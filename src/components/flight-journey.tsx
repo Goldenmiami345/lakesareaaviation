@@ -88,7 +88,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       <div className="sticky top-0 h-svh overflow-hidden">
         {stages.map((st, i) => (
           <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="absolute -inset-[2%] will-change-transform backface-hidden" style={{ zIndex: stages.length - i }}>
-            <img src={st.img} alt={st.alt} width={1920} height={1088} loading={i < 2 ? "eager" : "lazy"} decoding="async" className="h-full w-full object-cover" />
+            <img src={st.img} alt={st.alt} width={st.w ?? 1920} height={st.h ?? 1088} loading={i < 2 ? "eager" : "lazy"} decoding="async" className="h-full w-full object-cover" />
           </div>
         ))}
         <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-ink via-ink/40 to-ink/50" />
