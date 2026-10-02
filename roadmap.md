@@ -21,5 +21,7 @@
 - [x] Simplify scroll guidance to a tiny bottom landing cue and animated right-edge journey line on mobile.
 - [ ] Publish the latest preview build (awaiting go-ahead).
 - [ ] Inquiry form destination (where leads should be sent).
-- [ ] Confirm "1-hour oral · 1-hour flight" meaning (checkride format vs daily schedule).
+- [x] Confirm "1-hour oral · 1-hour flight" meaning: the advertised CFI/CFII exam format.
 - [ ] Fresh security scan before wide sharing.
+
+- [x] Clarify that “1-hour oral · 1-hour flight” describes the CFI/CFII exam, modernize its presentation, and simplify the mobile scroll cue.

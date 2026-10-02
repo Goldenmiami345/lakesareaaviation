@@ -45,7 +45,7 @@ export function MotionExperience() {
 
 export function ScrollCue({ targetId }: { targetId: string }) {
   return (
-    <div className="absolute inset-x-0 bottom-3 z-20 flex justify-center sm:bottom-5">
+    <div className="absolute inset-x-0 bottom-5 z-20 hidden justify-center sm:flex">
       <button type="button" aria-label="Continue to the flight path" onClick={() => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" })} className="landing-scroll-cue relative h-10 w-5 text-background/70 hover:text-background">
         <span className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 overflow-hidden bg-background/25" aria-hidden="true">
           <span className="landing-scroll-stroke absolute inset-x-0 top-0 h-4 bg-primary" />
