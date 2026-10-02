@@ -85,10 +85,14 @@ export const testimonials = [
   { quote: "The instruction is top-quality, delivered by experienced and supportive instructors. The entire staff is warm and welcoming.", name: "Kevin Bounda", detail: "Commercial single & multi-engine student" },
 ];
 
+// Single school line — airport numbers are intentionally not listed.
+export const SCHOOL_PHONE = "318-347-9004";
+export const SCHOOL_PHONE_TEL = "tel:3183479004";
+
 export const locations = [
-  { city: "Little Falls, Minnesota", airport: "Little Falls/Morrison County Airport · KLXL", address: "13129 Airport Rd, Little Falls, MN 56345", phone: "218-851-2196" },
-  { city: "Fort Lupton, Colorado", airport: "Platte Valley Airpark · 18V", address: "7507 Co Rd 39, Fort Lupton, CO 80621", phone: "303-718-3779" },
-  { city: "Cottonwood, Arizona", airport: "Cottonwood Municipal Airport · P52", address: "1001 W Mingus Avenue, Cottonwood, AZ 86326", phone: "928-274-9996" },
+  { city: "Little Falls, Minnesota", airport: "Little Falls/Morrison County Airport · KLXL", address: "13129 Airport Rd, Little Falls, MN 56345" },
+  { city: "Fort Lupton, Colorado", airport: "Platte Valley Airpark · 18V", address: "7507 Co Rd 39, Fort Lupton, CO 80621" },
+  { city: "Cottonwood, Arizona", airport: "Cottonwood Municipal Airport · P52", address: "1001 W Mingus Avenue, Cottonwood, AZ 86326" },
 ];
 
 export const fleet = [
