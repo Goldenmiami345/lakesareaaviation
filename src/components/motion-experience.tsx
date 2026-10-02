@@ -47,35 +47,6 @@ export function ScrollCue({ targetId }: { targetId: string }) {
   return <button type="button" onClick={() => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" })} className="scroll-cue mt-14 flex items-center gap-4 text-xs font-semibold uppercase text-background/60"><span className="h-px w-16 bg-primary runway-line" /><span className="scroll-arrow">↓</span> Scroll to plan your rating</button>;
 }
 
-const tickerItems = [
-  "CFI in 7–10 days",
-  "CFII in 5–7 days · MEI in 3–4",
-  "Instrument rating",
-  "Commercial single & multi",
-  "Private pilot",
-  "$100 intro flights",
-  "Housing from $30/night",
-  "Resident cars $20–30/day",
-  "Cessna · Piper · Taylorcraft fleet",
-  "Little Falls · Fort Lupton · Cottonwood",
-];
-
-export function Ticker() {
-  const row = [...tickerItems, ...tickerItems];
-  return (
-    <div className="overflow-hidden border-y border-border bg-ink py-4 text-background" aria-hidden="true">
-      <div className="marquee-track items-center gap-10">
-        {row.map((item, i) => (
-          <span key={i} className="flex items-center gap-10 whitespace-nowrap text-xs font-bold uppercase tracking-[0.18em]">
-            {item}
-            <span className="tick-dot inline-block size-1.5 rounded-full bg-primary" />
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export function ProgramExplorer() {
   const [active, setActive] = useState(0);
   const program = programs[active];
