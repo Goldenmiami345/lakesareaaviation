@@ -106,7 +106,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
           <ol className="flex flex-col justify-between gap-6">
             {stages.map((st, i) => (
               <li key={st.code}>
-                <button type="button" onClick={() => jump(i)} className={`group flex items-center gap-3 text-left text-[11px] font-bold uppercase tracking-[0.16em] transition-colors ${i === active ? "text-background" : "text-background/45 hover:text-background/80"}`}>
+                <button type="button" onClick={() => jump(i)} className={`group flex items-center gap-3 text-left text-[11px] font-bold uppercase tracking-[0.16em] transition-colors ${i === active ? "outlined-accent-label" : "text-background/55 hover:text-background/80"}`}>
                   <span className={`size-2 rounded-full border border-current transition-all ${i === active ? "scale-150 bg-primary border-primary" : ""}`} />
                   <span className="hidden sm:inline">{st.label}</span>
                 </button>
