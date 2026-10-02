@@ -5,6 +5,11 @@ import n96150Image from "../assets/fleet/n96150.jpg";
 import n11059Image from "../assets/fleet/n11059.jpg";
 import n7108gImage from "../assets/fleet/n7108g.jpg";
 import n3353pImage from "../assets/fleet/n3353p.jpg";
+import n3353pPanel from "../assets/fleet/n3353p-panel.png.asset.json";
+import n6641fPanel from "../assets/fleet/n6641f-panel.png.asset.json";
+import n6717aPanel from "../assets/fleet/n6717a-panel.png.asset.json";
+import n7018gPanel from "../assets/fleet/n7018g-panel.png.asset.json";
+import n8570bPanel from "../assets/fleet/n8570b-panel.png.asset.json";
 
 export type Program = {
   slug: string;
@@ -87,11 +92,11 @@ export const locations = [
 ];
 
 export const fleet = [
-  { name: "1956 Cessna 172", registration: "N6717A", nickname: "Blue", use: "Primary · Instrument · Commercial", note: "A real Lakes Area Aviation training aircraft photographed at the school.", image: n6717aImage, position: "center" },
-  { name: "1957 Cessna 172", registration: "N8570B", nickname: "Phoenix", use: "Primary · Instrument · Commercial", note: "A real Lakes Area Aviation training aircraft photographed at the school.", image: n8570bImage, position: "center" },
-  { name: "1966 Cessna 150", registration: "N6641F", nickname: "Elliott", use: "Primary training", note: "Efficient time-building and foundational instruction.", image: n6641fImage, position: "center" },
-  { name: "1946 Taylorcraft BC-12D", registration: "N96150", nickname: "Tweety", use: "Tailwheel training", note: "Classic stick-and-rudder skill development.", image: n96150Image, position: "center" },
+  { name: "1956 Cessna 172", registration: "N6717A", nickname: "Blue", use: "Primary · Instrument · Commercial", note: "A real Lakes Area Aviation training aircraft photographed at the school.", image: n6717aImage, position: "center", panel: n6717aPanel.url, specs: { Year: "1956", Horsepower: "145", "IFR/VFR": "VFR", Seats: "4", Coms: "4", GPS: "GPSMap 496", Equipment: "ADS-B out, Mode C transponder" } },
+  { name: "1957 Cessna 172", registration: "N8570B", nickname: "Phoenix", use: "Primary · Instrument · Commercial", note: "A real Lakes Area Aviation training aircraft photographed at the school.", image: n8570bImage, position: "center", panel: n8570bPanel.url, specs: { Year: "1956", Horsepower: "145", "IFR/VFR": "IFR", Seats: "4", Coms: "4", GPS: "Garmin 430, G5", Equipment: "ADS-B out, Mode C transponder" } },
+  { name: "1966 Cessna 150", registration: "N6641F", nickname: "Elliott", use: "Primary training", note: "Efficient time-building and foundational instruction.", image: n6641fImage, position: "center", panel: n6641fPanel.url, specs: { Year: "1966", Horsepower: "100", "IFR/VFR": "VFR", Seats: "2", Coms: "2", GPS: "GPSMap 496", Equipment: "Stratus" } },
+  { name: "1946 Taylorcraft BC-12D", registration: "N96150", nickname: "Tweety", use: "Tailwheel training", note: "Classic stick-and-rudder skill development.", image: n96150Image, position: "center", specs: { Year: "1946", Horsepower: "100", "IFR/VFR": "VFR", Seats: "2", Coms: "2" } },
   { name: "1965 Champion 7ECA", registration: "N11059", nickname: "Citabria", use: "Specialized training", note: "Tailwheel and specialized flight experience.", image: n11059Image, position: "center" },
-  { name: "1970 Cessna 172K", registration: "N7108G", nickname: "Hawk", use: "Primary · Instrument · Commercial", note: "A real Lakes Area Aviation training aircraft photographed at the school.", image: n7108gImage, position: "center" },
-  { name: "1958 Piper Apache", registration: "N3353P", nickname: "Tot", use: "Multi-engine training", note: "Twin-engine systems, procedures, and commercial training.", image: n3353pImage, position: "center" },
+  { name: "1970 Cessna 172K", registration: "N7108G", nickname: "Hawk", use: "Primary · Instrument · Commercial", note: "A real Lakes Area Aviation training aircraft photographed at the school.", image: n7108gImage, position: "center", panel: n7018gPanel.url, specs: { Year: "1969", Horsepower: "150", "IFR/VFR": "IFR", Seats: "4", Coms: "4", GPS: "Garmin 375, G5", Equipment: "ADS-B out & in, Mode C transponder" } },
+  { name: "1958 Piper Apache", registration: "N3353P", nickname: "Tot", use: "Multi-engine training", note: "Twin-engine systems, procedures, and commercial training.", image: n3353pImage, position: "center", panel: n3353pPanel.url, specs: { Year: "1970", Horsepower: "160/engine", "IFR/VFR": "IFR", Seats: "4", Coms: "4", GPS: "G430", Equipment: "ADS-B out, Mode C transponder" } },
 ];
