@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AcceleratedTrainingRouteImport } from './routes/accelerated-training'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as FleetRouteImport } from './routes/fleet'
 import { Route as IntroductoryFlightsRouteImport } from './routes/introductory-flights'
@@ -42,6 +43,11 @@ const AboutRoute = AboutRouteImport.update({
 const AcceleratedTrainingRoute = AcceleratedTrainingRouteImport.update({
   id: '/accelerated-training',
   path: '/accelerated-training',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/accelerated-training': typeof AcceleratedTrainingRoute
+  '/admin': typeof AdminRoute
   '/contact': typeof ContactRoute
   '/fleet': typeof FleetRoute
   '/introductory-flights': typeof IntroductoryFlightsRoute
@@ -150,6 +157,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/accelerated-training': typeof AcceleratedTrainingRoute
+  '/admin': typeof AdminRoute
   '/contact': typeof ContactRoute
   '/fleet': typeof FleetRoute
   '/introductory-flights': typeof IntroductoryFlightsRoute
@@ -171,6 +179,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/accelerated-training': typeof AcceleratedTrainingRoute
+  '/admin': typeof AdminRoute
   '/contact': typeof ContactRoute
   '/fleet': typeof FleetRoute
   '/introductory-flights': typeof IntroductoryFlightsRoute
@@ -194,6 +203,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/accelerated-training'
+    | '/admin'
     | '/contact'
     | '/fleet'
     | '/introductory-flights'
@@ -215,6 +225,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/accelerated-training'
+    | '/admin'
     | '/contact'
     | '/fleet'
     | '/introductory-flights'
@@ -235,6 +246,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/accelerated-training'
+    | '/admin'
     | '/contact'
     | '/fleet'
     | '/introductory-flights'
@@ -257,6 +269,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AcceleratedTrainingRoute: typeof AcceleratedTrainingRoute
+  AdminRoute: typeof AdminRoute
   ContactRoute: typeof ContactRoute
   FleetRoute: typeof FleetRoute
   IntroductoryFlightsRoute: typeof IntroductoryFlightsRoute
@@ -294,6 +307,13 @@ declare module '@tanstack/react-router' {
       path: '/accelerated-training'
       fullPath: '/accelerated-training'
       preLoaderRoute: typeof AcceleratedTrainingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -429,6 +449,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AcceleratedTrainingRoute: AcceleratedTrainingRoute,
+  AdminRoute: AdminRoute,
   ContactRoute: ContactRoute,
   FleetRoute: FleetRoute,
   IntroductoryFlightsRoute: IntroductoryFlightsRoute,
