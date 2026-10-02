@@ -85,6 +85,15 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     return () => { cancelAnimationFrame(frame); window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); window.removeEventListener("pointermove", onMove); };
   }, [stages]);
 
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    videoRefs.current.forEach((video, videoIndex) => {
+      if (!video) return;
+      if (videoIndex === active && !reduce) void video.play().catch(() => undefined);
+      else video.pause();
+    });
+  }, [active]);
+
   const jump = (i: number) => {
     const el = sectionRef.current;
     if (!el) return;
