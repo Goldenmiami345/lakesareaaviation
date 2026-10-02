@@ -17,15 +17,15 @@ const nav = [
 export function Header({ overlay = false }: { overlay?: boolean }) {
   const [open, setOpen] = useState(false);
   return <header className={`fixed inset-x-0 top-0 z-50 border-b transition-colors ${overlay ? "border-white/15 bg-ink/25 text-white backdrop-blur-md" : "border-border bg-background/95 text-foreground backdrop-blur-md"}`}>
-    <div className="mx-auto grid h-20 max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 lg:flex lg:justify-between lg:px-8">
+    <div className="mx-auto grid h-16 max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 sm:h-20 lg:flex lg:justify-between lg:px-8">
       <Link to="/" className="flex min-w-0 items-center gap-3" aria-label="Lakes Area Aviation home">
-        <img src={logoAsset.url} alt="Lakes Area Aviation" className={`h-12 w-auto max-w-[220px] object-contain ${overlay ? "brightness-0 invert" : ""}`} />
+        <img src={logoAsset.url} alt="Lakes Area Aviation" className={`h-10 w-auto max-w-[190px] object-contain sm:h-12 sm:max-w-[220px] ${overlay ? "brightness-0 invert" : ""}`} />
       </Link>
       <nav className="hidden items-center gap-7 lg:flex" aria-label="Main navigation">
         {nav.map(([label, to]) => <Link key={to} to={to} className="link-underline text-xs font-semibold uppercase tracking-[0.12em] transition-colors hover:text-primary">{label}</Link>)}
         <Link to="/contact" className="btn-shine bg-primary px-5 py-3 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground transition-colors hover:bg-ink hover:text-background">Build my training plan</Link>
       </nav>
-      <button aria-label={open ? "Close menu" : "Open menu"} className="grid size-11 place-items-center lg:hidden" onClick={() => setOpen(!open)}>{open ? <X /> : <Menu />}</button>
+      <button aria-label={open ? "Close menu" : "Open menu"} className="grid size-10 place-items-center lg:hidden" onClick={() => setOpen(!open)}>{open ? <X className="size-5" /> : <Menu className="size-5" />}</button>
     </div>
     {open && <nav className="border-t border-current/10 bg-background px-5 py-5 text-foreground lg:hidden" aria-label="Mobile navigation">
       <div className="grid gap-1">{nav.map(([label, to]) => <Link key={to} to={to} onClick={() => setOpen(false)} className="border-b border-border py-4 font-display text-xl">{label}</Link>)}<Link to="/contact" onClick={() => setOpen(false)} className="mt-4 bg-primary px-5 py-4 text-center text-sm font-bold uppercase text-primary-foreground">Build my training plan</Link></div>

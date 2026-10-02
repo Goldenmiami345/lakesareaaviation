@@ -24,14 +24,14 @@ function HomePage() {
     <main>
       <section className="relative min-h-[100svh] overflow-hidden bg-ink text-background">
         <div className="hero-parallax absolute inset-0"><img src={heroImage} alt="Lakes Area Aviation Cessna N6717A and Piper Apache on the ramp at sunset" width={1600} height={900} fetchPriority="high" className="hero-kenburns h-[112%] w-full object-cover object-[35%_center]" /></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/40 to-ink/10 lg:bg-gradient-to-r lg:from-ink lg:via-ink/60 lg:to-transparent" />
-        <div className="relative mx-auto flex min-h-[100svh] max-w-7xl flex-col justify-end px-5 pb-20 pt-32 lg:px-8">
+        <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/25 to-ink/5 lg:bg-gradient-to-r lg:from-ink lg:via-ink/60 lg:to-transparent" />
+        <div className="relative mx-auto flex min-h-[100svh] max-w-7xl flex-col justify-end px-5 pb-9 pt-24 sm:pb-20 sm:pt-32 lg:px-8">
           <div className="max-w-3xl reveal">
             <p className="eyebrow text-primary">Accelerated CFI &amp; CFII</p>
-            <h1 className="mt-5 font-display text-5xl leading-[.94] sm:text-7xl lg:text-[5.8rem]"><span className="line-mask"><span>CFI &amp; CFII</span></span><span className="line-mask delay-1"><span>in 4–6 weeks.</span></span></h1>
-            <p className="mt-6 inline-flex items-center gap-3 border border-background/25 bg-ink/40 px-4 py-2 text-sm font-bold uppercase tracking-widest backdrop-blur"><span className="size-2 rounded-full bg-primary" />1-hour oral · 1-hour flight</p>
+            <h1 className="mt-4 max-w-[9ch] font-display text-5xl leading-[.94] sm:mt-5 sm:max-w-none sm:text-7xl lg:text-[5.8rem]"><span className="line-mask"><span>CFI &amp; CFII</span></span><span className="line-mask delay-1"><span>in 4–6 weeks.</span></span></h1>
+            <p className="mt-5 flex items-center gap-3 text-xs font-bold uppercase text-background/85 sm:mt-6 sm:inline-flex sm:border sm:border-background/25 sm:bg-ink/40 sm:px-4 sm:py-2 sm:text-sm sm:backdrop-blur"><span className="h-px w-8 bg-primary sm:size-2 sm:rounded-full" />1-hour oral · 1-hour flight</p>
           </div>
-          <div className="mt-8 reveal-delay"><Link to="/contact" className="btn-shine inline-flex min-h-14 w-full items-center justify-center gap-3 bg-primary px-6 text-sm font-bold uppercase text-primary-foreground sm:w-auto">Build my training plan <ArrowRight className="size-4" /></Link></div>
+          <div className="mt-7 reveal-delay"><Link to="/contact" className="interactive-arrow group inline-flex min-h-12 items-center gap-4 border-b border-primary pb-1 text-sm font-bold uppercase text-background sm:btn-shine sm:min-h-14 sm:border-0 sm:bg-primary sm:px-6 sm:pb-0 sm:text-primary-foreground">Build my training plan <span className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground sm:contents"><ArrowRight className="size-4" /></span></Link></div>
           <ScrollCue targetId="flight-path" />
         </div>
       </section>

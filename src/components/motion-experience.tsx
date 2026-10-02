@@ -45,10 +45,10 @@ export function MotionExperience() {
 
 export function ScrollCue({ targetId }: { targetId: string }) {
   return (
-    <div className="mt-14 flex justify-center">
-      <button type="button" onClick={() => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" })} className="scroll-cue flex flex-col items-center gap-4 text-xs font-semibold uppercase tracking-[0.3em] text-background/60 transition-colors hover:text-background">
-        <span className="mouse-cue relative block h-10 w-6 rounded-full border-2 border-background/70"><span className="mouse-wheel absolute inset-x-0 top-2 mx-auto h-2 w-0.5 rounded-full bg-primary" /></span>
-        <span className="-mr-[0.3em]">Scroll to plan your rating</span>
+    <div className="mt-8 flex justify-center sm:mt-14">
+      <button type="button" onClick={() => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" })} className="scroll-cue flex items-center gap-3 text-[9px] font-semibold uppercase tracking-[0.22em] text-background/55 transition-colors hover:text-background sm:flex-col sm:gap-4 sm:text-xs sm:tracking-[0.3em]">
+        <span className="mouse-cue relative block h-8 w-5 rounded-full border border-background/70 sm:h-10 sm:w-6 sm:border-2"><span className="mouse-wheel absolute inset-x-0 top-2 mx-auto h-1.5 w-0.5 rounded-full bg-primary sm:h-2" /></span>
+        <span className="-mr-[0.22em] sm:-mr-[0.3em]">Scroll to plan your rating</span>
       </button>
     </div>
   );
