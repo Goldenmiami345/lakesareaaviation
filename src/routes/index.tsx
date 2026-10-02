@@ -29,10 +29,9 @@ function HomePage() {
           <div className="max-w-3xl reveal">
             <p className="eyebrow photo-label">Accelerated CFI &amp; CFII</p>
             <h1 className="mt-4 max-w-[9ch] font-display text-5xl leading-[.94] sm:mt-5 sm:max-w-none sm:text-7xl lg:text-[5.8rem]"><span className="line-mask"><span>CFI &amp; CFII</span></span><span className="line-mask delay-1"><span>in 4–6 weeks.</span></span></h1>
-            <div className="mt-6 flex items-center gap-4 sm:mt-7" aria-label="CFI and CFII exam: one-hour oral and one-hour flight">
-              <span className="h-px w-7 bg-primary" aria-hidden="true" />
+            <div className="mt-6 sm:mt-7" aria-label="CFI and CFII exams: one-hour oral and one-hour flight">
               <div>
-                <p className="text-[10px] font-bold uppercase text-background/65">CFI &amp; CFII exam</p>
+                <p className="text-[10px] font-bold uppercase text-background/65">CFI &amp; CFII exams</p>
                 <p className="mt-1 flex items-baseline gap-3 text-background">
                   <span><strong className="font-display text-2xl font-normal text-primary sm:text-3xl">1</strong> <span className="text-xs font-bold uppercase">hour oral</span></span>
                   <span className="h-4 w-px bg-background/30" aria-hidden="true" />
