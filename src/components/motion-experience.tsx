@@ -44,7 +44,16 @@ export function MotionExperience() {
 }
 
 export function ScrollCue({ targetId }: { targetId: string }) {
-  return <button type="button" onClick={() => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" })} className="scroll-cue mt-14 flex items-center gap-4 text-xs font-semibold uppercase text-background/60"><span className="h-px w-16 bg-primary runway-line" /><span className="scroll-arrow">↓</span> Scroll to plan your rating</button>;
+  return (
+    <div className="mt-14 flex justify-center">
+      <button type="button" onClick={() => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" })} className="scroll-cue flex flex-col items-center gap-4 text-xs font-semibold uppercase tracking-[0.3em] text-background/60 transition-colors hover:text-background">
+        <span className="scroll-cue-ring grid size-14 place-items-center rounded-full border border-background/30">
+          <span className="scroll-arrow inline-block text-base leading-none text-background">↓</span>
+        </span>
+        Scroll to plan your rating
+      </button>
+    </div>
+  );
 }
 
 export function ProgramExplorer() {

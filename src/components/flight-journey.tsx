@@ -6,6 +6,7 @@ import runway from "../assets/journey/02-runway.webp";
 import instrument from "../assets/journey/03-instrument.webp";
 import instructor from "../assets/journey/04-instructor.webp";
 import airline from "../assets/journey/05-airline.webp";
+import commercial from "../assets/photos/sunset-ramp.webp";
 
 type Stage = { code: string; label: string; time: string; title: string; text: string; img: string; alt: string; cta: string; slug?: string; to?: "/introductory-flights" | "/contact" };
 
@@ -13,8 +14,9 @@ const stages: Stage[] = [
   { code: "01", label: "Discovery flight", time: "$100", title: "Take the controls on day one.", text: "Left seat, instructor beside you.", img: clouds, alt: "Sunrise above a sea of clouds", cta: "Book an intro flight", to: "/introductory-flights" },
   { code: "02", label: "Private pilot", time: "~21 days", title: "Your first certificate.", text: "One focused block.", img: runway, alt: "Final approach to a runway surrounded by lakes and forest at dawn", cta: "Private pilot details", slug: "private-pilot" },
   { code: "03", label: "Instrument rating", time: "10–14 days", title: "Fly into the clouds.", text: "Fly by reference to instruments.", img: instrument, alt: "Cockpit glass displays while flying through cloud", cta: "Instrument details", slug: "instrument-rating" },
-  { code: "04", label: "CFI & CFII", time: "4–6 weeks", title: "Become the instructor.", text: "1-hour oral · 1-hour flight.", img: instructor, alt: "Flight instructor and student pilot in the cockpit at golden hour", cta: "CFI & CFII track", slug: "cfi-cfii" },
-  { code: "05", label: "The right seat", time: "Your goal", title: "Build toward the airline flight deck.", text: "Every instructing hour moves you closer.", img: airline, alt: "Airline flight deck at night above city lights", cta: "Build my training plan", to: "/contact" },
+  { code: "04", label: "Commercial pilot", time: "5–7 days", title: "Fly professionally.", text: "Commercial standards in a focused block.", img: commercial, alt: "Lakes Area Aviation airplanes on the ramp at sunset", cta: "Commercial details", slug: "commercial-single-engine" },
+  { code: "05", label: "CFI & CFII", time: "4–6 weeks", title: "Become the instructor.", text: "1-hour oral · 1-hour flight.", img: instructor, alt: "Flight instructor and student pilot in the cockpit at golden hour", cta: "CFI & CFII track", slug: "cfi-cfii" },
+  { code: "06", label: "The right seat", time: "Your goal", title: "Build toward the airline flight deck.", text: "Every instructing hour moves you closer.", img: airline, alt: "Airline flight deck at night above city lights", cta: "Build my training plan", to: "/contact" },
 ];
 
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
@@ -114,7 +116,14 @@ export function FlightJourney() {
               : <Link to={s.to ?? "/contact"} className="interactive-arrow btn-shine mt-6 inline-flex min-h-12 items-center gap-3 bg-primary px-6 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>}
           </div>
         </div>
-        {active === 0 && <p className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 text-center text-xs font-semibold uppercase tracking-[0.3em] text-background/70"><span className="scroll-arrow inline-block">↓</span><br />Scroll to climb</p>}
+        {active === 0 && (
+          <p className="pointer-events-none absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-4 text-center text-xs font-semibold uppercase tracking-[0.3em] text-background/70">
+            <span className="scroll-cue-ring grid size-14 place-items-center rounded-full border border-background/30">
+              <span className="scroll-arrow inline-block text-base leading-none text-background">↓</span>
+            </span>
+            Scroll to climb
+          </p>
+        )}
       </div>
     </section>
   );
