@@ -39,6 +39,21 @@ function HomePage() {
       <FlightJourney />
       <FlightJourney stages={airportStages} id="airports" label="Three airports to train from" cue="Three airports. Scroll to fly in." mode="code" />
 
+      <section className="bg-background py-20 sm:py-28" data-scroll-reveal>
+        <div className="mx-auto max-w-7xl px-5 lg:px-8">
+          <div className="grid gap-10 border-b border-border pb-10 lg:grid-cols-[.75fr_1.25fr] lg:items-end">
+            <div><p className="eyebrow text-primary">More ways to train</p><h2 className="mt-4 max-w-[12ch] font-display text-4xl sm:text-6xl">Add the privilege. Sharpen the skill.</h2></div>
+            <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">Build beyond the core ratings with focused multi-engine training, instructor privileges, endorsements, and recurrent proficiency work.</p>
+          </div>
+          <div className="stagger-grid grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-4" data-scroll-reveal>
+            <ServiceLink eyebrow="3–4 days" title="Commercial multi" text="Add commercial multi-engine privileges in the Piper Apache." to="/programs/$slug" slug="commercial-multi-engine" />
+            <ServiceLink eyebrow="3–4 days" title="MEI" text="Add multi-engine instructor privileges through a concentrated course." to="/programs/$slug" slug="mei" />
+            <ServiceLink eyebrow="Endorsements" title="Expand your envelope" text="Tailwheel, complex, high-performance, high-altitude, and spin training." to="/specialized-training" />
+            <ServiceLink eyebrow="Stay proficient" title="Flight reviews" text="Continue training with instruction tailored to your experience and goals." to="/local-training" />
+          </div>
+        </div>
+      </section>
+
       <section className="bg-ink py-20 text-background sm:py-28"><div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-2 lg:px-8" data-scroll-reveal><div className="photo-reveal zoom-reveal relative min-h-[380px] overflow-hidden sm:min-h-[520px]" data-scroll-reveal><img src={trainingImage} alt="Lakes Area Aviation Piper Apache N3353P on the ramp" width={1600} height={1200} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 hover:scale-[1.04]" /></div><div className="flex flex-col justify-center"><p className="eyebrow photo-label">Stay on site</p><h2 className="mt-4 font-display text-5xl sm:text-6xl">Arrive ready.<br />Train every day.</h2><div className="mt-10 grid grid-cols-2 gap-px bg-background/15"><Stat value="$30" label="Housing / night" /><Stat value="$20" label="Car / day" /></div></div></div></section>
 
       <section className="bg-secondary py-20 sm:py-28"><div className="mx-auto max-w-5xl px-5 lg:px-8" data-scroll-reveal="blur"><p className="eyebrow text-primary">Student experience</p><blockquote className="mt-6 font-display text-3xl leading-snug sm:text-5xl">“{featuredStory.quote}”<footer className="mt-8 font-sans text-sm font-bold uppercase text-foreground">{featuredStory.name}</footer></blockquote><Link to="/student-success" className="interactive-arrow mt-8 inline-flex items-center gap-2 text-sm font-bold uppercase text-primary">More stories <ArrowRight className="size-4" /></Link><p className="mt-6 text-xs text-muted-foreground">Individual results vary.</p></div></section>
@@ -48,3 +63,10 @@ function HomePage() {
 }
 
 function Stat({ value, label }: { value: string; label: string }) { return <div className="bg-ink p-6"><p className="font-display text-4xl text-primary">{value}</p><p className="mt-2 text-xs font-bold uppercase tracking-widest text-background/60">{label}</p></div>; }
+
+function ServiceLink({ eyebrow, title, text, to, slug }: { eyebrow: string; title: string; text: string; to: "/programs/$slug" | "/specialized-training" | "/local-training"; slug?: string }) {
+  const content = <><p className="eyebrow text-primary">{eyebrow}</p><h3 className="mt-5 font-display text-3xl">{title}</h3><p className="mt-3 text-sm leading-relaxed text-muted-foreground">{text}</p><span className="mt-8 inline-flex items-center gap-2 text-xs font-bold uppercase text-primary">Explore <ArrowRight className="size-4" /></span></>;
+  return slug
+    ? <Link to={to} params={{ slug }} className="program-card interactive-arrow group min-h-72 bg-background p-7 sm:p-8">{content}</Link>
+    : <Link to={to} className="program-card interactive-arrow group min-h-72 bg-background p-7 sm:p-8">{content}</Link>;
+}

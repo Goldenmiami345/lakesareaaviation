@@ -151,4 +151,6 @@
 .mouse-wheel { animation: mouse-wheel 1.8s cubic-bezier(.4,0,.2,1) infinite; }
 @keyframes swipe-up { 0% { opacity: 0; transform: translateY(8px); } 25% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; transform: translateY(-10px); } }
 .swipe-cue { animation: swipe-up 1.6s cubic-bezier(.4,0,.2,1) infinite; }
-@media (prefers-reduced-motion: reduce) { .mouse-wheel, .swipe-cue { animation: none; } }
+@keyframes airport-scroll { 0% { opacity: 0; transform: translateY(-100%); } 20% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(200%); } }
+.airport-scroll-stroke { animation: airport-scroll 2.5s cubic-bezier(.65,0,.35,1) 2 forwards; }
+@media (prefers-reduced-motion: reduce) { .mouse-wheel, .swipe-cue, .airport-scroll-stroke { animation: none; } }
