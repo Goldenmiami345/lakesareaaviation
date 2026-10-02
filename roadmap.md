@@ -3,4 +3,4 @@
 - [x] Audit all current rating pathways.
 - [x] Research the original school’s published rating details and cost sheets.
 - [x] Add rating-specific timelines, prices, course hours, prerequisites, and disclosures.
-- [ ] Verify every pathway on desktop and mobile.
+- [x] Verify every pathway on desktop and mobile.
