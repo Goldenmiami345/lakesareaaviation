@@ -14,6 +14,7 @@
 - [x] Simplify scroll prompts to a standalone scrolling mouse on desktop and swipe gesture on mobile.
 - [x] Restyle small photographic and active flight-step labels with blue fill and crisp white outlines.
 - [x] Integrate the school’s real cockpit photos and video into the Instrument and CFI/CFII scroll stages, professionally finished for desktop and mobile.
+- [x] Refine cockpit storytelling: preserve the school's real panel, add obvious IMC outside, and restore the wider instructor-aircraft scene for CFI/CFII.
 - [ ] Publish the latest preview build (awaiting go-ahead).
 - [ ] Inquiry form destination (where leads should be sent).
 - [ ] Confirm "1-hour oral · 1-hour flight" meaning (checkride format vs daily schedule).
