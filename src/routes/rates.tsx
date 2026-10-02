@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageIntro, SiteLayout } from "../components/site-shell";
 
-const instruction = [
+const instruction: [string, string][] = [
   ["Primary flight & ground instruction", "$60/hr"],
   ["Instrument flight & ground instruction", "$60/hr"],
   ["Commercial flight & ground instruction", "$60/hr"],
