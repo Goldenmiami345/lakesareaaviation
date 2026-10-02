@@ -1,5 +1,20 @@
 {
   "version": "7",
   "dialect": "postgresql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790959817319,
+      "tag": "0000_create_site_theme_and_admin_roles",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790959900691,
+      "tag": "0001_add_first_admin_claim",
+      "breakpoints": true
+    }
+  ]
 }

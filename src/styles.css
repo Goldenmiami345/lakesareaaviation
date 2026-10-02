@@ -38,6 +38,12 @@
   --ring: oklch(0.56 0.22 258);
 }
 
+:root[data-accent="orange"] {
+  --primary: oklch(0.625 0.175 40);
+  --primary-foreground: oklch(0.985 0.008 75);
+  --ring: oklch(0.625 0.175 40);
+}
+
 @layer base {
   * { border-color: var(--color-border); }
   html { scroll-behavior: smooth; }
@@ -48,6 +54,10 @@
 
 @utility font-display { font-family: var(--font-display); }
 @utility eyebrow { font-size: .72rem; line-height: 1rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+@utility photo-label { color: var(--background); text-shadow: 0 1px 2px color-mix(in oklab, var(--ink) 85%, transparent), 0 0 12px color-mix(in oklab, var(--ink) 70%, transparent); }
+
+.theme-swatch-blue { background: oklch(0.56 0.22 258); }
+.theme-swatch-orange { background: oklch(0.625 0.175 40); }
 
 @keyframes reveal { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes runway { from { transform: scaleX(0); } to { transform: scaleX(1); } }
