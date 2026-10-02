@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Pointer } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import clouds from "../assets/journey/01-clouds.webp";
 import runway from "../assets/journey/02-runway-corrected.webp";
 import instrument from "../assets/journey/instrument-imc-cockpit.webp";
@@ -30,9 +30,9 @@ export const airportStages: Stage[] = [
 
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 
-type Props = { stages?: Stage[]; id?: string; label?: string; cue?: string; mode?: "alt" | "code" };
+type Props = { stages?: Stage[]; id?: string; label?: string; mode?: "alt" | "code" };
 
-export function FlightJourney({ stages = journeyStages, id = "flight-path", label = "Your accelerated flight path", cue = "Scroll to climb", mode = "alt" }: Props = {}) {
+export function FlightJourney({ stages = journeyStages, id = "flight-path", label = "Your accelerated flight path", mode = "alt" }: Props = {}) {
   const sectionRef = useRef<HTMLElement>(null);
   const layerRefs = useRef<(HTMLDivElement | null)[]>([]);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
@@ -135,7 +135,10 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
 
         {/* Stage rail */}
         <nav aria-label={`${label} stages`} className="absolute right-4 top-1/2 z-20 flex -translate-y-1/2 items-stretch gap-4 lg:right-8">
-          <div className="relative w-px bg-background/20"><div ref={barRef} className="absolute inset-0 origin-top bg-primary" style={{ transform: "scaleY(0)" }} /></div>
+          <div className="journey-stage-rail relative w-px overflow-hidden bg-background/20">
+            <div ref={barRef} className="absolute inset-0 origin-top bg-primary" style={{ transform: "scaleY(0)" }} />
+            <span className="journey-scroll-stroke absolute inset-x-0 top-0 h-8 bg-background sm:hidden" aria-hidden="true" />
+          </div>
           <ol className="flex flex-col justify-between gap-6">
             {stages.map((st, i) => (
               <li key={st.code}>
@@ -160,23 +163,6 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
               : <Link to={s.to ?? "/contact"} className="interactive-arrow btn-shine mt-6 inline-flex min-h-12 items-center gap-3 bg-primary px-6 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>}
           </div>
         </div>
-        {active === 0 && (
-          <div role="img" aria-label={cue} className="pointer-events-none absolute left-1/2 top-[25%] z-20 grid size-14 -translate-x-1/2 -translate-y-1/2 place-items-center text-background/75 sm:top-1/2">
-            {mode === "code" ? (
-              <span className="airport-scroll-signal relative block h-20 w-10 sm:hidden" aria-hidden="true">
-                <span className="airport-scroll-rail absolute inset-y-0 left-1/2 w-px -translate-x-1/2 overflow-hidden bg-background/55">
-                  <span className="airport-scroll-stroke absolute inset-x-0 top-0 h-7 bg-primary" />
-                </span>
-                <span className="absolute left-2 top-3 h-10 w-px bg-background/25" />
-                <span className="absolute right-2 top-3 h-10 w-px bg-background/25" />
-                <span className="absolute bottom-0 left-1/2 size-1.5 -translate-x-1/2 rounded-full border border-background/80 bg-primary" />
-              </span>
-            ) : (
-              <span className="swipe-cue relative block sm:hidden" aria-hidden="true"><Pointer className="size-9 stroke-[1.5]" /></span>
-            )}
-            <span className="mouse-cue relative hidden h-12 w-8 rounded-full border-2 border-current sm:block" aria-hidden="true"><span className="mouse-wheel absolute inset-x-0 top-2.5 mx-auto h-2.5 w-0.5 rounded-full bg-primary" /></span>
-          </div>
-        )}
       </div>
     </section>
   );

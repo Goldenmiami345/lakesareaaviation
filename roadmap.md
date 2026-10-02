@@ -18,6 +18,7 @@
 - [x] Replace the repeated airport-journey finger with an understated mobile stroke cue.
 - [x] Strengthen the airport handoff into a visible three-line mobile runway signal.
 - [x] Add a concise post-locations section for commercial multi, MEI, endorsements, and flight reviews.
+- [x] Simplify scroll guidance to a tiny bottom landing cue and animated right-edge journey line on mobile.
 - [ ] Publish the latest preview build (awaiting go-ahead).
 - [ ] Inquiry form destination (where leads should be sent).
 - [ ] Confirm "1-hour oral · 1-hour flight" meaning (checkride format vs daily schedule).

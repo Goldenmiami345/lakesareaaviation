@@ -147,11 +147,8 @@
 .journey-grain { opacity: .12; background-image: radial-gradient(color-mix(in oklab, var(--background) 60%, transparent) 1px, transparent 1px); background-size: 3px 3px; mix-blend-mode: overlay; }
 @media (prefers-reduced-motion: reduce) { .journey-copy > * { animation: none; } }
 
-@keyframes mouse-wheel { 0% { opacity: 0; transform: translateY(0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(12px); } }
-.mouse-wheel { animation: mouse-wheel 1.8s cubic-bezier(.4,0,.2,1) infinite; }
-@keyframes swipe-up { 0% { opacity: 0; transform: translateY(8px); } 25% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; transform: translateY(-10px); } }
-.swipe-cue { animation: swipe-up 1.6s cubic-bezier(.4,0,.2,1) infinite; }
-@keyframes airport-scroll { 0% { opacity: 0; transform: translateY(-120%); } 18% { opacity: 1; } 72% { opacity: 1; } 100% { opacity: 0; transform: translateY(290%); } }
-.airport-scroll-signal { filter: drop-shadow(0 2px 8px color-mix(in oklab, var(--ink) 70%, transparent)); }
-.airport-scroll-stroke { box-shadow: 0 0 8px color-mix(in oklab, var(--primary) 80%, transparent); animation: airport-scroll 2.2s cubic-bezier(.45,0,.2,1) infinite; }
-@media (prefers-reduced-motion: reduce) { .mouse-wheel, .swipe-cue, .airport-scroll-stroke { animation: none; } }
+@keyframes scroll-stroke { 0%, 12% { opacity: 0; transform: translateY(-120%); } 26% { opacity: 1; } 68% { opacity: 1; } 84%, 100% { opacity: 0; transform: translateY(320%); } }
+.landing-scroll-stroke { box-shadow: 0 0 7px color-mix(in oklab, var(--primary) 80%, transparent); animation: scroll-stroke 2.8s cubic-bezier(.45,0,.2,1) infinite; }
+.journey-stage-rail { min-height: 10rem; }
+.journey-scroll-stroke { box-shadow: 0 0 8px color-mix(in oklab, var(--background) 75%, transparent); animation: scroll-stroke 3.2s cubic-bezier(.45,0,.2,1) infinite; }
+@media (prefers-reduced-motion: reduce) { .landing-scroll-stroke, .journey-scroll-stroke { animation: none; opacity: .7; transform: none; } }

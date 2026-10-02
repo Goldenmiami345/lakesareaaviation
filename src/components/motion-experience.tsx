@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowRight, Pointer } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { programs } from "../lib/site-data";
 
@@ -45,10 +45,11 @@ export function MotionExperience() {
 
 export function ScrollCue({ targetId }: { targetId: string }) {
   return (
-    <div className="mt-6 flex justify-center sm:mt-12">
-      <button type="button" aria-label="Scroll to plan your rating" onClick={() => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" })} className="scroll-cue grid size-12 place-items-center text-background/75 hover:text-background">
-        <span className="swipe-cue relative block sm:hidden" aria-hidden="true"><Pointer className="size-8 stroke-[1.5]" /></span>
-        <span className="mouse-cue relative hidden h-11 w-7 rounded-full border-2 border-current sm:block" aria-hidden="true"><span className="mouse-wheel absolute inset-x-0 top-2 mx-auto h-2 w-0.5 rounded-full bg-primary" /></span>
+    <div className="absolute inset-x-0 bottom-3 z-20 flex justify-center sm:bottom-5">
+      <button type="button" aria-label="Continue to the flight path" onClick={() => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" })} className="landing-scroll-cue relative h-10 w-5 text-background/70 hover:text-background">
+        <span className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 overflow-hidden bg-background/25" aria-hidden="true">
+          <span className="landing-scroll-stroke absolute inset-x-0 top-0 h-4 bg-primary" />
+        </span>
       </button>
     </div>
   );

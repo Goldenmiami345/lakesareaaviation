@@ -37,7 +37,7 @@ function HomePage() {
       </section>
 
       <FlightJourney />
-      <FlightJourney stages={airportStages} id="airports" label="Three airports to train from" cue="Three airports. Scroll to fly in." mode="code" />
+      <FlightJourney stages={airportStages} id="airports" label="Three airports to train from" mode="code" />
 
       <section className="bg-background py-20 sm:py-28" data-scroll-reveal>
         <div className="mx-auto max-w-7xl px-5 lg:px-8">
