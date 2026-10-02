@@ -1,3 +1,4 @@
+import introImg from "../assets/photos/lake-aerial.jpg";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, MapPin, Phone } from "lucide-react";
 import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
@@ -16,7 +17,7 @@ export const Route = createFileRoute("/local-training")({
 function Page() {
   return (
     <SiteLayout>
-      <PageIntro
+      <PageIntro image={introImg} imageAlt="Aerial view of a Minnesota lake shoreline"
         eyebrow="Local training"
         title="Train at your own pace, close to home."
         text="While we specialize in accelerated, full-time training, we value our local students — one of our main goals is to grow a community of aviators."
