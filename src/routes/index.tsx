@@ -32,9 +32,9 @@ function HomePage() {
             <div className="mt-6 sm:mt-7" aria-label="CFI and CFII exams: one-hour oral and one-hour flight">
               <p className="text-[10px] font-bold uppercase text-background/65">CFI &amp; CFII exams</p>
               <p className="mt-1 flex items-baseline gap-3 text-background">
-                <span><strong className="font-display text-lg font-normal text-primary sm:text-xl">1</strong> <span className="text-xs font-bold uppercase">hour oral</span></span>
-                <span className="h-3.5 w-px bg-background/30" aria-hidden="true" />
-                <span><strong className="font-display text-lg font-normal text-primary sm:text-xl">1</strong> <span className="text-xs font-bold uppercase">hour flight</span></span>
+                <span><strong className="font-display text-sm font-normal text-primary sm:text-base">1</strong> <span className="text-[11px] font-bold uppercase sm:text-xs">hour oral</span></span>
+                <span className="h-3 w-px bg-background/30" aria-hidden="true" />
+                <span><strong className="font-display text-sm font-normal text-primary sm:text-base">1</strong> <span className="text-[11px] font-bold uppercase sm:text-xs">hour flight</span></span>
               </p>
             </div>
           </div>
