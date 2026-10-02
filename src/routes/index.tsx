@@ -4,7 +4,7 @@ import heroImage from "../assets/fleet/n96150-enhanced.jpg";
 import trainingImage from "../assets/fleet/n3353p-enhanced.jpg";
 import { InquiryBand, SiteLayout } from "../components/site-shell";
 import { programs, testimonials } from "../lib/site-data";
-import { ProgramExplorer, ScrollCue } from "../components/motion-experience";
+import { ProgramExplorer, ScrollCue, Ticker } from "../components/motion-experience";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
@@ -22,7 +22,7 @@ function HomePage() {
   return <SiteLayout overlayHeader>
     <main>
       <section className="relative min-h-[92svh] overflow-hidden bg-foreground text-background">
-        <img src={heroImage} alt="Lakes Area Aviation Taylorcraft N96150 flying over Minnesota farmland" width={1600} height={900} fetchPriority="high" className="hero-parallax absolute inset-0 h-[112%] w-full object-cover object-[58%_center]" />
+        <div className="hero-parallax absolute inset-0"><img src={heroImage} alt="Lakes Area Aviation Taylorcraft N96150 flying over Minnesota farmland" width={1600} height={900} fetchPriority="high" className="hero-kenburns h-[112%] w-full object-cover object-[58%_center]" /></div>
         <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/65 to-transparent" />
         <div className="relative mx-auto flex min-h-[92svh] max-w-7xl flex-col justify-end px-5 pb-16 pt-32 lg:px-8 lg:pb-20">
           <div className="max-w-3xl reveal"><p className="eyebrow text-primary">Accelerated pilot ratings</p><h1 className="mt-5 font-display text-5xl leading-[.94] sm:text-7xl lg:text-[5.8rem]">CFI and CFII in 4–6 weeks.</h1><p className="mt-5 font-display text-2xl text-background/90 sm:text-3xl">1 hour oral. 1 hour flight.</p><p className="mt-6 max-w-xl text-base leading-relaxed text-background/70 sm:text-lg">Focused training for pilots ready to move. Build your private, instrument, commercial, or instructor rating around a clear timeline.</p></div>
