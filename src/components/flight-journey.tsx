@@ -163,7 +163,14 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         {active === 0 && (
           <div role="img" aria-label={cue} className="pointer-events-none absolute left-1/2 top-[25%] z-20 grid size-14 -translate-x-1/2 -translate-y-1/2 place-items-center text-background/75 sm:top-1/2">
             {mode === "code" ? (
-              <span className="airport-scroll-track relative block h-12 w-px overflow-hidden bg-background/20 sm:hidden" aria-hidden="true"><span className="airport-scroll-stroke absolute inset-x-0 top-0 h-1/2 bg-primary" /></span>
+              <span className="airport-scroll-signal relative block h-20 w-10 sm:hidden" aria-hidden="true">
+                <span className="airport-scroll-rail absolute inset-y-0 left-1/2 w-px -translate-x-1/2 overflow-hidden bg-background/55">
+                  <span className="airport-scroll-stroke absolute inset-x-0 top-0 h-7 bg-primary" />
+                </span>
+                <span className="absolute left-2 top-3 h-10 w-px bg-background/25" />
+                <span className="absolute right-2 top-3 h-10 w-px bg-background/25" />
+                <span className="absolute bottom-0 left-1/2 size-1.5 -translate-x-1/2 rounded-full border border-background/80 bg-primary" />
+              </span>
             ) : (
               <span className="swipe-cue relative block sm:hidden" aria-hidden="true"><Pointer className="size-9 stroke-[1.5]" /></span>
             )}
