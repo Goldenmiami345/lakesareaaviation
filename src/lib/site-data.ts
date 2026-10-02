@@ -1,3 +1,11 @@
+import n6717aImage from "../assets/fleet/n6717a.jpg";
+import n8570bImage from "../assets/fleet/n8570b.jpg";
+import n6641fImage from "../assets/fleet/n6641f.jpg";
+import n96150Image from "../assets/fleet/n96150.jpg";
+import n11059Image from "../assets/fleet/n11059.jpg";
+import n7108gImage from "../assets/fleet/n7108g.jpg";
+import n3353pImage from "../assets/fleet/n3353p.jpg";
+
 export type Program = {
   slug: string;
   name: string;
@@ -29,10 +37,11 @@ export const locations = [
 ];
 
 export const fleet = [
-  { name: "Cessna 172", use: "Primary · Instrument · Commercial", note: "The familiar, capable foundation of flight training." },
-  { name: "Cessna 150", use: "Primary training", note: "Efficient time-building and foundational instruction." },
-  { name: "Piper Apache PA-23-160", use: "Multi-engine training", note: "Twin-engine systems, procedures, and commercial training." },
-  { name: "Piper Comanche PA-24-250", use: "Complex aircraft", note: "Advanced aircraft experience and commercial operations." },
-  { name: "Taylorcraft BC-12D", use: "Tailwheel training", note: "Classic stick-and-rudder skill development." },
-  { name: "Citabria", use: "Specialized training", note: "Tailwheel and specialized flight experience." },
+  { name: "1956 Cessna 172", registration: "N6717A", nickname: "Blue", use: "Primary · Instrument · Commercial", note: "A real Lakes Area Aviation training aircraft photographed at the school.", image: n6717aImage, position: "center" },
+  { name: "1957 Cessna 172", registration: "N8570B", nickname: "Phoenix", use: "Primary · Instrument · Commercial", note: "A real Lakes Area Aviation training aircraft photographed at the school.", image: n8570bImage, position: "center" },
+  { name: "1966 Cessna 150", registration: "N6641F", nickname: "Elliott", use: "Primary training", note: "Efficient time-building and foundational instruction.", image: n6641fImage, position: "center" },
+  { name: "1946 Taylorcraft BC-12D", registration: "N96150", nickname: "Tweety", use: "Tailwheel training", note: "Classic stick-and-rudder skill development.", image: n96150Image, position: "center" },
+  { name: "1965 Champion 7ECA", registration: "N11059", nickname: "Citabria", use: "Specialized training", note: "Tailwheel and specialized flight experience.", image: n11059Image, position: "center" },
+  { name: "1970 Cessna 172K", registration: "N7108G", nickname: "Hawk", use: "Primary · Instrument · Commercial", note: "A real Lakes Area Aviation training aircraft photographed at the school.", image: n7108gImage, position: "center" },
+  { name: "1958 Piper Apache", registration: "N3353P", nickname: "Tot", use: "Multi-engine training", note: "Twin-engine systems, procedures, and commercial training.", image: n3353pImage, position: "center" },
 ];
