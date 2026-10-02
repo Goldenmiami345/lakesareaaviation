@@ -5,6 +5,11 @@ import n96150Image from "../assets/fleet/n96150.jpg";
 import n11059Image from "../assets/fleet/n11059.jpg";
 import n7108gImage from "../assets/fleet/n7108g.jpg";
 import n3353pImage from "../assets/fleet/n3353p.jpg";
+import n3353pPanel from "../assets/fleet/n3353p-panel.png.asset.json";
+import n6641fPanel from "../assets/fleet/n6641f-panel.png.asset.json";
+import n6717aPanel from "../assets/fleet/n6717a-panel.png.asset.json";
+import n7018gPanel from "../assets/fleet/n7018g-panel.png.asset.json";
+import n8570bPanel from "../assets/fleet/n8570b-panel.png.asset.json";
 
 export type Program = {
   slug: string;
