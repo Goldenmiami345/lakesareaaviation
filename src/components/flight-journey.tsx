@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import clouds from "../assets/journey/01-clouds.webp";
-import runway from "../assets/journey/02-runway.webp";
+import runway from "../assets/journey/02-runway-corrected.webp";
 import instrument from "../assets/journey/03-instrument.webp";
 import instructor from "../assets/journey/04-instructor.webp";
 import airline from "../assets/journey/05-airline.webp";
@@ -15,7 +15,7 @@ type Stage = { code: string; label: string; time: string; title: string; text: s
 
 const journeyStages: Stage[] = [
   { code: "01", label: "Discovery flight", time: "$100", title: "Take the controls on day one.", text: "Left seat, instructor beside you.", img: clouds, alt: "Sunrise above a sea of clouds", cta: "Book an intro flight", to: "/introductory-flights" },
-  { code: "02", label: "Private pilot", time: "~21 days", title: "Your first certificate.", text: "One focused block.", img: runway, alt: "Final approach to a runway surrounded by lakes and forest at dawn", cta: "Private pilot details", slug: "private-pilot" },
+  { code: "02", label: "Private pilot", time: "~21 days", title: "Your first certificate.", text: "One focused block.", img: runway, alt: "Aerial cockpit view of Runway 31 and intersecting Runway 18/36 at KLXL", cta: "Private pilot details", slug: "private-pilot" },
   { code: "03", label: "Instrument rating", time: "10–14 days", title: "Fly into the clouds.", text: "Fly by reference to instruments.", img: instrument, alt: "Cockpit glass displays while flying through cloud", cta: "Instrument details", slug: "instrument-rating" },
   { code: "04", label: "Commercial pilot", time: "5–7 days", title: "Fly professionally.", text: "Commercial standards in a focused block.", img: commercial, alt: "Lakes Area Aviation airplanes on the ramp at sunset", cta: "Commercial details", slug: "commercial-single-engine" },
   { code: "05", label: "CFI & CFII", time: "4–6 weeks", title: "Become the instructor.", text: "1-hour oral · 1-hour flight.", img: instructor, alt: "Flight instructor and student pilot in the cockpit at golden hour", cta: "CFI & CFII track", slug: "cfi-cfii" },
