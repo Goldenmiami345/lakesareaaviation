@@ -137,6 +137,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         <nav aria-label={`${label} stages`} className="absolute right-4 top-1/2 z-20 flex -translate-y-1/2 items-stretch gap-4 lg:right-8">
           <div className="journey-stage-rail relative w-px overflow-hidden bg-background/20">
             <div ref={barRef} className="absolute inset-0 origin-top bg-primary" style={{ transform: "scaleY(0)" }} />
+            <span aria-hidden="true" className="landing-scroll-stroke absolute inset-x-0 top-0 h-8 bg-background" />
           </div>
           <ol className="flex flex-col justify-between gap-6">
             {stages.map((st, i) => (

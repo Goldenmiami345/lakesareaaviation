@@ -43,8 +43,27 @@ export function MotionExperience() {
   return <div className="scroll-progress" aria-hidden="true" />;
 }
 
+export function TapScrollHint() {
+  const [cycle, setCycle] = useState(0);
+  const [gone, setGone] = useState(false);
+  useEffect(() => {
+    let count = 0; let t: ReturnType<typeof setTimeout>;
+    const next = () => { count += 1; setCycle(count); t = setTimeout(next, count < 3 ? 5000 : 10000); };
+    t = setTimeout(next, 600);
+    const onScroll = () => { if (window.scrollY > 40) setGone(true); };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => { clearTimeout(t); window.removeEventListener("scroll", onScroll); };
+  }, []);
+  if (gone || cycle === 0) return null;
+  return <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-[24%] z-20 -translate-x-1/2 sm:hidden">
+    <span key={cycle} className="tap-scroll-dot block size-4 rounded-full bg-background/90" />
+  </div>;
+}
+
 export function ScrollCue({ targetId }: { targetId: string }) {
   return (
+    <>
+    <TapScrollHint />
     <div className="absolute inset-x-0 bottom-5 z-20 hidden justify-center sm:flex">
       <button type="button" aria-label="Continue to the flight path" onClick={() => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" })} className="landing-scroll-cue relative h-10 w-5 text-background/70 hover:text-background">
         <span className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 overflow-hidden bg-background/25" aria-hidden="true">
@@ -52,6 +71,7 @@ export function ScrollCue({ targetId }: { targetId: string }) {
         </span>
       </button>
     </div>
+    </>
   );
 }
 
