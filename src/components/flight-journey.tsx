@@ -54,12 +54,11 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         const local = raw - i;
         const leaving = clamp(local);
         const coming = clamp(-local);
-        const scale = reduce ? 1 : 1 + leaving * 1.6 + coming * 0.18;
-        const opacity = local > 0 ? 1 - clamp(local * 1.25) : 1;
-        const depth = reduce ? 0 : 14 + i * 4;
-        layer.style.transform = `translate3d(${mx * -depth}px, ${my * -depth}px, 0) scale(${scale})`;
-        layer.style.opacity = String(opacity);
-        layer.style.filter = reduce ? "" : `blur(${(leaving * 8).toFixed(1)}px)`;
+        const scale = reduce ? 1 : 1 + leaving * 0.55 + coming * 0.06;
+        const opacity = local > 0 ? 1 - clamp(local * 1.4) : 1;
+        const depth = reduce ? 0 : 10 + i * 3;
+        layer.style.transform = `translate3d(${(mx * -depth).toFixed(2)}px, ${(my * -depth).toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
+        layer.style.opacity = opacity.toFixed(3);
       });
       if (hudRef.current) hudRef.current.textContent = Math.round((raw / (n - 1)) * 35000).toLocaleString("en-US");
       if (barRef.current) barRef.current.style.transform = `scaleY(${raw / (n - 1)})`;
