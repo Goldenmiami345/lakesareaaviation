@@ -24,7 +24,7 @@ function Page() {
         <div className="stagger-grid grid gap-px bg-border md:grid-cols-2 lg:grid-cols-3" data-scroll-reveal>
           {fleet.map((f, i) => (
             <article key={f.registration} className="group bg-background">
-              <div className="aspect-[4/3] overflow-hidden bg-muted">
+              <div className="zoom-reveal aspect-[4/3] overflow-hidden bg-muted" data-scroll-reveal>
                 <img
                   src={f.image}
                   alt={`${f.name} ${f.registration} “${f.nickname}”`}
