@@ -5,7 +5,7 @@ import clouds from "../assets/journey/01-clouds.webp";
 import runway from "../assets/journey/02-runway-corrected.webp";
 import instrument from "../assets/journey/instrument-real-cockpit.webp";
 import instructor from "../assets/journey/cfii-real-cockpit.webp";
-import instrumentVideoAsset from "../assets/journey/instrument-training.mp4.asset.json";
+import instrumentVideoAsset from "../assets/journey/instrument-training.webm.asset.json";
 import airline from "../assets/journey/05-airline.webp";
 import lf from "../assets/journey/loc-little-falls.webp";
 import fl from "../assets/journey/loc-fort-lupton.webp";
