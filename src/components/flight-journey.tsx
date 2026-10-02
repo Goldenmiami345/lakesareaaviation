@@ -116,7 +116,14 @@ export function FlightJourney() {
               : <Link to={s.to ?? "/contact"} className="interactive-arrow btn-shine mt-6 inline-flex min-h-12 items-center gap-3 bg-primary px-6 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>}
           </div>
         </div>
-        {active === 0 && <p className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 text-center text-xs font-semibold uppercase tracking-[0.3em] text-background/70"><span className="scroll-arrow inline-block">↓</span><br />Scroll to climb</p>}
+        {active === 0 && (
+          <p className="pointer-events-none absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-4 text-center text-xs font-semibold uppercase tracking-[0.3em] text-background/70">
+            <span className="scroll-cue-ring grid size-14 place-items-center rounded-full border border-background/30">
+              <span className="scroll-arrow inline-block text-base leading-none text-background">↓</span>
+            </span>
+            Scroll to climb
+          </p>
+        )}
       </div>
     </section>
   );
