@@ -1,6 +1,5 @@
-# Rating detail upgrade
+# Roadmap
 
-- [x] Audit all current rating pathways.
-- [x] Research the original school’s published rating details and cost sheets.
-- [x] Add rating-specific timelines, prices, course hours, prerequisites, and disclosures.
-- [x] Verify every pathway on desktop and mobile.
+- [x] Rating detail upgrade (audit, research, timelines/prices, verify).
+- [ ] Flight path: add Commercial stage between Instrument and CFI & CFII.
+- [ ] Slightly polish the "Scroll to climb" cue (keep the concept, no redesign).

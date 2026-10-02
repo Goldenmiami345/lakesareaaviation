@@ -6,6 +6,7 @@ import runway from "../assets/journey/02-runway.webp";
 import instrument from "../assets/journey/03-instrument.webp";
 import instructor from "../assets/journey/04-instructor.webp";
 import airline from "../assets/journey/05-airline.webp";
+import commercial from "../assets/photos/sunset-ramp.webp";
 
 type Stage = { code: string; label: string; time: string; title: string; text: string; img: string; alt: string; cta: string; slug?: string; to?: "/introductory-flights" | "/contact" };
 
