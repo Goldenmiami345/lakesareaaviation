@@ -15,10 +15,12 @@ import { Route as AcceleratedTrainingRouteImport } from './routes/accelerated-tr
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as FleetRouteImport } from './routes/fleet'
 import { Route as IntroductoryFlightsRouteImport } from './routes/introductory-flights'
+import { Route as LocalTrainingRouteImport } from './routes/local-training'
 import { Route as LocationsRouteImport } from './routes/locations'
 import { Route as NewStudentsRouteImport } from './routes/new-students'
 import { Route as ProgramsRouteImport } from './routes/programs'
 import { Route as RatesRouteImport } from './routes/rates'
+import { Route as ScenicFlightsRouteImport } from './routes/scenic-flights'
 import { Route as StudentSuccessRouteImport } from './routes/student-success'
 import { Route as TeamRouteImport } from './routes/team'
 import { Route as ProgramsIndexRouteImport } from './routes/programs.index'
@@ -54,6 +56,11 @@ const IntroductoryFlightsRoute = IntroductoryFlightsRouteImport.update({
   path: '/introductory-flights',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LocalTrainingRoute = LocalTrainingRouteImport.update({
+  id: '/local-training',
+  path: '/local-training',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LocationsRoute = LocationsRouteImport.update({
   id: '/locations',
   path: '/locations',
@@ -72,6 +79,11 @@ const ProgramsRoute = ProgramsRouteImport.update({
 const RatesRoute = RatesRouteImport.update({
   id: '/rates',
   path: '/rates',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScenicFlightsRoute = ScenicFlightsRouteImport.update({
+  id: '/scenic-flights',
+  path: '/scenic-flights',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StudentSuccessRoute = StudentSuccessRouteImport.update({
@@ -102,10 +114,12 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/fleet': typeof FleetRoute
   '/introductory-flights': typeof IntroductoryFlightsRoute
+  '/local-training': typeof LocalTrainingRoute
   '/locations': typeof LocationsRoute
   '/new-students': typeof NewStudentsRoute
   '/programs': typeof ProgramsRouteWithChildren
   '/rates': typeof RatesRoute
+  '/scenic-flights': typeof ScenicFlightsRoute
   '/student-success': typeof StudentSuccessRoute
   '/team': typeof TeamRoute
   '/programs/$slug': typeof ProgramsSlugRoute
@@ -118,9 +132,11 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/fleet': typeof FleetRoute
   '/introductory-flights': typeof IntroductoryFlightsRoute
+  '/local-training': typeof LocalTrainingRoute
   '/locations': typeof LocationsRoute
   '/new-students': typeof NewStudentsRoute
   '/rates': typeof RatesRoute
+  '/scenic-flights': typeof ScenicFlightsRoute
   '/student-success': typeof StudentSuccessRoute
   '/team': typeof TeamRoute
   '/programs/$slug': typeof ProgramsSlugRoute
@@ -134,10 +150,12 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/fleet': typeof FleetRoute
   '/introductory-flights': typeof IntroductoryFlightsRoute
+  '/local-training': typeof LocalTrainingRoute
   '/locations': typeof LocationsRoute
   '/new-students': typeof NewStudentsRoute
   '/programs': typeof ProgramsRouteWithChildren
   '/rates': typeof RatesRoute
+  '/scenic-flights': typeof ScenicFlightsRoute
   '/student-success': typeof StudentSuccessRoute
   '/team': typeof TeamRoute
   '/programs/$slug': typeof ProgramsSlugRoute
@@ -152,10 +170,12 @@ export interface FileRouteTypes {
     | '/contact'
     | '/fleet'
     | '/introductory-flights'
+    | '/local-training'
     | '/locations'
     | '/new-students'
     | '/programs'
     | '/rates'
+    | '/scenic-flights'
     | '/student-success'
     | '/team'
     | '/programs/$slug'
@@ -168,9 +188,11 @@ export interface FileRouteTypes {
     | '/contact'
     | '/fleet'
     | '/introductory-flights'
+    | '/local-training'
     | '/locations'
     | '/new-students'
     | '/rates'
+    | '/scenic-flights'
     | '/student-success'
     | '/team'
     | '/programs/$slug'
@@ -183,10 +205,12 @@ export interface FileRouteTypes {
     | '/contact'
     | '/fleet'
     | '/introductory-flights'
+    | '/local-training'
     | '/locations'
     | '/new-students'
     | '/programs'
     | '/rates'
+    | '/scenic-flights'
     | '/student-success'
     | '/team'
     | '/programs/$slug'
@@ -200,10 +224,12 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   FleetRoute: typeof FleetRoute
   IntroductoryFlightsRoute: typeof IntroductoryFlightsRoute
+  LocalTrainingRoute: typeof LocalTrainingRoute
   LocationsRoute: typeof LocationsRoute
   NewStudentsRoute: typeof NewStudentsRoute
   ProgramsRoute: typeof ProgramsRouteWithChildren
   RatesRoute: typeof RatesRoute
+  ScenicFlightsRoute: typeof ScenicFlightsRoute
   StudentSuccessRoute: typeof StudentSuccessRoute
   TeamRoute: typeof TeamRoute
 }
@@ -252,6 +278,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IntroductoryFlightsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/local-training': {
+      id: '/local-training'
+      path: '/local-training'
+      fullPath: '/local-training'
+      preLoaderRoute: typeof LocalTrainingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/locations': {
       id: '/locations'
       path: '/locations'
@@ -278,6 +311,13 @@ declare module '@tanstack/react-router' {
       path: '/rates'
       fullPath: '/rates'
       preLoaderRoute: typeof RatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/scenic-flights': {
+      id: '/scenic-flights'
+      path: '/scenic-flights'
+      fullPath: '/scenic-flights'
+      preLoaderRoute: typeof ScenicFlightsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/student-success': {
@@ -332,10 +372,12 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   FleetRoute: FleetRoute,
   IntroductoryFlightsRoute: IntroductoryFlightsRoute,
+  LocalTrainingRoute: LocalTrainingRoute,
   LocationsRoute: LocationsRoute,
   NewStudentsRoute: NewStudentsRoute,
   ProgramsRoute: ProgramsRouteWithChildren,
   RatesRoute: RatesRoute,
+  ScenicFlightsRoute: ScenicFlightsRoute,
   StudentSuccessRoute: StudentSuccessRoute,
   TeamRoute: TeamRoute,
 }
