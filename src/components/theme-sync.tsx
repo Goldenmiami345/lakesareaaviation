@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 export type AccentTheme = "blue" | "orange";
 
 export function applyAccentTheme(theme: AccentTheme) {
-  document.documentElement.dataset.accent = theme;
+  document.documentElement.dataset["accent"] = theme;
 }
 
 export function ThemeSync() {
@@ -16,7 +16,7 @@ export function ThemeSync() {
     };
     void load();
     const channel = supabase.channel("site-theme").on("postgres_changes", { event: "UPDATE", schema: "public", table: "site_settings", filter: "id=eq.brand" }, (payload) => {
-      const theme = payload.new.accent_theme;
+      const theme = payload.new["accent_theme"];
       if (theme === "blue" || theme === "orange") applyAccentTheme(theme);
     }).subscribe();
     return () => { active = false; void supabase.removeChannel(channel); };

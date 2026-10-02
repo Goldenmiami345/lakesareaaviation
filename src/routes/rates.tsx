@@ -53,7 +53,7 @@ function Page() {
           <Row a="Introductory flight" b="$100" />
           <Row a="Scenic flight (up to three people)" b="$129/hr" />
           <Row a="Student housing" b="$30/night" />
-          <Row a="Student cars (housing residents)" b="$20–30/day" />
+          <Row a="Student cars (housing residents)" b="$20/day" />
         </section>
         <div className="mt-16 bg-secondary p-8 md:p-12">
           <h2 className="font-display text-3xl sm:text-4xl">Get a plan, not a vague total.</h2>
