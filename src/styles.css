@@ -24,8 +24,8 @@
 :root {
   --background: oklch(0.975 0.012 75);
   --foreground: oklch(0.19 0.012 55);
-  --ink: oklch(0.145 0.014 55);
-  --primary: oklch(0.61 0.157 42);
+  --ink: oklch(0.17 0.035 258);
+  --primary: oklch(0.625 0.175 40);
   --primary-foreground: oklch(0.985 0.008 75);
   --secondary: oklch(0.91 0.025 72);
   --secondary-foreground: oklch(0.22 0.016 55);
@@ -35,7 +35,7 @@
   --card-foreground: oklch(0.19 0.012 55);
   --border: oklch(0.82 0.025 66);
   --input: oklch(0.82 0.025 66);
-  --ring: oklch(0.61 0.157 42);
+  --ring: oklch(0.625 0.175 40);
 }
 
 @layer base {
