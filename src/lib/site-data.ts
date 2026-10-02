@@ -12,16 +12,66 @@ export type Program = {
   short: string;
   description: string;
   details: string[];
+  sourceLabel: string;
+  sourceUrl: string;
+  options: {
+    name: string;
+    timeline: string;
+    estimatedCost: string;
+    lineItems: string[];
+    requirements: string[];
+  }[];
+  steps?: { name: string; cost: string; description: string }[];
+  notes: string[];
 };
 
 export const programs: Program[] = [
-  { slug: "private-pilot", name: "Private Pilot", short: "Start flying", description: "Build the foundation for every rating that follows with focused ground and flight instruction.", details: ["Local and accelerated formats", "Ground and flight training", "Preparation for the practical test"] },
-  { slug: "instrument-rating", name: "Instrument Rating", short: "Fly with precision", description: "Develop the skills and judgment to operate safely by reference to instruments.", details: ["Structured instrument syllabus", "Simulator and aircraft training", "Practical-test preparation"] },
-  { slug: "commercial-single-engine", name: "Commercial Single-Engine", short: "Fly professionally", description: "Advance your flying to commercial standards through concentrated training and preparation.", details: ["Commercial maneuvers", "Oral-exam preparation", "Checkride-focused training"] },
-  { slug: "commercial-multi-engine", name: "Commercial Multi-Engine", short: "Add multi-engine", description: "Train for multi-engine commercial privileges in the school’s twin-engine aircraft.", details: ["Systems and aerodynamics", "Engine-out procedures", "Commercial multi preparation"] },
-  { slug: "cfi-cfii", name: "CFI & CFII", short: "Start instructing", description: "A focused instructor pathway designed around a 4–6 week training timeline.", details: ["CFI and CFII pathway", "1-hour oral preparation", "1-hour flight preparation"] },
-  { slug: "mei", name: "Multi-Engine Instructor", short: "Teach in twins", description: "Add multi-engine instructor privileges and expand the students you can teach.", details: ["Multi-engine teaching skills", "Systems mastery", "Practical-test preparation"] },
-  { slug: "zero-to-hero", name: "Zero to Hero", short: "Build a career path", description: "Connect each rating into one clear professional-pilot training sequence.", details: ["Private through commercial", "Instructor-rating pathway", "Personalized timeline planning"] },
+  {
+    slug: "private-pilot", name: "Private Pilot", short: "Start flying", description: "Build the foundation for every rating that follows with concentrated ground and flight instruction.", details: ["40 hours Cessna 172 rental", "30 hours dual instruction", "10 hours one-on-one ground school"], sourceLabel: "2026 Private Pilot estimated rates", sourceUrl: "https://www.lakesareaaviation.com/private-pilot",
+    options: [{ name: "Accelerated Private Pilot", timeline: "As little as 21 days", estimatedCost: "As low as $9,600", lineItems: ["40 hours Cessna 172 rental at $175/hr — $7,000", "30 hours dual instruction at $60/hr — $1,800", "10 hours one-on-one ground school at $60/hr — $600", "Ground-school course: King Schools $219, Sporty’s $200, or ASA $129", "FAA medical estimate — $100"], requirements: ["FAA medical is required before solo flight", "Written test must be complete before the practical test", "Finish the required flight and ground training and receive an instructor endorsement"] }],
+    notes: ["The medical and written test do not need to be complete before training begins.", "Examiner fees are additional and aircraft rental is subject to tax."]
+  },
+  {
+    slug: "instrument-rating", name: "Instrument Rating", short: "Fly with precision", description: "Develop the skills and judgment to operate safely by reference to instruments.", details: ["30 hours Cessna 172 rental", "15 hours flight instruction", "10 hours simulator training with instructor"], sourceLabel: "2026 Instrument estimated rates", sourceUrl: "https://www.lakesareaaviation.com/instrument-rating-1",
+    options: [{ name: "Accelerated Instrument Rating", timeline: "10–14 days", estimatedCost: "As low as $8,300", lineItems: ["Course fee — $500", "30 hours Cessna 172 rental at $175/hr — $5,250", "15 hours flight instruction at $60/hr — $900", "10 hours ground instruction at $60/hr — $600", "10 hours simulator rental, including instructor, at $105/hr — $1,050"], requirements: ["Private Pilot certificate", "The school recommends arriving with the written test complete", "The school’s career-path outline notes 40–50 hours of flight time are required"] }],
+    notes: ["Examiner fees are additional and subject to change.", "Aircraft rental is subject to tax."]
+  },
+  {
+    slug: "commercial-single-engine", name: "Commercial Single-Engine", short: "Fly professionally", description: "Advance your flying to commercial standards through concentrated maneuver, ground, and practical-test preparation.", details: ["15 hours Cessna 172 rental", "15 hours flight instruction", "10 hours ground instruction"], sourceLabel: "2026 Commercial Single Engine Land estimated rates", sourceUrl: "https://www.lakesareaaviation.com/commercial-single-engine",
+    options: [{ name: "Commercial Single-Engine Land", timeline: "5–7 days", estimatedCost: "As low as $4,625", lineItems: ["Course fee — $500", "15 hours Cessna 172 rental at $175/hr — $2,625", "15 hours flight instruction at $60/hr — $900", "10 hours ground instruction at $60/hr — $600"], requirements: ["Meet the required flight-hour totals before the checkride", "Complete the commercial written test before the checkride"] }],
+    notes: ["This estimate prices the concentrated commercial course, not the time-building needed to reach commercial eligibility.", "Examiner fees are additional and aircraft rental is subject to tax."]
+  },
+  {
+    slug: "commercial-multi-engine", name: "Commercial Multi-Engine", short: "Add multi-engine", description: "Train for commercial multi-engine privileges in Lakes Area Aviation’s Piper Apache.", details: ["10 hours Piper Apache rental", "10 hours multi-engine instruction", "4 hours ground school"], sourceLabel: "2026 Commercial Multi Engine Land estimated rates", sourceUrl: "https://www.lakesareaaviation.com/commercial-multi-engine",
+    options: [{ name: "Commercial Multi-Engine Land", timeline: "3–4 days", estimatedCost: "As low as $5,300", lineItems: ["Course fee — $500", "10 hours Piper Apache rental at $375/hr — $3,750", "10 hours multi-engine instruction at $75/hr — $750", "4 hours ground school at $75/hr — $300"], requirements: ["Training is normally scheduled in two-hour blocks", "The instructor has a 1.6-hour minimum per two-hour block; unused flight time may be used for ground school"] }],
+    notes: ["Examiner fees are additional and aircraft rental is subject to tax."]
+  },
+  {
+    slug: "cfi-cfii", name: "CFI & CFII", short: "Instructor ratings", description: "Choose an accelerated initial flight-instructor course, add instrument-instructor privileges, or plan both ratings back to back.", details: ["Separate CFI and CFII course estimates", "Daily concentrated flight and ground training", "Checkride-focused preparation"], sourceLabel: "2026 CFI and CFI-I estimated rates", sourceUrl: "https://www.lakesareaaviation.com/cfi",
+    options: [
+      { name: "Certified Flight Instructor", timeline: "7–10 days", estimatedCost: "As low as $5,125", lineItems: ["Course fee — $1,000", "10 hours ground instruction at $60/hr — $600", "15 hours Cessna 172 rental at $175/hr — $2,625", "15 hours flight instruction at $60/hr — $900"], requirements: ["Plan for lessons in two-hour blocks", "Arrive ready for concentrated ground, flight, oral, and practical-test preparation"] },
+      { name: "Certified Flight Instructor–Instrument", timeline: "5–7 days", estimatedCost: "As low as $3,150", lineItems: ["Course fee — $500", "10 hours Cessna 172 rental at $175/hr — $1,750", "10 hours flight instruction at $60/hr — $600", "5 hours ground instruction at $60/hr — $300"], requirements: ["Designed as an instrument-instructor add-on", "Plan for concentrated ground, flight, oral, and practical-test preparation"] }
+    ],
+    notes: ["Andrew Cashen reported completing his CFI training and checkride in 10 days, then finishing CFI-I in a total of 12 days. Individual timelines vary.", "Examiner fees are additional and aircraft rental is subject to tax."]
+  },
+  {
+    slug: "mei", name: "Multi-Engine Instructor", short: "Teach in twins", description: "Add multi-engine instructor privileges in the Piper Apache through a short, concentrated course.", details: ["8 hours Piper Apache rental", "8 hours flight instruction", "4 hours ground instruction"], sourceLabel: "2026 Multi Engine Flight Instructor estimated rates", sourceUrl: "https://www.lakesareaaviation.com/mei",
+    options: [{ name: "Multi-Engine Flight Instructor", timeline: "3–4 days", estimatedCost: "As low as $4,475", lineItems: ["Course fee — $500", "8 hours Piper Apache rental at $375/hr — $3,000", "8 hours flight instruction at $75/hr — $600", "4 hours ground instruction at $75/hr — $300"], requirements: ["Must have 15 hours pilot-in-command time in multi-engine aircraft"] }],
+    notes: ["Examiner fees are additional and aircraft rental is subject to tax."]
+  },
+  {
+    slug: "zero-to-hero", name: "Zero to Hero", short: "Professional pilot path", description: "See the complete sequence Lakes Area Aviation publishes for progressing from no flight time toward professional flying.", details: ["Six clearly defined stages", "Published budgeting estimates", "Instructor and non-instructor career paths"], sourceLabel: "Lakes Area Aviation Zero-to-Hero roadmap", sourceUrl: "https://www.lakesareaaviation.com/zero-to-hero",
+    options: [{ name: "Complete career-path estimate", timeline: "Built around your starting point", estimatedCost: "Approximately $40,000", lineItems: ["Private Pilot — approximately $10,000", "Instrument Pilot — approximately $9,000", "Time and experience building — approximately $9,600", "Commercial Pilot — approximately $5,000", "Flight Instructor — approximately $5,000", "Airline Transport Pilot — described by the school as employer-paid"], requirements: ["The sequence and cost change with prior experience, pace, and additional ratings", "Most students need 1,500 total hours before the Airline Transport Pilot stage"] }],
+    steps: [
+      { name: "Private Pilot", cost: "About $10,000", description: "Complete student-pilot paperwork, medical, written test, flight and ground training, instructor endorsement, and the practical exam." },
+      { name: "Instrument Pilot", cost: "About $9,000", description: "Begin after private pilot; complete the written test and the required instrument flight experience." },
+      { name: "Time & experience building", cost: "About $9,600", description: "Build meaningful experience toward commercial eligibility. The school discusses splitting eligible flight time with another pilot to control cost." },
+      { name: "Commercial Pilot", cost: "About $5,000", description: "Plan for roughly 10–20 hours of focused flight training plus the written and practical tests." },
+      { name: "Flight Instructor", cost: "About $5,000", description: "Prepare to teach and use instructing as one route to build professional flight time." },
+      { name: "Airline Transport Pilot", cost: "Employer-paid", description: "The school describes this as the final stage after building the required professional flight experience." }
+    ],
+    notes: ["The original school page says students can expect to spend close to $40,000 for flight training, ground training, checkrides, and related costs.", "These are planning estimates, not fixed-price guarantees."]
+  },
 ];
 
 export const testimonials = [

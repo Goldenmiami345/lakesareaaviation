@@ -1,8 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
-import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
-import { programs } from "../lib/site-data";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/programs")({ head: () => ({ meta: meta("Flight Training Programs | Lakes Area Aviation", "Explore private, instrument, commercial, CFI, CFII, MEI, and zero-to-hero flight training.") }), component: Programs });
-function Programs(){return <SiteLayout><PageIntro eyebrow="Training programs" title="Choose the rating. Set the timeline." text="From your first solo to your first instructor student, build a focused training plan around the rating ahead."/><main className="mx-auto max-w-7xl px-5 py-20 lg:px-8"><div className="grid border-l border-t border-border md:grid-cols-2 lg:grid-cols-3">{programs.map((p,i)=><Link key={p.slug} to="/programs/$slug" params={{slug:p.slug}} className="group min-h-72 border-b border-r border-border p-7 hover:bg-secondary"><span className="text-xs font-bold text-primary">0{i+1}</span><h2 className="mt-10 font-display text-3xl">{p.name}</h2><p className="mt-4 text-sm leading-relaxed text-muted-foreground">{p.description}</p><ArrowRight className="mt-8 size-5 group-hover:translate-x-2"/></Link>)}</div></main><InquiryBand/></SiteLayout>}
-const meta=(title:string,description:string)=>[{title},{name:"description",content:description},{property:"og:title",content:title},{property:"og:description",content:description},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary_large_image"}];
+export const Route = createFileRoute("/programs")({ component: ProgramsLayout });
+function ProgramsLayout(){return <Outlet/>}
