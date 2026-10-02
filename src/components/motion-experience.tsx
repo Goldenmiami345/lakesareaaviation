@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { programs } from "../lib/site-data";
 
 export function MotionExperience() {
+  const { pathname } = useLocation();
+
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches return;
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
 
     const revealTargets = Array.from(document.querySelectorAll<HTMLElement>("[data-scroll-reveal]"));
     const observer = new IntersectionObserver((entries) => {
@@ -35,13 +38,42 @@ export function MotionExperience() {
       cancelAnimationFrame(frame);
       window.removeEventListener("scroll", updateScroll);
     };
-  }, []);
+  }, [pathname]);
 
   return <div className="scroll-progress" aria-hidden="true" />;
 }
 
 export function ScrollCue({ targetId }: { targetId: string }) {
   return <button type="button" onClick={() => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" })} className="scroll-cue mt-14 flex items-center gap-4 text-xs font-semibold uppercase text-background/60"><span className="h-px w-16 bg-primary runway-line" /><span className="scroll-arrow">↓</span> Scroll to plan your rating</button>;
+}
+
+const tickerItems = [
+  "CFI in 4–6 weeks",
+  "CFII · MEI",
+  "Instrument rating",
+  "Commercial single & multi",
+  "Private pilot",
+  "$100 intro flights",
+  "Housing from $30/night",
+  "Resident cars $20–30/day",
+  "7 training aircraft",
+  "Little Falls · Fort Lupton · Cottonwood",
+];
+
+export function Ticker() {
+  const row = [...tickerItems, ...tickerItems];
+  return (
+    <div className="overflow-hidden border-y border-border bg-foreground py-4 text-background" aria-hidden="true">
+      <div className="marquee-track items-center gap-10">
+        {row.map((item, i) => (
+          <span key={i} className="flex items-center gap-10 whitespace-nowrap text-xs font-bold uppercase tracking-[0.18em]">
+            {item}
+            <span className="tick-dot inline-block size-1.5 rounded-full bg-primary" />
+          </span>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export function ProgramExplorer() {
