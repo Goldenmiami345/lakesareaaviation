@@ -8,6 +8,9 @@
 - [x] Single school phone 318-347-9004 everywhere; airport numbers removed.
 - [x] Replace the existing orange accent token with royal blue; keep the design unchanged.
 - [x] Refine the mobile home opening to feel lighter and less blocky, informed by ATP and Blue Line Aviation.
+- [ ] Improve blue accent text contrast across photographic and dark backgrounds.
+- [ ] Add secure `/admin` control for the site-wide royal blue/original orange theme.
+- [ ] Upgrade “Build my training plan” with earned/planned rating selection, minimum timeline and cost calculations, $30/night housing, $20/day car, and optional airport pickup.
 - [ ] Publish the latest preview build (awaiting go-ahead).
 - [ ] Inquiry form destination (where leads should be sent).
 - [ ] Confirm "1-hour oral · 1-hour flight" meaning (checkride format vs daily schedule).
