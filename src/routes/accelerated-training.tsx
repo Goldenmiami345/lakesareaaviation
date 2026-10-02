@@ -1,4 +1,4 @@
-import introImg from "../assets/photos/sedona-wing.jpg";
+import introImg from "../assets/photos/sedona-wing.webp";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";

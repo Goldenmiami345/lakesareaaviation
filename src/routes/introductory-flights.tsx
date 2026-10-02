@@ -1,4 +1,4 @@
-import introImg from "../assets/photos/above-clouds.jpg";
+import introImg from "../assets/photos/above-clouds.webp";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageIntro, SiteLayout } from "../components/site-shell";
 
