@@ -54,4 +54,26 @@
 .reveal { animation: reveal .8s cubic-bezier(.2,.65,.3,1) both; }
 .reveal-delay { animation: reveal .8s .18s cubic-bezier(.2,.65,.3,1) both; }
 .runway-line { transform-origin: left; animation: runway 1.2s .35s cubic-bezier(.2,.65,.3,1) both; }
+.scroll-progress { position: fixed; inset: 0 auto auto 0; z-index: 80; width: 100%; height: 3px; background: var(--primary); transform: scaleX(var(--scroll-progress, 0)); transform-origin: left; pointer-events: none; }
+.hero-parallax { transform: translate3d(0, var(--hero-shift, 0px), 0) scale(1.04); will-change: transform; }
+[data-scroll-reveal] { opacity: 0; transform: translateY(42px); transition: opacity .8s cubic-bezier(.2,.65,.3,1), transform .8s cubic-bezier(.2,.65,.3,1); }
+[data-scroll-reveal].is-visible { opacity: 1; transform: translateY(0); }
+.stagger-grid > * { opacity: 0; transform: translateY(24px); }
+.is-visible .stagger-grid > * { animation: reveal .65s cubic-bezier(.2,.65,.3,1) both; }
+.is-visible .stagger-grid > *:nth-child(2) { animation-delay: .08s; }
+.is-visible .stagger-grid > *:nth-child(3) { animation-delay: .16s; }
+.is-visible .stagger-grid > *:nth-child(4) { animation-delay: .24s; }
+.program-card { position: relative; overflow: hidden; transition: transform .3s ease, background-color .3s ease; }
+.program-card::after { content: ""; position: absolute; inset: auto 0 0; height: 3px; background: var(--primary); transform: scaleX(0); transform-origin: left; transition: transform .35s ease; }
+.program-card:hover { transform: translateY(-8px); }
+.program-card:hover::after { transform: scaleX(1); }
+.program-detail { animation: reveal .45s cubic-bezier(.2,.65,.3,1) both; }
+.program-chip { transition: transform .2s ease, background-color .2s ease, border-color .2s ease; }
+.program-chip:hover { transform: translateY(-2px); }
+.interactive-arrow span, .interactive-arrow svg { transition: transform .25s ease; }
+.interactive-arrow:hover span, .interactive-arrow:hover svg { transform: translateX(5px); }
+.scroll-cue { cursor: pointer; transition: color .2s ease; }
+.scroll-cue:hover { color: var(--primary); }
+.scroll-arrow { animation: cue-bounce 1.6s ease-in-out infinite; }
+@keyframes cue-bounce { 0%, 100% { transform: translateY(-2px); } 50% { transform: translateY(5px); } }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
