@@ -14,7 +14,7 @@ export default defineConfig({
     pages: [
       "/", "/about", "/accelerated-training", "/contact", "/fleet", "/introductory-flights",
       "/local-training", "/locations", "/new-students", "/programs", "/rates", "/scenic-flights",
-      "/specialized-training", "/student-success", "/team",
+      "/specialized-training", "/student-success", "/team", "/services", "/students",
       ...["private-pilot", "instrument-rating", "commercial-single-engine", "commercial-multi-engine", "cfi-cfii", "mei", "zero-to-hero"].map((s) => `/programs/${s}`),
     ].map((path) => ({ path })),
     prerender: { enabled: true, autoStaticPathsDiscovery: false, autoSubfolderIndex: false },
