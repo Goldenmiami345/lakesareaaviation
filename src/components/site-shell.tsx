@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Menu, Phone, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import logoAsset from "../assets/lakes-logo-transparent.png.asset.json";
+import { MotionExperience } from "./motion-experience";
 
 const nav = [
   ["Accelerated", "/accelerated-training"],
@@ -53,13 +54,13 @@ export function MobileActions() {
 }
 
 export function SiteLayout({ children, overlayHeader = false }: { children: ReactNode; overlayHeader?: boolean }) {
-  return <><Header overlay={overlayHeader} />{children}<Footer /><MobileActions /></>;
+  return <><MotionExperience /><Header overlay={overlayHeader} />{children}<Footer /><MobileActions /></>;
 }
 
 export function PageIntro({ eyebrow, title, text }: { eyebrow: string; title: string; text: string }) {
-  return <section className="bg-foreground pb-20 pt-36 text-background"><div className="mx-auto max-w-7xl px-5 lg:px-8"><p className="eyebrow text-primary">{eyebrow}</p><h1 className="mt-4 max-w-4xl font-display text-5xl leading-[0.98] sm:text-7xl">{title}</h1><p className="mt-6 max-w-2xl text-lg leading-relaxed text-background/70">{text}</p></div></section>;
+  return <section className="bg-foreground pb-20 pt-36 text-background"><div className="mx-auto max-w-7xl px-5 lg:px-8" data-scroll-reveal><p className="eyebrow text-primary">{eyebrow}</p><h1 className="mt-4 max-w-4xl font-display text-5xl leading-[0.98] sm:text-7xl">{title}</h1><p className="mt-6 max-w-2xl text-lg leading-relaxed text-background/70">{text}</p></div></section>;
 }
 
 export function InquiryBand() {
-  return <section className="bg-primary py-16 text-primary-foreground"><div className="mx-auto grid max-w-7xl items-center gap-8 px-5 md:grid-cols-[1fr_auto] lg:px-8"><div><p className="eyebrow text-primary-foreground/70">Your next rating</p><h2 className="mt-3 font-display text-4xl">Build a training plan around your timeline.</h2></div><Link to="/contact" className="inline-flex min-h-14 items-center justify-center bg-foreground px-7 text-sm font-bold uppercase tracking-[0.1em] text-background">Start planning</Link></div></section>;
+  return <section className="bg-primary py-16 text-primary-foreground"><div className="mx-auto grid max-w-7xl items-center gap-8 px-5 md:grid-cols-[1fr_auto] lg:px-8" data-scroll-reveal><div><p className="eyebrow text-primary-foreground/70">Your next rating</p><h2 className="mt-3 font-display text-4xl">Build a training plan around your timeline.</h2></div><Link to="/contact" className="interactive-arrow inline-flex min-h-14 items-center justify-center bg-foreground px-7 text-sm font-bold uppercase tracking-[0.1em] text-background">Start planning <span aria-hidden="true">→</span></Link></div></section>;
 }
