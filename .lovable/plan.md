@@ -1,33 +1,35 @@
-# Color & Conversion Plan — Lakes Area Aviation Rebuild
+# Mobile cleanup + competitor-inspired program pages
 
-## Why the site looks yellow
+## Already done (last turn)
+- Mobile Call / Apply bar is hidden when the page opens and slides up only after scrolling past the top photo. It hides near the footer and on Contact.
+- Home page trimmed to the headline, a "1-hour oral · 1-hour flight" badge, and one "Build my training plan" button. Flight path text cut to one line per stage.
+- Program pages now open with a full-screen photo and a quick-facts strip: timeline, starting price, format or location, and "Get my written estimate".
 
-The design palette is not yellow. It uses the school's real brand: rust orange (#DD6D3F), near-black charcoal, and warm cream, with their Andada Pro / Montserrat fonts. The yellow comes from the hero photograph — the school's actual yellow 1946 Taylorcraft (N96150), which fills the full screen and tints the whole first impression. So the fix is mostly about photography and balance, not a rebrand.
+## Next steps
+1. **Finish the research.** Retry ATP Flight School (atpflightschool.com) and L3Harris Airline Academy on their current program pages (Commercial, Instrument, CFI), since the first tries returned "page not found." Blue Line Aviation already loaded. List the layout patterns they share:
+   - Stat strips
+   - "What's included" checklists
+   - Timeline steppers
+   - Financing and estimate prompts
+   - FAQ sections
+   - Student stories
+   - Free-guide offers
+2. **Upgrade each program page** using those patterns, with Lakes Area's own facts only:
+   - A visual timeline stepper of the training days (from the published course hours)
+   - A "What's included" checklist with icons
+   - A short FAQ (requirements, housing, what happens if weather delays training), answered from the original site
+   - A student story placed next to the button that starts the inquiry
+   - A "Next rating" card linking to the next step in the path, for example Commercial to CFI
+3. **CFI & CFII emphasis.** Show "1-hour oral · 1-hour flight" as a large badge on the CFI & CFII page and the Accelerated Training page, with a short explanation (see the question below).
+4. **Photos.** Use the school's real fleet photos where they fit, and new AI-made scenes for instrument and commercial training (no school airplanes shown in AI images).
+5. **Check on phone and desktop** that the bar appears while scrolling and that nothing feels crowded.
 
-## What the market research says
+## Not included
+- Copying photos or text from ATP, Blue Line, or L3Harris. Their content is copyrighted, so we use their layout ideas, not their material.
 
-- Big, high-converting academies (ATP, Acron/L3Harris) lean on **deep navy/blue + white + one strong accent** — blue reads as trust, safety, and professionalism in aviation.
-- Specialist flight-school agencies agree the palette matters less than **contrast and clarity**: real fleet photos, visible prices, instructor faces, and a booking CTA above the fold drive enquiries ([Right Rudder Marketing](https://rightruddermarketing.com/marketing-system/flight-school-website-design/)).
-- Rebrand case studies show schools moving **toward** sophisticated dark+navy+metallic-accent palettes (e.g. Spirit Aviation went red/black → navy with gold accents) ([Cosmic Designs](https://cosmicdesigns.org/portfolio/spirit-aviation/)).
-- Lifestyle schools use soft airy sky tones; career/accelerated schools use dark, confident, high-contrast schemes. Lakes Area's accelerated CFI/CFII offer fits the second group.
+## Question for you
+- Does "1-hour oral, 1-hour flight" describe the CFI & CFII checkride (the final flight test) or the daily training schedule? The badge's explanation depends on it.
 
-## Recommendation (marketing perspective)
-
-Keep the school's brand equity (rust + charcoal + cream + their logo) but rebalance so the site reads "premium and trustworthy" instead of "yellow":
-
-1. **Swap the hero photo** to a less yellow-dominant real aircraft shot (e.g. the Piper Apache ramp photo or the Cessna 172 in flight), keeping the Taylorcraft elsewhere on the page.
-2. **Deepen the dark sections** — richer near-black with a subtle navy undertone for hero overlays, page intros, and footer, echoing the trust palette big academies use without copying them.
-3. **Sharpen the rust accent** — reserve it strictly for CTAs, eyebrows, and key numbers so the eye always lands on the conversion action.
-4. **Increase contrast on conversion points** — inquiry band, mobile Call/Apply bar, and form buttons get the boldest color pairing on the site.
-5. **Rebalance section rhythm** — alternate cream / dark / rust bands so no single hue dominates any viewport.
-
-## Technical details
-
-- All changes confined to `src/styles.css` design tokens plus hero image selection in `src/routes/index.tsx` — no structural changes.
-- Colors stay semantic tokens (no hardcoded utilities), preserving theming.
-- Hero swap uses existing verified real fleet photos only (per project imagery rule — no AI-generated aircraft).
-- Verify on desktop + mobile after the change; check build log and console for errors.
-
-## Out of scope (flag for later)
-
-- A full rebrand to navy/blue would break from the school's actual brand (logo, signage, print). Not recommended without the owner's sign-off — the current plan gets 90% of the conversion benefit while staying on-brand.
+## Technical notes
+- Program page sections are added to the existing program page and fed from the shared site data. FAQ content is added there too.
+- New images are saved as WebP, at most 1920 px wide, and load as visitors scroll.
