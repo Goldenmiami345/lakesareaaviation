@@ -136,6 +136,6 @@
 .journey-grain { opacity: .12; background-image: radial-gradient(color-mix(in oklab, var(--background) 60%, transparent) 1px, transparent 1px); background-size: 3px 3px; mix-blend-mode: overlay; }
 @media (prefers-reduced-motion: reduce) { .journey-copy > * { animation: none; } }
 
-@keyframes mouse-wheel { 0% { opacity: 0; transform: translate(-50%, 0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, 12px); } }
+@keyframes mouse-wheel { 0% { opacity: 0; transform: translateY(0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(12px); } }
 .mouse-wheel { animation: mouse-wheel 1.8s cubic-bezier(.4,0,.2,1) infinite; }
 @media (prefers-reduced-motion: reduce) { .mouse-wheel { animation: none; } }
