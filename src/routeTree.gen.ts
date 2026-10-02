@@ -21,8 +21,10 @@ import { Route as NewStudentsRouteImport } from './routes/new-students'
 import { Route as ProgramsRouteImport } from './routes/programs'
 import { Route as RatesRouteImport } from './routes/rates'
 import { Route as ScenicFlightsRouteImport } from './routes/scenic-flights'
+import { Route as ServicesRouteImport } from './routes/services'
 import { Route as SpecializedTrainingRouteImport } from './routes/specialized-training'
 import { Route as StudentSuccessRouteImport } from './routes/student-success'
+import { Route as StudentsRouteImport } from './routes/students'
 import { Route as TeamRouteImport } from './routes/team'
 import { Route as ProgramsIndexRouteImport } from './routes/programs.index'
 import { Route as ProgramsSlugRouteImport } from './routes/programs.$slug'
@@ -87,6 +89,11 @@ const ScenicFlightsRoute = ScenicFlightsRouteImport.update({
   path: '/scenic-flights',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ServicesRoute = ServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SpecializedTrainingRoute = SpecializedTrainingRouteImport.update({
   id: '/specialized-training',
   path: '/specialized-training',
@@ -95,6 +102,11 @@ const SpecializedTrainingRoute = SpecializedTrainingRouteImport.update({
 const StudentSuccessRoute = StudentSuccessRouteImport.update({
   id: '/student-success',
   path: '/student-success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentsRoute = StudentsRouteImport.update({
+  id: '/students',
+  path: '/students',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TeamRoute = TeamRouteImport.update({
@@ -126,8 +138,10 @@ export interface FileRoutesByFullPath {
   '/programs': typeof ProgramsRouteWithChildren
   '/rates': typeof RatesRoute
   '/scenic-flights': typeof ScenicFlightsRoute
+  '/services': typeof ServicesRoute
   '/specialized-training': typeof SpecializedTrainingRoute
   '/student-success': typeof StudentSuccessRoute
+  '/students': typeof StudentsRoute
   '/team': typeof TeamRoute
   '/programs/$slug': typeof ProgramsSlugRoute
   '/programs/': typeof ProgramsIndexRoute
@@ -144,8 +158,10 @@ export interface FileRoutesByTo {
   '/new-students': typeof NewStudentsRoute
   '/rates': typeof RatesRoute
   '/scenic-flights': typeof ScenicFlightsRoute
+  '/services': typeof ServicesRoute
   '/specialized-training': typeof SpecializedTrainingRoute
   '/student-success': typeof StudentSuccessRoute
+  '/students': typeof StudentsRoute
   '/team': typeof TeamRoute
   '/programs/$slug': typeof ProgramsSlugRoute
   '/programs': typeof ProgramsIndexRoute
@@ -164,8 +180,10 @@ export interface FileRoutesById {
   '/programs': typeof ProgramsRouteWithChildren
   '/rates': typeof RatesRoute
   '/scenic-flights': typeof ScenicFlightsRoute
+  '/services': typeof ServicesRoute
   '/specialized-training': typeof SpecializedTrainingRoute
   '/student-success': typeof StudentSuccessRoute
+  '/students': typeof StudentsRoute
   '/team': typeof TeamRoute
   '/programs/$slug': typeof ProgramsSlugRoute
   '/programs/': typeof ProgramsIndexRoute
@@ -185,8 +203,10 @@ export interface FileRouteTypes {
     | '/programs'
     | '/rates'
     | '/scenic-flights'
+    | '/services'
     | '/specialized-training'
     | '/student-success'
+    | '/students'
     | '/team'
     | '/programs/$slug'
     | '/programs/'
@@ -203,8 +223,10 @@ export interface FileRouteTypes {
     | '/new-students'
     | '/rates'
     | '/scenic-flights'
+    | '/services'
     | '/specialized-training'
     | '/student-success'
+    | '/students'
     | '/team'
     | '/programs/$slug'
     | '/programs'
@@ -222,8 +244,10 @@ export interface FileRouteTypes {
     | '/programs'
     | '/rates'
     | '/scenic-flights'
+    | '/services'
     | '/specialized-training'
     | '/student-success'
+    | '/students'
     | '/team'
     | '/programs/$slug'
     | '/programs/'
@@ -242,8 +266,10 @@ export interface RootRouteChildren {
   ProgramsRoute: typeof ProgramsRouteWithChildren
   RatesRoute: typeof RatesRoute
   ScenicFlightsRoute: typeof ScenicFlightsRoute
+  ServicesRoute: typeof ServicesRoute
   SpecializedTrainingRoute: typeof SpecializedTrainingRoute
   StudentSuccessRoute: typeof StudentSuccessRoute
+  StudentsRoute: typeof StudentsRoute
   TeamRoute: typeof TeamRoute
 }
 
@@ -333,6 +359,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ScenicFlightsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/services': {
+      id: '/services'
+      path: '/services'
+      fullPath: '/services'
+      preLoaderRoute: typeof ServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/specialized-training': {
       id: '/specialized-training'
       path: '/specialized-training'
@@ -345,6 +378,13 @@ declare module '@tanstack/react-router' {
       path: '/student-success'
       fullPath: '/student-success'
       preLoaderRoute: typeof StudentSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/students': {
+      id: '/students'
+      path: '/students'
+      fullPath: '/students'
+      preLoaderRoute: typeof StudentsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/team': {
@@ -398,8 +438,10 @@ const rootRouteChildren: RootRouteChildren = {
   ProgramsRoute: ProgramsRouteWithChildren,
   RatesRoute: RatesRoute,
   ScenicFlightsRoute: ScenicFlightsRoute,
+  ServicesRoute: ServicesRoute,
   SpecializedTrainingRoute: SpecializedTrainingRoute,
   StudentSuccessRoute: StudentSuccessRoute,
+  StudentsRoute: StudentsRoute,
   TeamRoute: TeamRoute,
 }
 export const routeTree = rootRouteImport
