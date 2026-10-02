@@ -2,9 +2,24 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowRight, Check, Clock3, DollarSign, FileCheck2 } from "lucide-react";
 import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
 import { programs } from "../lib/site-data";
+import clouds from "../assets/journey/01-clouds.webp";
+import runway from "../assets/journey/02-runway.webp";
+import instrument from "../assets/journey/03-instrument.webp";
+import instructor from "../assets/journey/04-instructor.webp";
+import airline from "../assets/journey/05-airline.webp";
+import n6717a from "../assets/fleet/n6717a.webp";
+import apache from "../assets/fleet/n3353p-enhanced.webp";
+
+const heroBySlug: Record<string,string>={"private-pilot":runway,"instrument-rating":instrument,"commercial-single-engine":n6717a,"commercial-multi-engine":apache,"cfi-cfii":instructor,"mei":apache,"zero-to-hero":airline};
 
 export const Route=createFileRoute("/programs/$slug")({loader:({params})=>{const program=programs.find(p=>p.slug===params.slug);if(!program)throw notFound();return program},head:({loaderData})=>{const title=`${loaderData?.name??"Flight Training"} | Lakes Area Aviation`;const d=loaderData?.description??"Focused flight training programs.";return{meta:[{title},{name:"description",content:d},{property:"og:title",content:title},{property:"og:description",content:d},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary_large_image"}]}},component:ProgramPage});
-function ProgramPage(){const p=Route.useLoaderData();return <SiteLayout><PageIntro eyebrow={p.short} title={p.name} text={p.description}/><main>
+function ProgramPage(){const p=Route.useLoaderData();return <SiteLayout><PageIntro eyebrow={p.short} title={p.name} text={p.description} image={heroBySlug[p.slug]??clouds} imageAlt={`${p.name} training`}/><main>
+  <section className="relative z-10 mx-auto -mt-10 max-w-7xl px-5 lg:px-8"><div className="grid gap-px overflow-hidden border border-border bg-border shadow-2xl sm:grid-cols-2 lg:grid-cols-4" data-scroll-reveal>
+    <div className="bg-background p-6"><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Timeline</p><p className="mt-2 font-display text-3xl">{p.slug==="cfi-cfii"?"4–6 weeks":p.options.at(0)?.timeline??"Custom"}</p></div>
+    <div className="bg-background p-6"><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Estimate from</p><p className="mt-2 font-display text-3xl">{p.options.at(0)?.estimatedCost??"Request"}</p></div>
+    <div className="bg-background p-6"><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{p.slug==="cfi-cfii"?"Format":"Location"}</p><p className="mt-2 font-display text-3xl">{p.slug==="cfi-cfii"?"1-hr oral · 1-hr flight":"Little Falls, MN"}</p></div>
+    <Link to="/contact" search={{program:p.name}} className="btn-shine flex items-center justify-between gap-3 bg-primary p-6 text-sm font-bold uppercase text-primary-foreground">Get my written estimate <ArrowRight className="size-5"/></Link>
+  </div></section>
   <section className="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-24">
     <div className="grid gap-12 lg:grid-cols-[.72fr_1.28fr]">
       <div className="lg:sticky lg:top-28 lg:self-start"><p className="eyebrow text-primary">What this rating includes</p><h2 className="mt-4 font-display text-4xl lg:text-5xl">The actual training plan.</h2><p className="mt-6 max-w-xl leading-relaxed text-muted-foreground">Published course hours, current estimates, prerequisites, and timing—so you can understand the commitment before you inquire.</p><div className="mt-8 border-y border-border">{p.details.map(x=><div key={x} className="flex gap-4 border-b border-border py-4 last:border-0"><Check className="mt-0.5 size-5 shrink-0 text-primary"/><span className="font-semibold">{x}</span></div>)}</div></div>

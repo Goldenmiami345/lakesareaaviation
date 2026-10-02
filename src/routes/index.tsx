@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Clock3, MapPin, Plane } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import heroImage from "../assets/photos/sunset-ramp.webp";
 import trainingImage from "../assets/fleet/n3353p-enhanced.webp";
 import { InquiryBand, SiteLayout } from "../components/site-shell";
@@ -22,24 +22,28 @@ function HomePage() {
   if (!featuredStory) return null;
   return <SiteLayout overlayHeader>
     <main>
-      <section className="relative min-h-[92svh] overflow-hidden bg-ink text-background">
+      <section className="relative min-h-[100svh] overflow-hidden bg-ink text-background">
         <div className="hero-parallax absolute inset-0"><img src={heroImage} alt="Lakes Area Aviation Cessna N6717A and Piper Apache on the ramp at sunset" width={1600} height={900} fetchPriority="high" className="hero-kenburns h-[112%] w-full object-cover object-[35%_center]" /></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/65 to-transparent" />
-        <div className="relative mx-auto flex min-h-[92svh] max-w-7xl flex-col justify-end px-5 pb-16 pt-32 lg:px-8 lg:pb-20">
-          <div className="max-w-3xl reveal"><p className="eyebrow text-primary">Accelerated pilot ratings</p><h1 className="mt-5 font-display text-5xl leading-[.94] sm:text-7xl lg:text-[5.8rem]"><span className="line-mask"><span>CFI &amp; CFII</span></span><span className="line-mask delay-1"><span>in 4–6 weeks.</span></span></h1><p className="mt-6 max-w-xl text-base leading-relaxed text-background/75 sm:text-lg">Accelerated pilot training in Little Falls, Minnesota.</p></div>
-          <div className="mt-8 flex flex-wrap gap-3 reveal-delay"><Link to="/contact" className="btn-shine inline-flex min-h-14 items-center gap-3 bg-primary px-6 text-sm font-bold uppercase text-primary-foreground">Build my training plan <ArrowRight className="size-4" /></Link><Link to="/accelerated-training" className="inline-flex min-h-14 items-center border border-background/40 px-6 text-sm font-bold uppercase text-background transition-colors hover:border-background hover:bg-background/10">Explore accelerated training</Link></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/40 to-ink/10 lg:bg-gradient-to-r lg:from-ink lg:via-ink/60 lg:to-transparent" />
+        <div className="relative mx-auto flex min-h-[100svh] max-w-7xl flex-col justify-end px-5 pb-20 pt-32 lg:px-8">
+          <div className="max-w-3xl reveal">
+            <p className="eyebrow text-primary">Accelerated CFI &amp; CFII</p>
+            <h1 className="mt-5 font-display text-5xl leading-[.94] sm:text-7xl lg:text-[5.8rem]"><span className="line-mask"><span>CFI &amp; CFII</span></span><span className="line-mask delay-1"><span>in 4–6 weeks.</span></span></h1>
+            <p className="mt-6 inline-flex items-center gap-3 border border-background/25 bg-ink/40 px-4 py-2 text-sm font-bold uppercase tracking-widest backdrop-blur"><span className="size-2 rounded-full bg-primary" />1-hour oral · 1-hour flight</p>
+          </div>
+          <div className="mt-8 reveal-delay"><Link to="/contact" className="btn-shine inline-flex min-h-14 w-full items-center justify-center gap-3 bg-primary px-6 text-sm font-bold uppercase text-primary-foreground sm:w-auto">Build my training plan <ArrowRight className="size-4" /></Link></div>
           <ScrollCue targetId="flight-path" />
         </div>
       </section>
 
       <FlightJourney />
 
-      <section className="bg-ink py-20 text-background sm:py-28"><div className="mx-auto grid max-w-7xl gap-12 px-5 lg:grid-cols-2 lg:px-8" data-scroll-reveal><div className="photo-reveal zoom-reveal relative min-h-[520px] overflow-hidden" data-scroll-reveal><img src={trainingImage} alt="Lakes Area Aviation Piper Apache N3353P on the ramp" width={1600} height={1200} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 hover:scale-[1.04]" /><div className="absolute bottom-0 left-0 bg-primary p-6 text-primary-foreground"><p className="eyebrow">On-site logistics</p><p className="mt-2 font-display text-3xl">Stay focused on training.</p></div></div><div className="flex flex-col justify-center"><p className="eyebrow text-primary">Designed for momentum</p><h2 className="mt-4 font-display text-5xl sm:text-6xl">Arrive ready.<br />Train every day.</h2><div className="mt-10 divide-y divide-background/15 border-y border-background/15"><Fact icon={<Clock3 />} title="Focused scheduling" text="Your training sequence is organized around proficiency, availability, weather, and checkride readiness." /><Fact icon={<MapPin />} title="Housing from $30/night" text="Affordable student housing helps visiting pilots stay close to training." /><Fact icon={<Plane />} title="Resident cars $20–30/day" text="Ground transportation is available so travel logistics don’t interrupt the plan." /></div></div></div></section>
+      <section className="bg-ink py-20 text-background sm:py-28"><div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-2 lg:px-8" data-scroll-reveal><div className="photo-reveal zoom-reveal relative min-h-[380px] overflow-hidden sm:min-h-[520px]" data-scroll-reveal><img src={trainingImage} alt="Lakes Area Aviation Piper Apache N3353P on the ramp" width={1600} height={1200} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 hover:scale-[1.04]" /></div><div className="flex flex-col justify-center"><p className="eyebrow text-primary">Stay on site</p><h2 className="mt-4 font-display text-5xl sm:text-6xl">Arrive ready.<br />Train every day.</h2><div className="mt-10 grid grid-cols-2 gap-px bg-background/15"><Stat value="$30" label="Housing / night" /><Stat value="$20–30" label="Car / day" /></div></div></div></section>
 
-      <section className="bg-secondary py-20 sm:py-28"><div className="mx-auto max-w-7xl px-5 lg:px-8" data-scroll-reveal="blur"><p className="eyebrow text-primary">Student experience</p><div className="mt-6 grid gap-8 lg:grid-cols-[1.3fr_.7fr]"><blockquote className="font-display text-3xl leading-snug sm:text-5xl">“{featuredStory.quote}”<footer className="mt-8 font-sans text-sm font-bold uppercase text-foreground">{featuredStory.name}<span className="block mt-1 font-normal normal-case text-muted-foreground">{featuredStory.detail}</span></footer></blockquote><div className="border-l border-border pl-8"><p className="text-sm leading-relaxed text-muted-foreground">Andrew’s timeline reflects his individual experience. Your plan depends on experience, preparation, weather, aircraft, and examiner availability.</p><Link to="/student-success" className="interactive-arrow mt-8 inline-flex items-center gap-2 text-sm font-bold uppercase text-primary">More student stories <ArrowRight className="size-4" /></Link></div></div></div></section>
+      <section className="bg-secondary py-20 sm:py-28"><div className="mx-auto max-w-5xl px-5 lg:px-8" data-scroll-reveal="blur"><p className="eyebrow text-primary">Student experience</p><blockquote className="mt-6 font-display text-3xl leading-snug sm:text-5xl">“{featuredStory.quote}”<footer className="mt-8 font-sans text-sm font-bold uppercase text-foreground">{featuredStory.name}</footer></blockquote><Link to="/student-success" className="interactive-arrow mt-8 inline-flex items-center gap-2 text-sm font-bold uppercase text-primary">More stories <ArrowRight className="size-4" /></Link><p className="mt-6 text-xs text-muted-foreground">Individual results vary.</p></div></section>
       <InquiryBand />
     </main>
   </SiteLayout>;
 }
 
-function Fact({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) { return <div className="grid grid-cols-[auto_1fr] gap-5 py-6"><div className="text-primary [&>svg]:size-6">{icon}</div><div><h3 className="font-display text-xl">{title}</h3><p className="mt-2 text-sm leading-relaxed text-background/60">{text}</p></div></div>; }
+function Stat({ value, label }: { value: string; label: string }) { return <div className="bg-ink p-6"><p className="font-display text-4xl text-primary">{value}</p><p className="mt-2 text-xs font-bold uppercase tracking-widest text-background/60">{label}</p></div>; }

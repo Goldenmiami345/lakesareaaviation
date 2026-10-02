@@ -1,6 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { Menu, Phone, X } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import logoAsset from "../assets/lakes-logo-transparent.png.asset.json";
 import { MotionExperience } from "./motion-experience";
 
@@ -52,7 +52,19 @@ function FooterGroup({ title, links }: { title: string; links: [string, string][
 }
 
 export function MobileActions() {
-  return <div className="fixed inset-x-3 bottom-3 z-50 grid grid-cols-2 overflow-hidden border border-white/20 bg-ink text-background shadow-2xl md:hidden"><a href="tel:2188512196" className="flex min-h-14 items-center justify-center gap-2 text-sm font-bold"><Phone className="size-4" /> Call</a><Link to="/contact" className="flex min-h-14 items-center justify-center bg-primary text-sm font-bold text-primary-foreground">Apply now</Link></div>;
+  const { pathname } = useLocation();
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const onScroll = () => {
+      const nearEnd = window.innerHeight + window.scrollY > document.documentElement.scrollHeight - 520;
+      setShow(window.scrollY > window.innerHeight * 0.9 && !nearEnd);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [pathname]);
+  if (pathname === "/contact") return null;
+  return <div aria-hidden={!show} className={`fixed inset-x-3 bottom-3 z-50 grid grid-cols-2 overflow-hidden border border-background/20 bg-ink text-background shadow-2xl transition-all duration-500 ease-out md:hidden ${show ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-[140%] opacity-0"}`}><a tabIndex={show ? 0 : -1} href="tel:2188512196" className="flex min-h-14 items-center justify-center gap-2 text-sm font-bold"><Phone className="size-4" /> Call</a><Link tabIndex={show ? 0 : -1} to="/contact" className="flex min-h-14 items-center justify-center bg-primary text-sm font-bold text-primary-foreground">Apply now</Link></div>;
 }
 
 export function SiteLayout({ children, overlayHeader = false }: { children: ReactNode; overlayHeader?: boolean }) {

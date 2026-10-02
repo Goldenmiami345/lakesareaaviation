@@ -10,11 +10,11 @@ import airline from "../assets/journey/05-airline.webp";
 type Stage = { code: string; label: string; time: string; title: string; text: string; img: string; alt: string; cta: string; slug?: string; to?: "/introductory-flights" | "/contact" };
 
 const stages: Stage[] = [
-  { code: "01", label: "Discovery flight", time: "$100", title: "Take the controls on day one.", text: "An introductory flight puts you in the left seat with an instructor beside you.", img: clouds, alt: "Sunrise above a sea of clouds", cta: "Book an intro flight", to: "/introductory-flights" },
-  { code: "02", label: "Private pilot", time: "~21 days", title: "Your first certificate.", text: "Solo, cross-country, checkride — organized into one focused block.", img: runway, alt: "Final approach to a runway surrounded by lakes and forest at dawn", cta: "Private pilot details", slug: "private-pilot" },
-  { code: "03", label: "Instrument rating", time: "10–14 days", title: "Fly into the clouds.", text: "Precision flying by reference to instruments — the rating that makes you useful.", img: instrument, alt: "Cockpit glass displays while flying through cloud", cta: "Instrument details", slug: "instrument-rating" },
-  { code: "04", label: "CFI & CFII", time: "4–6 weeks", title: "Become the instructor.", text: "Commercial, then CFI and CFII on an accelerated track — and start building paid hours.", img: instructor, alt: "Flight instructor and student pilot in the cockpit at golden hour", cta: "CFI & CFII track", slug: "cfi-cfii" },
-  { code: "05", label: "The right seat", time: "Your goal", title: "Build toward the airline flight deck.", text: "Every instructing hour moves you closer. We build the plan backward from where you want to sit.", img: airline, alt: "Airline flight deck at night above city lights", cta: "Build my training plan", to: "/contact" },
+  { code: "01", label: "Discovery flight", time: "$100", title: "Take the controls on day one.", text: "Left seat, instructor beside you.", img: clouds, alt: "Sunrise above a sea of clouds", cta: "Book an intro flight", to: "/introductory-flights" },
+  { code: "02", label: "Private pilot", time: "~21 days", title: "Your first certificate.", text: "One focused block.", img: runway, alt: "Final approach to a runway surrounded by lakes and forest at dawn", cta: "Private pilot details", slug: "private-pilot" },
+  { code: "03", label: "Instrument rating", time: "10–14 days", title: "Fly into the clouds.", text: "Fly by reference to instruments.", img: instrument, alt: "Cockpit glass displays while flying through cloud", cta: "Instrument details", slug: "instrument-rating" },
+  { code: "04", label: "CFI & CFII", time: "4–6 weeks", title: "Become the instructor.", text: "1-hour oral · 1-hour flight.", img: instructor, alt: "Flight instructor and student pilot in the cockpit at golden hour", cta: "CFI & CFII track", slug: "cfi-cfii" },
+  { code: "05", label: "The right seat", time: "Your goal", title: "Build toward the airline flight deck.", text: "Every instructing hour moves you closer.", img: airline, alt: "Airline flight deck at night above city lights", cta: "Build my training plan", to: "/contact" },
 ];
 
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
