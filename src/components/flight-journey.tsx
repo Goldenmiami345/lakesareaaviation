@@ -129,10 +129,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         </div>
         {active === 0 && (
           <p className="pointer-events-none absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-4 text-center text-xs font-semibold uppercase tracking-[0.3em] text-background/70">
-            <span className="scroll-cue-ring grid size-14 place-items-center rounded-full border border-background/30">
-              <span className="scroll-arrow inline-block text-base leading-none text-background">↓</span>
-            </span>
-            {cue}
+            <span className="mouse-cue relative block h-10 w-6 rounded-full border-2 border-background/70"><span className="mouse-wheel absolute left-1/2 top-2 h-2 w-0.5 -translate-x-1/2 rounded-full bg-primary" /></span>
+            <span className="-mr-[0.3em]">{cue}</span>
           </p>
         )}
       </div>

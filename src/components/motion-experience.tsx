@@ -47,10 +47,8 @@ export function ScrollCue({ targetId }: { targetId: string }) {
   return (
     <div className="mt-14 flex justify-center">
       <button type="button" onClick={() => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" })} className="scroll-cue flex flex-col items-center gap-4 text-xs font-semibold uppercase tracking-[0.3em] text-background/60 transition-colors hover:text-background">
-        <span className="scroll-cue-ring grid size-14 place-items-center rounded-full border border-background/30">
-          <span className="scroll-arrow inline-block text-base leading-none text-background">↓</span>
-        </span>
-        Scroll to plan your rating
+        <span className="mouse-cue relative block h-10 w-6 rounded-full border-2 border-background/70"><span className="mouse-wheel absolute left-1/2 top-2 h-2 w-0.5 -translate-x-1/2 rounded-full bg-primary" /></span>
+        <span className="-mr-[0.3em]">Scroll to plan your rating</span>
       </button>
     </div>
   );
