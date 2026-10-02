@@ -6,11 +6,14 @@ import runway from "../assets/journey/02-runway.webp";
 import instrument from "../assets/journey/03-instrument.webp";
 import instructor from "../assets/journey/04-instructor.webp";
 import airline from "../assets/journey/05-airline.webp";
+import lf from "../assets/journey/loc-little-falls.webp";
+import fl from "../assets/journey/loc-fort-lupton.webp";
+import cw from "../assets/journey/loc-cottonwood.webp";
 import commercial from "../assets/photos/sunset-ramp.webp";
 
-type Stage = { code: string; label: string; time: string; title: string; text: string; img: string; alt: string; cta: string; slug?: string; to?: "/introductory-flights" | "/contact" };
+type Stage = { code: string; label: string; time: string; title: string; text: string; img: string; alt: string; cta: string; slug?: string; to?: "/introductory-flights" | "/contact" | "/locations"; hud?: string };
 
-const stages: Stage[] = [
+const journeyStages: Stage[] = [
   { code: "01", label: "Discovery flight", time: "$100", title: "Take the controls on day one.", text: "Left seat, instructor beside you.", img: clouds, alt: "Sunrise above a sea of clouds", cta: "Book an intro flight", to: "/introductory-flights" },
   { code: "02", label: "Private pilot", time: "~21 days", title: "Your first certificate.", text: "One focused block.", img: runway, alt: "Final approach to a runway surrounded by lakes and forest at dawn", cta: "Private pilot details", slug: "private-pilot" },
   { code: "03", label: "Instrument rating", time: "10–14 days", title: "Fly into the clouds.", text: "Fly by reference to instruments.", img: instrument, alt: "Cockpit glass displays while flying through cloud", cta: "Instrument details", slug: "instrument-rating" },
@@ -19,9 +22,17 @@ const stages: Stage[] = [
   { code: "06", label: "The right seat", time: "Your goal", title: "Build toward the airline flight deck.", text: "Every instructing hour moves you closer.", img: airline, alt: "Airline flight deck at night above city lights", cta: "Build my training plan", to: "/contact" },
 ];
 
+export const airportStages: Stage[] = [
+  { code: "MN", label: "Little Falls", hud: "KLXL · 13129 Airport Rd", time: "KLXL", title: "Little Falls, Minnesota.", text: "Little Falls/Morrison County Airport · 218-851-2196", img: lf, alt: "Aerial approach over forest, lakes and the Mississippi River to a Minnesota runway at sunset", cta: "See our locations", to: "/locations" },
+  { code: "CO", label: "Fort Lupton", hud: "18V · 7507 Co Rd 39", time: "18V", title: "Fort Lupton, Colorado.", text: "Platte Valley Airpark · 303-718-3779", img: fl, alt: "Rural Colorado airstrip among farm fields with the Rocky Mountains on the horizon", cta: "See our locations", to: "/locations" },
+  { code: "AZ", label: "Cottonwood", hud: "P52 · 1001 W Mingus Ave", time: "P52", title: "Cottonwood, Arizona.", text: "Cottonwood Municipal Airport · 928-274-9996", img: cw, alt: "Desert runway in the Verde Valley with Sedona red rocks at sunset", cta: "Build my training plan", to: "/contact" },
+];
+
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 
-export function FlightJourney() {
+type Props = { stages?: Stage[]; id?: string; label?: string; cue?: string; mode?: "alt" | "code" };
+
+export function FlightJourney({ stages = journeyStages, id = "flight-path", label = "Your accelerated flight path", cue = "Scroll to climb", mode = "alt" }: Props = {}) {
   const sectionRef = useRef<HTMLElement>(null);
   const layerRefs = useRef<(HTMLDivElement | null)[]>([]);
   const hudRef = useRef<HTMLSpanElement>(null);
@@ -62,7 +73,7 @@ export function FlightJourney() {
     window.addEventListener("resize", onScroll);
     if (!reduce) window.addEventListener("pointermove", onMove, { passive: true });
     return () => { cancelAnimationFrame(frame); window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); window.removeEventListener("pointermove", onMove); };
-  }, []);
+  }, [stages]);
 
   const jump = (i: number) => {
     const el = sectionRef.current;
@@ -73,7 +84,7 @@ export function FlightJourney() {
 
   const s = stages[active]!;
   return (
-    <section ref={sectionRef} id="flight-path" aria-label="Your accelerated flight path" className="relative bg-ink text-background" style={{ height: `${stages.length * 110}svh` }}>
+    <section ref={sectionRef} id={id} aria-label={label} className="relative bg-ink text-background" style={{ height: `${stages.length * 110}svh` }}>
       <div className="sticky top-0 h-svh overflow-hidden">
         {stages.map((st, i) => (
           <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="absolute -inset-[4%] will-change-transform" style={{ zIndex: stages.length - i }}>
@@ -85,12 +96,12 @@ export function FlightJourney() {
 
         {/* HUD */}
         <div className="absolute left-5 top-24 z-20 font-mono text-[11px] uppercase tracking-[0.2em] text-background/70 lg:left-8">
-          <p>Alt <span ref={hudRef} className="tabular-nums text-background">0</span> ft</p>
+          {mode === "alt" ? <p>Alt <span ref={hudRef} className="tabular-nums text-background">0</span> ft</p> : <p className="text-background">{s.hud}</p>}
           <p className="mt-1">Stage {s.code} / 0{stages.length}</p>
         </div>
 
         {/* Stage rail */}
-        <nav aria-label="Flight path stages" className="absolute right-4 top-1/2 z-20 flex -translate-y-1/2 items-stretch gap-4 lg:right-8">
+        <nav aria-label={`${label} stages`} className="absolute right-4 top-1/2 z-20 flex -translate-y-1/2 items-stretch gap-4 lg:right-8">
           <div className="relative w-px bg-background/20"><div ref={barRef} className="absolute inset-0 origin-top bg-primary" style={{ transform: "scaleY(0)" }} /></div>
           <ol className="flex flex-col justify-between gap-6">
             {stages.map((st, i) => (
@@ -121,7 +132,7 @@ export function FlightJourney() {
             <span className="scroll-cue-ring grid size-14 place-items-center rounded-full border border-background/30">
               <span className="scroll-arrow inline-block text-base leading-none text-background">↓</span>
             </span>
-            Scroll to climb
+            {cue}
           </p>
         )}
       </div>

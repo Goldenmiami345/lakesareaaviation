@@ -5,7 +5,7 @@ import trainingImage from "../assets/fleet/n3353p-enhanced.webp";
 import { InquiryBand, SiteLayout } from "../components/site-shell";
 import { testimonials } from "../lib/site-data";
 import { ScrollCue } from "../components/motion-experience";
-import { FlightJourney } from "../components/flight-journey";
+import { FlightJourney, airportStages } from "../components/flight-journey";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
@@ -37,6 +37,7 @@ function HomePage() {
       </section>
 
       <FlightJourney />
+      <FlightJourney stages={airportStages} id="airports" label="Three airports to train from" cue="Three airports. Scroll to fly in." mode="code" />
 
       <section className="bg-ink py-20 text-background sm:py-28"><div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-2 lg:px-8" data-scroll-reveal><div className="photo-reveal zoom-reveal relative min-h-[380px] overflow-hidden sm:min-h-[520px]" data-scroll-reveal><img src={trainingImage} alt="Lakes Area Aviation Piper Apache N3353P on the ramp" width={1600} height={1200} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 hover:scale-[1.04]" /></div><div className="flex flex-col justify-center"><p className="eyebrow text-primary">Stay on site</p><h2 className="mt-4 font-display text-5xl sm:text-6xl">Arrive ready.<br />Train every day.</h2><div className="mt-10 grid grid-cols-2 gap-px bg-background/15"><Stat value="$30" label="Housing / night" /><Stat value="$20–30" label="Car / day" /></div></div></div></section>
 
