@@ -30,14 +30,12 @@ function HomePage() {
             <p className="eyebrow photo-label">Accelerated CFI &amp; CFII</p>
             <h1 className="mt-4 max-w-[9ch] font-display text-5xl leading-[.94] sm:mt-5 sm:max-w-none sm:text-7xl lg:text-[5.8rem]"><span className="line-mask"><span>CFI &amp; CFII</span></span><span className="line-mask delay-1"><span>in 4–6 weeks.</span></span></h1>
             <div className="mt-6 sm:mt-7" aria-label="CFI and CFII exams: one-hour oral and one-hour flight">
-              <div>
-                <p className="text-[10px] font-bold uppercase text-background/65">CFI &amp; CFII exams</p>
-                <p className="mt-1 flex items-baseline gap-3 text-background">
-                  <span><strong className="font-display text-2xl font-normal text-primary sm:text-3xl">1</strong> <span className="text-xs font-bold uppercase">hour oral</span></span>
-                  <span className="h-4 w-px bg-background/30" aria-hidden="true" />
-                  <span><strong className="font-display text-2xl font-normal text-primary sm:text-3xl">1</strong> <span className="text-xs font-bold uppercase">hour flight</span></span>
-                </p>
-              </div>
+              <p className="text-[10px] font-bold uppercase text-background/65">CFI &amp; CFII exams</p>
+              <p className="mt-1 flex items-baseline gap-3 text-background">
+                <span><strong className="font-display text-2xl font-normal text-primary sm:text-3xl">1</strong> <span className="text-xs font-bold uppercase">hour oral</span></span>
+                <span className="h-4 w-px bg-background/30" aria-hidden="true" />
+                <span><strong className="font-display text-2xl font-normal text-primary sm:text-3xl">1</strong> <span className="text-xs font-bold uppercase">hour flight</span></span>
+              </p>
             </div>
           </div>
           <div className="mt-7 reveal-delay"><Link to="/contact" className="interactive-arrow group inline-flex min-h-12 items-center gap-4 border-b border-background/45 pb-1 text-sm font-bold uppercase text-background transition-colors hover:border-primary">Build my training plan <span className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><ArrowRight className="size-4" /></span></Link></div>
