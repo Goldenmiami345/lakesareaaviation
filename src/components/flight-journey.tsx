@@ -78,7 +78,7 @@ export function FlightJourney() {
             <img src={st.img} alt={st.alt} width={1920} height={1088} loading={i < 2 ? "eager" : "lazy"} decoding="async" className="h-full w-full object-cover" />
           </div>
         ))}
-        <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-ink via-ink/30 to-ink/50" />
+        <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-ink via-ink/40 to-ink/50" />
         <div className="journey-grain pointer-events-none absolute inset-0 z-10" />
 
         {/* HUD */}
@@ -103,7 +103,7 @@ export function FlightJourney() {
         </nav>
 
         {/* Copy */}
-        <div className="absolute inset-x-0 bottom-0 z-20 mx-auto max-w-7xl px-5 pb-14 pr-16 lg:px-8 lg:pb-20">
+        <div className="absolute inset-x-0 bottom-0 z-20 mx-auto max-w-7xl px-5 pb-28 pr-16 md:pb-14 lg:px-8 lg:pb-20">
           <div key={s.code} className="journey-copy max-w-2xl">
             <p className="eyebrow text-primary">{s.code} · {s.label}</p>
             <p className="mt-4 font-display text-6xl leading-none sm:text-8xl">{s.time}</p>
