@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Pointer } from "lucide-react";
 import clouds from "../assets/journey/01-clouds.webp";
 import runway from "../assets/journey/02-runway-corrected.webp";
 import instrument from "../assets/journey/03-instrument.webp";
@@ -128,10 +128,10 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
           </div>
         </div>
         {active === 0 && (
-          <p className="pointer-events-none absolute left-1/2 top-[28%] z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-3 text-center text-[10px] font-semibold uppercase tracking-[0.3em] text-background/70 sm:top-1/2 sm:gap-4 sm:text-xs">
-            <span className="mouse-cue relative block h-10 w-6 rounded-full border-2 border-background/70"><span className="mouse-wheel absolute inset-x-0 top-2 mx-auto h-2 w-0.5 rounded-full bg-primary" /></span>
-            <span className="-mr-[0.3em]">{cue}</span>
-          </p>
+          <div role="img" aria-label={cue} className="pointer-events-none absolute left-1/2 top-[25%] z-20 grid size-14 -translate-x-1/2 -translate-y-1/2 place-items-center text-background/75 sm:top-1/2">
+            <span className="swipe-cue relative block sm:hidden" aria-hidden="true"><Pointer className="size-9 stroke-[1.5]" /></span>
+            <span className="mouse-cue relative hidden h-12 w-8 rounded-full border-2 border-current sm:block" aria-hidden="true"><span className="mouse-wheel absolute inset-x-0 top-2.5 mx-auto h-2.5 w-0.5 rounded-full bg-primary" /></span>
+          </div>
         )}
       </div>
     </section>
