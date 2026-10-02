@@ -14,3 +14,4 @@
 
 - All 24 public pages are prerendered via the explicit `pages` list in vite.config.ts; add new static routes there (router uses trailingSlash "preserve" so prerender requests do not redirect-loop).
 - Bundled photos are WebP (heroes max 1920px, fleet cards max 1280px) to keep pages light.
+- The global accent theme is read from the public site_settings row; only a database-verified admin role may change it.

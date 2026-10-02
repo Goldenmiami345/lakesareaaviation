@@ -12,7 +12,7 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
     pages: [
-      "/", "/about", "/accelerated-training", "/contact", "/fleet", "/introductory-flights",
+      "/", "/about", "/accelerated-training", "/admin", "/contact", "/fleet", "/introductory-flights",
       "/local-training", "/locations", "/new-students", "/programs", "/rates", "/scenic-flights",
       "/specialized-training", "/student-success", "/team", "/services", "/students",
       ...["private-pilot", "instrument-rating", "commercial-single-engine", "commercial-multi-engine", "cfi-cfii", "mei", "zero-to-hero"].map((s) => `/programs/${s}`),
