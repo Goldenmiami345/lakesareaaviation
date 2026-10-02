@@ -36,7 +36,7 @@ export function Footer() {
     <div className="mx-auto grid max-w-7xl gap-12 px-5 md:grid-cols-[1.3fr_2fr] lg:px-8">
       <div><img src={logoAsset.url} alt="Lakes Area Aviation" loading="lazy" className="h-16 w-auto max-w-full brightness-0 invert" /><p className="mt-5 max-w-sm text-sm text-background/65">Flight instruction, accelerated ratings, commercial pilot services, aircraft management, and specialized training.</p></div>
       <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
-        <FooterGroup title="Train" links={[["Accelerated", "/accelerated-training"], ["CFI & CFII", "/programs/cfi-cfii"], ["All programs", "/programs"], ["Local training", "/local-training"], ["Rates", "/rates"]]} />
+        <FooterGroup title="Train" links={[["Accelerated", "/accelerated-training"], ["CFI & CFII", "/programs/cfi-cfii"], ["All programs", "/programs"], ["Local training", "/local-training"], ["Specialized", "/specialized-training"], ["Rates", "/rates"]]} />
         <FooterGroup title="Explore" links={[["Fleet", "/fleet"], ["Team", "/team"], ["Success", "/student-success"], ["About", "/about"]]} />
         <FooterGroup title="Start" links={[["Intro flight", "/introductory-flights"], ["Scenic flights", "/scenic-flights"], ["New students", "/new-students"], ["Locations", "/locations"], ["Contact", "/contact"]]} />
       </div>

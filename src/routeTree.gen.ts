@@ -21,6 +21,7 @@ import { Route as NewStudentsRouteImport } from './routes/new-students'
 import { Route as ProgramsRouteImport } from './routes/programs'
 import { Route as RatesRouteImport } from './routes/rates'
 import { Route as ScenicFlightsRouteImport } from './routes/scenic-flights'
+import { Route as SpecializedTrainingRouteImport } from './routes/specialized-training'
 import { Route as StudentSuccessRouteImport } from './routes/student-success'
 import { Route as TeamRouteImport } from './routes/team'
 import { Route as ProgramsIndexRouteImport } from './routes/programs.index'
@@ -86,6 +87,11 @@ const ScenicFlightsRoute = ScenicFlightsRouteImport.update({
   path: '/scenic-flights',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SpecializedTrainingRoute = SpecializedTrainingRouteImport.update({
+  id: '/specialized-training',
+  path: '/specialized-training',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StudentSuccessRoute = StudentSuccessRouteImport.update({
   id: '/student-success',
   path: '/student-success',
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/programs': typeof ProgramsRouteWithChildren
   '/rates': typeof RatesRoute
   '/scenic-flights': typeof ScenicFlightsRoute
+  '/specialized-training': typeof SpecializedTrainingRoute
   '/student-success': typeof StudentSuccessRoute
   '/team': typeof TeamRoute
   '/programs/$slug': typeof ProgramsSlugRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/new-students': typeof NewStudentsRoute
   '/rates': typeof RatesRoute
   '/scenic-flights': typeof ScenicFlightsRoute
+  '/specialized-training': typeof SpecializedTrainingRoute
   '/student-success': typeof StudentSuccessRoute
   '/team': typeof TeamRoute
   '/programs/$slug': typeof ProgramsSlugRoute
@@ -156,6 +164,7 @@ export interface FileRoutesById {
   '/programs': typeof ProgramsRouteWithChildren
   '/rates': typeof RatesRoute
   '/scenic-flights': typeof ScenicFlightsRoute
+  '/specialized-training': typeof SpecializedTrainingRoute
   '/student-success': typeof StudentSuccessRoute
   '/team': typeof TeamRoute
   '/programs/$slug': typeof ProgramsSlugRoute
@@ -176,6 +185,7 @@ export interface FileRouteTypes {
     | '/programs'
     | '/rates'
     | '/scenic-flights'
+    | '/specialized-training'
     | '/student-success'
     | '/team'
     | '/programs/$slug'
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
     | '/new-students'
     | '/rates'
     | '/scenic-flights'
+    | '/specialized-training'
     | '/student-success'
     | '/team'
     | '/programs/$slug'
@@ -211,6 +222,7 @@ export interface FileRouteTypes {
     | '/programs'
     | '/rates'
     | '/scenic-flights'
+    | '/specialized-training'
     | '/student-success'
     | '/team'
     | '/programs/$slug'
@@ -230,6 +242,7 @@ export interface RootRouteChildren {
   ProgramsRoute: typeof ProgramsRouteWithChildren
   RatesRoute: typeof RatesRoute
   ScenicFlightsRoute: typeof ScenicFlightsRoute
+  SpecializedTrainingRoute: typeof SpecializedTrainingRoute
   StudentSuccessRoute: typeof StudentSuccessRoute
   TeamRoute: typeof TeamRoute
 }
@@ -320,6 +333,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ScenicFlightsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/specialized-training': {
+      id: '/specialized-training'
+      path: '/specialized-training'
+      fullPath: '/specialized-training'
+      preLoaderRoute: typeof SpecializedTrainingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/student-success': {
       id: '/student-success'
       path: '/student-success'
@@ -378,6 +398,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProgramsRoute: ProgramsRouteWithChildren,
   RatesRoute: RatesRoute,
   ScenicFlightsRoute: ScenicFlightsRoute,
+  SpecializedTrainingRoute: SpecializedTrainingRoute,
   StudentSuccessRoute: StudentSuccessRoute,
   TeamRoute: TeamRoute,
 }
