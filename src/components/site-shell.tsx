@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { Menu, Phone, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import logoAsset from "../assets/lakes-logo-transparent.png.asset.json";
@@ -20,8 +20,8 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
         <img src={logoAsset.url} alt="Lakes Area Aviation" className={`h-12 w-auto max-w-[220px] object-contain ${overlay ? "brightness-0 invert" : ""}`} />
       </Link>
       <nav className="hidden items-center gap-7 lg:flex" aria-label="Main navigation">
-        {nav.map(([label, to]) => <Link key={to} to={to} className="text-xs font-semibold uppercase tracking-[0.12em] transition-colors hover:text-primary">{label}</Link>)}
-        <Link to="/contact" className="bg-primary px-5 py-3 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground transition-colors hover:bg-foreground hover:text-background">Build my training plan</Link>
+        {nav.map(([label, to]) => <Link key={to} to={to} className="link-underline text-xs font-semibold uppercase tracking-[0.12em] transition-colors hover:text-primary">{label}</Link>)}
+        <Link to="/contact" className="btn-shine bg-primary px-5 py-3 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground transition-colors hover:bg-foreground hover:text-background">Build my training plan</Link>
       </nav>
       <button aria-label={open ? "Close menu" : "Open menu"} className="grid size-11 place-items-center lg:hidden" onClick={() => setOpen(!open)}>{open ? <X /> : <Menu />}</button>
     </div>
@@ -54,7 +54,8 @@ export function MobileActions() {
 }
 
 export function SiteLayout({ children, overlayHeader = false }: { children: ReactNode; overlayHeader?: boolean }) {
-  return <><MotionExperience /><Header overlay={overlayHeader} />{children}<Footer /><MobileActions /></>;
+  const { pathname } = useLocation();
+  return <><MotionExperience /><Header overlay={overlayHeader} /><div key={pathname} className="page-enter">{children}</div><Footer /><MobileActions /></>;
 }
 
 export function PageIntro({ eyebrow, title, text }: { eyebrow: string; title: string; text: string }) {
