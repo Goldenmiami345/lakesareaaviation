@@ -150,5 +150,4 @@
 @keyframes scroll-stroke { 0%, 12% { opacity: 0; transform: translateY(-120%); } 26% { opacity: 1; } 68% { opacity: 1; } 84%, 100% { opacity: 0; transform: translateY(320%); } }
 .landing-scroll-stroke { box-shadow: 0 0 7px color-mix(in oklab, var(--primary) 80%, transparent); animation: scroll-stroke 2.8s cubic-bezier(.45,0,.2,1) infinite; }
 .journey-stage-rail { min-height: 10rem; }
-.journey-scroll-stroke { box-shadow: 0 0 8px color-mix(in oklab, var(--background) 75%, transparent); animation: scroll-stroke 3.2s cubic-bezier(.45,0,.2,1) infinite; }
-@media (prefers-reduced-motion: reduce) { .landing-scroll-stroke, .journey-scroll-stroke { animation: none; opacity: .7; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .landing-scroll-stroke { animation: none; opacity: .7; transform: none; } }

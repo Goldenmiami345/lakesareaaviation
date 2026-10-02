@@ -29,9 +29,19 @@ function HomePage() {
           <div className="max-w-3xl reveal">
             <p className="eyebrow photo-label">Accelerated CFI &amp; CFII</p>
             <h1 className="mt-4 max-w-[9ch] font-display text-5xl leading-[.94] sm:mt-5 sm:max-w-none sm:text-7xl lg:text-[5.8rem]"><span className="line-mask"><span>CFI &amp; CFII</span></span><span className="line-mask delay-1"><span>in 4–6 weeks.</span></span></h1>
-            <p className="mt-5 flex items-center gap-3 text-xs font-bold uppercase text-background/85 sm:mt-6 sm:inline-flex sm:border sm:border-background/25 sm:bg-ink/40 sm:px-4 sm:py-2 sm:text-sm sm:backdrop-blur"><span className="h-px w-8 bg-primary sm:size-2 sm:rounded-full" />1-hour oral · 1-hour flight</p>
+            <div className="mt-6 flex items-center gap-4 sm:mt-7" aria-label="CFI and CFII exam: one-hour oral and one-hour flight">
+              <span className="h-px w-7 bg-primary" aria-hidden="true" />
+              <div>
+                <p className="text-[10px] font-bold uppercase text-background/65">CFI &amp; CFII exam</p>
+                <p className="mt-1 flex items-baseline gap-3 text-background">
+                  <span><strong className="font-display text-2xl font-normal text-primary sm:text-3xl">1</strong> <span className="text-xs font-bold uppercase">hour oral</span></span>
+                  <span className="h-4 w-px bg-background/30" aria-hidden="true" />
+                  <span><strong className="font-display text-2xl font-normal text-primary sm:text-3xl">1</strong> <span className="text-xs font-bold uppercase">hour flight</span></span>
+                </p>
+              </div>
+            </div>
           </div>
-          <div className="mt-7 reveal-delay"><Link to="/contact" className="interactive-arrow group inline-flex min-h-12 items-center gap-4 border-b border-primary pb-1 text-sm font-bold uppercase text-background sm:btn-shine sm:min-h-14 sm:border-0 sm:bg-primary sm:px-6 sm:pb-0 sm:text-primary-foreground">Build my training plan <span className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground sm:contents"><ArrowRight className="size-4" /></span></Link></div>
+          <div className="mt-7 reveal-delay"><Link to="/contact" className="interactive-arrow group inline-flex min-h-12 items-center gap-4 border-b border-background/45 pb-1 text-sm font-bold uppercase text-background transition-colors hover:border-primary">Build my training plan <span className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><ArrowRight className="size-4" /></span></Link></div>
           <ScrollCue targetId="flight-path" />
         </div>
       </section>
