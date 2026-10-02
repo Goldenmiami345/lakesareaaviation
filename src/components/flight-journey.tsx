@@ -3,22 +3,23 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, Pointer } from "lucide-react";
 import clouds from "../assets/journey/01-clouds.webp";
 import runway from "../assets/journey/02-runway-corrected.webp";
-import instrument from "../assets/journey/03-instrument.webp";
-import instructor from "../assets/journey/04-instructor.webp";
+import instrument from "../assets/journey/instrument-real-cockpit.webp";
+import instructor from "../assets/journey/cfii-real-cockpit.webp";
+import instrumentVideoAsset from "../assets/journey/instrument-training.mp4.asset.json";
 import airline from "../assets/journey/05-airline.webp";
 import lf from "../assets/journey/loc-little-falls.webp";
 import fl from "../assets/journey/loc-fort-lupton.webp";
 import cw from "../assets/journey/loc-cottonwood.webp";
 import commercial from "../assets/photos/sunset-ramp.webp";
 
-type Stage = { code: string; label: string; time: string; title: string; text: string; img: string; alt: string; cta: string; slug?: string; to?: "/introductory-flights" | "/contact" | "/locations"; hud?: string; zoom?: number; zoomIn?: number; w?: number; h?: number };
+type Stage = { code: string; label: string; time: string; title: string; text: string; img: string; alt: string; cta: string; slug?: string; to?: "/introductory-flights" | "/contact" | "/locations"; hud?: string; zoom?: number; zoomIn?: number; w?: number; h?: number; video?: string; position?: string };
 
 const journeyStages: Stage[] = [
   { code: "01", label: "Discovery flight", time: "$100", title: "Take the controls on day one.", text: "Left seat, instructor beside you.", img: clouds, alt: "Sunrise above a sea of clouds", cta: "Book an intro flight", to: "/introductory-flights" },
   { code: "02", label: "Private pilot", time: "~21 days", title: "Your first certificate.", text: "One focused block.", img: runway, alt: "Aerial cockpit view of Runway 31 and intersecting Runway 18/36 at KLXL", cta: "Private pilot details", slug: "private-pilot" },
-  { code: "03", label: "Instrument rating", time: "10–14 days", title: "Fly into the clouds.", text: "Fly by reference to instruments.", img: instrument, alt: "Cockpit glass displays while flying through cloud", cta: "Instrument details", slug: "instrument-rating" },
+  { code: "03", label: "Instrument rating", time: "10–14 days", title: "Train in the real cockpit.", text: "Fly by reference to instruments.", img: instrument, video: instrumentVideoAsset.url, alt: "Real Lakes Area Aviation instrument panel in flight", cta: "Instrument details", slug: "instrument-rating", position: "center" },
   { code: "04", label: "Commercial pilot", time: "5–7 days", title: "Fly professionally.", text: "Commercial standards in a focused block.", img: commercial, alt: "Lakes Area Aviation airplanes on the ramp at sunset", cta: "Commercial details", slug: "commercial-single-engine" },
-  { code: "05", label: "CFI & CFII", time: "4–6 weeks", title: "Become the instructor.", text: "1-hour oral · 1-hour flight.", img: instructor, alt: "Flight instructor and student pilot in the cockpit at golden hour", cta: "CFI & CFII track", slug: "cfi-cfii" },
+  { code: "05", label: "CFI & CFII", time: "4–6 weeks", title: "Become the instructor.", text: "1-hour oral · 1-hour flight.", img: instructor, alt: "A real Lakes Area Aviation instructor and student training together in flight", cta: "CFI & CFII track", slug: "cfi-cfii", position: "center" },
   { code: "06", label: "The right seat", time: "Your goal", title: "Build toward the airline flight deck.", text: "Every instructing hour moves you closer.", img: airline, alt: "Airline flight deck at night above city lights", cta: "Build my training plan", to: "/contact" },
 ];
 
@@ -35,6 +36,7 @@ type Props = { stages?: Stage[]; id?: string; label?: string; cue?: string; mode
 export function FlightJourney({ stages = journeyStages, id = "flight-path", label = "Your accelerated flight path", cue = "Scroll to climb", mode = "alt" }: Props = {}) {
   const sectionRef = useRef<HTMLElement>(null);
   const layerRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const hudRef = useRef<HTMLSpanElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
@@ -64,7 +66,15 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       if (hudRef.current) hudRef.current.textContent = Math.round((raw / (n - 1)) * 35000).toLocaleString("en-US");
       if (barRef.current) barRef.current.style.transform = `scaleY(${raw / (n - 1)})`;
       const idx = Math.min(n - 1, Math.round(raw));
-      if (idx !== last) { last = idx; setActive(idx); }
+      if (idx !== last) {
+        last = idx;
+        setActive(idx);
+        videoRefs.current.forEach((video, videoIndex) => {
+          if (!video) return;
+          if (videoIndex === idx && !reduce) void video.play().catch(() => undefined);
+          else video.pause();
+        });
+      }
     };
     const onScroll = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(render); };
     const onMove = (e: PointerEvent) => { mx = e.clientX / window.innerWidth - 0.5; my = e.clientY / window.innerHeight - 0.5; onScroll(); };
@@ -88,7 +98,22 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       <div className="sticky top-0 h-svh overflow-hidden">
         {stages.map((st, i) => (
           <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="absolute -inset-[2%] will-change-transform backface-hidden" style={{ zIndex: stages.length - i }}>
-            <img src={st.img} alt={st.alt} width={st.w ?? 1920} height={st.h ?? 1088} loading={i < 2 ? "eager" : "lazy"} decoding="async" className="h-full w-full object-cover" />
+            {st.video ? (
+              <video
+                ref={(el) => { videoRefs.current[i] = el; }}
+                src={st.video}
+                poster={st.img}
+                aria-label={st.alt}
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                className="h-full w-full object-cover"
+                style={{ objectPosition: st.position ?? "center" }}
+              />
+            ) : (
+              <img src={st.img} alt={st.alt} width={st.w ?? 1920} height={st.h ?? 1088} loading={i < 2 ? "eager" : "lazy"} decoding="async" className="h-full w-full object-cover" style={{ objectPosition: st.position ?? "center" }} />
+            )}
           </div>
         ))}
         <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-ink via-ink/40 to-ink/50" />

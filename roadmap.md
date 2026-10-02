@@ -13,7 +13,7 @@
 - [x] Upgrade “Build my training plan” with earned/planned rating selection, minimum timeline and cost calculations, $30/night housing, $20/day car, and optional airport pickup.
 - [x] Simplify scroll prompts to a standalone scrolling mouse on desktop and swipe gesture on mobile.
 - [x] Restyle small photographic and active flight-step labels with blue fill and crisp white outlines.
-- [ ] Integrate the school’s real cockpit photos and video into the Instrument and CFI/CFII scroll stages, professionally finished for desktop and mobile.
+- [x] Integrate the school’s real cockpit photos and video into the Instrument and CFI/CFII scroll stages, professionally finished for desktop and mobile.
 - [ ] Publish the latest preview build (awaiting go-ahead).
 - [ ] Inquiry form destination (where leads should be sent).
 - [ ] Confirm "1-hour oral · 1-hour flight" meaning (checkride format vs daily schedule).
