@@ -23,3 +23,5 @@
 - [ ] Inquiry form destination (where leads should be sent).
 - [ ] Confirm "1-hour oral · 1-hour flight" meaning (checkride format vs daily schedule).
 - [ ] Fresh security scan before wide sharing.
+
+- [ ] Clarify that “1-hour oral · 1-hour flight” describes the CFI/CFII exam, modernize its presentation, and simplify the mobile scroll cue.
