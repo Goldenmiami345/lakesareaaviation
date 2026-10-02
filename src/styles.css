@@ -100,6 +100,7 @@
 
 .zoom-reveal img { transform: scale(1.16); transition: transform 1.5s cubic-bezier(.2,.65,.3,1); }
 .zoom-reveal.is-visible img { transform: scale(1); }
+.is-visible .zoom-reveal img { transform: scale(1); }
 
 .btn-shine { position: relative; overflow: hidden; isolation: isolate; }
 .btn-shine::after { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(105deg, transparent 42%, rgba(255,255,255,.38) 50%, transparent 58%); transform: translateX(-130%) skewX(-8deg); transition: transform .75s cubic-bezier(.2,.65,.3,1); pointer-events: none; }
