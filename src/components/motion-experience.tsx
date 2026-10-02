@@ -7,7 +7,7 @@ export function MotionExperience() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
 
     const revealTargets = Array.from(document.querySelectorAll<HTMLElement>("[data-scroll-reveal]"));
