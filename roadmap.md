@@ -1,5 +1,5 @@
 # Roadmap
 
 - [x] Rating detail upgrade (audit, research, timelines/prices, verify).
-- [ ] Flight path: add Commercial stage between Instrument and CFI & CFII.
-- [ ] Slightly polish the "Scroll to climb" cue (keep the concept, no redesign).
+- [x] Flight path: Commercial stage added between Instrument and CFI & CFII (now 6 stages).
+- [x] Scroll cues polished: centered ring with pulsing rust halo, kept the original concept.
