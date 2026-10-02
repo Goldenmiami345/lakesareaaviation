@@ -25,3 +25,5 @@
 - [ ] Fresh security scan before wide sharing.
 
 - [x] Clarify that “1-hour oral · 1-hour flight” describes the CFI/CFII exam, modernize its presentation, and simplify the mobile scroll cue.
+
+- [x] Reduce the size of the "1"s in the "1 hour oral / 1 hour flight" line so they sit level with the words on phone and desktop.
