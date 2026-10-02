@@ -48,15 +48,15 @@ export function ScrollCue({ targetId }: { targetId: string }) {
 }
 
 const tickerItems = [
-  "CFI in 4–6 weeks",
-  "CFII · MEI",
+  "CFI in 7–10 days",
+  "CFII in 5–7 days · MEI in 3–4",
   "Instrument rating",
   "Commercial single & multi",
   "Private pilot",
   "$100 intro flights",
   "Housing from $30/night",
   "Resident cars $20–30/day",
-  "7 training aircraft",
+  "Cessna · Piper · Taylorcraft fleet",
   "Little Falls · Fort Lupton · Cottonwood",
 ];
 
