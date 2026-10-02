@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Clock3, MapPin, Plane } from "lucide-react";
-import heroImage from "../assets/fleet/n96150-enhanced.jpg";
+import heroImage from "../assets/photos/sunset-ramp.jpg";
 import trainingImage from "../assets/fleet/n3353p-enhanced.jpg";
 import { InquiryBand, SiteLayout } from "../components/site-shell";
 import { programs, testimonials } from "../lib/site-data";
@@ -22,7 +22,7 @@ function HomePage() {
   return <SiteLayout overlayHeader>
     <main>
       <section className="relative min-h-[92svh] overflow-hidden bg-foreground text-background">
-        <div className="hero-parallax absolute inset-0"><img src={heroImage} alt="Lakes Area Aviation Taylorcraft N96150 flying over Minnesota farmland" width={1600} height={900} fetchPriority="high" className="hero-kenburns h-[112%] w-full object-cover object-[58%_center]" /></div>
+        <div className="hero-parallax absolute inset-0"><img src={heroImage} alt="Lakes Area Aviation Cessna N6717A and Piper Apache on the ramp at sunset" width={1600} height={900} fetchPriority="high" className="hero-kenburns h-[112%] w-full object-cover object-[35%_center]" /></div>
         <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/65 to-transparent" />
         <div className="relative mx-auto flex min-h-[92svh] max-w-7xl flex-col justify-end px-5 pb-16 pt-32 lg:px-8 lg:pb-20">
           <div className="max-w-3xl reveal"><p className="eyebrow text-primary">Accelerated pilot ratings</p><h1 className="mt-5 font-display text-5xl leading-[.94] sm:text-7xl lg:text-[5.8rem]"><span className="line-mask"><span>CFI in 7–10 days.</span></span><span className="line-mask delay-1"><span>CFII in 5–7.</span></span></h1><p className="mt-5 font-display text-2xl text-background/90 sm:text-3xl">Published 2026 accelerated course timelines.</p><p className="mt-6 max-w-xl text-base leading-relaxed text-background/70 sm:text-lg">Focused training for pilots ready to move. Build your private, instrument, commercial, or instructor rating around a clear timeline.</p></div>

@@ -58,8 +58,8 @@ export function SiteLayout({ children, overlayHeader = false }: { children: Reac
   return <><MotionExperience /><Header overlay={overlayHeader} /><div key={pathname} className="page-enter">{children}</div><Footer /><MobileActions /></>;
 }
 
-export function PageIntro({ eyebrow, title, text }: { eyebrow: string; title: string; text: string }) {
-  return <section className="bg-foreground pb-20 pt-36 text-background"><div className="mx-auto max-w-7xl px-5 lg:px-8" data-scroll-reveal><p className="eyebrow text-primary">{eyebrow}</p><h1 className="mt-4 max-w-4xl font-display text-5xl leading-[0.98] sm:text-7xl">{title}</h1><p className="mt-6 max-w-2xl text-lg leading-relaxed text-background/70">{text}</p></div></section>;
+export function PageIntro({ eyebrow, title, text, image, imageAlt = "" }: { eyebrow: string; title: string; text: string; image?: string; imageAlt?: string }) {
+  return <section className="relative isolate overflow-hidden bg-foreground pb-20 pt-36 text-background">{image && <><img src={image} alt={imageAlt} width={1920} height={1080} loading="eager" fetchPriority="high" decoding="async" className="hero-kenburns absolute inset-0 -z-20 h-full w-full object-cover" /><div className="absolute inset-0 -z-10 bg-gradient-to-r from-foreground/90 via-foreground/65 to-foreground/25" /></>}<div className="mx-auto max-w-7xl px-5 lg:px-8" data-scroll-reveal><p className="eyebrow text-primary">{eyebrow}</p><h1 className="mt-4 max-w-4xl font-display text-5xl leading-[0.98] sm:text-7xl">{title}</h1><p className="mt-6 max-w-2xl text-lg leading-relaxed text-background/80">{text}</p></div></section>;
 }
 
 export function InquiryBand() {
