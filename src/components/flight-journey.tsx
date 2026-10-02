@@ -86,7 +86,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     <section ref={sectionRef} id={id} aria-label={label} className="relative bg-ink text-background" style={{ height: `${stages.length * 110}svh` }}>
       <div className="sticky top-0 h-svh overflow-hidden">
         {stages.map((st, i) => (
-          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="absolute -inset-[4%] will-change-transform" style={{ zIndex: stages.length - i }}>
+          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="absolute -inset-[2%] will-change-transform backface-hidden" style={{ zIndex: stages.length - i }}>
             <img src={st.img} alt={st.alt} width={1920} height={1088} loading={i < 2 ? "eager" : "lazy"} decoding="async" className="h-full w-full object-cover" />
           </div>
         ))}
