@@ -3,7 +3,7 @@ import { ArrowRight, MapPin, Phone, Users } from "lucide-react";
 import scenic1 from "../assets/scenic-1.jpg.asset.json";
 import scenic2 from "../assets/scenic-2.jpg.asset.json";
 import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
-import { locations } from "../lib/site-data";
+import { locations, SCHOOL_PHONE, SCHOOL_PHONE_TEL } from "../lib/site-data";
 
 export const Route = createFileRoute("/scenic-flights")({
   head: () => ({
@@ -41,7 +41,7 @@ function Page() {
                 <p className="mt-2 text-sm text-muted-foreground">Up to three people per flight</p>
               </div>
             </div>
-            <a href="tel:2188512196" className="btn-shine mt-10 inline-flex min-h-14 items-center justify-center gap-3 bg-primary px-6 text-sm font-bold uppercase text-primary-foreground sm:w-fit">
+            <a href={SCHOOL_PHONE_TEL} className="btn-shine mt-10 inline-flex min-h-14 items-center justify-center gap-3 bg-primary px-6 text-sm font-bold uppercase text-primary-foreground sm:w-fit">
               <Phone className="size-4" /> Call to schedule
             </a>
           </div>
@@ -64,10 +64,10 @@ function Page() {
                 <h3 className="font-display text-2xl">{l.city}</h3>
                 <p className="mt-1 text-sm font-semibold text-primary">{l.airport}</p>
                 <p className="mt-3 flex items-start gap-2 text-sm text-muted-foreground"><MapPin className="mt-0.5 size-4 shrink-0" />{l.address}</p>
-                <a href={`tel:${l.phone.replace(/-/g, "")}`} className="mt-2 flex items-center gap-2 text-sm font-semibold transition-colors hover:text-primary"><Phone className="size-4" />{l.phone}</a>
               </div>
             ))}
           </div>
+          <a href={SCHOOL_PHONE_TEL} className="mt-8 inline-flex items-center gap-3 font-display text-3xl text-primary"><Phone className="size-6" />{SCHOOL_PHONE}</a>
           <Link to="/introductory-flights" className="interactive-arrow mt-10 inline-flex items-center gap-3 text-sm font-bold uppercase text-primary">
             Or start with a $100 intro flight <ArrowRight className="size-4" />
           </Link>

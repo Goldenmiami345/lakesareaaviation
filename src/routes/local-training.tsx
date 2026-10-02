@@ -2,7 +2,7 @@ import introImg from "../assets/photos/lake-aerial.webp";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, MapPin, Phone } from "lucide-react";
 import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
-import { locations } from "../lib/site-data";
+import { locations, SCHOOL_PHONE, SCHOOL_PHONE_TEL } from "../lib/site-data";
 
 export const Route = createFileRoute("/local-training")({
   head: () => ({
@@ -54,10 +54,10 @@ function Page() {
                   <h3 className="font-display text-2xl">{l.city}</h3>
                   <p className="mt-1 text-sm font-semibold text-primary">{l.airport}</p>
                   <p className="mt-3 flex items-start gap-2 text-sm text-muted-foreground"><MapPin className="mt-0.5 size-4 shrink-0" />{l.address}</p>
-                  <a href={`tel:${l.phone.replace(/-/g, "")}`} className="mt-2 flex items-center gap-2 text-sm font-semibold text-foreground transition-colors hover:text-primary"><Phone className="size-4" />{l.phone}</a>
                 </div>
               ))}
             </div>
+            <a href={SCHOOL_PHONE_TEL} className="mt-8 inline-flex items-center gap-3 font-display text-3xl text-primary"><Phone className="size-6" />{SCHOOL_PHONE}</a>
           </div>
         </div>
       </main>
