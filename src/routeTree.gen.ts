@@ -10,10 +10,15 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as AcceleratedTrainingRouteImport } from './routes/accelerated-training'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as FleetRouteImport } from './routes/fleet'
+import { Route as LocationsRouteImport } from './routes/locations'
 import { Route as ProgramsRouteImport } from './routes/programs'
 import { Route as RatesRouteImport } from './routes/rates'
+import { Route as StudentSuccessRouteImport } from './routes/student-success'
+import { Route as TeamRouteImport } from './routes/team'
 import { Route as ProgramsSlugRouteImport } from './routes/programs.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -21,14 +26,29 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AcceleratedTrainingRoute = AcceleratedTrainingRouteImport.update({
   id: '/accelerated-training',
   path: '/accelerated-training',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FleetRoute = FleetRouteImport.update({
   id: '/fleet',
   path: '/fleet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocationsRoute = LocationsRouteImport.update({
+  id: '/locations',
+  path: '/locations',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProgramsRoute = ProgramsRouteImport.update({
@@ -41,6 +61,16 @@ const RatesRoute = RatesRouteImport.update({
   path: '/rates',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudentSuccessRoute = StudentSuccessRouteImport.update({
+  id: '/student-success',
+  path: '/student-success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeamRoute = TeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProgramsSlugRoute = ProgramsSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -49,62 +79,97 @@ const ProgramsSlugRoute = ProgramsSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/accelerated-training': typeof AcceleratedTrainingRoute
+  '/contact': typeof ContactRoute
   '/fleet': typeof FleetRoute
+  '/locations': typeof LocationsRoute
   '/programs': typeof ProgramsRouteWithChildren
   '/rates': typeof RatesRoute
+  '/student-success': typeof StudentSuccessRoute
+  '/team': typeof TeamRoute
   '/programs/$slug': typeof ProgramsSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/accelerated-training': typeof AcceleratedTrainingRoute
+  '/contact': typeof ContactRoute
   '/fleet': typeof FleetRoute
+  '/locations': typeof LocationsRoute
   '/programs': typeof ProgramsRouteWithChildren
   '/rates': typeof RatesRoute
+  '/student-success': typeof StudentSuccessRoute
+  '/team': typeof TeamRoute
   '/programs/$slug': typeof ProgramsSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/accelerated-training': typeof AcceleratedTrainingRoute
+  '/contact': typeof ContactRoute
   '/fleet': typeof FleetRoute
+  '/locations': typeof LocationsRoute
   '/programs': typeof ProgramsRouteWithChildren
   '/rates': typeof RatesRoute
+  '/student-success': typeof StudentSuccessRoute
+  '/team': typeof TeamRoute
   '/programs/$slug': typeof ProgramsSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/accelerated-training'
+    | '/contact'
     | '/fleet'
+    | '/locations'
     | '/programs'
     | '/rates'
+    | '/student-success'
+    | '/team'
     | '/programs/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/accelerated-training'
+    | '/contact'
     | '/fleet'
+    | '/locations'
     | '/programs'
     | '/rates'
+    | '/student-success'
+    | '/team'
     | '/programs/$slug'
   id:
     | '__root__'
     | '/'
+    | '/about'
     | '/accelerated-training'
+    | '/contact'
     | '/fleet'
+    | '/locations'
     | '/programs'
     | '/rates'
+    | '/student-success'
+    | '/team'
     | '/programs/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
   AcceleratedTrainingRoute: typeof AcceleratedTrainingRoute
+  ContactRoute: typeof ContactRoute
   FleetRoute: typeof FleetRoute
+  LocationsRoute: typeof LocationsRoute
   ProgramsRoute: typeof ProgramsRouteWithChildren
   RatesRoute: typeof RatesRoute
+  StudentSuccessRoute: typeof StudentSuccessRoute
+  TeamRoute: typeof TeamRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +181,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/accelerated-training': {
       id: '/accelerated-training'
       path: '/accelerated-training'
@@ -123,11 +195,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AcceleratedTrainingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/fleet': {
       id: '/fleet'
       path: '/fleet'
       fullPath: '/fleet'
       preLoaderRoute: typeof FleetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/locations': {
+      id: '/locations'
+      path: '/locations'
+      fullPath: '/locations'
+      preLoaderRoute: typeof LocationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/programs': {
@@ -142,6 +228,20 @@ declare module '@tanstack/react-router' {
       path: '/rates'
       fullPath: '/rates'
       preLoaderRoute: typeof RatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student-success': {
+      id: '/student-success'
+      path: '/student-success'
+      fullPath: '/student-success'
+      preLoaderRoute: typeof StudentSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/team': {
+      id: '/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof TeamRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/programs/$slug': {
@@ -168,10 +268,15 @@ const ProgramsRouteWithChildren = ProgramsRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
   AcceleratedTrainingRoute: AcceleratedTrainingRoute,
+  ContactRoute: ContactRoute,
   FleetRoute: FleetRoute,
+  LocationsRoute: LocationsRoute,
   ProgramsRoute: ProgramsRouteWithChildren,
   RatesRoute: RatesRoute,
+  StudentSuccessRoute: StudentSuccessRoute,
+  TeamRoute: TeamRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
