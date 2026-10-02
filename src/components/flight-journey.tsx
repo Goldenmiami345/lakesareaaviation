@@ -3,9 +3,8 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, Pointer } from "lucide-react";
 import clouds from "../assets/journey/01-clouds.webp";
 import runway from "../assets/journey/02-runway-corrected.webp";
-import instrument from "../assets/journey/instrument-real-cockpit.webp";
-import instructor from "../assets/journey/cfii-real-cockpit.webp";
-import instrumentVideoAsset from "../assets/journey/instrument-training.webm.asset.json";
+import instrument from "../assets/journey/instrument-imc-cockpit.webp";
+import instructor from "../assets/journey/04-instructor.webp";
 import airline from "../assets/journey/05-airline.webp";
 import lf from "../assets/journey/loc-little-falls.webp";
 import fl from "../assets/journey/loc-fort-lupton.webp";
@@ -17,9 +16,9 @@ type Stage = { code: string; label: string; time: string; title: string; text: s
 const journeyStages: Stage[] = [
   { code: "01", label: "Discovery flight", time: "$100", title: "Take the controls on day one.", text: "Left seat, instructor beside you.", img: clouds, alt: "Sunrise above a sea of clouds", cta: "Book an intro flight", to: "/introductory-flights" },
   { code: "02", label: "Private pilot", time: "~21 days", title: "Your first certificate.", text: "One focused block.", img: runway, alt: "Aerial cockpit view of Runway 31 and intersecting Runway 18/36 at KLXL", cta: "Private pilot details", slug: "private-pilot" },
-  { code: "03", label: "Instrument rating", time: "10–14 days", title: "Train in the real cockpit.", text: "Fly by reference to instruments.", img: instrument, video: instrumentVideoAsset.url, alt: "Real Lakes Area Aviation instrument panel in flight", cta: "Instrument details", slug: "instrument-rating", position: "center" },
+  { code: "03", label: "Instrument rating", time: "10–14 days", title: "Train in the real cockpit.", text: "Fly by reference to instruments.", img: instrument, alt: "Real Lakes Area Aviation instrument panel flying through instrument conditions", cta: "Instrument details", slug: "instrument-rating", position: "center" },
   { code: "04", label: "Commercial pilot", time: "5–7 days", title: "Fly professionally.", text: "Commercial standards in a focused block.", img: commercial, alt: "Lakes Area Aviation airplanes on the ramp at sunset", cta: "Commercial details", slug: "commercial-single-engine" },
-  { code: "05", label: "CFI & CFII", time: "4–6 weeks", title: "Become the instructor.", text: "1-hour oral · 1-hour flight.", img: instructor, alt: "A real Lakes Area Aviation instructor and student training together in flight", cta: "CFI & CFII track", slug: "cfi-cfii", position: "center" },
+  { code: "05", label: "CFI & CFII", time: "4–6 weeks", title: "Become the instructor.", text: "1-hour oral · 1-hour flight.", img: instructor, alt: "Instructor and student inspecting a training airplane before flight", cta: "CFI & CFII track", slug: "cfi-cfii", position: "center" },
   { code: "06", label: "The right seat", time: "Your goal", title: "Build toward the airline flight deck.", text: "Every instructing hour moves you closer.", img: airline, alt: "Airline flight deck at night above city lights", cta: "Build my training plan", to: "/contact" },
 ];
 
