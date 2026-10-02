@@ -148,4 +148,6 @@
 
 @keyframes mouse-wheel { 0% { opacity: 0; transform: translateY(0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(12px); } }
 .mouse-wheel { animation: mouse-wheel 1.8s cubic-bezier(.4,0,.2,1) infinite; }
-@media (prefers-reduced-motion: reduce) { .mouse-wheel { animation: none; } }
+@keyframes swipe-up { 0% { opacity: 0; transform: translateY(8px); } 25% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; transform: translateY(-10px); } }
+.swipe-cue { animation: swipe-up 1.6s cubic-bezier(.4,0,.2,1) infinite; }
+@media (prefers-reduced-motion: reduce) { .mouse-wheel, .swipe-cue { animation: none; } }
