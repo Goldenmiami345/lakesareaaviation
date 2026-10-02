@@ -21,7 +21,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
       </Link>
       <nav className="hidden items-center gap-7 lg:flex" aria-label="Main navigation">
         {nav.map(([label, to]) => <Link key={to} to={to} className="link-underline text-xs font-semibold uppercase tracking-[0.12em] transition-colors hover:text-primary">{label}</Link>)}
-        <Link to="/contact" className="btn-shine bg-primary px-5 py-3 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground transition-colors hover:bg-foreground hover:text-background">Build my training plan</Link>
+        <Link to="/contact" className="btn-shine bg-primary px-5 py-3 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground transition-colors hover:bg-ink hover:text-background">Build my training plan</Link>
       </nav>
       <button aria-label={open ? "Close menu" : "Open menu"} className="grid size-11 place-items-center lg:hidden" onClick={() => setOpen(!open)}>{open ? <X /> : <Menu />}</button>
     </div>
@@ -32,7 +32,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
 }
 
 export function Footer() {
-  return <footer className="bg-foreground pb-24 pt-16 text-background md:pb-12">
+  return <footer className="bg-ink pb-24 pt-16 text-background md:pb-12">
     <div className="mx-auto grid max-w-7xl gap-12 px-5 md:grid-cols-[1.3fr_2fr] lg:px-8">
       <div><img src={logoAsset.url} alt="Lakes Area Aviation" loading="lazy" className="h-16 w-auto max-w-full brightness-0 invert" /><p className="mt-5 max-w-sm text-sm text-background/65">Flight instruction, accelerated ratings, commercial pilot services, aircraft management, and specialized training.</p></div>
       <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
@@ -50,7 +50,7 @@ function FooterGroup({ title, links }: { title: string; links: [string, string][
 }
 
 export function MobileActions() {
-  return <div className="fixed inset-x-3 bottom-3 z-50 grid grid-cols-2 overflow-hidden border border-white/20 bg-foreground text-background shadow-2xl md:hidden"><a href="tel:2188512196" className="flex min-h-14 items-center justify-center gap-2 text-sm font-bold"><Phone className="size-4" /> Call</a><Link to="/contact" className="flex min-h-14 items-center justify-center bg-primary text-sm font-bold text-primary-foreground">Apply now</Link></div>;
+  return <div className="fixed inset-x-3 bottom-3 z-50 grid grid-cols-2 overflow-hidden border border-white/20 bg-ink text-background shadow-2xl md:hidden"><a href="tel:2188512196" className="flex min-h-14 items-center justify-center gap-2 text-sm font-bold"><Phone className="size-4" /> Call</a><Link to="/contact" className="flex min-h-14 items-center justify-center bg-primary text-sm font-bold text-primary-foreground">Apply now</Link></div>;
 }
 
 export function SiteLayout({ children, overlayHeader = false }: { children: ReactNode; overlayHeader?: boolean }) {
@@ -59,9 +59,9 @@ export function SiteLayout({ children, overlayHeader = false }: { children: Reac
 }
 
 export function PageIntro({ eyebrow, title, text, image, imageAlt = "" }: { eyebrow: string; title: string; text: string; image?: string; imageAlt?: string }) {
-  return <section className="relative isolate overflow-hidden bg-foreground pb-20 pt-36 text-background">{image && <><img src={image} alt={imageAlt} width={1920} height={1080} loading="eager" fetchPriority="high" decoding="async" className="hero-kenburns absolute inset-0 -z-20 h-full w-full object-cover" /><div className="absolute inset-0 -z-10 bg-gradient-to-r from-foreground/90 via-foreground/65 to-foreground/25" /></>}<div className="mx-auto max-w-7xl px-5 lg:px-8" data-scroll-reveal><p className="eyebrow text-primary">{eyebrow}</p><h1 className="mt-4 max-w-4xl font-display text-5xl leading-[0.98] sm:text-7xl">{title}</h1><p className="mt-6 max-w-2xl text-lg leading-relaxed text-background/80">{text}</p></div></section>;
+  return <section className="relative isolate overflow-hidden bg-ink pb-20 pt-36 text-background">{image && <><img src={image} alt={imageAlt} width={1920} height={1080} loading="eager" fetchPriority="high" decoding="async" className="hero-kenburns absolute inset-0 -z-20 h-full w-full object-cover" /><div className="absolute inset-0 -z-10 bg-gradient-to-r from-ink/90 via-ink/65 to-ink/25" /></>}<div className="mx-auto max-w-7xl px-5 lg:px-8" data-scroll-reveal><p className="eyebrow text-primary">{eyebrow}</p><h1 className="mt-4 max-w-4xl font-display text-5xl leading-[0.98] sm:text-7xl">{title}</h1><p className="mt-6 max-w-2xl text-lg leading-relaxed text-background/80">{text}</p></div></section>;
 }
 
 export function InquiryBand() {
-  return <section className="bg-primary py-16 text-primary-foreground"><div className="mx-auto grid max-w-7xl items-center gap-8 px-5 md:grid-cols-[1fr_auto] lg:px-8" data-scroll-reveal><div><p className="eyebrow text-primary-foreground/70">Your next rating</p><h2 className="mt-3 font-display text-4xl">Build a training plan around your timeline.</h2></div><Link to="/contact" className="interactive-arrow inline-flex min-h-14 items-center justify-center bg-foreground px-7 text-sm font-bold uppercase tracking-[0.1em] text-background">Start planning <span aria-hidden="true">→</span></Link></div></section>;
+  return <section className="bg-primary py-16 text-primary-foreground"><div className="mx-auto grid max-w-7xl items-center gap-8 px-5 md:grid-cols-[1fr_auto] lg:px-8" data-scroll-reveal><div><p className="eyebrow text-primary-foreground/70">Your next rating</p><h2 className="mt-3 font-display text-4xl">Build a training plan around your timeline.</h2></div><Link to="/contact" className="interactive-arrow inline-flex min-h-14 items-center justify-center bg-ink px-7 text-sm font-bold uppercase tracking-[0.1em] text-background">Start planning <span aria-hidden="true">→</span></Link></div></section>;
 }

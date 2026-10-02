@@ -63,7 +63,7 @@ const tickerItems = [
 export function Ticker() {
   const row = [...tickerItems, ...tickerItems];
   return (
-    <div className="overflow-hidden border-y border-border bg-foreground py-4 text-background" aria-hidden="true">
+    <div className="overflow-hidden border-y border-border bg-ink py-4 text-background" aria-hidden="true">
       <div className="marquee-track items-center gap-10">
         {row.map((item, i) => (
           <span key={i} className="flex items-center gap-10 whitespace-nowrap text-xs font-bold uppercase tracking-[0.18em]">
