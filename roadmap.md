@@ -16,6 +16,7 @@
 - [x] Integrate the school’s real cockpit photos and video into the Instrument and CFI/CFII scroll stages, professionally finished for desktop and mobile.
 - [x] Refine cockpit storytelling: preserve the school's real panel, add obvious IMC outside, and restore the wider instructor-aircraft scene for CFI/CFII.
 - [x] Replace the repeated airport-journey finger with an understated mobile stroke cue.
+- [x] Strengthen the airport handoff into a visible three-line mobile runway signal.
 - [x] Add a concise post-locations section for commercial multi, MEI, endorsements, and flight reviews.
 - [ ] Publish the latest preview build (awaiting go-ahead).
 - [ ] Inquiry form destination (where leads should be sent).
