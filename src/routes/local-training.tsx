@@ -1,4 +1,4 @@
-import introImg from "../assets/photos/lake-aerial.jpg";
+import introImg from "../assets/photos/lake-aerial.webp";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, MapPin, Phone } from "lucide-react";
 import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";

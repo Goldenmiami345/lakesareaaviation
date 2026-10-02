@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Clock3, MapPin, Plane } from "lucide-react";
-import heroImage from "../assets/photos/sunset-ramp.jpg";
-import trainingImage from "../assets/fleet/n3353p-enhanced.jpg";
+import heroImage from "../assets/photos/sunset-ramp.webp";
+import trainingImage from "../assets/fleet/n3353p-enhanced.webp";
 import { InquiryBand, SiteLayout } from "../components/site-shell";
 import { programs, testimonials } from "../lib/site-data";
 import { ProgramExplorer, ScrollCue, Ticker } from "../components/motion-experience";
