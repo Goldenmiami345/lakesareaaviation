@@ -6,9 +6,11 @@ import { MotionExperience } from "./motion-experience";
 
 const nav = [
   ["Accelerated", "/accelerated-training"],
+  ["Services", "/services"],
   ["Programs", "/programs"],
   ["Fleet", "/fleet"],
   ["Rates", "/rates"],
+  ["Students", "/students"],
   ["About", "/about"],
 ] as const;
 
