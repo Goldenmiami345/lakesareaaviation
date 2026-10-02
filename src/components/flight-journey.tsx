@@ -11,7 +11,7 @@ import fl from "../assets/journey/loc-fort-lupton.webp";
 import cw from "../assets/journey/loc-cottonwood.webp";
 import commercial from "../assets/photos/sunset-ramp.webp";
 
-type Stage = { code: string; label: string; time: string; title: string; text: string; img: string; alt: string; cta: string; slug?: string; to?: "/introductory-flights" | "/contact" | "/locations"; hud?: string };
+type Stage = { code: string; label: string; time: string; title: string; text: string; img: string; alt: string; cta: string; slug?: string; to?: "/introductory-flights" | "/contact" | "/locations"; hud?: string; zoom?: number; zoomIn?: number; w?: number; h?: number };
 
 const journeyStages: Stage[] = [
   { code: "01", label: "Discovery flight", time: "$100", title: "Take the controls on day one.", text: "Left seat, instructor beside you.", img: clouds, alt: "Sunrise above a sea of clouds", cta: "Book an intro flight", to: "/introductory-flights" },
@@ -23,9 +23,9 @@ const journeyStages: Stage[] = [
 ];
 
 export const airportStages: Stage[] = [
-  { code: "MN", label: "Little Falls", hud: "KLXL · 13129 Airport Rd", time: "KLXL", title: "Little Falls, Minnesota.", text: "Little Falls/Morrison County Airport", img: lf, alt: "USGS aerial photo of Little Falls/Morrison County Airport (KLXL) runways and hangars", cta: "See our locations", to: "/locations" },
-  { code: "CO", label: "Fort Lupton", hud: "18V · 7507 Co Rd 39", time: "18V", title: "Fort Lupton, Colorado.", text: "Platte Valley Airpark", img: fl, alt: "USGS aerial photo of Platte Valley Airpark (18V) runway among Colorado farm fields", cta: "See our locations", to: "/locations" },
-  { code: "AZ", label: "Cottonwood", hud: "P52 · 1001 W Mingus Ave", time: "P52", title: "Cottonwood, Arizona.", text: "Cottonwood Municipal Airport", img: cw, alt: "USGS aerial photo of Cottonwood Municipal Airport (P52) runway 14/32 and ramp", cta: "Build my training plan", to: "/contact" },
+  { code: "MN", label: "Little Falls", hud: "KLXL · 13129 Airport Rd", time: "KLXL", title: "Little Falls, Minnesota.", text: "Little Falls/Morrison County Airport", img: lf, alt: "Public-domain USGS aerial photo of Little Falls/Morrison County Airport (KLXL) with both runways, hangars and surrounding fields", cta: "See our locations", to: "/locations", w: 1500, h: 1500, zoom: 0.4, zoomIn: 0.04 },
+  { code: "CO", label: "Fort Lupton", hud: "18V · 7507 Co Rd 39", time: "18V", title: "Fort Lupton, Colorado.", text: "Platte Valley Airpark", img: fl, alt: "Public-domain USGS aerial photo of Platte Valley Airpark (18V) runway, hangars and surrounding Colorado farm fields", cta: "See our locations", to: "/locations", w: 1500, h: 1500, zoom: 0.12, zoomIn: 0.02 },
+  { code: "AZ", label: "Cottonwood", hud: "P52 · 1001 W Mingus Ave", time: "P52", title: "Cottonwood, Arizona.", text: "Cottonwood Municipal Airport", img: cw, alt: "Public-domain USGS aerial photo of Cottonwood Municipal Airport (P52) runway 14/32, ramp and surrounding Verde Valley terrain", cta: "Build my training plan", to: "/contact", w: 1500, h: 1500, zoom: 0.18, zoomIn: 0.03 },
 ];
 
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
@@ -54,7 +54,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         const local = raw - i;
         const leaving = clamp(local);
         const coming = clamp(-local);
-        const scale = reduce ? 1 : 1 + leaving * 0.55 + coming * 0.06;
+        const st = stages[i];
+        const scale = reduce ? 1 : 1 + leaving * (st?.zoom ?? 0.55) + coming * (st?.zoomIn ?? 0.06);
         const opacity = local > 0 ? 1 - clamp(local * 1.4) : 1;
         const depth = reduce ? 0 : 10 + i * 3;
         layer.style.transform = `translate3d(${(mx * -depth).toFixed(2)}px, ${(my * -depth).toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
@@ -87,7 +88,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       <div className="sticky top-0 h-svh overflow-hidden">
         {stages.map((st, i) => (
           <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="absolute -inset-[2%] will-change-transform backface-hidden" style={{ zIndex: stages.length - i }}>
-            <img src={st.img} alt={st.alt} width={1920} height={1088} loading={i < 2 ? "eager" : "lazy"} decoding="async" className="h-full w-full object-cover" />
+            <img src={st.img} alt={st.alt} width={st.w ?? 1920} height={st.h ?? 1088} loading={i < 2 ? "eager" : "lazy"} decoding="async" className="h-full w-full object-cover" />
           </div>
         ))}
         <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-ink via-ink/40 to-ink/50" />
