@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Menu, Phone, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
-import logoAsset from "../assets/lakes-logo.png.asset.json";
+import logoAsset from "../assets/lakes-logo-transparent.png.asset.json";
 
 const nav = [
   ["Accelerated", "/accelerated-training"],
