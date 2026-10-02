@@ -1,11 +1,10 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Menu, Phone, X } from "lucide-react";
+import { ArrowUpRight, Menu, Phone, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import logoAsset from "../assets/lakes-logo-transparent.png.asset.json";
 import { MotionExperience } from "./motion-experience";
 
 const nav = [
-  ["Accelerated", "/accelerated-training"],
   ["Services", "/services"],
   ["Programs", "/programs"],
   ["Fleet", "/fleet"],
@@ -23,7 +22,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
       </Link>
       <nav className="hidden items-center gap-7 lg:flex" aria-label="Main navigation">
         {nav.map(([label, to]) => <Link key={to} to={to} className="link-underline text-xs font-semibold uppercase tracking-[0.12em] transition-colors hover:text-primary">{label}</Link>)}
-        <Link to="/contact" className="btn-shine bg-primary px-5 py-3 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground transition-colors hover:bg-ink hover:text-background">Build my training plan</Link>
+        <Link to="/contact" className={`group inline-flex items-center gap-2 rounded-full border py-1.5 pl-4 pr-1.5 text-xs font-semibold tracking-[0.04em] backdrop-blur transition-all duration-300 hover:border-primary ${overlay ? "border-white/30 bg-white/10" : "border-border bg-background"}`}>Build my training plan<span className="grid size-7 place-items-center rounded-full bg-primary text-primary-foreground transition-transform duration-300 group-hover:rotate-45"><ArrowUpRight className="size-3.5" /></span></Link>
       </nav>
       <button aria-label={open ? "Close menu" : "Open menu"} className="grid size-10 place-items-center lg:hidden" onClick={() => setOpen(!open)}>{open ? <X className="size-5" /> : <Menu className="size-5" />}</button>
     </div>
