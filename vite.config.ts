@@ -17,6 +17,6 @@ export default defineConfig({
       "/specialized-training", "/student-success", "/team",
       ...["private-pilot", "instrument-rating", "commercial-single-engine", "commercial-multi-engine", "cfi-cfii", "mei", "zero-to-hero"].map((s) => `/programs/${s}`),
     ].map((path) => ({ path })),
-    prerender: { enabled: true, autoStaticPathsDiscovery: false },
+    prerender: { enabled: true, autoStaticPathsDiscovery: false, autoSubfolderIndex: false },
   },
 });
