@@ -46,8 +46,8 @@
 
 @layer base {
   * { border-color: var(--color-border); }
-  html { scroll-behavior: smooth; }
-  body { margin: 0; background: var(--background); color: var(--foreground); font-family: var(--font-sans); letter-spacing: 0; }
+  html { min-height: 100%; scroll-behavior: smooth; background: var(--ink); }
+  body { min-height: 100%; margin: 0; background: var(--background); color: var(--foreground); font-family: var(--font-sans); letter-spacing: 0; }
   button, a, input, select, textarea { letter-spacing: 0; }
   ::selection { background: color-mix(in oklab, var(--primary) 35%, transparent); }
 }
