@@ -52,12 +52,15 @@ function HomePage() {
             <div><p className="eyebrow text-primary">More ways to train</p><h2 className="mt-4 max-w-[12ch] font-display text-4xl sm:text-6xl">Add the privilege. Sharpen the skill.</h2></div>
             <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">Build beyond the core ratings with focused multi-engine training, instructor privileges, endorsements, and recurrent proficiency work.</p>
           </div>
-          <div className="stagger-grid grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-4" data-scroll-reveal>
+          <div className="stagger-grid grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-3" data-scroll-reveal>
             <ServiceLink eyebrow="3–4 days" title="Commercial multi" text="Add commercial multi-engine privileges in the Piper Apache." to="/programs/$slug" slug="commercial-multi-engine" />
             <ServiceLink eyebrow="3–4 days" title="MEI" text="Add multi-engine instructor privileges through a concentrated course." to="/programs/$slug" slug="mei" />
+            <ServiceLink eyebrow="Approved provider" title="Kodiak 100" text="Insurance-approved initial and recurrent Kodiak 100 training." to="/specialized-training" />
             <ServiceLink eyebrow="Endorsements" title="Expand your envelope" text="Tailwheel, complex, high-performance, high-altitude, and spin training." to="/specialized-training" />
+            <ServiceLink eyebrow="Specialty courses" title="Fly something new" text="Mountain flying, light aerobatics, ski plane, and Cirrus transition." to="/specialized-training" />
             <ServiceLink eyebrow="Stay proficient" title="Flight reviews" text="Continue training with instruction tailored to your experience and goals." to="/local-training" />
           </div>
+          <p className="mt-px bg-background p-6 text-sm leading-relaxed text-muted-foreground lg:p-7">First time in the air? <Link to="/introductory-flights" className="font-bold text-primary">Introductory flights from $100</Link> — or <Link to="/scenic-flights" className="font-bold text-primary">book a scenic flight</Link> for up to three passengers.</p>
         </div>
       </section>
 
