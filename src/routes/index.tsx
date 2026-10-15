@@ -10,10 +10,10 @@ import { FlightJourney, airportStages } from "../components/flight-journey";
 export const Route = createFileRoute("/")({
   staticData: { sitemap: true },
   head: () => ({ meta: [
-    { title: "Accelerated Flight Training | Lakes Area Aviation" },
-    { name: "description", content: "Accelerated CFI, CFII, commercial, instrument, and private pilot training built around your timeline." },
-    { property: "og:title", content: "Accelerated Flight Training | Lakes Area Aviation" },
-    { property: "og:description", content: "Move through your next pilot rating on a focused schedule." },
+    { title: "Zero to Hero Flight Training | Lakes Area Aviation" },
+    { name: "description", content: "From your first flight to commercial pilot and instructor. Explore Lakes Area Aviation’s accelerated zero-to-hero training path and build your personal plan." },
+    { property: "og:title", content: "Zero to Hero Flight Training | Lakes Area Aviation" },
+    { property: "og:description", content: "From your first flight to commercial pilot and instructor, build a training plan around your starting point." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
   ] }), component: HomePage,
 });
@@ -28,16 +28,9 @@ function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/25 to-ink/5 lg:bg-gradient-to-r lg:from-ink lg:via-ink/60 lg:to-transparent" />
         <div className="relative mx-auto flex min-h-[100svh] max-w-7xl flex-col justify-end px-5 pb-9 pt-24 sm:pb-20 sm:pt-32 lg:px-8">
           <div className="max-w-3xl reveal">
-            <p className="eyebrow photo-label">Accelerated CFI &amp; CFII</p>
-            <h1 className="mt-4 max-w-[9ch] font-display text-5xl leading-[.94] sm:mt-5 sm:max-w-none sm:text-7xl lg:text-[5.8rem]"><span className="line-mask"><span>CFI &amp; CFII</span></span><span className="line-mask delay-1"><span>in 4–6 weeks.</span></span></h1>
-            <div className="mt-6 sm:mt-7" aria-label="CFI and CFII exams: one-hour oral and one-hour flight">
-              <p className="text-[10px] font-bold uppercase text-background/65">CFI &amp; CFII exams</p>
-              <p className="mt-1 flex items-baseline gap-3 text-background">
-                <span><strong className="font-display text-xs font-normal text-primary sm:text-base">1</strong> <span className="text-[11px] font-bold uppercase sm:text-xs">hour oral</span></span>
-                <span className="h-3 w-px bg-background/30" aria-hidden="true" />
-                <span><strong className="font-display text-xs font-normal text-primary sm:text-base">1</strong> <span className="text-[11px] font-bold uppercase sm:text-xs">hour flight</span></span>
-              </p>
-            </div>
+            <p className="eyebrow photo-label">Accelerated flight training</p>
+            <h1 className="mt-4 font-display text-5xl leading-[.94] sm:mt-5 sm:text-7xl lg:text-[5.8rem]"><span className="line-mask"><span>Zero to Hero.</span></span></h1>
+            <p className="mt-6 max-w-sm text-base leading-relaxed text-background/80 sm:mt-7 sm:max-w-lg sm:text-lg">From your first flight to commercial pilot and instructor.</p>
           </div>
           <div className="mt-7 reveal-delay"><Link to="/contact" className="interactive-arrow group inline-flex min-h-12 items-center gap-4 border-b border-background/45 pb-1 text-sm font-bold uppercase text-background transition-colors hover:border-primary">Build my training plan <span className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><ArrowRight className="size-4" /></span></Link></div>
           <ScrollCue targetId="flight-path" />

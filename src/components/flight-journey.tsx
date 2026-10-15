@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
+import { Button } from "./ui/button";
+import { journeyFrame, journeyLanding, JOURNEY_STAGE_SVH } from "../lib/journey-pacing";
 import clouds from "../assets/journey/01-clouds.webp";
 import runway from "../assets/journey/02-runway-corrected.webp";
 import instrument from "../assets/journey/instrument-imc-cockpit.webp";
@@ -34,6 +36,8 @@ type Props = { stages?: Stage[]; id?: string; label?: string; mode?: "alt" | "co
 
 export function FlightJourney({ stages = journeyStages, id = "flight-path", label = "Your accelerated flight path", mode = "alt" }: Props = {}) {
   const sectionRef = useRef<HTMLElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const copyRef = useRef<HTMLDivElement>(null);
   const layerRefs = useRef<(HTMLDivElement | null)[]>([]);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const hudRef = useRef<HTMLSpanElement>(null);
@@ -48,23 +52,27 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const el = sectionRef.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
-      const total = el.offsetHeight - window.innerHeight;
-      const raw = clamp(-rect.top / total) * (n - 1);
+      const viewportHeight = viewportRef.current?.offsetHeight ?? window.innerHeight;
+      const total = Math.max(1, el.offsetHeight - viewportHeight);
+      const state = journeyFrame(-rect.top / total, n);
       layerRefs.current.forEach((layer, i) => {
         if (!layer) return;
-        const local = raw - i;
-        const leaving = clamp(local);
-        const coming = clamp(-local);
         const st = stages[i];
+        const leaving = i === state.stage ? state.transition : 0;
+        const coming = i === state.next && i !== state.stage ? 1 - state.transition : 0;
         const scale = reduce ? 1 : 1 + leaving * (st?.zoom ?? 0.55) + coming * (st?.zoomIn ?? 0.06);
-        const opacity = local > 0 ? 1 - clamp(local * 1.4) : 1;
+        const opacity = i === state.stage ? 1 - state.transition : i === state.next ? 1 : 0;
         const depth = reduce ? 0 : 10 + i * 3;
         layer.style.transform = `translate3d(${(mx * -depth).toFixed(2)}px, ${(my * -depth).toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
         layer.style.opacity = opacity.toFixed(3);
       });
-      if (hudRef.current) hudRef.current.textContent = Math.round((raw / (n - 1)) * 35000).toLocaleString("en-US");
-      if (barRef.current) barRef.current.style.transform = `scaleY(${raw / (n - 1)})`;
-      const idx = Math.min(n - 1, Math.round(raw));
+      if (copyRef.current) {
+        copyRef.current.style.opacity = reduce ? "1" : state.copyOpacity.toFixed(3);
+        copyRef.current.style.transform = reduce ? "none" : `translate3d(0, ${((1 - state.copyOpacity) * 8).toFixed(2)}px, 0)`;
+      }
+      if (hudRef.current) hudRef.current.textContent = Math.round(state.progress * 35000).toLocaleString("en-US");
+      if (barRef.current) barRef.current.style.transform = `scaleY(${state.progress})`;
+      const idx = state.active;
       if (idx !== last) {
         last = idx;
         setActive(idx);
@@ -96,14 +104,16 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const jump = (i: number) => {
     const el = sectionRef.current;
     if (!el) return;
-    const total = el.offsetHeight - window.innerHeight;
-    window.scrollTo({ top: el.offsetTop + (total * i) / (stages.length - 1) + 2, behavior: "smooth" });
+    const total = Math.max(1, el.offsetHeight - (viewportRef.current?.offsetHeight ?? window.innerHeight));
+    const top = window.scrollY + el.getBoundingClientRect().top + total * journeyLanding(i, stages.length);
+    window.scrollTo({ top, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
   };
 
-  const s = stages[active]!;
+  const s = stages[active] ?? stages[0];
+  if (!s) return null;
   return (
-    <section ref={sectionRef} id={id} aria-label={label} className="relative bg-ink text-background" style={{ height: `${stages.length * 110}svh` }}>
-      <div className="sticky top-0 h-svh overflow-hidden">
+    <section ref={sectionRef} id={id} aria-label={label} className="relative bg-ink text-background" style={{ height: `${stages.length * JOURNEY_STAGE_SVH + 100}svh` }}>
+      <div ref={viewportRef} className="sticky top-0 h-svh overflow-hidden">
         {stages.map((st, i) => (
           <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="absolute -inset-[2%] will-change-transform backface-hidden" style={{ zIndex: stages.length - i }}>
             {st.video ? (
@@ -139,13 +149,13 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
             <div ref={barRef} className="absolute inset-0 origin-top bg-primary" style={{ transform: "scaleY(0)" }} />
             <span aria-hidden="true" className="landing-scroll-stroke absolute inset-x-0 top-0 h-8 bg-background" />
           </div>
-          <ol className="flex flex-col justify-between gap-6">
+          <ol className="flex flex-col justify-between gap-1 sm:gap-3">
             {stages.map((st, i) => (
               <li key={st.code}>
-                <button type="button" onClick={() => jump(i)} className={`group flex items-center gap-3 text-left text-[11px] font-bold uppercase tracking-[0.16em] transition-colors ${i === active ? "outlined-accent-label" : "text-background/55 hover:text-background/80"}`}>
+                <Button variant="ghost" type="button" aria-label={st.label} aria-current={i === active ? "step" : undefined} onClick={() => jump(i)} className={`group h-11 min-w-11 justify-start gap-3 rounded-none px-2 text-left text-[11px] font-bold uppercase tracking-[0.16em] transition-colors hover:bg-transparent ${i === active ? "outlined-accent-label" : "text-background/55 hover:text-background/80"}`}>
                   <span className={`size-2 rounded-full border border-current transition-all ${i === active ? "scale-150 bg-primary border-primary" : ""}`} />
                   <span className="hidden sm:inline">{st.label}</span>
-                </button>
+                </Button>
               </li>
             ))}
           </ol>
@@ -153,7 +163,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
 
         {/* Copy */}
         <div className="absolute inset-x-0 bottom-0 z-20 mx-auto max-w-7xl px-5 pb-32 pr-16 md:pb-14 lg:px-8 lg:pb-20">
-          <div key={s.code} className="journey-copy max-w-2xl">
+          <div ref={copyRef} className="journey-copy max-w-2xl">
             <p className="eyebrow photo-label">{s.code} · {s.label}</p>
             <p className="mt-4 font-display text-6xl leading-none sm:text-8xl">{s.time}</p>
             <h2 className="mt-4 font-display text-3xl sm:text-4xl">{s.title}</h2>

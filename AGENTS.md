@@ -16,3 +16,4 @@
 - Bundled photos are WebP (heroes max 1920px, fleet cards max 1280px) to keep pages light.
 - The global accent theme is read from the public site_settings row; only a database-verified admin role may change it.
 - Scroll-journey stages may use optimized CDN video with a real-photo poster; video plays only while its stage is active to protect mobile performance.
+- Both homepage journeys use the shared pure journey-pacing mapping for reading windows, transitions, active steps, and click destinations; measure scrolling against the sticky viewport so imagery and copy stay synchronized on mobile.
