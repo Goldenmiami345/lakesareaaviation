@@ -18,6 +18,7 @@ const aircraft = [
 ];
 
 export const Route = createFileRoute("/rates")({
+  staticData: { sitemap: true },
   head: () => ({ meta: m("Aircraft & Training Rates | Lakes Area Aviation", "Published instruction rates, wet aircraft rental rates with prepay pricing, intro flights, housing, and student cars.") }),
   component: Page,
 });

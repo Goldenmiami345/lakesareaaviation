@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
 export const Route = createFileRoute("/admin")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [
     { title: "Site Admin | Lakes Area Aviation" },
     { name: "description", content: "Secure Lakes Area Aviation site appearance controls." },

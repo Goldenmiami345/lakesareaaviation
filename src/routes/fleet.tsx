@@ -3,6 +3,7 @@ import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
 import { fleet } from "../lib/site-data";
 
 export const Route = createFileRoute("/fleet")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: m(
       "Training Fleet | Lakes Area Aviation",
