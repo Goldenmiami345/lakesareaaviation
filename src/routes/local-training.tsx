@@ -5,6 +5,7 @@ import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
 import { locations, SCHOOL_PHONE, SCHOOL_PHONE_TEL } from "../lib/site-data";
 
 export const Route = createFileRoute("/local-training")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: m(
       "Local Flight Training | Lakes Area Aviation",

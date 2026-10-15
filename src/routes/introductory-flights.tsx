@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageIntro, SiteLayout } from "../components/site-shell";
 
 export const Route = createFileRoute("/introductory-flights")({
+  staticData: { sitemap: true },
   head: () => ({ meta: [
     { title: "Introductory Flights | Lakes Area Aviation" },
     { name: "description", content: "Take a $100 introductory flight and experience flight training from the pilot's seat." },

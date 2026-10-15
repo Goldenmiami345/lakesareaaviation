@@ -25,6 +25,7 @@ const team = [
 ];
 
 export const Route = createFileRoute("/team")({
+  staticData: { sitemap: true },
   head: () => ({ meta: m("Flight Instructors & Team | Lakes Area Aviation", "Meet Lakes Area Aviation's owner and flight instructors — CFI, CFII, MEI, and helicopter CFI.") }),
   component: Page,
 });

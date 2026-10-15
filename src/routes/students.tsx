@@ -8,6 +8,7 @@ const title = "Students | Lakes Area Aviation";
 const description = "New students: talk with our team and sign up for scheduling. Current students: request access to Lakes Area Aviation training resources.";
 
 export const Route = createFileRoute("/students")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title }, { name: "description", content: description },

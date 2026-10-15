@@ -8,6 +8,7 @@ import { ScrollCue } from "../components/motion-experience";
 import { FlightJourney, airportStages } from "../components/flight-journey";
 
 export const Route = createFileRoute("/")({
+  staticData: { sitemap: true },
   head: () => ({ meta: [
     { title: "Accelerated Flight Training | Lakes Area Aviation" },
     { name: "description", content: "Accelerated CFI, CFII, commercial, instrument, and private pilot training built around your timeline." },

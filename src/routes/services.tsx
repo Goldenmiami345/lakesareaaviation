@@ -7,6 +7,7 @@ const title = "Our Services | Lakes Area Aviation";
 const description = "Accelerated training, introductory flights, local training, scenic flights, specialized training, and Zero-to-Hero programs at Lakes Area Aviation.";
 
 export const Route = createFileRoute("/services")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title }, { name: "description", content: description },

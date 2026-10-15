@@ -10,6 +10,7 @@ const courses = [
 ];
 
 export const Route = createFileRoute("/specialized-training")({
+  staticData: { sitemap: true },
   head: () => ({ meta: m("Specialized Training & Endorsements | Lakes Area Aviation", "Kodiak 100 initial and recurrent training, tailwheel, complex, high-performance, high-altitude, spin, mountain, aerobatic, ski plane, and Cirrus transition training.") }),
   component: Page,
 });
