@@ -23,6 +23,7 @@ import { Route as ProgramsRouteImport } from './routes/programs'
 import { Route as RatesRouteImport } from './routes/rates'
 import { Route as ScenicFlightsRouteImport } from './routes/scenic-flights'
 import { Route as ServicesRouteImport } from './routes/services'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SpecializedTrainingRouteImport } from './routes/specialized-training'
 import { Route as StudentSuccessRouteImport } from './routes/student-success'
 import { Route as StudentsRouteImport } from './routes/students'
@@ -100,6 +101,11 @@ const ServicesRoute = ServicesRouteImport.update({
   path: '/services',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SpecializedTrainingRoute = SpecializedTrainingRouteImport.update({
   id: '/specialized-training',
   path: '/specialized-training',
@@ -146,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/rates': typeof RatesRoute
   '/scenic-flights': typeof ScenicFlightsRoute
   '/services': typeof ServicesRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/specialized-training': typeof SpecializedTrainingRoute
   '/student-success': typeof StudentSuccessRoute
   '/students': typeof StudentsRoute
@@ -167,6 +174,7 @@ export interface FileRoutesByTo {
   '/rates': typeof RatesRoute
   '/scenic-flights': typeof ScenicFlightsRoute
   '/services': typeof ServicesRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/specialized-training': typeof SpecializedTrainingRoute
   '/student-success': typeof StudentSuccessRoute
   '/students': typeof StudentsRoute
@@ -190,6 +198,7 @@ export interface FileRoutesById {
   '/rates': typeof RatesRoute
   '/scenic-flights': typeof ScenicFlightsRoute
   '/services': typeof ServicesRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/specialized-training': typeof SpecializedTrainingRoute
   '/student-success': typeof StudentSuccessRoute
   '/students': typeof StudentsRoute
@@ -214,6 +223,7 @@ export interface FileRouteTypes {
     | '/rates'
     | '/scenic-flights'
     | '/services'
+    | '/sitemap.xml'
     | '/specialized-training'
     | '/student-success'
     | '/students'
@@ -235,6 +245,7 @@ export interface FileRouteTypes {
     | '/rates'
     | '/scenic-flights'
     | '/services'
+    | '/sitemap.xml'
     | '/specialized-training'
     | '/student-success'
     | '/students'
@@ -257,6 +268,7 @@ export interface FileRouteTypes {
     | '/rates'
     | '/scenic-flights'
     | '/services'
+    | '/sitemap.xml'
     | '/specialized-training'
     | '/student-success'
     | '/students'
@@ -280,6 +292,7 @@ export interface RootRouteChildren {
   RatesRoute: typeof RatesRoute
   ScenicFlightsRoute: typeof ScenicFlightsRoute
   ServicesRoute: typeof ServicesRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SpecializedTrainingRoute: typeof SpecializedTrainingRoute
   StudentSuccessRoute: typeof StudentSuccessRoute
   StudentsRoute: typeof StudentsRoute
@@ -386,6 +399,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServicesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/specialized-training': {
       id: '/specialized-training'
       path: '/specialized-training'
@@ -460,6 +480,7 @@ const rootRouteChildren: RootRouteChildren = {
   RatesRoute: RatesRoute,
   ScenicFlightsRoute: ScenicFlightsRoute,
   ServicesRoute: ServicesRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   SpecializedTrainingRoute: SpecializedTrainingRoute,
   StudentSuccessRoute: StudentSuccessRoute,
   StudentsRoute: StudentsRoute,
