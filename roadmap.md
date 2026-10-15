@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Polish homepage journey pacing with settled reading windows and synchronized transitions; shift the opening to Zero to Hero.
+- [x] Polish homepage journey pacing with settled reading windows and synchronized transitions; shift the opening to Zero to Hero.
 
 - [x] Rating detail upgrade (audit, research, timelines/prices, verify).
 - [x] Flight path: Commercial stage added between Instrument and CFI & CFII (now 6 stages).

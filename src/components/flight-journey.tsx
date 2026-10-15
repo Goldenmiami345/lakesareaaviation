@@ -30,8 +30,6 @@ export const airportStages: Stage[] = [
   { code: "AZ", label: "Cottonwood", hud: "P52 · 1001 W Mingus Ave", time: "P52", title: "Cottonwood, Arizona.", text: "Cottonwood Municipal Airport", img: cw, alt: "Public-domain USGS aerial photo of Cottonwood Municipal Airport (P52) runway 14/32, ramp and surrounding Verde Valley terrain", cta: "Build my training plan", to: "/contact", w: 1500, h: 1500, zoom: 0.18, zoomIn: 0.03 },
 ];
 
-const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
-
 type Props = { stages?: Stage[]; id?: string; label?: string; mode?: "alt" | "code" };
 
 export function FlightJourney({ stages = journeyStages, id = "flight-path", label = "Your accelerated flight path", mode = "alt" }: Props = {}) {
