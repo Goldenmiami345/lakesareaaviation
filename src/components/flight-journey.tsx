@@ -144,7 +144,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         </div>
 
         {/* Stage rail */}
-        <nav aria-label={`${label} stages`} className="absolute right-4 top-1/2 z-20 flex -translate-y-1/2 items-stretch gap-4 lg:right-8">
+        <nav aria-label={`${label} stages`} className="absolute right-4 top-1/2 z-30 flex -translate-y-1/2 items-stretch gap-4 lg:right-8">
           <div className="journey-stage-rail relative w-px overflow-hidden bg-background/20">
             <div ref={barRef} className="absolute inset-0 origin-top bg-primary" style={{ transform: "scaleY(0)" }} />
             <span aria-hidden="true" className="landing-scroll-stroke absolute inset-x-0 top-0 h-8 bg-background" />
@@ -162,8 +162,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         </nav>
 
         {/* Copy */}
-        <div className="absolute inset-x-0 bottom-0 z-20 mx-auto max-w-7xl px-5 pb-32 pr-16 md:pb-14 lg:px-8 lg:pb-20">
-          <div ref={copyRef} className="journey-copy max-w-2xl">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 mx-auto max-w-7xl px-5 pb-32 pr-16 md:pb-14 lg:px-8 lg:pb-20">
+          <div ref={copyRef} className="journey-copy pointer-events-auto max-w-2xl">
             <p className="eyebrow photo-label">{s.code} · {s.label}</p>
             <p className="mt-4 font-display text-6xl leading-none sm:text-8xl">{s.time}</p>
             <h2 className="mt-4 font-display text-3xl sm:text-4xl">{s.title}</h2>
