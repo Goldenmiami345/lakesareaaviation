@@ -26,6 +26,18 @@ export function journeyLanding(index: number, count: number) {
   return (clamp(index, 0, length - 1) + JOURNEY_HOLD / 2) / length;
 }
 
+// Index of the stage landing closest to the given progress — used to snap a
+// momentum fling that stops between stages back onto one page.
+export function journeyNearestLanding(progress: number, count: number) {
+  const length = Math.max(1, count);
+  const p = clamp(progress);
+  let best = 0;
+  for (let index = 1; index < length; index += 1) {
+    if (Math.abs(journeyLanding(index, length) - p) < Math.abs(journeyLanding(best, length) - p)) best = index;
+  }
+  return best;
+}
+
 // One gesture = one stage. Returns the stage a gesture should land on, or null
 // when the gesture should scroll natively (leaving the journey upward or downward).
 export const JOURNEY_GESTURE_LOCK_MS = 500;

@@ -1,6 +1,6 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { journeyFrame, journeyGestureTarget, journeyLanding, JOURNEY_HOLD, JOURNEY_STAGE_SVH } from "./journey-pacing";
+import { journeyFrame, journeyGestureTarget, journeyLanding, journeyNearestLanding, JOURNEY_HOLD, JOURNEY_STAGE_SVH } from "./journey-pacing";
 
 describe("homepage journey pacing", () => {
   test("a viewport-sized swipe stays on the current reading step in either journey", () => {
