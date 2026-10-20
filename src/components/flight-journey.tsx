@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { Button } from "./ui/button";
-import { journeyFrame, journeyLanding, JOURNEY_STAGE_SVH } from "../lib/journey-pacing";
+import { journeyFrame, journeyGestureTarget, journeyLanding, JOURNEY_GESTURE_LOCK_MS, JOURNEY_STAGE_SVH, JOURNEY_SWIPE_PX } from "../lib/journey-pacing";
 import clouds from "../assets/journey/01-clouds.webp";
 import runway from "../assets/journey/02-runway-corrected.webp";
 import instrument from "../assets/journey/instrument-imc-cockpit.webp";
