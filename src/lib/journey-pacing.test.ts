@@ -51,4 +51,20 @@ describe("homepage journey pacing", () => {
     assert.equal(journeyGestureTarget(1, 6, 1), null);
     assert.equal(journeyGestureTarget(0.99, 6, -1), 5);
   });
+
+  test("momentum catch-up snaps to the nearest stage landing", () => {
+    for (const count of [3, 6]) {
+      assert.equal(journeyNearestLanding(0, count), 0);
+      assert.equal(journeyNearestLanding(1, count), count - 1);
+      for (let index = 0; index < count; index += 1) {
+        const landing = journeyLanding(index, count);
+        assert.equal(journeyNearestLanding(landing, count), index);
+        if (index + 1 < count) {
+          const next = journeyLanding(index + 1, count);
+          assert.equal(journeyNearestLanding((landing + next) / 2 + 1e-6, count), index + 1);
+          assert.equal(journeyNearestLanding((landing + next) / 2 - 1e-6, count), index);
+        }
+      }
+    }
+  });
 });
