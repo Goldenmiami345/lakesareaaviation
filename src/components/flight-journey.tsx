@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { Button } from "./ui/button";
-import { journeyFrame, journeyGestureTarget, journeyLanding, JOURNEY_GESTURE_LOCK_MS, JOURNEY_STAGE_SVH, JOURNEY_SWIPE_PX } from "../lib/journey-pacing";
+import { journeyFrame, journeyGestureTarget, journeyLanding, journeyNearestLanding, JOURNEY_GESTURE_LOCK_MS, JOURNEY_STAGE_SVH, JOURNEY_SWIPE_PX } from "../lib/journey-pacing";
 import clouds from "../assets/journey/01-clouds.webp";
 import runway from "../assets/journey/02-runway-corrected.webp";
 import instrument from "../assets/journey/instrument-imc-cockpit.webp";
@@ -82,8 +82,9 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         });
       }
     };
-    const onScroll = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(render); };
-    const onMove = (e: PointerEvent) => { mx = e.clientX / window.innerWidth - 0.5; my = e.clientY / window.innerHeight - 0.5; onScroll(); };
+    const renderScroll = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(render); };
+    const onScroll = () => { renderScroll(); scheduleSettle(); };
+    const onMove = (e: PointerEvent) => { mx = e.clientX / window.innerWidth - 0.5; my = e.clientY / window.innerHeight - 0.5; renderScroll(); };
     // One gesture = one stage: a wheel burst or swipe advances exactly one step
     // and locks until the gesture settles, so momentum can never skip stages.
     let locked = false;
@@ -151,10 +152,42 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       lock();
       stepTo(target);
     };
+    // Momentum catch-up: a fling that starts before the section pins scrolls
+    // natively and can stop mid-stage. Once the scroll goes quiet while the
+    // viewport is pinned, snap to the nearest stage landing — one swipe still
+    // covers exactly one page.
+    const SETTLE_DELAY_MS = 160;
+    const SETTLE_TOLERANCE_PX = 40;
+    let settleTimer = 0;
+    const clearSettle = () => {
+      if (settleTimer) {
+        window.clearTimeout(settleTimer);
+        settleTimer = 0;
+      }
+    };
+    const scheduleSettle = () => {
+      clearSettle();
+      settleTimer = window.setTimeout(() => {
+        settleTimer = 0;
+        if (reduce) return;
+        if (locked) { scheduleSettle(); return; }
+        const el = sectionRef.current;
+        if (!el) return;
+        const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
+        const rect = el.getBoundingClientRect();
+        if (rect.top > 0 || rect.bottom < vh) return;
+        const total = Math.max(1, el.offsetHeight - vh);
+        const progress = Math.max(0, Math.min(1, -rect.top / total));
+        if (progress > journeyLanding(n - 1, n)) return;
+        const best = journeyNearestLanding(progress, n);
+        const top = window.scrollY + rect.top + total * journeyLanding(best, n);
+        if (Math.abs(top - window.scrollY) > SETTLE_TOLERANCE_PX) stepTo(best);
+      }, SETTLE_DELAY_MS);
+    };
     render();
     const viewportEl = viewportRef.current;
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("resize", renderScroll);
     if (!reduce) window.addEventListener("pointermove", onMove, { passive: true });
     viewportEl?.addEventListener("wheel", onWheel, { passive: false });
     viewportEl?.addEventListener("touchstart", onTouchStart, { passive: true });
@@ -163,6 +196,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     return () => {
       cancelAnimationFrame(frame);
       window.clearTimeout(unlockTimer);
+      window.clearTimeout(settleTimer);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       window.removeEventListener("pointermove", onMove);
