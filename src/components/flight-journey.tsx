@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { Button } from "./ui/button";
-import { journeyFrame, journeyLanding, JOURNEY_STAGE_SVH } from "../lib/journey-pacing";
+import { journeyFrame, journeyGestureTarget, journeyLanding, journeyNearestLanding, JOURNEY_GESTURE_LOCK_MS, JOURNEY_STAGE_SVH, JOURNEY_SWIPE_PX } from "../lib/journey-pacing";
 import clouds from "../assets/journey/01-clouds.webp";
 import runway from "../assets/journey/02-runway-corrected.webp";
 import instrument from "../assets/journey/instrument-imc-cockpit.webp";
@@ -51,6 +51,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       if (!el) return;
       const rect = el.getBoundingClientRect();
       const viewportHeight = viewportRef.current?.offsetHeight ?? window.innerHeight;
+      viewportRef.current?.classList.toggle("touch-none", rect.top <= 0 && rect.bottom >= viewportHeight);
       const total = Math.max(1, el.offsetHeight - viewportHeight);
       const state = journeyFrame(-rect.top / total, n);
       layerRefs.current.forEach((layer, i) => {
@@ -81,13 +82,129 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         });
       }
     };
-    const onScroll = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(render); };
-    const onMove = (e: PointerEvent) => { mx = e.clientX / window.innerWidth - 0.5; my = e.clientY / window.innerHeight - 0.5; onScroll(); };
+    const renderScroll = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(render); };
+    const onScroll = () => { renderScroll(); scheduleSettle(); };
+    const onMove = (e: PointerEvent) => { mx = e.clientX / window.innerWidth - 0.5; my = e.clientY / window.innerHeight - 0.5; renderScroll(); };
+    // One gesture = one stage: a wheel burst or swipe advances exactly one step
+    // and locks until the gesture settles, so momentum can never skip stages.
+    let locked = false;
+    let unlockTimer = 0;
+    const lock = () => {
+      locked = true;
+      window.clearTimeout(unlockTimer);
+      unlockTimer = window.setTimeout(() => { locked = false; }, JOURNEY_GESTURE_LOCK_MS);
+    };
+    const gestureProgress = () => {
+      const el = sectionRef.current;
+      if (!el) return null;
+      const rect = el.getBoundingClientRect();
+      const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
+      if (rect.top > 0 || rect.bottom < vh) return null;
+      const total = Math.max(1, el.offsetHeight - vh);
+      return Math.max(0, Math.min(1, -rect.top / total));
+    };
+    const stepTo = (target: number) => {
+      const el = sectionRef.current;
+      if (!el) return;
+      const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
+      const total = Math.max(1, el.offsetHeight - vh);
+      const top = window.scrollY + el.getBoundingClientRect().top + total * journeyLanding(target, n);
+      window.scrollTo({ top, behavior: reduce ? "instant" : "smooth" });
+    };
+    const onWheel = (e: WheelEvent) => {
+      const progress = gestureProgress();
+      if (progress === null) return;
+      if (locked) { e.preventDefault(); lock(); return; }
+      const direction: 1 | -1 = e.deltaY > 0 ? 1 : -1;
+      if (direction === 1 && progress < journeyLanding(0, n)) return;
+      const target = journeyGestureTarget(progress, n, direction);
+      if (target === null) return;
+      e.preventDefault();
+      lock();
+      stepTo(target);
+    };
+    let touchY = 0;
+    let touchHijack = false;
+    const onTouchStart = (e: TouchEvent) => {
+      touchY = e.touches[0]?.clientY ?? 0;
+      const el = sectionRef.current;
+      if (!el || reduce) { touchHijack = false; return; }
+      const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
+      const rect = el.getBoundingClientRect();
+      touchHijack = rect.top <= 0 && rect.bottom >= vh;
+    };
+    const onTouchMove = (e: TouchEvent) => { if (touchHijack) e.preventDefault(); };
+    const onTouchEnd = (e: TouchEvent) => {
+      if (!touchHijack) return;
+      touchHijack = false;
+      const progress = gestureProgress();
+      if (progress === null) return;
+      const dy = touchY - (e.changedTouches[0]?.clientY ?? touchY);
+      if (Math.abs(dy) < JOURNEY_SWIPE_PX) return;
+      const direction: 1 | -1 = dy > 0 ? 1 : -1;
+      const target = journeyGestureTarget(progress, n, direction);
+      if (target === null) {
+        const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
+        window.scrollTo({ top: window.scrollY + direction * vh * 0.9, behavior: reduce ? "instant" : "smooth" });
+        return;
+      }
+      if (locked) return;
+      lock();
+      stepTo(target);
+    };
+    // Momentum catch-up: a fling that starts before the section pins scrolls
+    // natively and can stop mid-stage. Once the scroll goes quiet while the
+    // viewport is pinned, snap to the nearest stage landing — one swipe still
+    // covers exactly one page.
+    const SETTLE_DELAY_MS = 160;
+    const SETTLE_TOLERANCE_PX = 40;
+    let settleTimer = 0;
+    const clearSettle = () => {
+      if (settleTimer) {
+        window.clearTimeout(settleTimer);
+        settleTimer = 0;
+      }
+    };
+    const scheduleSettle = () => {
+      clearSettle();
+      settleTimer = window.setTimeout(() => {
+        settleTimer = 0;
+        if (reduce) return;
+        if (locked) { scheduleSettle(); return; }
+        const el = sectionRef.current;
+        if (!el) return;
+        const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
+        const rect = el.getBoundingClientRect();
+        if (rect.top > 0 || rect.bottom < vh) return;
+        const total = Math.max(1, el.offsetHeight - vh);
+        const progress = Math.max(0, Math.min(1, -rect.top / total));
+        if (progress > journeyLanding(n - 1, n)) return;
+        const best = journeyNearestLanding(progress, n);
+        const top = window.scrollY + rect.top + total * journeyLanding(best, n);
+        if (Math.abs(top - window.scrollY) > SETTLE_TOLERANCE_PX) stepTo(best);
+      }, SETTLE_DELAY_MS);
+    };
     render();
+    const viewportEl = viewportRef.current;
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("resize", renderScroll);
     if (!reduce) window.addEventListener("pointermove", onMove, { passive: true });
-    return () => { cancelAnimationFrame(frame); window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); window.removeEventListener("pointermove", onMove); };
+    viewportEl?.addEventListener("wheel", onWheel, { passive: false });
+    viewportEl?.addEventListener("touchstart", onTouchStart, { passive: true });
+    viewportEl?.addEventListener("touchmove", onTouchMove, { passive: false });
+    viewportEl?.addEventListener("touchend", onTouchEnd, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(unlockTimer);
+      window.clearTimeout(settleTimer);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      window.removeEventListener("pointermove", onMove);
+      viewportEl?.removeEventListener("wheel", onWheel);
+      viewportEl?.removeEventListener("touchstart", onTouchStart);
+      viewportEl?.removeEventListener("touchmove", onTouchMove);
+      viewportEl?.removeEventListener("touchend", onTouchEnd);
+    };
   }, [stages]);
 
   useEffect(() => {
