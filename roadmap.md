@@ -3,6 +3,8 @@
 - [x] Reduce accidental homepage step skipping with longer reading windows; reverse the mobile dot to demonstrate an upward swipe.
 
 - [x] One gesture = one stage: wheel bursts and swipes advance a single journey step and lock until the gesture settles.
+- [x] Momentum catch-up: a fling that stops inside a pinned journey snaps to the nearest stage, so one swipe covers one page.
+- [x] Replace built-in scroll restoration with explicit top-of-page resets on real navigations, so a late hydration settle can no longer yank a scrolling visitor to the top.
 
 - [x] Rating detail upgrade (audit, research, timelines/prices, verify).
 - [x] Flight path: Commercial stage added between Instrument and CFI & CFII (now 6 stages).
