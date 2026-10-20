@@ -1,7 +1,7 @@
 const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 
-export const JOURNEY_HOLD = 0.6;
-export const JOURNEY_STAGE_SVH = 140;
+export const JOURNEY_HOLD = 0.8;
+export const JOURNEY_STAGE_SVH = 240;
 
 // Each stage owns a reading window, then a transition; the final stage holds to the exit.
 export function journeyFrame(progress: number, count: number) {
