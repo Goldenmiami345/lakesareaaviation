@@ -17,3 +17,4 @@
 - The global accent theme is read from the public site_settings row; only a database-verified admin role may change it.
 - Scroll-journey stages may use optimized CDN video with a real-photo poster; video plays only while its stage is active to protect mobile performance.
 - Both homepage journeys use the shared pure journey-pacing mapping for reading windows, transitions, active steps, and click destinations; measure scrolling against the sticky viewport so imagery and copy stay synchronized on mobile.
+- Scroll management is explicit in src/router.tsx (top-of-page reset on real navigations via an onResolved subscription); never re-enable TanStack's built-in scrollRestoration — its reset can fire from a late hydration settle and yank a scrolling visitor to the top.
