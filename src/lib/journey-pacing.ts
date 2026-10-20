@@ -34,7 +34,7 @@ export const JOURNEY_SWIPE_PX = 40;
 export function journeyGestureTarget(progress: number, count: number, direction: 1 | -1): number | null {
   const length = Math.max(1, count);
   const position = clamp(progress) * length - JOURNEY_HOLD / 2;
-  const target = direction === 1 ? Math.floor(position) + 1 : Math.ceil(position) - 1;
+  const target = direction === 1 ? Math.floor(position + 1e-9) + 1 : Math.ceil(position - 1e-9) - 1;
   if (target < 0 || target >= length) return null;
   return target;
 }
