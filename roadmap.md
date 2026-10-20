@@ -2,7 +2,7 @@
 
 - [x] Reduce accidental homepage step skipping with longer reading windows; reverse the mobile dot to demonstrate an upward swipe.
 
-- [x] Polish homepage journey pacing with settled reading windows and synchronized transitions; shift the opening to Zero to Hero.
+- [x] One gesture = one stage: wheel bursts and swipes advance a single journey step and lock until the gesture settles.
 
 - [x] Rating detail upgrade (audit, research, timelines/prices, verify).
 - [x] Flight path: Commercial stage added between Instrument and CFI & CFII (now 6 stages).
