@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Reduce accidental homepage step skipping with longer reading windows; reverse the mobile dot to demonstrate an upward swipe.
+
 - [x] Polish homepage journey pacing with settled reading windows and synchronized transitions; shift the opening to Zero to Hero.
 
 - [x] Rating detail upgrade (audit, research, timelines/prices, verify).
