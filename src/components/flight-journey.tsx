@@ -145,7 +145,12 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const target = journeyGestureTarget(progress, n, direction);
       if (target === null) {
         const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
-        window.scrollTo({ top: window.scrollY + direction * vh * 0.9, behavior: reduce ? "instant" : "smooth" });
+        const el = sectionRef.current;
+        // Leaving upward: clear the whole pinned entry band so the snap can't pull the visitor back in.
+        const top = direction === -1 && el
+          ? window.scrollY + el.getBoundingClientRect().top - vh * 0.9
+          : window.scrollY + direction * vh * 0.9;
+        window.scrollTo({ top, behavior: reduce ? "instant" : "smooth" });
         return;
       }
       if (locked) return;
@@ -178,7 +183,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         if (rect.top > 0 || rect.bottom < vh) return;
         const total = Math.max(1, el.offsetHeight - vh);
         const progress = Math.max(0, Math.min(1, -rect.top / total));
-        if (progress > journeyLanding(n - 1, n)) return;
+        // Entry and exit bands scroll natively so visitors can always leave the journey.
+        if (progress < journeyLanding(0, n) || progress > journeyLanding(n - 1, n)) return;
         const best = journeyNearestLanding(progress, n);
         const top = window.scrollY + rect.top + total * journeyLanding(best, n);
         if (Math.abs(top - window.scrollY) > SETTLE_TOLERANCE_PX) stepTo(best);
