@@ -1,8 +1,29 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { journeyFrame, journeyGestureTarget, journeyLanding, journeyNearestLanding, JOURNEY_HOLD, JOURNEY_STAGE_SVH } from "./journey-pacing";
+import { journeyFrame, journeyGestureTarget, journeyLanding, journeyNearestLanding, journeyShouldSettle, JOURNEY_HOLD, JOURNEY_STAGE_SVH } from "./journey-pacing";
 
 describe("homepage journey pacing", () => {
+  test("rounded mobile landings still advance one step and release both endpoints", () => {
+    for (const count of [3, 6]) {
+      for (let index = 0; index < count; index += 1) {
+        for (const offset of [-0.001, 0.001]) {
+          const progress = journeyLanding(index, count) + offset / count;
+          assert.equal(journeyGestureTarget(progress, count, 1), index === count - 1 ? null : index + 1);
+          assert.equal(journeyGestureTarget(progress, count, -1), index === 0 ? null : index - 1);
+        }
+      }
+    }
+  });
+
+  test("settling never pulls visitors back from either exit corridor", () => {
+    for (const count of [3, 6]) {
+      assert.equal(journeyShouldSettle(0, count), false);
+      assert.equal(journeyShouldSettle(journeyLanding(0, count), count), false);
+      assert.equal(journeyShouldSettle(journeyLanding(count - 1, count), count), false);
+      assert.equal(journeyShouldSettle(1, count), false);
+      assert.equal(journeyShouldSettle(journeyLanding(1, count), count), true);
+    }
+  });
   test("a viewport-sized swipe stays on the current reading step in either journey", () => {
     for (const count of [3, 6]) {
       const progress = 100 / (count * JOURNEY_STAGE_SVH);
