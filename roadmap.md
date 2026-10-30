@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Verify mobile journey exits, rounded step positions, and reduced-motion scrolling no longer trap swipes.
+
 - [x] Reduce accidental homepage step skipping with longer reading windows; reverse the mobile dot to demonstrate an upward swipe.
 
 - [x] One gesture = one stage: wheel bursts and swipes advance a single journey step and lock until the gesture settles.

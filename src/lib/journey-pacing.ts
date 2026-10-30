@@ -38,6 +38,10 @@ export function journeyNearestLanding(progress: number, count: number) {
   return best;
 }
 
+export function journeyShouldSettle(progress: number, count: number) {
+  return progress > journeyLanding(0, count) && progress < journeyLanding(count - 1, count);
+}
+
 // One gesture = one stage. Returns the stage a gesture should land on, or null
 // when the gesture should scroll natively (leaving the journey upward or downward).
 export const JOURNEY_GESTURE_LOCK_MS = 500;
@@ -45,7 +49,10 @@ export const JOURNEY_SWIPE_PX = 40;
 
 export function journeyGestureTarget(progress: number, count: number, direction: 1 | -1): number | null {
   const length = Math.max(1, count);
-  const position = clamp(progress) * length - JOURNEY_HOLD / 2;
+  const rawPosition = clamp(progress) * length - JOURNEY_HOLD / 2;
+  // Browser scroll coordinates round to pixels; treat near-landings as exact.
+  const nearest = Math.round(rawPosition);
+  const position = Math.abs(rawPosition - nearest) < 0.01 ? nearest : rawPosition;
   const target = direction === 1 ? Math.floor(position + 1e-9) + 1 : Math.ceil(position - 1e-9) - 1;
   if (target < 0 || target >= length) return null;
   return target;
