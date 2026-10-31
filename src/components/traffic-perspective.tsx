@@ -23,6 +23,7 @@ export function TrafficPerspective({ active }: { active: boolean }) {
   const [hovered, setHovered] = useState<number | null>(null);
   const [info, setInfo] = useState<string>("");
   const hoveredRef = useRef<number | null>(null);
+  const cardRef = useRef<SVGGElement>(null);
   hoveredRef.current = hovered;
   const navigate = useNavigate();
   const a = KLXL_OBLIQUE_PATTERN;
@@ -57,6 +58,7 @@ export function TrafficPerspective({ active }: { active: boolean }) {
           sh.setAttribute("rx", (w * 0.42).toFixed(1)); sh.setAttribute("ry", (w * 0.09).toFixed(1));
           sh.setAttribute("opacity", Math.max(0.06, 0.4 - (s.agl / a.tpaAgl) * 0.32).toFixed(2));
         }
+        if (hoveredRef.current === i) cardRef.current?.setAttribute("transform", `translate(${Math.min(KLXL_OBLIQUE.width - 240, g.x + 14).toFixed(0)} ${(g.y - lift - 70).toFixed(0)})`);
         if (hoveredRef.current === i) setInfo(`${s.phase} · ${s.msl.toLocaleString("en-US")} ft MSL · ${s.knots} kt`);
       });
       if (!reduce) raf = requestAnimationFrame(draw);
@@ -89,15 +91,15 @@ export function TrafficPerspective({ active }: { active: boolean }) {
           <rect x={-0.7} y={-0.6} width={1.4} height={1.2} fill="transparent" />
           {/* unit-wide sprite, anchored at its wheels */}
           <image href={p.sp.src} x={-0.5} y={-1 / p.sp.aspect} width={1} height={1 / p.sp.aspect} style={{ filter: "saturate(0.85) brightness(0.95) drop-shadow(0 0 0.4px rgb(0 0 0 / 0.4))" }} />
-          {hovered === i && (
-            <g transform={`scale(${1 / 40}) translate(24 -40)`}>
-              <rect width={250} height={52} rx={3} fill="rgb(15 20 30 / 0.88)" />
-              <text x={10} y={20} fontSize={14} fontWeight={700} fill="white" fontFamily="monospace">{p.reg} · {p.f?.name ?? ""}</text>
-              <text x={10} y={40} fontSize={11} fill="rgb(255 255 255 / 0.75)" fontFamily="monospace">{info}</text>
-            </g>
-          )}
         </g>
       ))}
+      {hovered !== null && planes[hovered] && (
+        <g ref={cardRef} className="pointer-events-none" aria-hidden>
+          <rect width={236} height={50} rx={3} fill="rgb(15 20 30 / 0.88)" />
+          <text x={10} y={20} fontSize={13} fontWeight={700} fill="white" fontFamily="monospace">{planes[hovered]!.reg} · {planes[hovered]!.f?.name ?? ""}</text>
+          <text x={10} y={38} fontSize={11} fill="rgb(255 255 255 / 0.75)" fontFamily="monospace">{info}</text>
+        </g>
+      )}
     </svg>
   );
 }
