@@ -179,6 +179,7 @@ function installController() {
   };
   let lastWheel = 0, lastDelta = 0;
   const onWheel = (e: WheelEvent) => {
+    if ((e.target as Element | null)?.closest?.('[data-model-gesture]')) return;
     if (reduce() || e.ctrlKey || e.metaKey || Math.abs(e.deltaY) < Math.abs(e.deltaX) || root.classList.contains("journey-free")) return;
     const pages = journeyPages();
     const dir = e.deltaY > 0 ? 1 : -1;
@@ -204,12 +205,14 @@ function installController() {
   let lastTouchAt = 0;
   const fingerDown = () => touching && performance.now() - lastTouchAt < 150;
   const onTouchStart = (e: TouchEvent) => {
+    if ((e.target as Element | null)?.closest?.('[data-model-gesture]')) { g = null; rejected = true; return; }
     if (e.touches.length > 1 || multi) { lastTouchAt = performance.now(); touching = true; cancelForMulti(); return; }
     touching = true; rejected = false; landedUntil = 0; lastTouchAt = performance.now();
     const t = e.touches[0];
     g = e.touches.length === 1 && t && !reduce() ? { x: t.clientX, y: t.clientY, decided: false, claimed: false, fired: false } : null;
   };
   const onTouchMove = (e: TouchEvent) => {
+    if ((e.target as Element | null)?.closest?.('[data-model-gesture]')) { g = null; rejected = true; return; }
     lastTouchAt = performance.now();
     if (e.touches.length > 1 || multi) { cancelForMulti(); return; }
     if (zoomedIn()) { g = null; rejected = true; return; }
