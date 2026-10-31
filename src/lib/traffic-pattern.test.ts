@@ -30,3 +30,13 @@ test("aircraft are on the ground at the touch-and-go point", () => {
   assert.equal(s.agl, 0);
   assert.equal(s.msl, airportTraffic.KLXL.elevation);
 });
+
+import { lapSeconds, feetPerPixel } from "./traffic-pattern";
+import { airportTraffic as trafficData } from "./site-data";
+test("pattern circuits take real-world minutes, not seconds", () => {
+  const a = trafficData.KLXL;
+  expect(feetPerPixel(a)).toBeCloseTo(4010 / Math.hypot(932 - 566, 911 - 597), 5);
+  const lap = lapSeconds(a);
+  expect(lap).toBeGreaterThan(90);
+  expect(lap).toBeLessThan(300);
+});
