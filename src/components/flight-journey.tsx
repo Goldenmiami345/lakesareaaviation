@@ -179,6 +179,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         lastWheel = performance.now(); lastDelta = Math.abs(e.deltaY);
         if (!armed || gap < 180) return;
         engage();
+        if (!snapOwners.has(el)) return;
         lastWheel = 0;
       }
       const total = Math.max(1, el.offsetHeight - vh);
