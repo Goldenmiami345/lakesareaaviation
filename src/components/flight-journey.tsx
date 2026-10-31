@@ -36,8 +36,8 @@ export const airportStages: Stage[] = [
 ];
 
 const snapOwners = new Set<Element>();
-// Traffic-pattern airplanes are paused while their design is still being decided.
-const SHOW_TRAFFIC = false;
+// Traffic-pattern airplanes on the airport aerials.
+const SHOW_TRAFFIC = true;
 
 // Programmatic glide that temporarily disables journey snapping, so jumps
 // (back to top, location shortcuts) travel straight to their target.
