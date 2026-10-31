@@ -194,3 +194,4 @@ html.journey-paging { overflow: hidden; overscroll-behavior: none; }
 .journey-copy-wrap, .journey-hud { transition: opacity .3s ease; }
 .journey-viewport[data-zoomed] .journey-copy-wrap { opacity: 0; pointer-events: none !important; }
 .journey-viewport[data-zoomed] .journey-copy-wrap * { pointer-events: none !important; }
+.journey-viewport[data-zoomed] .journey-shade { opacity: .3; }
