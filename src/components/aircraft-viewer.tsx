@@ -28,7 +28,7 @@ export default function AircraftViewer({ plane, initialIndex = 0, onClose }: { p
       <Button variant="ghost" size="icon" aria-label="Close viewer" autoFocus onClick={onClose} className="size-11"><X /></Button>
     </div>
     <div className="relative min-h-0 flex-1 overflow-hidden">
-      {mode === 'model' && model ? <Suspense fallback={null}><AircraftModel src={model} label={plane.name} /></Suspense> :
+      {mode === 'model' && model ? <div data-model-gesture="" className="h-full w-full touch-none" onTouchStart={e=>e.stopPropagation()} onTouchMove={e=>e.stopPropagation()} onPointerDown={e=>e.stopPropagation()} onPointerMove={e=>e.stopPropagation()} onWheel={e=>e.stopPropagation()}><Suspense fallback={<img src={plane.image} alt={plane.registration} className="h-full w-full object-contain" />}><AircraftModel src={model} label={plane.name} poster={plane.image} /></Suspense></div> :
         <TransformWrapper ref={zoom} minScale={1} maxScale={4} centerOnInit wheel={{ step: .1 }}>
           <TransformComponent wrapperClass="!h-full !w-full" contentClass="!h-full !w-full">
             <img src={mode === 'panel' ? plane.panel : photo?.src} alt={mode === 'panel' ? `${plane.registration} panel` : photo?.label} draggable={false} className="h-full w-full select-none object-contain" />

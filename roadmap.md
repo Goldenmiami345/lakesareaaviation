@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Install supplied GLBs and exact top sprites; verify three cards/fleet rotation/drag/pinch isolation and dev SSR; report production limitations.
+
 - [x] Add production HTML gate for all 26 routes, fleet order and unfinished Suspense; validate gate against empty shell.
 - [ ] Confirm production SSR repair/root cause and production mobile hydration: awaiting new hosted build/artifacts (current hosted build predates edits; dev-only checks pass).
 
@@ -10,7 +12,7 @@
 - [x] Replace retired Apache and correct Phoenix/order everywhere; update traffic paint and factual tests.
 - [x] Inspect 35 owner photos; prepare seven exact-photo cutouts and optimized CDN walk-arounds (masking quality limitations recorded in the report).
 - [x] Add real walk-around/fullscreen zoom and hidden-until-present lazy model slot; verify fleet and traffic on phone/desktop.
-- [ ] Verify accurate 3D rendering after owner supplies Phoenix, Apache and Cardinal GLB files.
+- [x] Verify supplied Phoenix, Apache and Cardinal GLBs load and render in fleet/cards at 390×844; physical iPhone performance unverified.
 
 - [x] Contain airplane photos in a full-width top card area; verify four aircraft types at 375×667 and 390×844.
 

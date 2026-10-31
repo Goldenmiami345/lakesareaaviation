@@ -2,19 +2,19 @@ import { useCallback, useMemo, useRef } from 'react';
 import { fleet } from '../lib/site-data';
 import { feetPerPixel, patternAltitude, type PatternAirport, type PatternSample, type Wind } from '../lib/traffic-pattern';
 import { RadarTag, TrafficCard, useTrafficSelection, usePreloadCardPhotos } from './traffic-ui';
-import { AIRCRAFT_SPANS, TrafficVector } from './traffic-vector';
+import { trafficSpanFeet, TrafficVector } from './traffic-vector';
 import { useTrafficAnimation } from './use-traffic-animation';
+import { trafficPresentationScale } from '../lib/model-settings';
 
 // Keep the existing threefold presentation footprint; map timing is independent
 // of this legacy visual multiplier. Never increase aircraft size for visibility.
-const VISUAL_SCALE = 3;
 export function TrafficPattern({airport,active,viewBox='0 0 1500 1500',wind=null,runwayHeading=Number(airport.runway)*10}:{airport:PatternAirport;active:boolean;viewBox?:string;wind?:Wind|null;runwayHeading?:number}){
   const svgRef=useRef<SVGSVGElement>(null),planeRefs=useRef<(SVGGElement|null)[]>([]),shadowRefs=useRef<(SVGGElement|null)[]>([]),tagRefs=useRef<(SVGGElement|null)[]>([]),textRefs=useRef<(SVGTextElement|null)[]>([]),cardRef=useRef<HTMLDivElement>(null);
   const {selected,selectedRef,open,hitProps}=useTrafficSelection(active);
   usePreloadCardPhotos(airport.aircraft,active);
   const planes=useMemo(()=>airport.aircraft.map(reg=>{const f=fleet.find(x=>x.registration===reg);return {reg,type:f?.name??'Training aircraft',nickname:f?.nickname??''};}),[airport]);
   const project=useCallback((s:PatternSample,reg:string)=>{
-    const w=(AIRCRAFT_SPANS[reg]??36)/feetPerPixel(airport)*VISUAL_SCALE;
+    const w=trafficSpanFeet(reg)/feetPerPixel(airport)*trafficPresentationScale(reg);
     const lift=s.agl/airport.tpaAgl;
     return {x:s.x,y:s.y,lift,transform:`translate(${s.x} ${s.y}) rotate(${s.heading}) scale(${w*(1+lift*.12)})`,shadow:`translate(${s.x+2+lift*10} ${s.y+2.5+lift*12}) rotate(${s.heading}) scale(${w})`};
   },[airport]);

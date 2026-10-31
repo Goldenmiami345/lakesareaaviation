@@ -220,6 +220,8 @@ html.journey-free, html.journey-free.journey-snap { scroll-snap-type: none !impo
 .aircraft-tan { fill:var(--aircraft-phoenix-tan); }
 .aircraft-lettering { fill:var(--aircraft-white); font: bold 3px monospace; }
 .fleet-cutout { filter:drop-shadow(var(--fleet-ground-shadow)); }
+.aircraft-model { background: transparent; --poster-color: transparent; }
+.aircraft-render-shadow { filter:brightness(0); opacity:.45; }
 .aircraft-base { fill:var(--aircraft-white); stroke:var(--ink); stroke-width:.5; }
 .aircraft-stripe { fill:var(--plane-stripe); }
 .aircraft-glass { fill:var(--aircraft-glass); }
