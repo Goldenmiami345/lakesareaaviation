@@ -1,6 +1,7 @@
 import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "@tanstack/react-router";
+import { Button } from './ui/button';
 
 import c6717a from "../assets/traffic-card/n6717a.webp";
 import c8570b from "../assets/traffic-card/n8570b.webp";
@@ -78,10 +79,13 @@ export function useTrafficSelection(active: boolean) {
 /** Position a fixed card next to a screen point: inside a 16px safe area, clear of the
  * side-dot rail, header and stage copy, and never over the tapped airplane. */
 const LIFT = 22; // the photo rises this far above the card's top edge
+const cardPositions = new WeakMap<HTMLElement, {x:number;y:number}>();
 export function placeCard(card: HTMLElement | null, x: number, y: number) {
   if (!card) return;
   const w = card.offsetWidth || 220, h = card.offsetHeight || 150;
   const W = window.innerWidth, H = window.innerHeight;
+  const locked = cardPositions.get(card);
+  if (locked && locked.x >= 16 && locked.x + w <= W - 16 && locked.y >= LIFT + 16 && locked.y + h <= H - 16) return;
   const header = document.querySelector("header")?.getBoundingClientRect().bottom ?? 64;
   const section = document.elementFromPoint(Math.min(W - 1, Math.max(0, x)), Math.min(H - 1, Math.max(0, y)))?.closest("section");
   const copy = section?.querySelector(".journey-copy");
@@ -111,6 +115,7 @@ export function placeCard(card: HTMLElement | null, x: number, y: number) {
     }
   }
   card.style.transform = `translate3d(${px.toFixed(0)}px, ${py.toFixed(0)}px, 0)`;
+  cardPositions.set(card, {x:Math.round(px),y:Math.round(py)});
 }
 
 /** Info card rendered on <body>, above every photo shade. Live values are written into data-k slots. */
@@ -133,7 +138,7 @@ export const TrafficCard = forwardRef<HTMLDivElement, { plane: TrafficPlaneInfo;
         <span data-k="alt" /><span data-k="kt" /><span data-k="phase" className="truncate font-bold uppercase tracking-[0.08em] text-[color:var(--radar)]" />
       </span>
       <span className="sr-only">Runway {runway}</span>
-      <button type="button" onClick={onOpen} className="mt-1 flex min-h-11 w-full items-center text-left text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--radar)]">View in fleet →</button>
+      <Button variant="ghost" onClick={onOpen} className="mt-1 flex min-h-11 w-full justify-start px-0 text-left text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--radar)]">View in fleet →</Button>
     </div>,
     document.body,
   );
@@ -157,14 +162,15 @@ export function RadarTag({ reg, index, seed, label, tabIndex, hit, tagRef, textR
   hit: ReturnType<ReturnType<typeof useTrafficSelection>["hitProps"]>;
   tagRef: (el: SVGGElement | null) => void; textRef: (el: SVGTextElement | null) => void;
 }) {
-  const period = 5 + ((index + seed) % 3);
-  const delay = -((index * 2.3 + seed * 1.1) % period);
+  void index; void seed;
   return (
     <g ref={tagRef} className="traffic-tag">
-      <circle r={9} className="traffic-ping" style={{ animationDuration: `${period}s`, animationDelay: `${delay}s` }} />
+      <g className="traffic-history">{[0,1,2,3].map(i=><circle key={i} r={1.2} opacity={.28-i*.055}/>)}</g>
+      <circle r={7} className="traffic-target" />
+      <circle r={7} className="traffic-ping" />
       <line x1={5} y1={-5} x2={15} y2={-15} className="traffic-leader" />
-      <rect x={14} y={-27} width={60} height={18} rx={9} className="traffic-pill" />
-      <text ref={textRef} x={20} y={-14} className="traffic-label">{reg}</text>
+      <rect x={14} y={-39} width={60} height={30} rx={2} className="traffic-pill" />
+      <text ref={textRef} x={20} y={-27} className="traffic-label"><tspan className="traffic-call-title">{reg}</tspan><tspan className="traffic-call-data" x={20} dy={12}/></text>
       <circle r={22} fill="transparent" className="cursor-pointer" role="button" tabIndex={tabIndex} aria-label={label} {...hit} />
     </g>
   );
@@ -184,7 +190,8 @@ function obstacles(g: SVGGElement) {
     if (r.width && r.height) list.push({ l: r.left - 6, t: r.top - 6, r: r.right + 6, b: r.bottom + 6 });
   };
   add(document.querySelector("header"));
-  section?.querySelectorAll(".journey-copy, .journey-hud").forEach(add);
+  section?.querySelectorAll(".journey-copy, .journey-hud, .journey-dots, [data-traffic-card]").forEach(el => { if(getComputedStyle(el.closest('.journey-copy-wrap') ?? el).opacity !== '0') add(el); });
+  add(document.querySelector('[data-traffic-card]'));
   const rail = w < 768 ? 56 : 16;
   obstacleCache = { at: now, key: section, list, safe: { l: 16, t: 16, r: w - rail, b: h - 16 } };
   return obstacleCache;
@@ -194,7 +201,7 @@ type TagSide = { ox: number; oy: number; sy: number; W: number };
 const SIDES = [[1, -1], [-1, -1], [1, 1], [-1, 1], [0, -1], [0, 1], [1, -2], [-1, -2], [1, 2], [-1, 2]] as const;
 const sideOf = (g: SVGGElement) => (g as SVGGElement & { __side?: TagSide }).__side;
 const fits = (side: TagSide, pts: { x: number; y: number }[], list: Box[], safe: Box) => pts.every(({ x, y }) => {
-  const box = { l: x + side.ox, t: y + side.oy, r: x + side.ox + side.W, b: y + side.oy + 18 };
+  const box = { l: x + side.ox, t: y + side.oy, r: x + side.ox + side.W, b: y + side.oy + 30 };
   if (box.l < safe.l || box.r > safe.r || box.t < safe.t || box.b > safe.b) return false;
   return !list.some((o) => hits(box, o));
 });
@@ -206,7 +213,7 @@ const fits = (side: TagSide, pts: { x: number; y: number }[], list: Box[], safe:
  * then fixed: same offset, same leader length every frame. Returns false when no side
  * fits the whole window, so the caller can skip that callout.
  */
-export function fitTagSide(g: SVGGElement | null | undefined, pts: { x: number; y: number }[]) {
+export function fitTagSide(g: SVGGElement | null | undefined, pts: { x: number; y: number }[], occupied: Box[] = []) {
   if (!g) return false;
   const text = g.querySelector<SVGTextElement>(".traffic-label");
   const pill = g.querySelector<SVGRectElement>(".traffic-pill");
@@ -214,17 +221,18 @@ export function fitTagSide(g: SVGGElement | null | undefined, pts: { x: number; 
   if (!text || !pill || !line) return false;
   obstacleCache = null;
   const { list, safe } = obstacles(g);
-  const W = Math.ceil(text.getComputedTextLength()) + 14, H = 18;
+  const W = Math.ceil(Math.max(...Array.from(text.querySelectorAll('tspan')).map(t=>t.getComputedTextLength()), 60)) + 14, H = 30;
   for (const [sx, sy] of SIDES) {
     const ox = sx > 0 ? 14 : sx < 0 ? -14 - W : -Math.round(W / 2);
-    let oy = sy < 0 ? -27 : 9;
-    if (sx === 0) oy = sy < 0 ? -34 : 16;
-    if (Math.abs(sy) === 2) oy = sy < 0 ? -48 : 30;
+    let oy = sy < 0 ? -39 : 9;
+    if (sx === 0) oy = sy < 0 ? -46 : 16;
+    if (Math.abs(sy) === 2) oy = sy < 0 ? -60 : 30;
     const side = { ox, oy, sy, W };
-    if (!fits(side, pts, list, safe)) continue;
+    if (!fits(side, pts, [...list,...occupied], safe)) continue;
     (g as SVGGElement & { __side?: TagSide }).__side = side;
     pill.setAttribute("x", String(ox)); pill.setAttribute("y", String(oy)); pill.setAttribute("width", String(W));
     text.setAttribute("x", String(ox + 7)); text.setAttribute("y", String(oy + 12.5));
+    text.querySelectorAll('tspan').forEach(t=>t.setAttribute('x',String(ox+7)));
     const tx = Math.min(Math.max(0, ox), ox + W);
     const ty = Math.min(Math.max(0, oy), oy + H) || (sy < 0 ? oy + H : oy);
     const len = Math.hypot(tx, ty) || 1;
@@ -241,6 +249,10 @@ export function tagSideHolds(g: SVGGElement | null | undefined, pts: { x: number
   if (!g || !side) return false;
   const { list, safe } = obstacles(g);
   return fits(side, pts, list, safe);
+}
+
+export function tagBounds(g: SVGGElement | null | undefined, x:number,y:number): Box | null {
+  const s=g&&sideOf(g); return s ? {l:x+s.ox,t:y+s.oy,r:x+s.ox+s.W,b:y+s.oy+30} : null;
 }
 
 /** Places the tag group on its airplane, snapped to whole screen pixels (no sub-pixel shimmer). */
