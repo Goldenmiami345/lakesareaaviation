@@ -180,8 +180,8 @@ export function placePatternLabel(el: SVGTextElement, m: DOMMatrix, p:{x:number;
     blocked.push(n.getBoundingClientRect());
   });
   const w=Math.max(30,el.getComputedTextLength());
-  for(const offset of [18,30,44]){
-    const sx=x+p.dx*(offset+w*.25),sy=y+p.dy*offset;
+  for(const [offset,tangent] of [[18,0],[30,0],[44,0],[18,-32],[18,32],[30,-48],[30,48]]){
+    const sx=x+p.dx*((offset??18)+w*.25)-p.dy*(tangent??0),sy=y+p.dy*(offset??18)+p.dx*(tangent??0);
     const b={l:sx-w/2,t:sy-6,r:sx+w/2,b:sy+6};
     if(b.l<12||b.r>innerWidth-12||b.t<12||b.b>innerHeight-12||blocked.some(r=>hits(b,{l:r.left-7,t:r.top-7,r:r.right+7,b:r.bottom+7})))continue;
     const point=new DOMPoint(sx,sy).matrixTransform(m.inverse());
