@@ -6,6 +6,7 @@ import { journeyFrame, journeyStop, JOURNEY_STAGE_SVH, pageStep, nearestPage, cu
 import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
 import { patternFor, pickRunway, type PatternField } from "../lib/traffic-pattern";
 import { useMetar } from "../lib/use-metar";
+import { useStageZoom } from "../lib/stage-zoom";
 import { TrafficPattern } from "./traffic-pattern";
 import { TrafficPerspective } from "./traffic-perspective";
 import airlineVideo from "../assets/journey/airline-approach.mp4.asset.json";
@@ -181,7 +182,7 @@ function installController() {
   };
   let lastWheel = 0, lastDelta = 0;
   const onWheel = (e: WheelEvent) => {
-    if (reduce() || e.ctrlKey || Math.abs(e.deltaY) < Math.abs(e.deltaX) || root.classList.contains("journey-free")) return;
+    if (reduce() || e.ctrlKey || e.metaKey || Math.abs(e.deltaY) < Math.abs(e.deltaX) || root.classList.contains("journey-free")) return;
     const pages = journeyPages();
     if (!inRange(pages)) return;
     const now = performance.now(), delta = Math.abs(e.deltaY);
@@ -194,6 +195,13 @@ function installController() {
   let g: { x: number; y: number; decided: boolean; claimed: boolean; fired: boolean } | null = null;
   let touching = false;
   let rejected = false;
+  // Any second finger makes the whole gesture a pinch: no paging, and a finger-follow springs back.
+  let multi = false;
+  const cancelForMulti = () => {
+    multi = true; g = null; rejected = true;
+    if (follow) { follow.dy = 0; follow.max = 0; releaseFollow(); }
+  };
+  const zoomedIn = () => root.classList.contains("journey-zoomed");
   // touchend can be dropped when the main thread is busy; a finger with no touch
   // events for 150ms is treated as lifted so the landing guard and settling still run.
   let lastTouchAt = 0;
@@ -212,12 +220,15 @@ function installController() {
   };
   const followable = (pages: JourneyPage[], j: number) => j === 0 || (pages[j]?.hold !== undefined && j + 2 < pages.length);
   const onTouchStart = (e: TouchEvent) => {
+    if (e.touches.length > 1 || multi) { lastTouchAt = performance.now(); touching = true; cancelForMulti(); return; }
     touching = true; rejected = false; landedUntil = 0; lastTouchAt = performance.now();
     const t = e.touches[0];
     g = e.touches.length === 1 && t && !reduce() ? { x: t.clientX, y: t.clientY, decided: false, claimed: false, fired: false } : null;
   };
   const onTouchMove = (e: TouchEvent) => {
     lastTouchAt = performance.now();
+    if (e.touches.length > 1 || multi) { cancelForMulti(); return; }
+    if (zoomedIn()) { g = null; rejected = true; return; }
     const t = e.touches[0];
     // A finger that went down before the handler attached (first load) is adopted here.
     if (!g && !rejected && t && e.touches.length === 1 && !reduce()) { touching = true; g = { x: t.clientX, y: t.clientY, decided: false, claimed: false, fired: false }; return; }
@@ -255,14 +266,14 @@ function installController() {
     if (!g.fired && !busy() && Math.abs(dy) >= PAGE_SWIPE_PX) { g.fired = true; step(dy > 0 ? 1 : -1, true); }
   };
   let settleTimer = 0;
-  const onTouchEnd = (e: TouchEvent) => { if (e.touches.length === 0) { touching = false; g = null; releaseFollow(); scheduleSettle(); } };
+  const onTouchEnd = (e: TouchEvent) => { if (e.touches.length === 0) { multi = false; touching = false; g = null; releaseFollow(); scheduleSettle(); } };
   // Native momentum arriving from below stops at the exit page; anything left
   // resting between pages (keyboard, scrollbar) settles onto the nearest one.
   let lastY = window.scrollY;
   const scheduleSettle = () => {
     window.clearTimeout(settleTimer);
     settleTimer = window.setTimeout(() => {
-      if (fingerDown() || busy() || reduce() || root.classList.contains("journey-free")) return;
+      if (fingerDown() || busy() || reduce() || zoomedIn() || root.classList.contains("journey-free")) return;
       const pages = journeyPages();
       if (!inRange(pages) || currentPage(pages, window.scrollY) >= 0) return;
       const p = pages[nearestPage(pages, window.scrollY)];
@@ -428,6 +439,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const jump = (i: number) => jumpToJourney(id, i);
 
   const isPhone = useIsPhone();
+  const { zoomed, reset } = useStageZoom({ viewportRef, target: () => layerRefs.current[active]?.querySelector<HTMLElement>(".journey-zoom") ?? null, resetKey: active });
   const metar = useMetar();
   // Active runway per airport stage from live wind; calm-wind runway (and no readout) without weather.
   const ops = useMemo(() => stages.map((st) => {
@@ -443,9 +455,10 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       {stages.map((st, i) => (
         <div key={`stop-${st.code}`} aria-hidden className="journey-stop journey-stop-page pointer-events-none absolute left-0 h-px w-px" style={{ top: `${journeyStop(i, stages.length) * stages.length * JOURNEY_STAGE_SVH}svh` }} />
       ))}
-      <div ref={viewportRef} className="sticky top-0 h-svh overflow-hidden">
+      <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className="journey-viewport sticky top-0 h-svh overflow-hidden">
         {stages.map((st, i) => (
           <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="journey-layer absolute -inset-[2%] bg-ink will-change-transform backface-hidden" style={{ zIndex: stages.length - i }}>
+            <div className="journey-zoom absolute inset-0 origin-top-left">
             {st.video ? (
               <video
                 ref={(el) => { videoRefs.current[i] = el; }}
@@ -467,9 +480,10 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
             )}
             {SHOW_TRAFFIC && st.traffic && <TrafficPattern airport={ops[i]?.pattern ?? st.traffic} active={i === active} {...(isPhone && st.phoneView ? { viewBox: st.phoneView } : {})} />}
             {st.perspective && <TrafficPerspective active={i === active} {...(isPhone && st.phoneView ? { viewBox: st.phoneView } : {})} />}
+            </div>
           </div>
         ))}
-        <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-ink via-ink/40 to-ink/50" />
+        <div className="journey-shade pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-ink via-ink/40 to-ink/50 transition-opacity duration-300" />
         <div className="journey-grain pointer-events-none absolute inset-0 z-10" />
         <div ref={fadeTopRef} aria-hidden className="pointer-events-none absolute inset-0 z-40 bg-ink" style={{ opacity: 0 }} />
         <div ref={fadeBottomRef} aria-hidden className={`pointer-events-none absolute inset-0 z-40 ${fadeBottom === "background" ? "bg-background" : "bg-ink"}`} style={{ opacity: 0 }} />
@@ -503,8 +517,11 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
           </ol>
         </nav>
 
+        {zoomed && (
+          <button type="button" onClick={reset} aria-label="Reset zoom" className="absolute right-4 top-24 z-30 inline-flex min-h-11 min-w-11 items-center gap-1.5 border border-background/40 bg-ink/70 px-3 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-background backdrop-blur-sm">✕ Reset</button>
+        )}
         {/* Copy */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 mx-auto max-w-7xl px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pr-14 sm:pb-24 md:pb-12 lg:px-8 lg:pb-16">
+        <div className="journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 z-20 mx-auto max-w-7xl px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pr-14 sm:pb-24 md:pb-12 lg:px-8 lg:pb-16">
           <div ref={copyRef} className="journey-copy max-w-2xl">
             <p className="stage-label max-sm:tracking-[0.18em]"><span className="max-sm:hidden">{s.code} · </span>{s.label}<span className="sm:hidden"> · {s.time}</span></p>
             <p className="mt-2 hidden font-display text-5xl leading-none sm:block">{s.time}</p>
