@@ -76,11 +76,12 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     let mx = 0, my = 0, frame = 0, last = -1;
     let shown: number | null = null;
     let prevTime = 0;
-    let armed = false, touching = false, settleTimer = 0;
+    let armed = false, touching = false, settleTimer = 0, holdUntil = 0;
     const root = document.documentElement;
     const engage = () => {
       const node = sectionRef.current;
       if (!node || !armed || touching || snapOwners.has(node)) return;
+      if (performance.now() < holdUntil) { scheduleSettle(); return; }
       snapOwners.add(node);
       root.classList.add("journey-snap");
     };
@@ -183,7 +184,16 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const total = Math.max(1, el.offsetHeight - vh);
       const current = journeyNearestLanding(Math.max(0, Math.min(1, -rect.top / total)), n);
       // At the first/last page, leaving is plain native scrolling, 1:1.
-      if ((dir > 0 && current >= n - 1) || (dir < 0 && current <= 0)) { release(); return; }
+      if ((dir > 0 && current >= n - 1) || (dir < 0 && current <= 0)) {
+        // Snap goes off before the exit corridor; we move the page by exactly
+        // the wheel's delta so leaving stays 1:1 (Chromium would re-snap a
+        // native wheel scroll that began while snapping was on).
+        release();
+        e.preventDefault();
+        const px = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * vh : e.deltaY;
+        window.scrollBy({ top: px, behavior: Math.abs(px) >= 50 ? "smooth" : "instant" });
+        return;
+      }
       const now = performance.now();
       const delta = Math.abs(e.deltaY);
       const fresh = now - lastWheel > 180 || delta > lastDelta * 1.6 + 4;
@@ -196,9 +206,10 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     // Briefly lift snapping so an outward scroll at either end isn't pulled back.
     let releaseTimer = 0;
     const release = () => {
-      root.classList.add("journey-free");
+      if (el) snapOwners.delete(el);
+      root.classList.toggle("journey-snap", snapOwners.size > 0);
+      holdUntil = performance.now() + 700;
       window.clearTimeout(releaseTimer);
-      releaseTimer = window.setTimeout(() => root.classList.remove("journey-free"), 900);
     };
     let touchY = 0;
     const onTouchStart = (e: TouchEvent) => { touching = true; window.clearTimeout(settleTimer); touchY = e.touches[0]?.clientY ?? 0; };
