@@ -1,5 +1,9 @@
 # Roadmap
 
+- [ ] Replace retired Apache and correct Phoenix/order everywhere; update traffic paint and factual tests.
+- [ ] Inspect 35 owner photos; prepare seven exact-photo cutouts and optimized CDN walk-arounds.
+- [ ] Add real walk-around/fullscreen zoom and hidden-until-present lazy model slot; verify fleet and traffic on phone/desktop.
+
 - [x] Contain airplane photos in a full-width top card area; verify four aircraft types at 375×667 and 390×844.
 
 - [x] Stabilize traffic cards and verify alpha/margins; preserve hero, geometry, legacy footprint and gestures (Citabria thin-edge perfection still needs owner review).
