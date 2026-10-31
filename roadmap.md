@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Restore complete server-rendered shared pages; add production HTML gate; verify all routes and mobile hydration.
+
 - [x] Add Cardinal facts, source-pixel cutout, finger-free walk-around and KLXL rotation (fine alpha-edge limitations reported).
 - [x] Fit airport default zoom to complete patterns and protected UI on phone/desktop (desktop targets cannot fit unchanged copy; actual reduced values reported).
 - [x] Add lazy model-backed card/fleet media with isolated gestures and photo fallback; verify and report.
