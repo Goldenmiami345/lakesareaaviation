@@ -148,14 +148,13 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     };
     const renderScroll = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(render); };
     const onMove = (e: PointerEvent) => { mx = e.clientX / window.innerWidth - 0.5; my = e.clientY / window.innerHeight - 0.5; renderScroll(); };
-    const onScroll = renderScroll;
+    const onScroll = () => { renderScroll(); scheduleSettle(); };
     // One page per swipe/flick is enforced by native mandatory snap stops (see
     // JSX), enabled on <html> only while this journey is pinned. A mouse wheel
     // notch steps exactly one page: the first event of a gesture glides to the
     // adjacent stop; following events are swallowed for a fixed, non-extending
     // window so trackpad inertia can't skip pages or freeze the page.
     const el = sectionRef.current;
-    const root = document.documentElement;
     let lastWheel = 0, lastDelta = 0, lockUntil = 0;
     const stopTop = (i: number) => {
       if (!el) return 0;
@@ -172,7 +171,15 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
       const rect = el.getBoundingClientRect();
       const dir = e.deltaY > 0 ? 1 : -1;
-      if (!snapOwners.has(el)) return;
+      if (!snapOwners.has(el)) {
+        // A fresh wheel gesture inside the armed range engages stepping; a
+        // continuing stream (still crossing the corridor) stays native 1:1.
+        const gap = performance.now() - lastWheel;
+        lastWheel = performance.now(); lastDelta = Math.abs(e.deltaY);
+        if (!armed || gap < 180) return;
+        engage();
+        lastWheel = 0;
+      }
       const total = Math.max(1, el.offsetHeight - vh);
       const current = journeyNearestLanding(Math.max(0, Math.min(1, -rect.top / total)), n);
       // At the first/last page, leaving is plain native scrolling, 1:1.
@@ -194,7 +201,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       releaseTimer = window.setTimeout(() => root.classList.remove("journey-free"), 900);
     };
     let touchY = 0;
-    const onTouchStart = (e: TouchEvent) => { touchY = e.touches[0]?.clientY ?? 0; };
+    const onTouchStart = (e: TouchEvent) => { touching = true; window.clearTimeout(settleTimer); touchY = e.touches[0]?.clientY ?? 0; };
+    const onTouchEnd = (e: TouchEvent) => { if (e.touches.length === 0) { touching = false; scheduleSettle(); } };
     const onTouchMove = (e: TouchEvent) => {
       if (!el || reduce || !snapOwners.has(el) || e.touches.length !== 1) return;
       const dy = touchY - (e.touches[0]?.clientY ?? touchY);
@@ -215,6 +223,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     window.addEventListener("journey:jump", onJump);
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: true });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+    window.addEventListener("touchcancel", onTouchEnd, { passive: true });
     if (!reduce) window.addEventListener("pointermove", onMove, { passive: true });
     return () => {
       cancelAnimationFrame(frame);
@@ -223,6 +233,9 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);
       window.clearTimeout(releaseTimer);
+      window.clearTimeout(settleTimer);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchEnd);
       if (el) snapOwners.delete(el);
       root.classList.toggle("journey-snap", snapOwners.size > 0);
       window.removeEventListener("scroll", onScroll);
