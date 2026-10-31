@@ -152,19 +152,25 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     };
     const onWheel = (e: WheelEvent) => {
       if (!el || reduce || e.ctrlKey || Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
-      if (!snapOwners.has(el) || root.classList.contains("journey-free")) return;
+      if (root.classList.contains("journey-free")) return;
+      const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
+      const rect = el.getBoundingClientRect();
+      const dir = e.deltaY > 0 ? 1 : -1;
+      // The screen right above/below the journey: any wheel nudge toward it
+      // glides straight onto its first/last page.
+      const entering = !snapOwners.has(el) && ((dir > 0 && rect.top > 1 && rect.top <= vh + 1) || (dir < 0 && rect.bottom < vh - 1 && rect.bottom >= -1));
+      if (!snapOwners.has(el) && !entering) return;
       const now = performance.now();
       const delta = Math.abs(e.deltaY);
       const fresh = now - lastWheel > 180 || delta > lastDelta * 1.6 + 4;
       lastWheel = now; lastDelta = delta;
       e.preventDefault();
       if (now < lockUntil || !fresh) return;
-      const dir = e.deltaY > 0 ? 1 : -1;
-      const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
-      const total = Math.max(1, el.offsetHeight - vh);
-      const progress = Math.max(0, Math.min(1, -el.getBoundingClientRect().top / total));
-      const current = progress >= 0.999 ? n : journeyNearestLanding(progress, n);
       lockUntil = now + 650;
+      if (entering) { glideTo(stopTop(dir > 0 ? 0 : n - 1)); return; }
+      const total = Math.max(1, el.offsetHeight - vh);
+      const progress = Math.max(0, Math.min(1, -rect.top / total));
+      const current = progress >= 0.999 ? n : journeyNearestLanding(progress, n);
       // Leaving past either end hands the page back to free scrolling so the
       // visitor is never trapped at the last (or first) stop.
       if (dir > 0 && current >= n - 1) { glideTo(stopTop(n) + vh); return; }
