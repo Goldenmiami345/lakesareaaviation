@@ -21,7 +21,7 @@ export const getRouter = () => {
   // while the visitor is already scrolling. A new page jumps to the top instantly
   // just before it mounts, so visitors never see the old page glide or flash.
   router.subscribe("onBeforeRouteMount", (event) => {
-    if (event.fromLocation && event.fromLocation.pathname !== event.toLocation.pathname) {
+    if (event.fromLocation && event.fromLocation.pathname !== event.toLocation.pathname && !event.toLocation.hash) {
       document.documentElement.classList.remove("journey-snap");
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     }
