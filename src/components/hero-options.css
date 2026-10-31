@@ -1,0 +1,25 @@
+.hero-comparison .option-phone { height: 100svh; min-height: 760px; }
+.hero-comparison .option-desktop { height: 900px; }
+.hero-comparison .option-shade { background: linear-gradient(to top, var(--ink) 0%, color-mix(in oklab, var(--ink) 92%, transparent) 28%, transparent 60%); }
+.hero-comparison .option-c.option-phone .option-photo { height: 57%; object-position: 65% center; }
+.hero-comparison .option-d.option-phone .option-photo { top: 38%; height: 55%; object-position: 35% center; }
+.hero-comparison .option-d.option-phone .option-copy { position: absolute; top: 100px; left: 20px; right: 20px; }
+.hero-comparison .option-d.option-phone .option-shade { background: linear-gradient(to bottom, var(--ink) 33%, transparent 45%, transparent 66%, var(--ink) 88%); }
+.hero-comparison .option-desktop .option-photo { object-position: center; }
+.hero-comparison .option-desktop .option-shade { background: linear-gradient(to right, var(--ink), color-mix(in oklab, var(--ink) 60%, transparent) 48%, transparent 80%); }
+@media (min-width: 640px) {
+  .hero-comparison .option-phone { width: 390px; height: 844px; min-height: 0; margin-inline: auto; }
+  .hero-comparison .option-phone .option-content { padding-inline: 20px; }
+  .hero-comparison .option-desktop .option-content { padding-bottom: 80px; }
+  .hero-comparison .option-desktop h2 { font-size: 5.8rem; }
+  .hero-comparison .option-desktop .option-copy p:last-child { max-width: 32rem; font-size: 1.125rem; }
+  .hero-comparison .option-desktop nav { gap: 8px; }
+}
+@media (max-width: 639px) {
+  .hero-comparison .option-desktop { height: 281px; }
+  .hero-comparison .option-desktop .option-content { width: 1280px; height: 900px; transform: scale(.3046875); transform-origin: top left; padding: 128px 32px 80px; }
+  .hero-comparison .option-desktop h2 { font-size: 5.8rem; }
+  .hero-comparison .option-desktop > div:nth-child(3) { height: 32px; }
+  .hero-comparison .option-desktop > div:nth-child(3) img { max-width: 110px; height: 24px; }
+  .hero-comparison .option-desktop > div:nth-child(3) span { font-size: 9px; }
+}
