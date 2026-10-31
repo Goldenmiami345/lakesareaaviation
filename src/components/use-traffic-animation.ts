@@ -63,7 +63,13 @@ export function useTrafficAnimation(o:Options) {
             }
           }
           if(calls.has(i)){
-            const clear=tagSideHolds(tag,[current]);
+            const own=tagBounds(tag,current.x,current.y);
+            const overlapsOther=own&&Array.from(calls.keys()).some(j=>{
+              if(j===i)return false;const state=states[j];if(!state)return false;
+              const q=screen(state.p,m),other=tagBounds(tagRefs.current[j],q.x,q.y);
+              return other&&own.l<other.r&&own.r>other.l&&own.t<other.b&&own.b>other.t;
+            });
+            const clear=tagSideHolds(tag,[current])&&!overlapsOther;
             // During pinch/pan UI relationships may change. Hide rather than
             // relocate a live block; targets and aircraft stay visible.
             tag.classList.toggle('call-obscured',!clear);
