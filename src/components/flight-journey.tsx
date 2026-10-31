@@ -53,6 +53,20 @@ export function glideTo(top: number, instant = false) {
   if (instant) window.requestAnimationFrame(finish);
 }
 
+// Instant jump to the very top (logo / Home tapped while already on "/"):
+// drop any engaged snap first so mandatory snapping can't pull the page onto a stop.
+export function jumpToPageTop() {
+  const root = document.documentElement;
+  snapOwners.clear();
+  root.classList.remove("journey-snap");
+  root.classList.add("journey-free");
+  window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+    if (window.scrollY !== 0) window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    root.classList.remove("journey-free");
+  }));
+}
+
 export function jumpToJourney(id: string, index: number) {
   window.dispatchEvent(new CustomEvent("journey:jump", { detail: { id, index } }));
 }

@@ -1,8 +1,9 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { ArrowUpRight, Menu, Phone, X } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
 import logoAsset from "../assets/lakes-logo-transparent.png.asset.json";
 import { MotionExperience } from "./motion-experience";
+import { jumpToPageTop } from "./flight-journey";
 
 const nav = [
   ["Services", "/services"],
@@ -15,9 +16,11 @@ const nav = [
 
 export function Header({ overlay = false }: { overlay?: boolean }) {
   const [open, setOpen] = useState(false);
+  const { pathname } = useLocation();
+  const onHome = (e: MouseEvent) => { if (pathname !== "/") return; e.preventDefault(); setOpen(false); jumpToPageTop(); };
   return <header className={`fixed inset-x-0 top-0 z-50 border-b transition-colors ${overlay ? "border-white/15 bg-ink/25 text-white backdrop-blur-md" : "border-border bg-background/95 text-foreground backdrop-blur-md"}`}>
     <div className="mx-auto grid h-16 max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 sm:h-20 lg:flex lg:justify-between lg:px-8">
-      <Link to="/" className="flex min-w-0 items-center gap-3" aria-label="Lakes Area Aviation home">
+      <Link to="/" onClick={onHome} className="flex min-w-0 items-center gap-3" aria-label="Lakes Area Aviation home">
         <img src={logoAsset.url} alt="Lakes Area Aviation" className={`h-10 w-auto max-w-[190px] object-contain sm:h-12 sm:max-w-[220px] ${overlay ? "brightness-0 invert" : ""}`} />
       </Link>
       <nav className="hidden items-center gap-7 lg:flex" aria-label="Main navigation">
