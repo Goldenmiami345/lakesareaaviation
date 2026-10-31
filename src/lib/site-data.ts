@@ -104,3 +104,11 @@ export const fleet = [
   { name: "1970 Cessna 172K", registration: "N7108G", nickname: "Hawk", use: "Primary · Instrument · Commercial", note: "A real Lakes Area Aviation training aircraft photographed at the school.", image: n7108gImage, position: "center", panel: n7018gPanel.url, specs: { Year: "1969", Horsepower: "150", "IFR/VFR": "IFR", Seats: "4", Coms: "4", GPS: "Garmin 375, G5", Equipment: "ADS-B out & in, Mode C transponder" } },
   { name: "1958 Piper Apache", registration: "N3353P", nickname: "Tot", use: "Multi-engine training", note: "Twin-engine systems, procedures, and commercial training.", image: n3353pImage, position: "center", panel: n3353pPanel.url, specs: { Year: "1970", Horsepower: "160/engine", "IFR/VFR": "IFR", Seats: "4", Coms: "4", GPS: "G430", Equipment: "ADS-B out, Mode C transponder" } },
 ];
+// Traffic-pattern data from FAA airport records (AirNav / Chart Supplement):
+// field elevation, pattern altitude, active runway and pattern direction.
+// Runway endpoints are measured on each USGS aerial (1500 x 1500 px).
+export const airportTraffic = {
+  KLXL: { ident: "KLXL", elevation: 1123, tpaAgl: 1000, runway: "13", side: "left", threshold: { x: 520, y: 625 }, end: { x: 948, y: 860 }, offset: 330, extension: 170, aircraft: ["N6717A", "N8570B", "N3353P"] },
+  "18V": { ident: "18V", elevation: 4965, tpaAgl: 1000, runway: "15", side: "left", threshold: { x: 733, y: 632 }, end: { x: 840, y: 950 }, offset: 300, extension: 150, aircraft: ["N7108G", "N6641F"] },
+  P52: { ident: "P52", elevation: 3560, tpaAgl: 800, runway: "14", side: "left", threshold: { x: 680, y: 590 }, end: { x: 885, y: 925 }, offset: 300, extension: 150, aircraft: ["N8570B", "N11059"] },
+} as const satisfies Record<string, import("./traffic-pattern").PatternAirport>;

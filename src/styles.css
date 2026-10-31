@@ -54,8 +54,8 @@
 
 @utility font-display { font-family: var(--font-display); }
 @utility eyebrow { font-size: .72rem; line-height: 1rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
-@utility photo-label { color: var(--primary); -webkit-text-stroke: .7px var(--primary-foreground); paint-order: stroke fill; text-shadow: 0 1px 3px color-mix(in oklab, var(--ink) 85%, transparent), 0 0 10px color-mix(in oklab, var(--ink) 60%, transparent); }
-@utility outlined-accent-label { color: var(--primary); -webkit-text-stroke: .6px var(--primary-foreground); paint-order: stroke fill; text-shadow: 0 1px 3px color-mix(in oklab, var(--ink) 90%, transparent); }
+@utility photo-label { display: inline-block; width: fit-content; color: var(--primary-foreground); background: var(--primary); padding: .42rem .7rem .38rem; font-size: .76rem; font-weight: 800; letter-spacing: .2em; border-radius: 999px; box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary-foreground) 35%, transparent), 0 6px 18px color-mix(in oklab, var(--ink) 45%, transparent); }
+@utility outlined-accent-label { color: var(--primary-foreground); font-weight: 800; letter-spacing: .18em; text-shadow: 0 1px 2px color-mix(in oklab, var(--ink) 90%, transparent), 0 0 12px color-mix(in oklab, var(--ink) 70%, transparent); }
 
 .theme-swatch-blue { background: oklch(0.56 0.22 258); }
 .theme-swatch-orange { background: oklch(0.625 0.175 40); }
@@ -155,4 +155,14 @@
 html.journey-snap { scroll-snap-type: y mandatory; }
 .journey-stop { scroll-snap-align: start; }
 .journey-stop-page { scroll-snap-stop: always; }
+html.journey-free, html.journey-free.journey-snap { scroll-snap-type: none !important; }
 @media (prefers-reduced-motion: reduce) { html.journey-snap { scroll-snap-type: none; } }
+
+/* Airport traffic pattern overlay */
+.traffic-path { stroke: color-mix(in oklab, var(--primary-foreground) 55%, transparent); }
+.traffic-shadow path { fill: var(--ink); }
+.traffic-body { fill: var(--primary-foreground); stroke: var(--ink); stroke-width: 2; filter: drop-shadow(0 0 6px color-mix(in oklab, var(--ink) 50%, transparent)); transition: fill .2s; }
+.traffic-trim { fill: var(--primary); }
+.traffic-plane:focus { outline: none; }
+.traffic-plane.is-hovered .traffic-body, .traffic-plane:hover .traffic-body { fill: var(--primary); stroke: var(--primary-foreground); }
+.traffic-card { background: color-mix(in oklab, var(--ink) 88%, transparent); color: var(--background); border: 1px solid color-mix(in oklab, var(--background) 22%, transparent); border-radius: 10px; padding: .7rem .8rem; backdrop-filter: blur(10px); box-shadow: 0 12px 30px color-mix(in oklab, var(--ink) 50%, transparent); will-change: transform; }

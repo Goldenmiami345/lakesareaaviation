@@ -27,6 +27,7 @@
 - [x] Strengthen the airport handoff into a visible three-line mobile runway signal.
 - [x] Add a concise post-locations section for commercial multi, MEI, endorsements, and flight reviews.
 - [x] Simplify scroll guidance to a tiny bottom landing cue and animated right-edge journey line on mobile.
+- [x] Home polish: one-notch paging, soft section edges, location shortcuts, back to top, readable labels, cockpit video, corrected KLXL runway, live FAA-based traffic pattern, nav flicker fix, 24-page audit.
 - [ ] Publish the latest preview build (awaiting go-ahead).
 - [ ] Inquiry form destination (where leads should be sent).
 - [x] Confirm "1-hour oral · 1-hour flight" meaning: the advertised CFI/CFII exam format.
