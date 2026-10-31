@@ -1,5 +1,9 @@
 # Roadmap
 
+- [ ] Stabilize traffic cards and verify transparent photos; preserve hero, geometry, footprint and gestures.
+- [ ] Share type-specific vector traffic and radar targets/calls across aerial and oblique views.
+- [ ] Use wind-adjusted true-time speeds with tests; verify all four views at 390×844 and 4× zoom and report changes.
+
 - [x] Create hidden prerendered hero comparison with protected-photo A/B, real-photo C and optional D; keep live hero unchanged.
 - [x] Verify all hero options at 390×844 and 1280×900, report sizes and uncertain AI extensions.
 
