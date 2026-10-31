@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Contain airplane photos in a full-width top card area; verify four aircraft types at 375×667 and 390×844.
+
 - [x] Stabilize traffic cards and verify alpha/margins; preserve hero, geometry, legacy footprint and gestures (Citabria thin-edge perfection still needs owner review).
 - [x] Share type-specific vector traffic and radar targets/calls across aerial and oblique views.
 - [x] Use wind-adjusted true-time speeds with tests; verify all four views at 390×844 and 4× zoom and report changes (physical iPhone unverified).

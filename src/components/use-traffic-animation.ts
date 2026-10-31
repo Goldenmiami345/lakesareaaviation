@@ -74,7 +74,7 @@ export function useTrafficAnimation(o:Options) {
             // relocate a live block; targets and aircraft stay visible.
             tag.classList.toggle('call-obscured',!clear);
           }
-          if(selectedRef.current===i){placeCard(cardRef.current,current.x,current.y);writeCard(cardRef.current,s);}
+          if(selectedRef.current===i){writeCard(cardRef.current,s);placeCard(cardRef.current,current.x,current.y,svgRef.current?.closest('section'));}
         }
         prev[i]=s.phase;
       });

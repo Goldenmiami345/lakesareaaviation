@@ -213,7 +213,7 @@ html.journey-free, html.journey-free.journey-snap { scroll-snap-type: none !impo
 .aircraft-shadow * { fill:var(--ink); stroke:var(--ink); }
 @media (prefers-reduced-motion: reduce) { .traffic-ping { animation: none; opacity: 0; } }
 .traffic-card { background: color-mix(in oklab, var(--ink) 88%, transparent); color: var(--background); border: 1px solid color-mix(in oklab, var(--background) 22%, transparent); border-radius: 8px; padding: .7rem .8rem; backdrop-filter: blur(10px); box-shadow: 0 12px 30px color-mix(in oklab, var(--ink) 50%, transparent); overflow:visible; }
-.traffic-card-media { overflow:visible; }
+.traffic-card-media { overflow:hidden; }
 @media (prefers-reduced-motion: reduce) { .traffic-history, .traffic-pill, .traffic-label, .traffic-leader { display:none; } .traffic-tag.is-pinging .traffic-ping { animation:none; } }
 .traffic-tag circle:focus { outline: none; }
 .traffic-tag circle:focus-visible { outline: none; stroke: var(--radar); stroke-opacity: .6; stroke-width: 1; }
