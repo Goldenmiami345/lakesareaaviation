@@ -6,6 +6,7 @@ import { journeyFrame, journeyStop, journeyNearestLanding, JOURNEY_STAGE_SVH } f
 import { airportTraffic } from "../lib/site-data";
 import type { PatternAirport } from "../lib/traffic-pattern";
 import { TrafficPattern } from "./traffic-pattern";
+import { TrafficPerspective } from "./traffic-perspective";
 import instrumentVideo from "../assets/journey/instrument-imc-smooth.mp4.asset.json";
 import airlineVideo from "../assets/journey/airline-approach.mp4.asset.json";
 import clouds from "../assets/journey/01-clouds.webp";
@@ -18,11 +19,11 @@ import fl from "../assets/journey/loc-fort-lupton.webp";
 import cw from "../assets/journey/loc-cottonwood.webp";
 import commercial from "../assets/photos/sunset-ramp.webp";
 
-type Stage = { code: string; label: string; time: string; title: string; text: string; img: string; alt: string; cta: string; slug?: string; location?: string; to?: "/introductory-flights" | "/contact" | "/locations"; hud?: string; zoom?: number; zoomIn?: number; w?: number; h?: number; video?: string; position?: string; traffic?: PatternAirport };
+type Stage = { code: string; label: string; time: string; title: string; text: string; img: string; alt: string; cta: string; slug?: string; location?: string; to?: "/introductory-flights" | "/contact" | "/locations"; hud?: string; zoom?: number; zoomIn?: number; w?: number; h?: number; video?: string; position?: string; traffic?: PatternAirport; perspective?: boolean };
 
 const journeyStages: Stage[] = [
   { code: "01", label: "Discovery flight", time: "$100", title: "Take the controls on day one.", text: "Left seat, instructor beside you.", img: clouds, alt: "Sunrise above a sea of clouds", cta: "Book an intro flight", to: "/introductory-flights" },
-  { code: "02", label: "Private pilot", time: "~21 days", title: "Your first certificate.", text: "One focused block.", img: runway, alt: "Cockpit view on approach to Runway 13 at KLXL, with Runway 18/36 crossing just past the threshold", cta: "Private pilot details", slug: "private-pilot" },
+  { code: "02", label: "Private pilot", time: "~21 days", title: "Your first certificate.", text: "One focused block.", img: runway, alt: "Oblique view of Little Falls (KLXL): runway 13/31 with the full-length runway 18/36 crossing near the runway 13 end", cta: "Private pilot details", slug: "private-pilot", perspective: true, w: 1376, h: 768 },
   { code: "03", label: "Instrument rating", time: "10–14 days", title: "Train in the real cockpit.", text: "Fly by reference to instruments.", img: instrument, alt: "Real Lakes Area Aviation instrument panel flying through instrument conditions", cta: "Instrument details", slug: "instrument-rating", position: "center", video: instrumentVideo.url, zoom: 0.2, zoomIn: 0.03 },
   { code: "04", label: "Commercial pilot", time: "5–7 days", title: "Fly professionally.", text: "Commercial standards in a focused block.", img: commercial, alt: "Lakes Area Aviation airplanes on the ramp at sunset", cta: "Commercial details", slug: "commercial-single-engine" },
   { code: "05", label: "CFI & CFII", time: "4–6 weeks", title: "Become the instructor.", text: "The exams: 1-hour oral and 1-hour flight.", img: instructor, alt: "Instructor and student inspecting a training airplane before flight", cta: "CFI & CFII track", slug: "cfi-cfii", position: "center" },
@@ -305,6 +306,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
               <img src={st.img} alt={st.alt} width={st.w ?? 1920} height={st.h ?? 1088} loading={i < 2 ? "eager" : "lazy"} decoding="async" className="h-full w-full object-cover" style={{ objectPosition: st.position ?? "center" }} />
             )}
             {SHOW_TRAFFIC && st.traffic && <TrafficPattern airport={st.traffic} active={i === active} />}
+            {st.perspective && <TrafficPerspective active={i === active} />}
           </div>
         ))}
         <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-ink via-ink/40 to-ink/50" />
