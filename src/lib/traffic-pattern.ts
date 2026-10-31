@@ -47,11 +47,12 @@ export function patternWaypoints(a: PatternAirport): Waypoint[] {
   return [
     { ...at(len * 0.08, 0), agl: 0, knots: 60, phase: "Touch-and-go" },
     { ...at(len * 0.45, 0), agl: 0, knots: 60, phase: "Takeoff" },
-    { ...at(len + ext, 0), agl: tpa * 0.55, knots: 75, phase: "Upwind" },
-    { ...at(len + ext, off), agl: tpa * 0.9, knots: 80, phase: "Crosswind" },
+    // Each waypoint names the leg that starts there.
+    { ...at(len + ext, 0), agl: tpa * 0.55, knots: 75, phase: "Crosswind" },
+    { ...at(len + ext, off), agl: tpa, knots: 80, phase: "Downwind" },
     { ...at(len * 0.5, off), agl: tpa, knots: 90, phase: "Downwind" },
-    { ...at(-ext, off), agl: tpa, knots: 85, phase: "Downwind" },
-    { ...at(-ext, 0), agl: tpa * 0.55, knots: 75, phase: "Base" },
+    { ...at(-ext, off), agl: tpa, knots: 85, phase: "Base" },
+    { ...at(-ext, 0), agl: tpa * 0.55, knots: 75, phase: "Final" },
     { ...at(len * 0.08, 0), agl: 0, knots: 65, phase: "Final" },
   ];
 }
@@ -114,4 +115,44 @@ export function sampleAtTime(a: PatternAirport, seconds: number, points = patter
     t -= durs[i]!; dist += lens[i]!;
   }
   return samplePattern(a, dist / total, points);
+}
+
+/** One end of the main runway with its FAA traffic-pattern direction and true heading. */
+export type RunwayEnd = { runway: string; side: "left" | "right"; trueHdg: number };
+/** Airport geometry plus both runway ends; `runway`/`threshold`/`end` describe ends[0]. */
+export type PatternField = PatternAirport & { ends: readonly [RunwayEnd, RunwayEnd]; calmRunway: string; wxStation: string };
+export type Wind = { dir: number | null; kt: number };
+
+/** Headwind component (kt) of a wind blowing FROM `dir` (true) on a runway heading `hdg` (true). */
+export function headwind(w: Wind, hdg: number) {
+  if (w.dir === null) return 0;
+  return w.kt * Math.cos(((w.dir - hdg) * Math.PI) / 180);
+}
+
+/** Active runway: best headwind; the calm-wind runway under 5 kt, variable, or with no weather. */
+export function pickRunway(f: Pick<PatternField, "ends" | "calmRunway">, wind: Wind | null): RunwayEnd {
+  const calm = f.ends.find((e) => e.runway === f.calmRunway) ?? f.ends[0];
+  if (!wind || wind.dir === null || wind.kt < 5) return calm;
+  const [a, b] = f.ends;
+  return headwind(wind, a.trueHdg) >= headwind(wind, b.trueHdg) ? a : b;
+}
+
+/** Pattern geometry for the chosen runway end (swaps the ends when landing the other way). */
+export function patternFor(f: PatternField, r: RunwayEnd): PatternAirport {
+  if (r.runway === f.ends[0].runway) return { ...f, runway: r.runway, side: r.side };
+  return { ...f, runway: r.runway, side: r.side, threshold: f.end, end: f.threshold };
+}
+
+/** CTAF-style position report for entering a leg; null for legs nobody reports. */
+export function positionReport(phase: string, runway: string, side: "left" | "right") {
+  const s = side === "left" ? "Left" : "Right";
+  switch (phase) {
+    case "Takeoff": return `Departing runway ${runway}`;
+    case "Crosswind": return `${s} crosswind ${runway}`;
+    case "Downwind": return `${s} downwind ${runway}`;
+    case "Base": return `${s} base ${runway}`;
+    case "Final": return `Final ${runway}`;
+    case "Touch-and-go": return `Touch-and-go ${runway}`;
+    default: return null;
+  }
 }

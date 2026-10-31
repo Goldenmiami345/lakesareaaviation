@@ -106,13 +106,16 @@ export const fleet: Array<{ name: string; registration: string; role: FleetRole;
   { name: "1970 Cessna 172K", registration: "N7108G", role: "trainer" as FleetRole, rate: "$185/hr", prepay: "$175/hr", nickname: "Hawk", use: "Primary · Instrument · Commercial", note: "A real Lakes Area Aviation training aircraft photographed at the school.", image: n7108gImage, position: "center", panel: n7018gPanel.url, specs: { Year: "1969", Horsepower: "150", "IFR/VFR": "IFR", Seats: "4", Coms: "4", GPS: "Garmin 375, G5", Equipment: "ADS-B out & in, Mode C transponder" } },
   { name: "1958 Piper Apache", registration: "N3353P", role: "twin" as FleetRole, rate: "$395/hr", prepay: "$375/hr", nickname: "Tot", use: "Multi-engine training", note: "Twin-engine systems, procedures, and commercial training.", image: n3353pImage, position: "center", panel: n3353pPanel.url, specs: { Year: "1970", Horsepower: "160/engine", "IFR/VFR": "IFR", Seats: "4", Coms: "4", GPS: "G430", Equipment: "ADS-B out, Mode C transponder" } },
 ];
-// Traffic-pattern data from FAA airport records (AirNav / Chart Supplement):
+// Traffic-pattern data from FAA airport records (NASR via AirNav, effective 2026-10-29):
+// pattern direction and true heading for both main-runway ends. P52 publishes RWY 32 as its
+// calm-wind runway with right traffic; KLXL and 18V publish none, so the school's usual runway is used.
+// wxStation: own METAR (KLXL) or nearest reporting station (KDEN 16 nm for 18V, KSEZ 14 nm for P52).
 // field elevation, pattern altitude, active runway and pattern direction.
 // Runway endpoints are measured on each USGS aerial (1500 x 1500 px).
 export const airportTraffic = {
   // Runway ends are the FAA NASR (effective 2026-10-29) end coordinates projected
   // with Web Mercator into each 1500 px USGS NAIP aerial, which is centred on the runway midpoint.
-  KLXL: { ident: "KLXL", elevation: 1123, tpaAgl: 1000, runway: "13", runwayFt: 4010, side: "left", threshold: { x: 595, y: 617 }, end: { x: 905, y: 883 }, offset: 126, extension: 65, aircraft: ["N6717A", "N8570B", "N3353P", "N6641F"] },
-  "18V": { ident: "18V", elevation: 4965, tpaAgl: 1000, runway: "15", runwayFt: 4100, side: "left", threshold: { x: 687, y: 506 }, end: { x: 813, y: 994 }, offset: 202, extension: 101, aircraft: ["N7108G", "N6641F", "N11059"] },
-  P52: { ident: "P52", elevation: 3560, tpaAgl: 800, runway: "14", runwayFt: 4250, side: "left", threshold: { x: 650, y: 529 }, end: { x: 850, y: 971 }, offset: 166, extension: 83, aircraft: ["N8570B", "N11059", "N6717A"] },
-} as const satisfies Record<string, import("./traffic-pattern").PatternAirport>;
+  KLXL: { ident: "KLXL", elevation: 1123, tpaAgl: 1000, runway: "13", runwayFt: 4010, side: "left", threshold: { x: 595, y: 617 }, end: { x: 905, y: 883 }, offset: 126, extension: 65, aircraft: ["N6717A", "N8570B", "N3353P", "N6641F"], ends: [{ runway: "13", side: "left", trueHdg: 131 }, { runway: "31", side: "left", trueHdg: 311 }], calmRunway: "13", wxStation: "KLXL" },
+  "18V": { ident: "18V", elevation: 4965, tpaAgl: 1000, runway: "15", runwayFt: 4100, side: "left", threshold: { x: 687, y: 506 }, end: { x: 813, y: 994 }, offset: 202, extension: 101, aircraft: ["N7108G", "N6641F", "N11059"], ends: [{ runway: "15", side: "left", trueHdg: 165 }, { runway: "33", side: "left", trueHdg: 345 }], calmRunway: "15", wxStation: "KDEN" },
+  P52: { ident: "P52", elevation: 3560, tpaAgl: 800, runway: "14", runwayFt: 4250, side: "left", threshold: { x: 650, y: 529 }, end: { x: 850, y: 971 }, offset: 166, extension: 83, aircraft: ["N8570B", "N11059", "N6717A"], ends: [{ runway: "14", side: "left", trueHdg: 156 }, { runway: "32", side: "right", trueHdg: 336 }], calmRunway: "32", wxStation: "KSEZ" },
+} as const satisfies Record<string, import("./traffic-pattern").PatternField>;

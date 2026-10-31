@@ -30,6 +30,7 @@ import { Route as StudentsRouteImport } from './routes/students'
 import { Route as TeamRouteImport } from './routes/team'
 import { Route as ProgramsIndexRouteImport } from './routes/programs.index'
 import { Route as ProgramsSlugRouteImport } from './routes/programs.$slug'
+import { Route as ApiPublicMetarRouteImport } from './routes/api/public/metar'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -136,6 +137,11 @@ const ProgramsSlugRoute = ProgramsSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => ProgramsRoute,
 } as any)
+const ApiPublicMetarRoute = ApiPublicMetarRouteImport.update({
+  id: '/api/public/metar',
+  path: '/api/public/metar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -159,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/team': typeof TeamRoute
   '/programs/$slug': typeof ProgramsSlugRoute
   '/programs/': typeof ProgramsIndexRoute
+  '/api/public/metar': typeof ApiPublicMetarRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -181,6 +188,7 @@ export interface FileRoutesByTo {
   '/team': typeof TeamRoute
   '/programs/$slug': typeof ProgramsSlugRoute
   '/programs': typeof ProgramsIndexRoute
+  '/api/public/metar': typeof ApiPublicMetarRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/team': typeof TeamRoute
   '/programs/$slug': typeof ProgramsSlugRoute
   '/programs/': typeof ProgramsIndexRoute
+  '/api/public/metar': typeof ApiPublicMetarRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -230,6 +239,7 @@ export interface FileRouteTypes {
     | '/team'
     | '/programs/$slug'
     | '/programs/'
+    | '/api/public/metar'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -252,6 +262,7 @@ export interface FileRouteTypes {
     | '/team'
     | '/programs/$slug'
     | '/programs'
+    | '/api/public/metar'
   id:
     | '__root__'
     | '/'
@@ -275,6 +286,7 @@ export interface FileRouteTypes {
     | '/team'
     | '/programs/$slug'
     | '/programs/'
+    | '/api/public/metar'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -297,6 +309,7 @@ export interface RootRouteChildren {
   StudentSuccessRoute: typeof StudentSuccessRoute
   StudentsRoute: typeof StudentsRoute
   TeamRoute: typeof TeamRoute
+  ApiPublicMetarRoute: typeof ApiPublicMetarRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -448,6 +461,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProgramsSlugRouteImport
       parentRoute: typeof ProgramsRoute
     }
+    '/api/public/metar': {
+      id: '/api/public/metar'
+      path: '/api/public/metar'
+      fullPath: '/api/public/metar'
+      preLoaderRoute: typeof ApiPublicMetarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -485,6 +505,7 @@ const rootRouteChildren: RootRouteChildren = {
   StudentSuccessRoute: StudentSuccessRoute,
   StudentsRoute: StudentsRoute,
   TeamRoute: TeamRoute,
+  ApiPublicMetarRoute: ApiPublicMetarRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
