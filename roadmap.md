@@ -1,7 +1,7 @@
 # Roadmap
 
-- [ ] Create hidden prerendered hero comparison with protected-photo A/B, real-photo C and optional D; keep live hero unchanged.
-- [ ] Verify all hero options at 390×844 and 1280×900, report sizes and uncertain AI extensions.
+- [x] Create hidden prerendered hero comparison with protected-photo A/B, real-photo C and optional D; keep live hero unchanged.
+- [x] Verify all hero options at 390×844 and 1280×900, report sizes and uncertain AI extensions.
 
 - [x] Verify mobile journey exits, rounded step positions, and reduced-motion scrolling no longer trap swipes.
 
