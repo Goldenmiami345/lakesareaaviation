@@ -301,7 +301,6 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const viewportHeight = viewportRef.current?.offsetHeight ?? window.innerHeight;
       const total = Math.max(1, el.offsetHeight - viewportHeight);
       const scrolled = journeyFrame(-rect.top / total, n);
-      if (fadeBottomRef.current) fadeBottomRef.current.style.opacity = Math.max(0, Math.min(1, (viewportHeight - rect.bottom) / (viewportHeight * 0.6))).toFixed(3);
       // Native snap glides are quick; ease a continuous "slide position" toward the
       // scroll so slides zoom and crossfade into each other over about a second.
       const target = scrolled.stage + scrolled.transition;
