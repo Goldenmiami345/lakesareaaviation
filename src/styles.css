@@ -15,6 +15,8 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -32,7 +34,12 @@
   --secondary-foreground: oklch(0.22 0.016 55);
   --muted: oklch(0.935 0.014 75);
   --muted-foreground: oklch(0.48 0.022 55);
-  --card: oklch(0.995 0.005 75);
+  /* COLOR TRIAL 2026-10-31 (docs/color-trial-beige-2026-10-31.md): every light surface reads this token.
+     Revert: set to oklch(0.995 0.005 75). */
+  --surface-light: oklch(0.975 0.012 75);
+  --card: var(--surface-light);
+  --popover: var(--surface-light);
+  --popover-foreground: oklch(0.19 0.012 55);
   --card-foreground: oklch(0.19 0.012 55);
   --border: oklch(0.82 0.025 66);
   --input: oklch(0.82 0.025 66);
