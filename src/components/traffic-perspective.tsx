@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import { RadarTag, layoutTag, TrafficCard, placeCard, radarAltitude, useTrafficSelection, usePreloadCardPhotos, writeCard } from "./traffic-ui";
+import { RadarTag, fitTagSide, tagSideHolds, setTagPosition, TrafficCard, placeCard, radarAltitude, useTrafficSelection, usePreloadCardPhotos, writeCard } from "./traffic-ui";
 import { fleet } from "../lib/site-data";
 import { lapSeconds, patternWaypoints, sampleAtTime } from "../lib/traffic-pattern";
 import { KLXL_OBLIQUE, KLXL_OBLIQUE_PATTERN, PX_PER_FT_MID, obliqueProject } from "../lib/oblique-view";
@@ -64,11 +64,26 @@ export function TrafficPerspective({ active, viewBox }: { active: boolean; viewB
           sh.setAttribute("opacity", Math.max(0.06, 0.4 - (s.agl / a.tpaAgl) * 0.32).toFixed(2));
         }
         const cy = air.y - w * 0.15;
-        tagRefs.current[i]?.setAttribute("transform", `translate(${air.x.toFixed(1)} ${cy.toFixed(1)}) scale(${(1 / k).toFixed(4)})`);
-        layoutTag(tagRefs.current[i]);
+        const tag = tagRefs.current[i];
+        setTagPosition(tag, m, air.x, cy);
         const label = `${p.reg} / ${radarAltitude(s.msl)}`;
         const tx = textRefs.current[i];
         if (tx && tx.textContent !== label) tx.textContent = label;
+        // Always-on tags keep one side; it is re-chosen (with a 4 s look-ahead) only
+        // when the fixed side would actually leave the safe area within the next second.
+        if (m && tag) {
+          const scr = (dt: number) => {
+            const f = sampleAtTime(a, t + dt * 0.33, points);
+            const o = obliqueProject(f.x, f.y, f.agl);
+            const fy = o.y - p.sp.span * o.scale * PX_PER_FT_MID * VISUAL_SCALE * 0.15;
+            return { x: m.a * o.x + m.c * fy + m.e, y: m.b * o.x + m.d * fy + m.f };
+          };
+          const soon = [0, 0.5, 1].map(scr);
+          if (!tagSideHolds(tag, soon)) {
+            const long = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4].map(scr);
+            if (!fitTagSide(tag, long)) fitTagSide(tag, soon) || fitTagSide(tag, [soon[0]!]);
+          }
+        }
         if (selectedRef.current === i && m) {
           placeCard(cardRef.current, m.a * air.x + m.c * cy + m.e, m.b * air.x + m.d * cy + m.f);
           writeCard(cardRef.current, s);

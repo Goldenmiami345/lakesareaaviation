@@ -158,8 +158,6 @@ export function RadarTag({ reg, index, seed, label, tabIndex, hit, tagRef, textR
 
 type Box = { l: number; t: number; r: number; b: number };
 const hits = (a: Box, b: Box) => a.l < b.r && a.r > b.l && a.t < b.b && a.b > b.t;
-const placed: Box[] = [];
-let placedAt = 0;
 let obstacleCache: { at: number; key: Element | null; list: Box[]; safe: Box } | null = null;
 function obstacles(g: SVGGElement) {
   const now = performance.now();
@@ -178,48 +176,64 @@ function obstacles(g: SVGGElement) {
   return obstacleCache;
 }
 
+type TagSide = { ox: number; oy: number; sy: number; W: number };
+const SIDES = [[1, -1], [-1, -1], [1, 1], [-1, 1], [0, -1], [0, 1], [1, -2], [-1, -2], [1, 2], [-1, 2]] as const;
+const sideOf = (g: SVGGElement) => (g as SVGGElement & { __side?: TagSide }).__side;
+const fits = (side: TagSide, pts: { x: number; y: number }[], list: Box[], safe: Box) => pts.every(({ x, y }) => {
+  const box = { l: x + side.ox, t: y + side.oy, r: x + side.ox + side.W, b: y + side.oy + 18 };
+  if (box.l < safe.l || box.r > safe.r || box.t < safe.t || box.b > safe.b) return false;
+  return !list.some((o) => hits(box, o));
+});
+
 /**
- * Keeps a radar tag readable: inside a 16px safe area, clear of the dot rail, the
- * header and the stage copy. Flips to whichever corner fits and moves the leader with it.
+ * Picks a radar tag's side ONCE for a whole display window: `pts` are the airplane's
+ * screen positions across that window (look-ahead). The first side that stays inside
+ * the safe area (16px edges, dot rail, header, stage copy) at every point wins and is
+ * then fixed: same offset, same leader length every frame. Returns false when no side
+ * fits the whole window, so the caller can skip that callout.
  */
-export function layoutTag(g: SVGGElement | null | undefined) {
-  if (!g) return;
-  const m = g.getScreenCTM();
+export function fitTagSide(g: SVGGElement | null | undefined, pts: { x: number; y: number }[]) {
+  if (!g) return false;
   const text = g.querySelector<SVGTextElement>(".traffic-label");
   const pill = g.querySelector<SVGRectElement>(".traffic-pill");
   const line = g.querySelector<SVGLineElement>(".traffic-leader");
-  if (!m || !text || !pill || !line) return;
-  const { list: fixed, safe } = obstacles(g);
-  const now = performance.now();
-  if (now - placedAt > 6) placed.length = 0;
-  placedAt = now;
-  const list = fixed.concat(placed);
+  if (!text || !pill || !line) return false;
+  obstacleCache = null;
+  const { list, safe } = obstacles(g);
   const W = Math.ceil(text.getComputedTextLength()) + 14, H = 18;
-  const px = m.e, py = m.f;
-  let best: { sx: number; sy: number; ox: number; oy: number; score: number } | null = null;
-  for (const [sx, sy] of [[1, -1], [-1, -1], [1, 1], [-1, 1], [0, -1], [0, 1], [1, -2], [-1, -2], [1, 2], [-1, 2]] as const) {
-    let ox = sx > 0 ? 14 : sx < 0 ? -14 - W : -W / 2;
+  for (const [sx, sy] of SIDES) {
+    const ox = sx > 0 ? 14 : sx < 0 ? -14 - W : -Math.round(W / 2);
     let oy = sy < 0 ? -27 : 9;
     if (sx === 0) oy = sy < 0 ? -34 : 16;
     if (Math.abs(sy) === 2) oy = sy < 0 ? -48 : 30;
-    // clamp horizontally into the safe area
-    const cl = Math.min(Math.max(px + ox, safe.l), safe.r - W) - px;
-    const shift = Math.abs(cl - ox); ox = cl;
-    const box = { l: px + ox, t: py + oy, r: px + ox + W, b: py + oy + H };
-    let score = shift;
-    if (box.t < safe.t || box.b > safe.b) score += 1000;
-    for (const o of list) if (hits(box, o)) score += 500;
-    if (!best || score < best.score) best = { sx, sy, ox, oy, score };
-    if (score === 0) break;
+    const side = { ox, oy, sy, W };
+    if (!fits(side, pts, list, safe)) continue;
+    (g as SVGGElement & { __side?: TagSide }).__side = side;
+    pill.setAttribute("x", String(ox)); pill.setAttribute("y", String(oy)); pill.setAttribute("width", String(W));
+    text.setAttribute("x", String(ox + 7)); text.setAttribute("y", String(oy + 12.5));
+    const tx = Math.min(Math.max(0, ox), ox + W);
+    const ty = Math.min(Math.max(0, oy), oy + H) || (sy < 0 ? oy + H : oy);
+    const len = Math.hypot(tx, ty) || 1;
+    line.setAttribute("x1", (tx / len * 6).toFixed(1)); line.setAttribute("y1", (ty / len * 6).toFixed(1));
+    line.setAttribute("x2", String(tx)); line.setAttribute("y2", String(ty));
+    return true;
   }
-  if (!best) return;
-  placed.push({ l: px + best.ox - 4, t: py + best.oy - 3, r: px + best.ox + W + 4, b: py + best.oy + H + 3 });
-  const { ox, oy, sy } = best;
-  pill.setAttribute("x", ox.toFixed(1)); pill.setAttribute("y", oy.toFixed(1)); pill.setAttribute("width", String(W));
-  text.setAttribute("x", (ox + 7).toFixed(1)); text.setAttribute("y", (oy + 12.5).toFixed(1));
-  const tx = Math.min(Math.max(0, ox), ox + W);
-  const ty = Math.min(Math.max(0, oy), oy + H) || (sy < 0 ? oy + H : oy);
-  const len = Math.hypot(tx, ty) || 1;
-  line.setAttribute("x1", (tx / len * 6).toFixed(1)); line.setAttribute("y1", (ty / len * 6).toFixed(1));
-  line.setAttribute("x2", tx.toFixed(1)); line.setAttribute("y2", ty.toFixed(1));
+  return false;
+}
+
+/** True while the tag's fixed side still fits the given upcoming screen positions. */
+export function tagSideHolds(g: SVGGElement | null | undefined, pts: { x: number; y: number }[]) {
+  const side = g && sideOf(g);
+  if (!g || !side) return false;
+  const { list, safe } = obstacles(g);
+  return fits(side, pts, list, safe);
+}
+
+/** Places the tag group on its airplane, snapped to whole screen pixels (no sub-pixel shimmer). */
+export function setTagPosition(g: SVGGElement | null | undefined, m: DOMMatrix | null | undefined, x: number, y: number) {
+  if (!g) return;
+  const k = m ? Math.hypot(m.a, m.b) || 1 : 1;
+  let ux = x, uy = y;
+  if (m && m.a) { ux = (Math.round(m.a * x + m.e) - m.e) / m.a; uy = (Math.round(m.d * y + m.f) - m.f) / m.d; }
+  g.setAttribute("transform", `translate(${ux.toFixed(3)} ${uy.toFixed(3)}) scale(${(1 / k).toFixed(4)})`);
 }
