@@ -40,7 +40,7 @@ export function TrafficPerspective({ active }: { active: boolean }) {
       // Same calm one-third real-time pace as the airport aerials.
       const secs = reduce ? 0 : ((now - start) / 1000) * 0.33;
       planes.forEach((p, i) => {
-        const t = secs + lap * [0.02, 0.45, 0.86][i]!;
+        const t = secs + lap * [0.08, 0.68, 0.95][i]!;
         const s = sampleAtTime(a, t, points);
         const ahead = sampleAtTime(a, t + 1.5, points);
         const g = obliqueProject(s.x, s.y);
