@@ -10,14 +10,14 @@ export const KLXL_OBLIQUE = {
   /** Image px per foot along the runway at its midpoint (4,010 ft ≈ 770 px). */
   pxPerFt: 770 / 4010,
   /** Height in image px of a 1,000 ft AGL climb at runway-mid scale. */
-  liftPx: 140,
+  liftPx: 95,
   // Ground quad: runway 13 threshold, runway 31 threshold, then the downwind
   // line (NE, hangar side) abeam each end.
   quad: [
     { x: 545, y: 252 },
     { x: 1275, y: 495 },
-    { x: 1165, y: 300 },
-    { x: 612, y: 206 },
+    { x: 1215, y: 335 },
+    { x: 640, y: 182 },
   ],
 } as const;
 
