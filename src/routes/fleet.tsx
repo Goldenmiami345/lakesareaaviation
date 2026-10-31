@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
 import { fleet } from "../lib/site-data";
 
@@ -14,6 +15,13 @@ export const Route = createFileRoute("/fleet")({
 });
 
 function Page() {
+  // Aircraft clicked in the home-page traffic pattern open here by tail number.
+  useEffect(() => {
+    const hash = window.location.hash.slice(1);
+    if (!hash) return;
+    const t = window.setTimeout(() => document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" }), 450);
+    return () => window.clearTimeout(t);
+  }, []);
   return (
     <SiteLayout>
       <PageIntro
@@ -24,7 +32,7 @@ function Page() {
       <main className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
         <div className="stagger-grid grid gap-px bg-border md:grid-cols-2 lg:grid-cols-3" data-scroll-reveal>
           {fleet.map((f, i) => (
-            <article key={f.registration} className="group bg-background">
+            <article key={f.registration} id={f.registration.toLowerCase()} className="group scroll-mt-24 bg-background target:ring-2 target:ring-primary">
               <div className="zoom-reveal aspect-[4/3] overflow-hidden bg-muted" data-scroll-reveal>
                 <img
                   src={f.image}

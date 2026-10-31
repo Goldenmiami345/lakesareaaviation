@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ArrowUp, MapPin } from "lucide-react";
+import { useEffect, useState } from "react";
 import heroImage from "../assets/photos/sunset-ramp.webp";
 import trainingImage from "../assets/fleet/n3353p-enhanced.webp";
 import { InquiryBand, SiteLayout } from "../components/site-shell";
 import { testimonials } from "../lib/site-data";
 import { ScrollCue } from "../components/motion-experience";
-import { FlightJourney, airportStages } from "../components/flight-journey";
+import { FlightJourney, airportStages, glideTo, jumpToJourney } from "../components/flight-journey";
 
 export const Route = createFileRoute("/")({
   staticData: { sitemap: true },
@@ -33,12 +34,16 @@ function HomePage() {
             <p className="mt-6 max-w-sm text-base leading-relaxed text-background/80 sm:mt-7 sm:max-w-lg sm:text-lg">From your first flight to commercial pilot and instructor.</p>
           </div>
           <div className="mt-7 reveal-delay"><Link to="/contact" className="interactive-arrow group inline-flex min-h-12 items-center gap-4 border-b border-background/45 pb-1 text-sm font-bold uppercase text-background transition-colors hover:border-primary">Build my training plan <span className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><ArrowRight className="size-4" /></span></Link></div>
+          <nav aria-label="Training locations" className="reveal-delay mt-7 flex flex-wrap items-center gap-x-1 gap-y-2 text-[11px] font-bold uppercase tracking-[0.16em] text-background/75">
+            <span className="mr-2 inline-flex items-center gap-1.5 text-background/55"><MapPin className="size-3.5" />Train at</span>
+            {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} className="rounded-full border border-background/25 px-3 py-1.5 transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground">{a.label} <span className="text-background/50">{a.time}</span></button>)}
+          </nav>
           <ScrollCue targetId="flight-path" />
         </div>
       </section>
 
       <FlightJourney />
-      <FlightJourney stages={airportStages} id="airports" label="Three airports to train from" mode="code" />
+      <FlightJourney stages={airportStages} id="airports" label="Three airports to train from" mode="code" fadeBottom="background" />
 
       <section className="bg-background py-20 sm:py-28" data-scroll-reveal>
         <div className="mx-auto max-w-7xl px-5 lg:px-8">
@@ -63,6 +68,7 @@ function HomePage() {
       <section className="bg-secondary py-20 sm:py-28"><div className="mx-auto max-w-5xl px-5 lg:px-8" data-scroll-reveal="blur"><p className="eyebrow text-primary">Student experience</p><blockquote className="mt-6 font-display text-3xl leading-snug sm:text-5xl">“{featuredStory.quote}”<footer className="mt-8 font-sans text-sm font-bold uppercase text-foreground">{featuredStory.name}</footer></blockquote><Link to="/student-success" className="interactive-arrow mt-8 inline-flex items-center gap-2 text-sm font-bold uppercase text-primary">More stories <ArrowRight className="size-4" /></Link><p className="mt-6 text-xs text-muted-foreground">Individual results vary.</p></div></section>
       <InquiryBand />
     </main>
+    <BackToTop />
   </SiteLayout>;
 }
 
@@ -73,4 +79,15 @@ function ServiceLink({ eyebrow, title, text, to, slug }: { eyebrow: string; titl
   return slug
     ? <Link to={to} params={{ slug }} className="program-card interactive-arrow group min-h-72 bg-background p-7 sm:p-8">{content}</Link>
     : <Link to={to} className="program-card interactive-arrow group min-h-72 bg-background p-7 sm:p-8">{content}</Link>;
+}
+
+function BackToTop() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setShow(window.scrollY > window.innerHeight * 1.5);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  return <button type="button" aria-label="Back to top" tabIndex={show ? 0 : -1} onClick={() => glideTo(0)} className={`fixed bottom-24 right-4 z-40 grid size-11 place-items-center rounded-full border border-background/25 bg-ink/80 text-background shadow-xl backdrop-blur-md transition-all duration-300 hover:bg-primary md:bottom-6 md:right-6 ${show ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`}><ArrowUp className="size-4" /></button>;
 }
