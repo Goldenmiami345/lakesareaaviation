@@ -1,8 +1,9 @@
 # Roadmap
 
-- [ ] Fix the production contact hydration mismatch and verify four pages.
-- [ ] Restore desktop airport zoom ≥1.0×, target 1.15×; preserve phone fit.
-- [ ] Draw exact traffic paths, safe leg labels and stronger radar targets; verify six airport screenshots and SSR guard.
+- [x] Fix contact slash-dependent hydration; verify four pages using production React replay of the exact repair and updated preview.
+- [x] Restore all three desktop airports to 1.15×; preserve phone 1.1029×/1.25×/1.25×.
+- [x] Draw exact flight paths, collision-checked labels and stronger targets; six screenshots, 30 tests, 4× pinch and one-notch/native-up checks pass.
+- [ ] Verify fresh production artifacts and deployed hydration after publish: no new dist/server output is available in this workspace; published-before and preview-after all-27 HTML guard checks pass.
 
 - [x] Disable visitor models/sprites with one flag; add hidden prerendered models preview; verify 390×844/1280×900, 28 tests and dev SSR (production verification remains blocked below).
 
