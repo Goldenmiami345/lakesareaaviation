@@ -148,6 +148,7 @@ export function positionReport(phase: string, runway: string, side: "left" | "ri
   const s = side === "left" ? "Left" : "Right";
   switch (phase) {
     case "Takeoff": return `Departing runway ${runway}`;
+    case "Upwind": return `${s} upwind ${runway}`;
     case "Crosswind": return `${s} crosswind ${runway}`;
     case "Downwind": return `${s} downwind ${runway}`;
     case "Base": return `${s} base ${runway}`;
