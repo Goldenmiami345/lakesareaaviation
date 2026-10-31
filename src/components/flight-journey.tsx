@@ -161,7 +161,7 @@ function installController() {
     if (!g || !t || e.touches.length !== 1) { g = null; return; }
     const dx = g.x - t.clientX, dy = g.y - t.clientY;
     if (!g.decided) {
-      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+      if (Math.abs(dx) < 3 && Math.abs(dy) < 3) return; // taps with jitter stay taps
       g.decided = true;
       if (Math.abs(dx) > Math.abs(dy) || root.classList.contains("journey-free")) { g = null; return; }
       const pages = journeyPages();
