@@ -15,6 +15,13 @@
       "when": 1790959900691,
       "tag": "0001_add_first_admin_claim",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793467345305,
+      "tag": "0002_training_plan_leads",
+      "breakpoints": true
     }
   ]
 }
