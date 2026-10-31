@@ -6,7 +6,7 @@ import { journeyFrame, journeyStop, journeyNearestLanding, JOURNEY_STAGE_SVH } f
 import { airportTraffic } from "../lib/site-data";
 import type { PatternAirport } from "../lib/traffic-pattern";
 import { TrafficPattern } from "./traffic-pattern";
-import instrumentVideo from "../assets/journey/instrument-imc-loop.mp4.asset.json";
+import instrumentVideo from "../assets/journey/instrument-imc-smooth.mp4.asset.json";
 import clouds from "../assets/journey/01-clouds.webp";
 import runway from "../assets/journey/02-runway-corrected.webp";
 import instrument from "../assets/journey/instrument-imc-cockpit.webp";
