@@ -451,7 +451,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
                 style={{ objectPosition: st.position ?? "center" }}
               />
             ) : (
-              <picture>
+              <picture className="block h-full w-full">
                 {st.phoneImg && <source media={PHONE_MQ} srcSet={st.phoneImg} />}
                 <img src={st.img} alt={st.alt} width={st.w ?? 1920} height={st.h ?? 1088} loading={i <= active + 2 ? "eager" : "lazy"} decoding="async" className="h-full w-full bg-ink object-cover" style={{ objectPosition: st.position ?? "center" }} />
               </picture>
