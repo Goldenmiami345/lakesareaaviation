@@ -6,7 +6,8 @@ import { journeyFrame, journeyStop, journeyNearestLanding, JOURNEY_STAGE_SVH } f
 import { airportTraffic } from "../lib/site-data";
 import type { PatternAirport } from "../lib/traffic-pattern";
 import { TrafficPattern } from "./traffic-pattern";
-import instrumentVideo from "../assets/journey/instrument-imc-loop.mp4.asset.json";
+import instrumentVideo from "../assets/journey/instrument-imc-smooth.mp4.asset.json";
+import airlineVideo from "../assets/journey/airline-approach.mp4.asset.json";
 import clouds from "../assets/journey/01-clouds.webp";
 import runway from "../assets/journey/02-runway-corrected.webp";
 import instrument from "../assets/journey/instrument-imc-cockpit.webp";
@@ -22,10 +23,10 @@ type Stage = { code: string; label: string; time: string; title: string; text: s
 const journeyStages: Stage[] = [
   { code: "01", label: "Discovery flight", time: "$100", title: "Take the controls on day one.", text: "Left seat, instructor beside you.", img: clouds, alt: "Sunrise above a sea of clouds", cta: "Book an intro flight", to: "/introductory-flights" },
   { code: "02", label: "Private pilot", time: "~21 days", title: "Your first certificate.", text: "One focused block.", img: runway, alt: "Cockpit view on approach to Runway 13 at KLXL, with Runway 18/36 crossing just past the threshold", cta: "Private pilot details", slug: "private-pilot" },
-  { code: "03", label: "Instrument rating", time: "10–14 days", title: "Train in the real cockpit.", text: "Fly by reference to instruments.", img: instrument, alt: "Real Lakes Area Aviation instrument panel flying through instrument conditions", cta: "Instrument details", slug: "instrument-rating", position: "center", video: instrumentVideo.url },
+  { code: "03", label: "Instrument rating", time: "10–14 days", title: "Train in the real cockpit.", text: "Fly by reference to instruments.", img: instrument, alt: "Real Lakes Area Aviation instrument panel flying through instrument conditions", cta: "Instrument details", slug: "instrument-rating", position: "center", video: instrumentVideo.url, zoom: 0.2, zoomIn: 0.03 },
   { code: "04", label: "Commercial pilot", time: "5–7 days", title: "Fly professionally.", text: "Commercial standards in a focused block.", img: commercial, alt: "Lakes Area Aviation airplanes on the ramp at sunset", cta: "Commercial details", slug: "commercial-single-engine" },
   { code: "05", label: "CFI & CFII", time: "4–6 weeks", title: "Become the instructor.", text: "The exams: 1-hour oral and 1-hour flight.", img: instructor, alt: "Instructor and student inspecting a training airplane before flight", cta: "CFI & CFII track", slug: "cfi-cfii", position: "center" },
-  { code: "06", label: "The right seat", time: "Your goal", title: "Build toward the airline flight deck.", text: "Every instructing hour moves you closer.", img: airline, alt: "Airline flight deck at night above city lights", cta: "Build my training plan", to: "/contact" },
+  { code: "06", label: "The right seat", time: "Your goal", title: "Build toward the airline flight deck.", text: "Every instructing hour moves you closer.", img: airline, alt: "Airline flight deck at night on final approach over city lights", cta: "Build my training plan", to: "/contact", video: airlineVideo.url, zoom: 0.2, zoomIn: 0.03 },
 ];
 
 export const airportStages: Stage[] = [
@@ -35,6 +36,8 @@ export const airportStages: Stage[] = [
 ];
 
 const snapOwners = new Set<Element>();
+// Traffic-pattern airplanes are paused while their design is still being decided.
+const SHOW_TRAFFIC = false;
 
 // Programmatic glide that temporarily disables journey snapping, so jumps
 // (back to top, location shortcuts) travel straight to their target.
@@ -149,21 +152,30 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     };
     const onWheel = (e: WheelEvent) => {
       if (!el || reduce || e.ctrlKey || Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
-      if (!snapOwners.has(el) || root.classList.contains("journey-free")) return;
+      if (root.classList.contains("journey-free")) return;
+      const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
+      const rect = el.getBoundingClientRect();
+      const dir = e.deltaY > 0 ? 1 : -1;
+      // The screen right above/below the journey: any wheel nudge toward it
+      // glides straight onto its first/last page.
+      const entering = !snapOwners.has(el) && ((dir > 0 && rect.top > 1 && rect.top <= vh + 1) || (dir < 0 && rect.bottom < vh - 1 && rect.bottom >= -1));
+      if (!snapOwners.has(el) && !entering) return;
       const now = performance.now();
       const delta = Math.abs(e.deltaY);
       const fresh = now - lastWheel > 180 || delta > lastDelta * 1.6 + 4;
       lastWheel = now; lastDelta = delta;
       e.preventDefault();
       if (now < lockUntil || !fresh) return;
-      const dir = e.deltaY > 0 ? 1 : -1;
-      const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
-      const total = Math.max(1, el.offsetHeight - vh);
-      const progress = Math.max(0, Math.min(1, -el.getBoundingClientRect().top / total));
-      const current = progress >= 0.999 ? n : journeyNearestLanding(progress, n);
-      const target = Math.max(-1, Math.min(n, current + dir));
       lockUntil = now + 650;
-      window.scrollTo({ top: stopTop(target), behavior: "smooth" });
+      if (entering) { glideTo(stopTop(dir > 0 ? 0 : n - 1)); return; }
+      const total = Math.max(1, el.offsetHeight - vh);
+      const progress = Math.max(0, Math.min(1, -rect.top / total));
+      const current = progress >= 0.999 ? n : journeyNearestLanding(progress, n);
+      // Leaving past either end hands the page back to free scrolling so the
+      // visitor is never trapped at the last (or first) stop.
+      if (dir > 0 && current >= n - 1) { glideTo(stopTop(n) + vh); return; }
+      if (dir < 0 && current <= 0) { glideTo(stopTop(-1)); return; }
+      window.scrollTo({ top: stopTop(current + dir), behavior: "smooth" });
     };
     const onJump = (e: Event) => {
       const d = (e as CustomEvent<{ id: string; index: number }>).detail;
@@ -226,7 +238,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
             ) : (
               <img src={st.img} alt={st.alt} width={st.w ?? 1920} height={st.h ?? 1088} loading={i < 2 ? "eager" : "lazy"} decoding="async" className="h-full w-full object-cover" style={{ objectPosition: st.position ?? "center" }} />
             )}
-            {st.traffic && <TrafficPattern airport={st.traffic} active={i === active} />}
+            {SHOW_TRAFFIC && st.traffic && <TrafficPattern airport={st.traffic} active={i === active} />}
           </div>
         ))}
         <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-ink via-ink/40 to-ink/50" />
