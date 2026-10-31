@@ -23,8 +23,8 @@ export const Route = createFileRoute("/hero-options")({
 });
 
 const options = [
-  { id: "A", title: "Same photo, reframed", phone: optionA, desktop: sunset, detail: "Original airplane pixels preserved. Extended sky and empty ramp. Review note: the softened ramp join is less convincing than the original photo.", size: "Phone 209.0 KB · Desktop 80.9 KB", alt: "Real Cessna N6717A at sunset, with extended sky and ramp" },
-  { id: "B", title: "Same photo, sunset enhanced", phone: optionB, desktop: sunset, detail: "Original airplane pixels preserved. Warmer extended sky and softer ramp shadows. Desktop retains the original sunset. Review note: the sky glow and softened ramp join are AI extensions.", size: "Phone 186.8 KB · Desktop 80.9 KB", alt: "Real Cessna N6717A with a warmer sunset sky above it" },
+  { id: "A", title: "Same photo, reframed", phone: optionA, desktop: sunset, detail: "Original airplane pixels preserved. Extended sky and empty ramp. Review note: the upper sky join remains visible; not final-photo quality.", size: "Phone 258.7 KB · Desktop 80.9 KB", alt: "Real Cessna N6717A at sunset, with extended sky and ramp" },
+  { id: "B", title: "Same photo, sunset enhanced", phone: optionB, desktop: sunset, detail: "Original airplane pixels preserved. Warmer extended sky and softer ramp shadows. Desktop retains the original sunset. Review note: the invented sky lighting and ramp grain need owner approval.", size: "Phone 256.1 KB · Desktop 80.9 KB", alt: "Real Cessna N6717A with a warmer sunset sky above it" },
   { id: "C", title: "Blue, in daylight", phone: blue, desktop: blue, detail: "Real school fleet photo of N6717A. No AI editing.", size: "191.4 KB shared by phone and desktop", alt: "Lakes Area Aviation blue and white Cessna N6717A on the ramp in daylight" },
   { id: "D", title: "Original photo, headline above", phone: sunset, desktop: sunset, detail: "No AI editing. The phone headline moves above the photograph.", size: "80.9 KB shared by phone and desktop", alt: "Original school sunset photo of Cessna N6717A and the Piper Apache" },
 ] as const;

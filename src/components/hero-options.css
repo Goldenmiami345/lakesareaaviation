@@ -1,7 +1,7 @@
 .hero-comparison .option-phone { height: 100svh; min-height: 760px; }
 .hero-comparison .option-desktop { height: 900px; }
 .hero-comparison .option-shade { background: linear-gradient(to top, var(--ink) 0%, color-mix(in oklab, var(--ink) 92%, transparent) 28%, transparent 60%); }
-.hero-comparison .option-c.option-phone .option-photo { height: 57%; object-position: center; }
+.hero-comparison .option-c.option-phone .option-photo { height: 57%; object-position: 65% center; }
 .hero-comparison .option-d.option-phone .option-photo { top: 38%; height: 55%; object-position: 35% center; }
 .hero-comparison .option-d.option-phone .option-copy { position: absolute; top: 100px; left: 20px; right: 20px; }
 .hero-comparison .option-d.option-phone .option-shade { background: linear-gradient(to bottom, var(--ink) 33%, transparent 45%, transparent 66%, var(--ink) 88%); }
