@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Disable visitor models/sprites with one flag; add hidden prerendered models preview; verify phone/desktop and SSR.
+- [x] Disable visitor models/sprites with one flag; add hidden prerendered models preview; verify 390×844/1280×900, 28 tests and dev SSR (production verification remains blocked below).
 
 - [x] Install supplied GLBs and exact top sprites; verify three cards/fleet rotation/drag/pinch isolation and dev SSR; report production limitations.
 
