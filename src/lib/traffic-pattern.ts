@@ -19,7 +19,7 @@ export type PatternAirport = {
   offset: number;
   /** Upwind / final extension beyond each runway end, image px. */
   extension: number;
-  aircraft: string[];
+  aircraft: readonly string[];
 };
 
 export type PatternSample = { x: number; y: number; heading: number; agl: number; msl: number; knots: number; phase: string };
