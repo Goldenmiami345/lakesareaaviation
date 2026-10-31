@@ -55,6 +55,7 @@
 @utility font-display { font-family: var(--font-display); }
 @utility eyebrow { font-size: .72rem; line-height: 1rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
 @utility photo-label { display: inline-block; width: fit-content; color: var(--primary-foreground); background: var(--primary); padding: .42rem .7rem .38rem; font-size: .76rem; font-weight: 800; letter-spacing: .2em; border-radius: 999px; box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary-foreground) 35%, transparent), 0 6px 18px color-mix(in oklab, var(--ink) 45%, transparent); }
+@utility stage-label { display: inline-flex; align-items: center; gap: .55rem; color: var(--primary-foreground); font-size: .6875rem; line-height: 1rem; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; text-shadow: 0 1px 2px color-mix(in oklab, var(--ink) 85%, transparent), 0 0 14px color-mix(in oklab, var(--ink) 65%, transparent); &::before { content: ""; width: 1.25rem; height: 2px; flex: none; background: var(--primary); box-shadow: 0 0 6px color-mix(in oklab, var(--ink) 60%, transparent); } }
 @utility outlined-accent-label { color: var(--primary-foreground); font-weight: 800; letter-spacing: .18em; text-shadow: 0 1px 2px color-mix(in oklab, var(--ink) 90%, transparent), 0 0 12px color-mix(in oklab, var(--ink) 70%, transparent); }
 
 .theme-swatch-blue { background: oklch(0.56 0.22 258); }
@@ -139,6 +140,8 @@
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
 /* Flight journey (zoom-scroll) */
 .journey-copy { will-change: opacity, transform; }
+/* Phones: shorter image box shows more of each scene; overlays inside the layer stay aligned. */
+@media (max-width: 639px) { .journey-layer { bottom: 14%; mask-image: linear-gradient(to bottom, #000 82%, transparent); -webkit-mask-image: linear-gradient(to bottom, #000 82%, transparent); } }
 .journey-grain { opacity: .12; background-image: radial-gradient(color-mix(in oklab, var(--background) 60%, transparent) 1px, transparent 1px); background-size: 3px 3px; mix-blend-mode: overlay; }
 @media (prefers-reduced-motion: reduce) { .journey-copy > * { animation: none; } }
 
