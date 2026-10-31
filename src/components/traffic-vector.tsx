@@ -2,11 +2,11 @@ import { aircraftType } from '../lib/traffic-flight';
 import apache from '../assets/models/n4383p_top.png.asset.json';
 import phoenix from '../assets/models/n8570b_top.png.asset.json';
 import cardinal from '../assets/models/n46201_top.png.asset.json';
-import { MODEL_WINGSPANS_M } from '../lib/model-settings';
+import { MODEL_WINGSPANS_M, trafficPresentationScale } from '../lib/model-settings';
 import { SHOW_3D_MODELS } from '../lib/site-data';
 const renders: Record<string, { url: string; height: number }> = { N4383P: {url:apache.url,height:766}, N8570B:{url:phoenix.url,height:748}, N46201:{url:cardinal.url,height:769} };
 export function trafficSpanFeet(reg: string) { return SHOW_3D_MODELS && MODEL_WINGSPANS_M[reg] ? MODEL_WINGSPANS_M[reg] / 0.3048 : AIRCRAFT_SPANS[reg] ?? 36; }
-export function trafficModelScale(reg: string) { return SHOW_3D_MODELS && MODEL_WINGSPANS_M[reg] ? 1 : 3; }
+export const trafficModelScale = trafficPresentationScale;
 
 // Original SVG source, not traced logos or invented tail lettering. Wingspan is
 // one local unit; lengths are proportional to published type dimensions. Paint
