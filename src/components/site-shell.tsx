@@ -73,7 +73,6 @@ export function MobileActions() {
 }
 
 export function SiteLayout({ children, overlayHeader = false }: { children: ReactNode; overlayHeader?: boolean }) {
-  const { pathname } = useLocation();
   // Key the single page-enter fade on the RESOLVED leaf match (state.matches only switches
   // once the new route's loaders and code are ready), never on the raw pathname, so the
   // old page stays still until the new one renders and the fade plays exactly once.

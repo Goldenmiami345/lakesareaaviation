@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { programs } from "../lib/site-data";
 
 export function MotionExperience({ pageKey }: { pageKey: string }) {
