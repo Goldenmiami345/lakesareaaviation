@@ -106,7 +106,7 @@ export const TrafficCard = forwardRef<HTMLDivElement, { plane: TrafficPlaneInfo;
     <div ref={ref} data-traffic-card="" className="traffic-card pointer-events-auto fixed left-0 top-0 z-[70] w-[min(60vw,15rem)]" role="dialog" aria-label={`${plane.reg} details`}>
       <div className="flex items-start gap-2.5">
         {/* Media slot: fixed 40% width and aspect, so a future 3D model or 360° spin drops in without changing the layout. */}
-        <div data-card-media="" className="traffic-card-media relative -mt-[34px] aspect-[480/210] w-[40%] shrink-0">
+        <div data-card-media="" className="traffic-card-media relative -mt-[34px] aspect-[480/210] w-[45%] shrink-0">
           {photo && <img src={photo} alt={`${plane.reg}, the real airplane`} width={480} height={210} decoding="async" className="absolute inset-0 h-full w-full object-contain object-bottom" />}
         </div>
         <span className="min-w-0 flex-1">
