@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Install supplied GLBs and exact top sprites; isolate model gestures; verify cards/fleet/SSR and report.
+
 - [x] Add production HTML gate for all 26 routes, fleet order and unfinished Suspense; validate gate against empty shell.
 - [ ] Confirm production SSR repair/root cause and production mobile hydration: awaiting new hosted build/artifacts (current hosted build predates edits; dev-only checks pass).
 
