@@ -173,9 +173,9 @@ function installController() {
   let touching = false;
   let rejected = false;
   // touchend can be dropped when the main thread is busy; a finger with no touch
-  // events for 300ms is treated as lifted so the landing guard and settling still run.
+  // events for 150ms is treated as lifted so the landing guard and settling still run.
   let lastTouchAt = 0;
-  const fingerDown = () => touching && performance.now() - lastTouchAt < 300;
+  const fingerDown = () => touching && performance.now() - lastTouchAt < 150;
   const onTouchStart = (e: TouchEvent) => {
     touching = true; rejected = false; landedUntil = 0; lastTouchAt = performance.now();
     const t = e.touches[0];
