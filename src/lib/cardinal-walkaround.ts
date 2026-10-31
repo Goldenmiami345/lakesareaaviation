@@ -21,8 +21,6 @@ import p13_800 from "../assets/fleet/walkaround/n46201-13-800.webp.asset.json";
 import p13_1600 from "../assets/fleet/walkaround/n46201-13-1600.webp.asset.json";
 import p9_800 from "../assets/fleet/walkaround/n46201-09-800.webp.asset.json";
 import p9_1600 from "../assets/fleet/walkaround/n46201-09-1600.webp.asset.json";
-import p10_800 from "../assets/fleet/walkaround/n46201-10-800.webp.asset.json";
-import p10_1600 from "../assets/fleet/walkaround/n46201-10-1600.webp.asset.json";
 export const cardinalWalkaround: WalkaroundPhoto[] = [
   { src: p8_1600.url, small: p8_800.url, label: "N46201 real walk-around photo 08" },
   { src: p6_1600.url, small: p6_800.url, label: "N46201 real walk-around photo 06" },
@@ -35,5 +33,4 @@ export const cardinalWalkaround: WalkaroundPhoto[] = [
   { src: p17_1600.url, small: p17_800.url, label: "N46201 real walk-around photo 17" },
   { src: p13_1600.url, small: p13_800.url, label: "N46201 real walk-around photo 13" },
   { src: p9_1600.url, small: p9_800.url, label: "N46201 real walk-around photo 09" },
-  { src: p10_1600.url, small: p10_800.url, label: "N46201 real walk-around photo 10" },
 ];
