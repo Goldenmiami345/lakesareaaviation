@@ -57,7 +57,7 @@ export function glideTo(top: number, instant = false) {
 export function jumpToPageTop() {
   const root = document.documentElement;
   root.classList.add("journey-free");
-  cancelAnimationFrame(tweenFrame); paging = false;
+  cancelAnimationFrame(tweenFrame); paging = false; root.classList.remove("journey-paging");
   window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
     if (window.scrollY !== 0) window.scrollTo({ top: 0, left: 0, behavior: "instant" });
@@ -97,9 +97,13 @@ function journeyPages(): JourneyPage[] {
 
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 
-function runPath(path: PageSegment[]) {
+function runPath(path: PageSegment[], touch = false) {
   cancelAnimationFrame(tweenFrame);
   paging = true;
+  // A touch swipe can leave a native fling running (iOS/Chromium mark later touchmoves
+  // non-cancelable once scrolling starts); freezing native scroll during our glide
+  // stops it from fighting the tween and overshooting several pages.
+  if (touch) document.documentElement.classList.add("journey-paging");
   const moving = path.filter((s) => !s.instant).length || 1;
   const dur = PAGE_MS / moving;
   let k = 0;
@@ -113,7 +117,9 @@ function runPath(path: PageSegment[]) {
         const p = pages[nearestPage(pages, window.scrollY)];
         if (p) window.scrollTo({ top: p.y, behavior: "instant" });
       }
-      paging = false; pagingUntil = performance.now() + 60; return;
+      paging = false; pagingUntil = performance.now() + 60;
+      document.documentElement.classList.remove("journey-paging");
+      return;
     }
     if (seg.instant) { window.scrollTo({ top: seg.y, behavior: "instant" }); nextSeg(); return; }
     const from = window.scrollY, start = performance.now();
@@ -128,7 +134,7 @@ function runPath(path: PageSegment[]) {
 }
 
 export function goToJourneyPage(y: number, instant = false) {
-  if (instant) { cancelAnimationFrame(tweenFrame); paging = false; window.scrollTo({ top: y, behavior: "instant" }); return; }
+  if (instant) { cancelAnimationFrame(tweenFrame); paging = false; document.documentElement.classList.remove("journey-paging"); window.scrollTo({ top: y, behavior: "instant" }); return; }
   runPath([{ y, instant: false }]);
 }
 
@@ -140,10 +146,10 @@ function installController() {
   const reduce = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const busy = () => paging || performance.now() < pagingUntil;
   const inRange = (pages: JourneyPage[]) => pages.length > 0 && window.scrollY <= pages[pages.length - 1]!.y + 2;
-  const step = (dir: 1 | -1) => {
+  const step = (dir: 1 | -1, touch = false) => {
     const path = pageStep(journeyPages(), window.scrollY, dir);
     if (!path) return false;
-    runPath(path);
+    runPath(path, touch);
     return true;
   };
   let lastWheel = 0, lastDelta = 0;
@@ -181,7 +187,7 @@ function installController() {
       if (!g.claimed) { g = null; rejected = true; return; }
     }
     if (e.cancelable) e.preventDefault();
-    if (!g.fired && !busy() && Math.abs(dy) >= PAGE_SWIPE_PX) { g.fired = true; step(dy > 0 ? 1 : -1); }
+    if (!g.fired && !busy() && Math.abs(dy) >= PAGE_SWIPE_PX) { g.fired = true; step(dy > 0 ? 1 : -1, true); }
   };
   let settleTimer = 0;
   const onTouchEnd = (e: TouchEvent) => { if (e.touches.length === 0) { touching = false; g = null; scheduleSettle(); } };
@@ -224,6 +230,7 @@ function installController() {
     window.clearTimeout(settleTimer);
     cancelAnimationFrame(tweenFrame);
     paging = false;
+    root.classList.remove("journey-paging");
   };
 }
 
