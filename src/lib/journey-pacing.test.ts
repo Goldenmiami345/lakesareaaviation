@@ -1,6 +1,6 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { journeyFrame, journeyGestureTarget, journeyLanding, journeyNearestLanding, journeyShouldSettle, JOURNEY_HOLD, JOURNEY_STAGE_SVH } from "./journey-pacing";
+import { journeyEase, journeyFrame, journeyGestureTarget, journeyLanding, journeyNearestLanding, journeyShouldSettle, journeyWheelStartsGesture, JOURNEY_HOLD, JOURNEY_STAGE_SVH } from "./journey-pacing";
 
 describe("homepage journey pacing", () => {
   test("rounded mobile landings still advance one step and release both endpoints", () => {
@@ -87,5 +87,30 @@ describe("homepage journey pacing", () => {
         }
       }
     }
+  });
+});
+
+describe("journey wheel gestures", () => {
+  test("decaying inertia after a step never triggers a second step", () => {
+    let delta = 80;
+    for (let t = 300; t < 1100; t += 16) {
+      delta = Math.max(1, delta * 0.94);
+      assert.equal(journeyWheelStartsGesture({ gapMs: 16, delta, lastDelta: delta / 0.94, sinceStepMs: t }), false);
+    }
+  });
+
+  test("a fresh flick after the glide starts a new step immediately", () => {
+    assert.equal(journeyWheelStartsGesture({ gapMs: 16, delta: 60, lastDelta: 4, sinceStepMs: 400 }), true);
+    assert.equal(journeyWheelStartsGesture({ gapMs: 250, delta: 5, lastDelta: 5, sinceStepMs: 400 }), true);
+  });
+
+  test("a continuous spin keeps advancing instead of locking the page", () => {
+    assert.equal(journeyWheelStartsGesture({ gapMs: 30, delta: 100, lastDelta: 100, sinceStepMs: 1200 }), true);
+  });
+
+  test("the glide eases from start to landing", () => {
+    assert.equal(journeyEase(0), 0);
+    assert.equal(journeyEase(1), 1);
+    assert.ok(journeyEase(0.5) > 0.49 && journeyEase(0.5) < 0.51);
   });
 });

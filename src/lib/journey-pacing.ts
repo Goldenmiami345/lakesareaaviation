@@ -57,3 +57,25 @@ export function journeyGestureTarget(progress: number, count: number, direction:
   if (target < 0 || target >= length) return null;
   return target;
 }
+
+// Stage-to-stage glide: a fixed, eased animation so every step feels the same
+// on every browser (native smooth scroll varies wildly and can crawl on iOS).
+export const JOURNEY_GLIDE_MS = 720;
+export function journeyEase(t: number) {
+  const x = clamp(t);
+  return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+}
+
+// Wheel gesture detection. Trackpad/Magic Mouse inertia keeps firing decaying
+// wheel events for a second or more; those belong to the gesture that already
+// stepped. A pause or a fresh, stronger push starts a new gesture, and a
+// continuously spinning wheel still advances after a cooldown so it never feels stuck.
+export const JOURNEY_WHEEL_GAP_MS = 180;
+export const JOURNEY_WHEEL_REPEAT_MS = 1100;
+export function journeyWheelStartsGesture(input: { gapMs: number; delta: number; lastDelta: number; sinceStepMs: number }) {
+  const { gapMs, delta, lastDelta, sinceStepMs } = input;
+  if (sinceStepMs < 260) return false;
+  if (gapMs > JOURNEY_WHEEL_GAP_MS) return true;
+  if (Math.abs(delta) > Math.abs(lastDelta) * 1.5 + 4) return true;
+  return sinceStepMs > JOURNEY_WHEEL_REPEAT_MS && Math.abs(delta) >= 12;
+}
