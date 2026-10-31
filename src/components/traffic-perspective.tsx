@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { fleet } from "../lib/site-data";
 import { lapSeconds, patternWaypoints, sampleAtTime } from "../lib/traffic-pattern";
-import { KLXL_OBLIQUE, KLXL_OBLIQUE_PATTERN, obliqueProject } from "../lib/oblique-view";
+import { KLXL_OBLIQUE, KLXL_OBLIQUE_PATTERN, PX_PER_FT_MID, obliqueProject } from "../lib/oblique-view";
 import n6717a from "../assets/traffic-side/n6717a.webp";
 import n8570b from "../assets/traffic-side/n8570b.webp";
 import n3353p from "../assets/traffic-side/n3353p.webp";
@@ -47,20 +47,18 @@ export function TrafficPerspective({ active }: { active: boolean }) {
         const g = obliqueProject(s.x, s.y);
         const air = obliqueProject(s.x, s.y, s.agl);
         const air2 = obliqueProject(ahead.x, ahead.y, ahead.agl);
-        const lift = g.y - air.y;
         const dx = air2.x - air.x, dy = air2.y - air.y;
         const flip = dx < 0;
         const ang = Math.max(-14, Math.min(14, (Math.atan2(flip ? -dy : dy, Math.abs(dx) || 0.001) * 180) / Math.PI * 0.6));
         const w = p.sp.span * air.scale * PX_PER_FT_MID * VISUAL_SCALE;
-        g.x = air.x;
-        planeRefs.current[i]?.setAttribute("transform", `translate(${g.x.toFixed(1)} ${(g.y - lift).toFixed(1)}) rotate(${ang.toFixed(1)}) scale(${flip ? -w : w} ${w})`);
+        planeRefs.current[i]?.setAttribute("transform", `translate(${air.x.toFixed(1)} ${air.y.toFixed(1)}) rotate(${ang.toFixed(1)}) scale(${flip ? -w : w} ${w})`);
         const sh = shadowRefs.current[i];
         if (sh) {
           sh.setAttribute("cx", g.x.toFixed(1)); sh.setAttribute("cy", g.y.toFixed(1));
           sh.setAttribute("rx", (w * 0.42).toFixed(1)); sh.setAttribute("ry", (w * 0.09).toFixed(1));
           sh.setAttribute("opacity", Math.max(0.06, 0.4 - (s.agl / a.tpaAgl) * 0.32).toFixed(2));
         }
-        if (hoveredRef.current === i) cardRef.current?.setAttribute("transform", `translate(${Math.min(KLXL_OBLIQUE.width - 240, g.x + 14).toFixed(0)} ${(g.y - lift - 70).toFixed(0)})`);
+        if (hoveredRef.current === i) cardRef.current?.setAttribute("transform", `translate(${Math.min(KLXL_OBLIQUE.width - 240, air.x + 14).toFixed(0)} ${(air.y - 70).toFixed(0)})`);
         if (hoveredRef.current === i) setInfo(`${s.phase} · ${s.msl.toLocaleString("en-US")} ft MSL · ${s.knots} kt`);
       });
       if (!reduce) raf = requestAnimationFrame(draw);
