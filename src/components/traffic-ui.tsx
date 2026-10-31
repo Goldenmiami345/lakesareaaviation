@@ -113,8 +113,77 @@ export function RadarTag({ reg, index, seed, label, tabIndex, hit, tagRef, textR
     <g ref={tagRef} className="traffic-tag">
       <circle r={9} className="traffic-ping" style={{ animationDuration: `${period}s`, animationDelay: `${delay}s` }} />
       <line x1={5} y1={-5} x2={15} y2={-15} className="traffic-leader" />
-      <text ref={textRef} x={18} y={-16} className="traffic-label">{reg}</text>
+      <rect x={14} y={-27} width={60} height={18} rx={9} className="traffic-pill" />
+      <text ref={textRef} x={20} y={-14} className="traffic-label">{reg}</text>
       <circle r={22} fill="transparent" className="cursor-pointer" role="button" tabIndex={tabIndex} aria-label={label} {...hit} />
     </g>
   );
+}
+
+type Box = { l: number; t: number; r: number; b: number };
+const hits = (a: Box, b: Box) => a.l < b.r && a.r > b.l && a.t < b.b && a.b > b.t;
+const placed: Box[] = [];
+let placedAt = 0;
+let obstacleCache: { at: number; key: Element | null; list: Box[]; safe: Box } | null = null;
+function obstacles(g: SVGGElement) {
+  const now = performance.now();
+  const section = g.closest("section");
+  if (obstacleCache && obstacleCache.key === section && now - obstacleCache.at < 250) return obstacleCache;
+  const w = window.innerWidth, h = window.innerHeight;
+  const list: Box[] = [];
+  const add = (el: Element | null | undefined) => {
+    if (!el) return; const r = el.getBoundingClientRect();
+    if (r.width && r.height) list.push({ l: r.left - 6, t: r.top - 6, r: r.right + 6, b: r.bottom + 6 });
+  };
+  add(document.querySelector("header"));
+  section?.querySelectorAll(".journey-copy, .journey-hud").forEach(add);
+  const rail = w < 768 ? 56 : 16;
+  obstacleCache = { at: now, key: section, list, safe: { l: 16, t: 16, r: w - rail, b: h - 16 } };
+  return obstacleCache;
+}
+
+/**
+ * Keeps a radar tag readable: inside a 16px safe area, clear of the dot rail, the
+ * header and the stage copy. Flips to whichever corner fits and moves the leader with it.
+ */
+export function layoutTag(g: SVGGElement | null | undefined) {
+  if (!g) return;
+  const m = g.getScreenCTM();
+  const text = g.querySelector<SVGTextElement>(".traffic-label");
+  const pill = g.querySelector<SVGRectElement>(".traffic-pill");
+  const line = g.querySelector<SVGLineElement>(".traffic-leader");
+  if (!m || !text || !pill || !line) return;
+  const { list: fixed, safe } = obstacles(g);
+  const now = performance.now();
+  if (now - placedAt > 6) placed.length = 0;
+  placedAt = now;
+  const list = fixed.concat(placed);
+  const W = Math.ceil(text.getComputedTextLength()) + 14, H = 18;
+  const px = m.e, py = m.f;
+  let best: { sx: number; sy: number; ox: number; oy: number; score: number } | null = null;
+  for (const [sx, sy] of [[1, -1], [-1, -1], [1, 1], [-1, 1], [0, -1], [0, 1], [1, -2], [-1, -2], [1, 2], [-1, 2]] as const) {
+    let ox = sx > 0 ? 14 : sx < 0 ? -14 - W : -W / 2;
+    let oy = sy < 0 ? -27 : 9;
+    if (sx === 0) oy = sy < 0 ? -34 : 16;
+    if (Math.abs(sy) === 2) oy = sy < 0 ? -48 : 30;
+    // clamp horizontally into the safe area
+    const cl = Math.min(Math.max(px + ox, safe.l), safe.r - W) - px;
+    const shift = Math.abs(cl - ox); ox = cl;
+    const box = { l: px + ox, t: py + oy, r: px + ox + W, b: py + oy + H };
+    let score = shift;
+    if (box.t < safe.t || box.b > safe.b) score += 1000;
+    for (const o of list) if (hits(box, o)) score += 500;
+    if (!best || score < best.score) best = { sx, sy, ox, oy, score };
+    if (score === 0) break;
+  }
+  if (!best) return;
+  placed.push({ l: px + best.ox - 4, t: py + best.oy - 3, r: px + best.ox + W + 4, b: py + best.oy + H + 3 });
+  const { ox, oy, sy } = best;
+  pill.setAttribute("x", ox.toFixed(1)); pill.setAttribute("y", oy.toFixed(1)); pill.setAttribute("width", String(W));
+  text.setAttribute("x", (ox + 7).toFixed(1)); text.setAttribute("y", (oy + 12.5).toFixed(1));
+  const tx = Math.min(Math.max(0, ox), ox + W);
+  const ty = Math.min(Math.max(0, oy), oy + H) || (sy < 0 ? oy + H : oy);
+  const len = Math.hypot(tx, ty) || 1;
+  line.setAttribute("x1", (tx / len * 6).toFixed(1)); line.setAttribute("y1", (ty / len * 6).toFixed(1));
+  line.setAttribute("x2", tx.toFixed(1)); line.setAttribute("y2", ty.toFixed(1));
 }

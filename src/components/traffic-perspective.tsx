@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import { RadarTag, TrafficCard, placeCard, radarAltitude, useTrafficSelection, writeCard } from "./traffic-ui";
+import { RadarTag, layoutTag, TrafficCard, placeCard, radarAltitude, useTrafficSelection, writeCard } from "./traffic-ui";
 import { fleet } from "../lib/site-data";
 import { lapSeconds, patternWaypoints, sampleAtTime } from "../lib/traffic-pattern";
 import { KLXL_OBLIQUE, KLXL_OBLIQUE_PATTERN, PX_PER_FT_MID, obliqueProject } from "../lib/oblique-view";
@@ -64,6 +64,7 @@ export function TrafficPerspective({ active }: { active: boolean }) {
         }
         const cy = air.y - w * 0.15;
         tagRefs.current[i]?.setAttribute("transform", `translate(${air.x.toFixed(1)} ${cy.toFixed(1)}) scale(${(1 / k).toFixed(4)})`);
+        layoutTag(tagRefs.current[i]);
         const label = `${p.reg} / ${radarAltitude(s.msl)}`;
         const tx = textRefs.current[i];
         if (tx && tx.textContent !== label) tx.textContent = label;
