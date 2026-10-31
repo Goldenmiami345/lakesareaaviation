@@ -13,11 +13,13 @@ export function TrafficVector({reg, shadow=false}: {reg:string;shadow?:boolean})
     <path className="aircraft-stripe" d={`M-49 ${wingY+1} L49 ${wingY+1} L49 ${wingY+4} L-49 ${wingY+4} Z`} />
     <path className="aircraft-base" d={`M0 ${-length/2} C-4 ${-length/2} -6 -24 -5 -12 L-3 16 L-2 ${length/2} L2 ${length/2} L3 16 L5 -12 C6 -24 4 ${-length/2} 0 ${-length/2}Z`} />
     <path className="aircraft-stripe" d={`M-3 -25 L-2 ${length/2} L0 ${length/2-2} L0 -26 Z`} />
+    {reg==='N8570B'&&<><path className="aircraft-stripe" d={`M-5 -26 L5 -26 L4 ${-length/2+1} L-4 ${-length/2+1}Z M-50 ${wingY-4}h6v8h-6z M44 ${wingY-4}h6v8h-6z M-2 ${length/2-12}h4v8h-4z`}/><path className="aircraft-tan" d={`M-3 -25h.6v${length/2+25}h-.6z`}/><text className="aircraft-lettering" transform="translate(-1 7) rotate(90)">N8570B</text></>}
+    {twin&&<><path className="aircraft-maroon" d={`M-2 -25h1v${length/2+25}h-1z M-47 ${wingY-6}h2v12h-2z M45 ${wingY-6}h2v12h-2z`}/><path className="aircraft-black" d={`M-1 -25h1v${length/2+25}h-1z M-45 ${wingY-6}h1v12h-1z M44 ${wingY-6}h1v12h-1z`}/><path className="aircraft-stripe" d={`M-49 ${wingY-6}h2v12h-2z M47 ${wingY-6}h2v12h-2z M0 ${length/2-14}h1v11h-1z`}/><path className="aircraft-maroon" d={`M1 ${length/2-14}h.7v12H1z`}/><path className="aircraft-black" d={`M1.7 ${length/2-14}h.5v13h-.5z`}/></>}
     <path className="aircraft-base" d={`M-17 ${length/2-8} L-3 ${length/2-12} L3 ${length/2-12} L17 ${length/2-8} L16 ${length/2-3} L-16 ${length/2-3} Z`} />
     <path className="aircraft-stripe" d={`M-16 ${length/2-5} L16 ${length/2-5} L16 ${length/2-3} L-16 ${length/2-3} Z`} />
     <path className="aircraft-glass" d={tandem?'M-2 -22 L2 -22 L2 -3 L-2 -3 Z':'M-4 -23 L4 -23 L4 -13 L-4 -13 Z'} />
     {tandem&&<path className="aircraft-detail" d="M-2 -12H2"/>}
     {!twin&&<><path className="aircraft-detail" d={`M-10 ${-length/2+1}H10 M-3 8L-19 ${wingY+5} M3 8L19 ${wingY+5}`}/><path className="aircraft-gear" d="M-7 7h2v5h-2z M5 7h2v5H5z"/></>}
-    {twin&&[-20,20].map(x=><g key={x}><path className="aircraft-base" d={`M${x-4} -23 Q${x} -29 ${x+4} -23 L${x+3} 12 Q${x} 17 ${x-3} 12 Z`}/><path className="aircraft-stripe" d={`M${x-3} -23H${x+3}V-18H${x-3}Z`}/><path className="aircraft-detail" d={`M${x-11} -24H${x+11}`}/></g>)}
+    {twin&&[-20,20].map(x=><g key={x}><path className="aircraft-base" d={`M${x-4} -23 Q${x} -29 ${x+4} -23 L${x+3} 12 Q${x} 17 ${x-3} 12 Z`}/><path className="aircraft-stripe" d={`M${x-3} -23H${x+3}V-20H${x-3}Z`}/><path className="aircraft-maroon" d={`M${x-3} -20h6v1h-6z`}/><path className="aircraft-black" d={`M${x-3} -19h6v1h-6z`}/><path className="aircraft-detail" d={`M${x-11} -24H${x+11}`}/><ellipse className="aircraft-chrome" cx={x} cy={-25} rx={1.5} ry={3}/></g>)}
   </g>;
 }

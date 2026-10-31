@@ -34,7 +34,13 @@
   --aircraft-red: #a9223d;
   --aircraft-elliott-red: #ce3040;
   --aircraft-hawk-maroon: #5b253a;
-  --aircraft-apache-stripe: #555b61;
+  --aircraft-apache-red: #9d312d;
+  --aircraft-apache-maroon: #592d30;
+  --aircraft-apache-black: #252528;
+  --aircraft-chrome: #bfc4c7;
+  --aircraft-phoenix-red: #9f2633;
+  --aircraft-phoenix-tan: #b3a585;
+  --fleet-ground-shadow: 0 10px 6px color-mix(in oklab, var(--ink) 22%, transparent);
   --aircraft-glass: #3d5258;
   --primary: oklch(0.56 0.22 258);
   --primary-foreground: oklch(0.99 0.004 250);
@@ -204,7 +210,14 @@ html.journey-free, html.journey-free.journey-snap { scroll-snap-type: none !impo
 .paint-n6717a { --plane-stripe:var(--aircraft-blue); }
 .paint-n6641f { --plane-stripe:var(--aircraft-elliott-red); }
 .paint-n7108g { --plane-stripe:var(--aircraft-hawk-maroon); }
-.paint-n3353p { --plane-stripe:var(--aircraft-apache-stripe); }
+.paint-n4383p { --plane-stripe:var(--aircraft-apache-red); }
+.paint-n8570b { --plane-stripe:var(--aircraft-phoenix-red); }
+.aircraft-maroon { fill:var(--aircraft-apache-maroon); }
+.aircraft-black { fill:var(--aircraft-apache-black); }
+.aircraft-chrome { fill:var(--aircraft-chrome); }
+.aircraft-tan { fill:var(--aircraft-phoenix-tan); }
+.aircraft-lettering { fill:var(--aircraft-white); font: bold 3px monospace; }
+.fleet-cutout { filter:drop-shadow(var(--fleet-ground-shadow)); }
 .aircraft-base { fill:var(--aircraft-white); stroke:var(--ink); stroke-width:.5; }
 .aircraft-stripe { fill:var(--plane-stripe); }
 .aircraft-glass { fill:var(--aircraft-glass); }
