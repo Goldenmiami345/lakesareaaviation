@@ -78,7 +78,7 @@ export function SiteLayout({ children, overlayHeader = false }: { children: Reac
 }
 
 export function PageIntro({ eyebrow, title, text, image, imageAlt = "" }: { eyebrow: string; title: string; text: string; image?: string; imageAlt?: string }) {
-  return <section className="relative isolate overflow-hidden bg-ink pb-20 pt-36 text-background">{image && <><img src={image} alt={imageAlt} width={1920} height={1080} loading="eager" fetchPriority="high" decoding="async" className="hero-kenburns absolute inset-0 -z-20 h-full w-full object-cover" /><div className="absolute inset-0 -z-10 bg-gradient-to-r from-ink/90 via-ink/65 to-ink/25" /></>}<div className="mx-auto max-w-7xl px-5 lg:px-8" data-scroll-reveal><p className="eyebrow photo-label">{eyebrow}</p><h1 className="mt-4 max-w-4xl font-display text-5xl leading-[0.98] sm:text-7xl">{title}</h1><p className="mt-6 max-w-2xl text-lg leading-relaxed text-background/80">{text}</p></div></section>;
+  return <section className="relative isolate overflow-hidden bg-ink pb-20 pt-36 text-background">{image && <><img src={image} alt={imageAlt} width={1920} height={1080} loading="eager" fetchPriority="high" decoding="async" className="hero-kenburns absolute inset-0 -z-20 h-full w-full object-cover" /><div className="absolute inset-0 -z-10 bg-gradient-to-r from-ink/90 via-ink/65 to-ink/25" /></>}<div className="mx-auto max-w-7xl px-5 lg:px-8" data-scroll-reveal><p className="stage-label">{eyebrow}</p><h1 className="mt-4 max-w-4xl font-display text-5xl leading-[0.98] sm:text-7xl">{title}</h1><p className="mt-6 max-w-2xl text-lg leading-relaxed text-background/80">{text}</p></div></section>;
 }
 
 export function InquiryBand() {
