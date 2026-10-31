@@ -260,14 +260,14 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
 
         {/* Copy */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 mx-auto max-w-7xl px-5 pb-32 pr-16 md:pb-14 lg:px-8 lg:pb-20">
-          <div ref={copyRef} className="journey-copy pointer-events-auto max-w-2xl">
+          <div ref={copyRef} className="journey-copy max-w-2xl">
             <p className="eyebrow photo-label">{s.code} · {s.label}</p>
             <p className="mt-4 font-display text-6xl leading-none sm:text-8xl">{s.time}</p>
             <h2 className="mt-4 font-display text-3xl sm:text-4xl">{s.title}</h2>
             <p className="mt-3 max-w-lg text-background/75">{s.text}</p>
             {s.slug
-              ? <Link to="/programs/$slug" params={{ slug: s.slug }} className="interactive-arrow btn-shine mt-6 inline-flex min-h-12 items-center gap-3 bg-primary px-6 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>
-              : <Link to={s.to ?? "/contact"} className="interactive-arrow btn-shine mt-6 inline-flex min-h-12 items-center gap-3 bg-primary px-6 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>}
+              ? <Link to="/programs/$slug" params={{ slug: s.slug }} className="interactive-arrow btn-shine pointer-events-auto mt-6 inline-flex min-h-12 items-center gap-3 bg-primary px-6 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>
+              : <Link to={s.to ?? "/contact"} className="interactive-arrow btn-shine pointer-events-auto mt-6 inline-flex min-h-12 items-center gap-3 bg-primary px-6 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>}
           </div>
         </div>
       </div>
