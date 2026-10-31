@@ -34,7 +34,7 @@ export function TrafficPattern({ airport, active }: { airport: PatternAirport; a
   const points = useMemo(() => patternWaypoints(airport), [airport]);
   const planes: Info[] = useMemo(() => airport.aircraft.map((reg) => {
     const f = fleet.find((x) => x.registration === reg);
-    const sp = SPRITES[reg] ?? SPRITES.N6717A!;
+    const sp = SPRITES[reg] ?? SPRITES["N6717A"]!;
     const w = (sp.span / feetPerPixel(airport)) * VISUAL_SCALE;
     return { reg, type: f?.name ?? "Training aircraft", nickname: f?.nickname ?? "", src: sp.src, w, h: w / sp.aspect };
   }), [airport]);

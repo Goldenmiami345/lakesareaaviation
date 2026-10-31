@@ -19,7 +19,10 @@ const ratings: Rating[] = [
 export const Route = createFileRoute("/contact")({
   staticData: { sitemap: true },
   head: () => ({ meta: meta("Build Your Training Plan | Lakes Area Aviation", "Select the ratings you have and want, then estimate your minimum training timeline, housing, and transportation.") }),
-  validateSearch: (search: Record<string, unknown>): { location?: string } => (typeof search.location === "string" ? { location: search.location } : {}),
+  validateSearch: (search: Record<string, unknown>): { location?: string; program?: string } => ({
+    ...(typeof search["location"] === "string" ? { location: search["location"] } : {}),
+    ...(typeof search["program"] === "string" ? { program: search["program"] } : {}),
+  }),
   component: ContactPage,
 });
 
