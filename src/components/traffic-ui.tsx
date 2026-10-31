@@ -2,7 +2,26 @@ import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "@tanstack/react-router";
 
+import c6717a from "../assets/traffic-card/n6717a.webp";
+import c8570b from "../assets/traffic-card/n8570b.webp";
+import c6641f from "../assets/traffic-card/n6641f.webp";
+import c7108g from "../assets/traffic-card/n7108g.webp";
+import c3353p from "../assets/traffic-card/n3353p.webp";
+import c11059 from "../assets/traffic-card/n11059.webp";
+
 export type TrafficPlaneInfo = { reg: string; type: string; nickname: string };
+
+/** Background-removed cut-outs of each airplane's real fleet photo (480 px WebP with alpha). */
+export const CARD_PHOTOS: Record<string, string> = { N6717A: c6717a, N8570B: c8570b, N6641F: c6641f, N7108G: c7108g, N3353P: c3353p, N11059: c11059 };
+
+/** Warm the cache for a stage's airplanes as soon as it becomes active, so the card photo is instant. */
+export function usePreloadCardPhotos(regs: readonly string[], active: boolean) {
+  const key = regs.join(",");
+  useEffect(() => {
+    if (!active) return;
+    key.split(",").forEach((r) => { const src = CARD_PHOTOS[r]; if (src) { const im = new Image(); im.decoding = "async"; im.src = src; } });
+  }, [active, key]);
+}
 
 /** Radar data block: altitude in hundreds of feet MSL, zero-padded (2,123 ft -> "021"). */
 export function radarAltitude(msl: number) {
@@ -56,34 +75,50 @@ export function useTrafficSelection(active: boolean) {
   return { selected, selectedRef, open, hitProps, close: () => setSelected(null) };
 }
 
-/** Position a fixed card next to a screen point, kept inside the viewport. */
+/** Position a fixed card next to a screen point: inside a 16px safe area, clear of the
+ * side-dot rail, header and stage copy, and never over the tapped airplane. */
+const LIFT = 22; // the photo rises this far above the card's top edge
 export function placeCard(card: HTMLElement | null, x: number, y: number) {
   if (!card) return;
-  const w = card.offsetWidth || 208, h = card.offsetHeight || 110;
+  const w = card.offsetWidth || 220, h = card.offsetHeight || 150;
   const W = window.innerWidth, H = window.innerHeight;
+  const header = document.querySelector("header")?.getBoundingClientRect().bottom ?? 64;
+  const section = document.elementFromPoint(Math.min(W - 1, Math.max(0, x)), Math.min(H - 1, Math.max(0, y)))?.closest("section");
+  const copy = section?.querySelector(".journey-copy");
+  const copyTop = copy && getComputedStyle(copy.closest(".journey-copy-wrap") ?? copy).opacity !== "0" ? copy.getBoundingClientRect().top : H;
+  const L = 16, R = W - (W < 768 ? 56 : 16), T = header + 8 + LIFT, B = Math.min(H - 16, copyTop - 8);
   let px: number, py: number;
-  if (x + 26 + w <= W - 8) { px = x + 26; py = y - h / 2; }
-  else if (x - 26 - w >= 8) { px = x - 26 - w; py = y - h / 2; }
+  if (x + 26 + w <= R) { px = x + 26; py = y - h / 2; }
+  else if (x - 26 - w >= L) { px = x - 26 - w; py = y - h / 2; }
   else {
     // Narrow screens: stack above (or below) so the card never covers the airplane's tap target.
-    px = Math.max(8, Math.min(W - w - 8, x - w / 2));
-    py = y - 30 - h >= 72 ? y - 30 - h : y + 30;
+    px = Math.max(L, Math.min(R - w, x - w / 2));
+    py = y - 30 - h >= T ? y - 30 - h : y + 30 + LIFT;
   }
-  py = Math.max(72, Math.min(H - h - 8, py));
+  py = Math.max(T, Math.min(B - h, py));
   card.style.transform = `translate3d(${px.toFixed(0)}px, ${py.toFixed(0)}px, 0)`;
 }
 
 /** Info card rendered on <body>, above every photo shade. Live values are written into data-k slots. */
 export const TrafficCard = forwardRef<HTMLDivElement, { plane: TrafficPlaneInfo; runway: string; onOpen: () => void }>(function TrafficCard({ plane, runway, onOpen }, ref) {
+  const photo = CARD_PHOTOS[plane.reg];
   return createPortal(
-    <div ref={ref} data-traffic-card="" className="traffic-card pointer-events-auto fixed left-0 top-0 z-[70] w-52" role="dialog" aria-label={`${plane.reg} details`}>
-      <span className="flex items-center justify-between gap-2"><span className="font-mono text-sm font-bold tracking-wider">{plane.reg}</span><span data-k="phase" className="text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--radar)]" /></span>
-      <span className="mt-0.5 block text-xs text-background/75">{plane.type}{plane.nickname ? ` · “${plane.nickname}”` : ""}</span>
-      <span className="mt-2 grid grid-cols-2 gap-x-3 font-mono text-[11px] tabular-nums">
-        <span data-k="alt" /><span data-k="kt" className="text-right" />
-        <span data-k="agl" className="text-background/60" /><span className="text-right text-background/60">RWY {runway}</span>
+    <div ref={ref} data-traffic-card="" className="traffic-card pointer-events-auto fixed left-0 top-0 z-[70] w-[min(60vw,15rem)]" role="dialog" aria-label={`${plane.reg} details`}>
+      <div className="flex items-start gap-2.5">
+        {/* Media slot: fixed 40% width and aspect, so a future 3D model or 360° spin drops in without changing the layout. */}
+        <div data-card-media="" className="traffic-card-media relative -mt-[34px] aspect-[480/210] w-[40%] shrink-0">
+          {photo && <img src={photo} alt={`${plane.reg}, the real airplane`} width={480} height={210} decoding="async" className="absolute inset-0 h-full w-full object-contain object-bottom" />}
+        </div>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate font-mono text-sm font-bold tracking-wider">{plane.reg}{plane.nickname ? <span className="font-sans text-xs font-normal tracking-normal text-background/70"> “{plane.nickname}”</span> : null}</span>
+          <span className="block truncate text-[11px] leading-tight text-background/70">{plane.type}</span>
+        </span>
+      </div>
+      <span className="mt-1.5 flex items-center justify-between gap-2 font-mono text-[11px] tabular-nums">
+        <span data-k="alt" /><span data-k="kt" /><span data-k="phase" className="truncate font-bold uppercase tracking-[0.08em] text-[color:var(--radar)]" />
       </span>
-      <button type="button" onClick={onOpen} className="mt-2 flex min-h-11 w-full items-center text-left text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--radar)]">View in fleet →</button>
+      <span className="sr-only">Runway {runway}</span>
+      <button type="button" onClick={onOpen} className="mt-1 flex min-h-11 w-full items-center text-left text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--radar)]">View in fleet →</button>
     </div>,
     document.body,
   );
@@ -92,7 +127,7 @@ export const TrafficCard = forwardRef<HTMLDivElement, { plane: TrafficPlaneInfo;
 export function writeCard(card: HTMLElement | null, s: { msl: number; agl: number; knots: number; phase: string }) {
   if (!card) return;
   const set = (k: string, v: string) => { const el = card.querySelector(`[data-k="${k}"]`); if (el && el.textContent !== v) el.textContent = v; };
-  set("alt", `${s.msl.toLocaleString("en-US")} ft MSL`);
+  set("alt", `${s.msl.toLocaleString("en-US")} ft`);
   set("agl", `${Math.round(s.agl).toLocaleString("en-US")} AGL`);
   set("kt", `${s.knots} kt`);
   set("phase", s.phase);

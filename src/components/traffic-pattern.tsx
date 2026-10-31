@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { fleet } from "../lib/site-data";
 import { feetPerPixel, lapSeconds, patternAltitude, patternWaypoints, positionReport, sampleAtTime, type PatternAirport } from "../lib/traffic-pattern";
-import { RadarTag, layoutTag, TrafficCard, placeCard, useTrafficSelection, writeCard } from "./traffic-ui";
+import { RadarTag, layoutTag, TrafficCard, placeCard, useTrafficSelection, usePreloadCardPhotos, writeCard } from "./traffic-ui";
 import n6717a from "../assets/traffic/n6717a.webp";
 import n8570b from "../assets/traffic/n8570b.webp";
 import n3353p from "../assets/traffic/n3353p.webp";
@@ -31,6 +31,7 @@ export function TrafficPattern({ airport, active, viewBox = "0 0 1500 1500" }: {
   const textRefs = useRef<(SVGTextElement | null)[]>([]);
   const cardRef = useRef<HTMLDivElement>(null);
   const { selected, selectedRef, open, hitProps } = useTrafficSelection(active);
+  usePreloadCardPhotos(PRELOAD_REGS, active);
   const points = useMemo(() => patternWaypoints(airport), [airport]);
   const planes = useMemo(() => airport.aircraft.map((reg) => {
     const f = fleet.find((x) => x.registration === reg);

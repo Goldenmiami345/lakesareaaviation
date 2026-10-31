@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import { RadarTag, layoutTag, TrafficCard, placeCard, radarAltitude, useTrafficSelection, writeCard } from "./traffic-ui";
+import { RadarTag, layoutTag, TrafficCard, placeCard, radarAltitude, useTrafficSelection, usePreloadCardPhotos, writeCard } from "./traffic-ui";
 import { fleet } from "../lib/site-data";
 import { lapSeconds, patternWaypoints, sampleAtTime } from "../lib/traffic-pattern";
 import { KLXL_OBLIQUE, KLXL_OBLIQUE_PATTERN, PX_PER_FT_MID, obliqueProject } from "../lib/oblique-view";
@@ -25,6 +25,7 @@ export function TrafficPerspective({ active, viewBox }: { active: boolean; viewB
   const textRefs = useRef<(SVGTextElement | null)[]>([]);
   const cardRef = useRef<HTMLDivElement>(null);
   const { selected, selectedRef, open, hitProps } = useTrafficSelection(active);
+  usePreloadCardPhotos(PRELOAD_REGS, active);
   const a = KLXL_OBLIQUE_PATTERN;
   const points = useMemo(() => patternWaypoints(a), [a]);
   const planes = useMemo(() => a.aircraft.map((reg) => {
