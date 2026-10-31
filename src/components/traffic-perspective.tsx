@@ -78,10 +78,14 @@ export function TrafficPerspective({ active, viewBox }: { active: boolean; viewB
             return { x: m.a * o.x + m.c * fy + m.e, y: m.b * o.x + m.d * fy + m.f };
           };
           const soon = [0, 0.5, 1].map(scr);
-          if (!tagSideHolds(tag, soon)) {
+          let shown = tagSideHolds(tag, soon);
+          if (!shown) {
             const long = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4].map(scr);
-            if (!fitTagSide(tag, long)) fitTagSide(tag, soon) || fitTagSide(tag, [soon[0]!]);
+            shown = fitTagSide(tag, long) || fitTagSide(tag, soon);
           }
+          // No side stays clear (airplane at the screen edge or under the dot rail): fade the tag out rather than clip it.
+          const op = shown ? "" : "0";
+          if (tag.style.opacity !== op) tag.style.opacity = op;
         }
         if (selectedRef.current === i && m) {
           placeCard(cardRef.current, m.a * air.x + m.c * cy + m.e, m.b * air.x + m.d * cy + m.f);
