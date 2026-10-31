@@ -374,7 +374,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const s = stages[active] ?? stages[0];
   if (!s) return null;
   return (
-    <section ref={sectionRef} id={id} aria-label={label} className="relative bg-ink text-background" style={{ height: `${stages.length * JOURNEY_STAGE_SVH + 100}svh` }}>
+    <section ref={sectionRef} data-journey-section="" id={id} aria-label={label} className="relative bg-ink text-background" style={{ height: `${stages.length * JOURNEY_STAGE_SVH + 100}svh` }}>
       {stages.map((st, i) => (
         <div key={`stop-${st.code}`} aria-hidden className="journey-stop journey-stop-page pointer-events-none absolute left-0 h-px w-px" style={{ top: `${journeyStop(i, stages.length) * stages.length * JOURNEY_STAGE_SVH}svh` }} />
       ))}
@@ -436,7 +436,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
             <p className="stage-label max-sm:tracking-[0.18em]"><span className="max-sm:hidden">{s.code} · </span>{s.label}<span className="sm:hidden"> · {s.time}</span></p>
             <p className="mt-2 hidden font-display text-5xl leading-none sm:block">{s.time}</p>
             <h2 className="mt-1.5 font-display text-lg leading-[1.1] min-[380px]:text-xl sm:mt-2 sm:text-2xl">{s.title}</h2>
-            <p className="mt-1 max-w-lg truncate text-sm leading-snug text-background/80 sm:mt-2 sm:text-base">{s.text}</p>
+            <p className="mt-1 max-w-lg text-pretty text-sm leading-snug text-background/80 sm:mt-2 sm:text-base">{s.text}</p>
             {s.location
               ? <Link to="/contact" search={{ location: s.location }} className="interactive-arrow btn-shine pointer-events-auto mt-2.5 inline-flex min-h-11 items-center gap-3 bg-primary px-4 text-[11px] sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>
               : s.slug

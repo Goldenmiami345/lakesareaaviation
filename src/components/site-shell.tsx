@@ -60,7 +60,9 @@ export function MobileActions() {
     const onScroll = () => {
       // Hide while the inquiry band (its own CTA) or the footer reaches the bottom of the screen.
       const nearEnd = [...document.querySelectorAll("[data-no-float]")].some((el) => { const r = el.getBoundingClientRect(); return r.top < window.innerHeight - 8 && r.bottom > 0; });
-      setShow(window.scrollY > window.innerHeight * 0.9 && !nearEnd);
+      // Home journeys carry a button on every stage, so the bar stays away while one is on screen.
+      const inJourney = [...document.querySelectorAll("[data-journey-section]")].some((el) => { const r = el.getBoundingClientRect(); return r.top < window.innerHeight - 8 && r.bottom > 8; });
+      setShow(window.scrollY > window.innerHeight * 0.9 && !nearEnd && !inJourney);
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
