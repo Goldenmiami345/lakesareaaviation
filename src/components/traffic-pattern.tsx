@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "@tanstack/react-router";
 import { fleet } from "../lib/site-data";
 import { patternAltitude, patternWaypoints, samplePattern, type PatternAirport } from "../lib/traffic-pattern";
@@ -46,10 +47,9 @@ export function TrafficPattern({ airport, active }: { airport: PatternAirport; a
         shadowRefs.current[i]?.setAttribute("opacity", (0.45 - lift * 0.25).toFixed(2));
         if (hoveredRef.current === i && cardRef.current && svgRef.current && wrapRef.current) {
           const m = svgRef.current.getScreenCTM();
-          const box = wrapRef.current.getBoundingClientRect();
           if (m) {
-            const px = m.a * s.x + m.c * s.y + m.e - box.left;
-            const py = m.b * s.x + m.d * s.y + m.f - box.top;
+            const px = Math.min(window.innerWidth - 220, m.a * s.x + m.c * s.y + m.e);
+            const py = m.b * s.x + m.d * s.y + m.f;
             cardRef.current.style.transform = `translate3d(${(px + 22).toFixed(0)}px, ${(py - 30).toFixed(0)}px, 0)`;
           }
           const set = (k: string, v: string) => { const el = cardRef.current?.querySelector(`[data-k="${k}"]`); if (el) el.textContent = v; };
@@ -101,8 +101,8 @@ export function TrafficPattern({ airport, active }: { airport: PatternAirport; a
           </g>
         ))}
       </svg>
-      {info && (
-        <div ref={cardRef} className="traffic-card pointer-events-auto absolute left-0 top-0 z-10 w-52" role="status">
+      {info && createPortal(
+        <div ref={cardRef} className="traffic-card pointer-events-auto fixed left-0 top-0 z-[45] w-52" role="status" onPointerLeave={(e) => { if (e.pointerType === "mouse") setHovered(null); }}>
           <button type="button" onClick={() => open(info.reg)} className="block w-full text-left">
             <span className="flex items-center justify-between gap-2"><span className="font-mono text-sm font-bold tracking-wider">{info.reg}</span><span data-k="phase" className="text-[10px] font-bold uppercase tracking-[0.14em] text-primary" /></span>
             <span className="mt-0.5 block text-xs text-background/70">{info.type}{info.nickname ? ` · “${info.nickname}”` : ""}</span>
@@ -112,7 +112,8 @@ export function TrafficPattern({ airport, active }: { airport: PatternAirport; a
             </span>
             <span className="mt-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-primary">View in fleet →</span>
           </button>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
