@@ -76,6 +76,15 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     let mx = 0, my = 0, frame = 0, last = -1;
     let shown: number | null = null;
     let prevTime = 0;
+    let armed = false, touching = false, settleTimer = 0;
+    const root = document.documentElement;
+    const engage = () => {
+      const node = sectionRef.current;
+      if (!node || !armed || touching || snapOwners.has(node)) return;
+      snapOwners.add(node);
+      root.classList.add("journey-snap");
+    };
+    const scheduleSettle = () => { window.clearTimeout(settleTimer); settleTimer = window.setTimeout(engage, 180); };
     const n = stages.length;
     const render = (now: number = performance.now()) => {
       const el = sectionRef.current;
@@ -87,9 +96,12 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       // Snapping only engages between the first and last pages; the way in from
       // the section above and the way out below scroll 1:1 with the visitor.
       const along = -rect.top / total;
-      const pinned = !reduce && along >= journeyStop(0, n) - 0.003 && along <= journeyStop(n - 1, n) + 0.003;
-      if (pinned) snapOwners.add(el); else snapOwners.delete(el);
-      root.classList.toggle("journey-snap", snapOwners.size > 0);
+      // Snap never switches ON mid-scroll: entering the range only arms it,
+      // and it engages once scrolling has settled (or on a fresh wheel gesture).
+      // Leaving the range switches it off immediately, so corridors stay 1:1.
+      const inRange = !reduce && along >= journeyStop(0, n) - 0.003 && along <= journeyStop(n - 1, n) + 0.003;
+      armed = inRange;
+      if (!inRange && snapOwners.delete(el)) root.classList.toggle("journey-snap", snapOwners.size > 0);
       if (fadeTopRef.current) fadeTopRef.current.style.opacity = Math.max(0, Math.min(1, rect.top / (viewportHeight * 0.6))).toFixed(3);
       if (fadeBottomRef.current) fadeBottomRef.current.style.opacity = Math.max(0, Math.min(1, (viewportHeight - rect.bottom) / (viewportHeight * 0.6))).toFixed(3);
       // Native snap glides are quick; ease a continuous "slide position" toward the
