@@ -7,7 +7,6 @@ import { airportTraffic } from "../lib/site-data";
 import type { PatternAirport } from "../lib/traffic-pattern";
 import { TrafficPattern } from "./traffic-pattern";
 import { TrafficPerspective } from "./traffic-perspective";
-import instrumentVideo from "../assets/journey/instrument-imc-smooth.mp4.asset.json";
 import airlineVideo from "../assets/journey/airline-approach.mp4.asset.json";
 import clouds from "../assets/journey/01-clouds.webp";
 import runway from "../assets/journey/02-runway-corrected.webp";
@@ -24,7 +23,7 @@ type Stage = { code: string; label: string; time: string; title: string; text: s
 const journeyStages: Stage[] = [
   { code: "01", label: "Discovery flight", time: "$100", title: "Take the controls on day one.", text: "Left seat, instructor beside you.", img: clouds, alt: "Sunrise above a sea of clouds", cta: "Book an intro flight", to: "/introductory-flights" },
   { code: "02", label: "Private pilot", time: "~21 days", title: "Your first certificate.", text: "One focused block.", img: runway, alt: "Oblique view of Little Falls (KLXL): runway 13/31 with the full-length runway 18/36 crossing near the runway 13 end", cta: "Private pilot details", slug: "private-pilot", perspective: true, w: 1376, h: 768 },
-  { code: "03", label: "Instrument rating", time: "10–14 days", title: "Train in the real cockpit.", text: "Fly by reference to instruments.", img: instrument, alt: "Real Lakes Area Aviation instrument panel flying through instrument conditions", cta: "Instrument details", slug: "instrument-rating", position: "center", video: instrumentVideo.url, zoom: 0.2, zoomIn: 0.03 },
+  { code: "03", label: "Instrument rating", time: "10–14 days", title: "Train in the real cockpit.", text: "Fly by reference to instruments.", img: instrument, alt: "Real Lakes Area Aviation instrument panel flying through instrument conditions", cta: "Instrument details", slug: "instrument-rating", position: "center", zoom: 0.2, zoomIn: 0.03 },
   { code: "04", label: "Commercial pilot", time: "5–7 days", title: "Fly professionally.", text: "Commercial standards in a focused block.", img: commercial, alt: "Lakes Area Aviation airplanes on the ramp at sunset", cta: "Commercial details", slug: "commercial-single-engine" },
   { code: "05", label: "CFI & CFII", time: "4–6 weeks", title: "Become the instructor.", text: "The exams: 1-hour oral and 1-hour flight.", img: instructor, alt: "Instructor and student inspecting a training airplane before flight", cta: "CFI & CFII track", slug: "cfi-cfii", position: "center" },
   { code: "06", label: "The right seat", time: "Your goal", title: "Build toward the airline flight deck.", text: "Every instructing hour moves you closer.", img: airline, alt: "Airline flight deck at night on final approach over city lights", cta: "Build my training plan", to: "/contact", video: airlineVideo.url, zoom: 0.2, zoomIn: 0.03 },
@@ -288,7 +287,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       ))}
       <div ref={viewportRef} className="sticky top-0 h-svh overflow-hidden">
         {stages.map((st, i) => (
-          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="absolute -inset-[2%] will-change-transform backface-hidden" style={{ zIndex: stages.length - i }}>
+          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="journey-layer absolute -inset-[2%] will-change-transform backface-hidden" style={{ zIndex: stages.length - i }}>
             {st.video ? (
               <video
                 ref={(el) => { videoRefs.current[i] = el; }}
@@ -341,15 +340,15 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         {/* Copy */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 mx-auto max-w-7xl px-5 pb-24 pr-14 md:pb-12 lg:px-8 lg:pb-16">
           <div ref={copyRef} className="journey-copy max-w-2xl">
-            <p className="eyebrow photo-label">{s.code} · {s.label}</p>
-            <p className="mt-1.5 font-display text-3xl leading-none sm:mt-2 sm:text-5xl">{s.time}</p>
-            <h2 className="mt-1.5 font-display text-lg leading-tight sm:mt-2 sm:text-2xl">{s.title}</h2>
-            <p className="mt-1 max-w-lg truncate text-sm text-background/75 sm:mt-2 sm:text-base">{s.text}</p>
+            <p className="stage-label">{s.code} · {s.label}<span className="sm:hidden"> · {s.time}</span></p>
+            <p className="mt-2 hidden font-display text-5xl leading-none sm:block">{s.time}</p>
+            <h2 className="mt-1.5 font-display text-xl leading-[1.1] sm:mt-2 sm:text-2xl">{s.title}</h2>
+            <p className="mt-1 max-w-lg truncate text-sm leading-snug text-background/80 sm:mt-2 sm:text-base">{s.text}</p>
             {s.location
-              ? <Link to="/contact" search={{ location: s.location }} className="interactive-arrow btn-shine pointer-events-auto mt-3 inline-flex min-h-10 items-center gap-3 bg-primary px-4 text-[11px] sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>
+              ? <Link to="/contact" search={{ location: s.location }} className="interactive-arrow btn-shine pointer-events-auto mt-2.5 inline-flex min-h-11 items-center gap-3 bg-primary px-4 text-[11px] sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>
               : s.slug
-              ? <Link to="/programs/$slug" params={{ slug: s.slug }} className="interactive-arrow btn-shine pointer-events-auto mt-3 inline-flex min-h-10 items-center gap-3 bg-primary px-4 text-[11px] sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>
-              : <Link to={s.to ?? "/contact"} className="interactive-arrow btn-shine pointer-events-auto mt-3 inline-flex min-h-10 items-center gap-3 bg-primary px-4 text-[11px] sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>}
+              ? <Link to="/programs/$slug" params={{ slug: s.slug }} className="interactive-arrow btn-shine pointer-events-auto mt-2.5 inline-flex min-h-11 items-center gap-3 bg-primary px-4 text-[11px] sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>
+              : <Link to={s.to ?? "/contact"} className="interactive-arrow btn-shine pointer-events-auto mt-2.5 inline-flex min-h-11 items-center gap-3 bg-primary px-4 text-[11px] sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>}
           </div>
         </div>
       </div>
