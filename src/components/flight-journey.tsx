@@ -249,8 +249,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
 
         {/* HUD */}
         <div className="absolute left-5 top-24 z-20 font-mono text-[11px] uppercase tracking-[0.2em] text-background/70 lg:left-8">
-          {mode === "alt" ? <p>Alt <span ref={hudRef} className="tabular-nums text-background">0</span> ft</p> : <><p className="text-background">{s.hud}</p>{s.traffic && <p className="mt-1">RWY {s.traffic.runway} · {s.traffic.side} traffic · TPA {(s.traffic.elevation + s.traffic.tpaAgl).toLocaleString("en-US")} MSL</p>}</>}
-          <p className="mt-1">Stage {s.code} / 0{stages.length}</p>
+          {mode === "alt" ? <p>Alt <span ref={hudRef} className="tabular-nums text-background">0</span> ft</p> : <><p className="text-background">{s.hud}</p>{s.traffic && <p className="mt-1 hidden sm:block">RWY {s.traffic.runway} · {s.traffic.side} traffic · TPA {(s.traffic.elevation + s.traffic.tpaAgl).toLocaleString("en-US")} MSL</p>}</>}
+          <p className="mt-1 hidden sm:block">Stage {s.code} / 0{stages.length}</p>
         </div>
 
         {/* Stage rail */}
