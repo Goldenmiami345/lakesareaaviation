@@ -315,7 +315,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const target = scrolled.stage + scrolled.transition;
       const dt = prevTime ? Math.min(64, now - prevTime) : 16;
       prevTime = now;
-      if (shown === null || reduce || Math.abs(target - shown) > 2) shown = target;
+      // Scrolling back up is tied directly to the scroll position: a continuous crossfade, no easing lag.
+      if (shown === null || reduce || Math.abs(target - shown) > 2 || target < shown) shown = target;
       else shown += (target - shown) * (1 - Math.exp(-dt / 320));
       if (Math.abs(target - shown) < 0.002) shown = target;
       if (shown !== target) frame = requestAnimationFrame(render);
