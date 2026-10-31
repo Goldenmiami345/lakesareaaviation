@@ -25,6 +25,7 @@ async function load(): Promise<string> {
 }
 
 export const Route = createFileRoute("/api/public/metar")({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       GET: async () => {
