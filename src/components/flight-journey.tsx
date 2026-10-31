@@ -424,7 +424,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         {stages.map((st, i) => (
           <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="journey-layer absolute -inset-[2%] bg-ink will-change-transform backface-hidden" style={{ zIndex: stages.length - i }}>
             <div className="journey-zoom absolute inset-0 origin-top-left">
-            {st.traffic && st.phoneImg ? <AirportScene airport={ops[i]?.pattern ?? st.traffic} active={i===active} photo={st.phoneImg} wind={ops[i]?.obs ?? null} runwayHeading={ops[i]?.rwy.trueHdg ?? Number(st.traffic.runway)*10} /> : st.video ? (
+            {st.traffic && st.phoneImg ? <AirportScene airport={ops[i]?.pattern ?? st.traffic} active={i===active} photo={st.phoneImg} original={st.img} wind={ops[i]?.obs ?? null} runwayHeading={ops[i]?.rwy.trueHdg ?? Number(st.traffic.runway)*10} /> : st.video ? (
               <video
                 ref={(el) => { videoRefs.current[i] = el; }}
                 src={st.video}

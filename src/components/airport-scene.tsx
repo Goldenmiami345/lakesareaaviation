@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { airportFraming } from '../lib/airport-framing';
 import type { PatternAirport, Wind } from '../lib/traffic-pattern';
 import { TrafficPattern } from './traffic-pattern';
-export function AirportScene({ airport, active, photo, wind, runwayHeading }: { airport: PatternAirport; active: boolean; photo: string; wind: Wind|null; runwayHeading: number }) {
+export function AirportScene({ airport, active, photo, original, wind, runwayHeading }: { airport: PatternAirport; active: boolean; photo: string; original: string; wind: Wind|null; runwayHeading: number }) {
   const ref=useRef<HTMLDivElement>(null);
   const [frame,setFrame]=useState<ReturnType<typeof airportFraming>|null>(null);
   useLayoutEffect(()=>{
@@ -20,6 +20,6 @@ export function AirportScene({ airport, active, photo, wind, runwayHeading }: { 
     return()=>{ro.disconnect();window.removeEventListener('resize',update);};
   },[airport,active]);
   return <div ref={ref} data-airport-framing={airport.ident} data-default-zoom={frame?.multiplier.toFixed(4)} className="absolute inset-0">
-    {frame&&<><svg viewBox={frame.viewBox} preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden><image href={photo} x="265" y="-300" width="970" height="2100" preserveAspectRatio="none" /></svg><TrafficPattern airport={airport} active={active} viewBox={frame.viewBox} wind={wind} runwayHeading={runwayHeading}/></>}
+    {frame&&<><svg viewBox={frame.viewBox} preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden><image href={photo} x="265" y="-300" width="970" height="2100" preserveAspectRatio="none" /><image href={original} x="0" y="0" width="1500" height="1500" preserveAspectRatio="none" /></svg><TrafficPattern airport={airport} active={active} viewBox={frame.viewBox} wind={wind} runwayHeading={runwayHeading}/></>}
   </div>;
 }
