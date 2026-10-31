@@ -2,9 +2,8 @@ import { useCallback, useMemo, useRef } from 'react';
 import { fleet } from '../lib/site-data';
 import { feetPerPixel, patternAltitude, type PatternAirport, type PatternSample, type Wind } from '../lib/traffic-pattern';
 import { RadarTag, TrafficCard, useTrafficSelection, usePreloadCardPhotos } from './traffic-ui';
-import { trafficSpanFeet, TrafficVector } from './traffic-vector';
+import { trafficSpanFeet, trafficModelScale, TrafficVector } from './traffic-vector';
 import { useTrafficAnimation } from './use-traffic-animation';
-import { trafficPresentationScale } from '../lib/model-settings';
 
 // Keep the existing threefold presentation footprint; map timing is independent
 // of this legacy visual multiplier. Never increase aircraft size for visibility.
@@ -14,7 +13,7 @@ export function TrafficPattern({airport,active,viewBox='0 0 1500 1500',wind=null
   usePreloadCardPhotos(airport.aircraft,active);
   const planes=useMemo(()=>airport.aircraft.map(reg=>{const f=fleet.find(x=>x.registration===reg);return {reg,type:f?.name??'Training aircraft',nickname:f?.nickname??''};}),[airport]);
   const project=useCallback((s:PatternSample,reg:string)=>{
-    const w=trafficSpanFeet(reg)/feetPerPixel(airport)*trafficPresentationScale(reg);
+    const w=trafficSpanFeet(reg)/feetPerPixel(airport)*trafficModelScale(reg);
     const lift=s.agl/airport.tpaAgl;
     return {x:s.x,y:s.y,lift,transform:`translate(${s.x} ${s.y}) rotate(${s.heading}) scale(${w*(1+lift*.12)})`,shadow:`translate(${s.x+2+lift*10} ${s.y+2.5+lift*12}) rotate(${s.heading}) scale(${w})`};
   },[airport]);

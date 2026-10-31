@@ -3,7 +3,10 @@ import assert from 'node:assert/strict';
 import { MODEL_SETTINGS, MODEL_WINGSPANS_M, trafficPresentationScale } from './model-settings';
 test('supplied aircraft use exact meter wingspans', () => {
   assert.deepEqual(MODEL_WINGSPANS_M, { N4383P: 11.28, N8570B: 10.97, N46201: 11.02 });
-  for(const reg of Object.keys(MODEL_WINGSPANS_M)) assert.equal(trafficPresentationScale(reg),1);
+  for(const reg of Object.keys(MODEL_WINGSPANS_M)) {
+    assert.equal(trafficPresentationScale(reg, true),1);
+    assert.equal(trafficPresentationScale(reg, false),3);
+  }
   assert.equal(trafficPresentationScale('N6641F'),3);
 });
 test('viewer clamps the requested polar range and uses the requested camera', () => {
