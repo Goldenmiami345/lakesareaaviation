@@ -63,6 +63,7 @@ export function useStageZoom({ viewportRef, target, resetKey }: Opts) {
     const dist = (a: Touch, b: Touch) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY) || 1;
 
     const onStart = (e: TouchEvent) => {
+      if ((e.target as Element | null)?.closest?.('[data-model-gesture]')) return;
       if (e.touches.length >= 2) {
         const a = e.touches[0]!, b = e.touches[1]!;
         const m = mid(a, b), v = view.current;
@@ -78,6 +79,7 @@ export function useStageZoom({ viewportRef, target, resetKey }: Opts) {
       pan = { x: p.x, y: p.y, v0: view.current, moved: false };
     };
     const onMove = (e: TouchEvent) => {
+      if ((e.target as Element | null)?.closest?.('[data-model-gesture]')) return;
       const { w, h } = size();
       if (pinch && e.touches.length >= 2) {
         const a = e.touches[0]!, b = e.touches[1]!;
@@ -124,6 +126,7 @@ export function useStageZoom({ viewportRef, target, resetKey }: Opts) {
     };
     // Desktop: ctrl/⌘-scroll and trackpad pinch (ctrlKey wheel) zoom; a plain wheel still pages.
     const onWheel = (e: WheelEvent) => {
+      if ((e.target as Element | null)?.closest?.('[data-model-gesture]')) return;
       if (!e.ctrlKey && !e.metaKey) return;
       e.preventDefault();
       const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 100 : 1);

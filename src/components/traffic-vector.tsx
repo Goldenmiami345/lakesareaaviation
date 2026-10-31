@@ -3,7 +3,7 @@ import { aircraftType } from '../lib/traffic-flight';
 // Original SVG source, not traced logos or invented tail lettering. Wingspan is
 // one local unit; lengths are proportional to published type dimensions. Paint
 // tokens were sampled on the real fleet photo's sunlit base/stripe panels.
-export const AIRCRAFT_SPANS: Record<string, number> = {N6717A:36,N8570B:36,N7108G:36,N6641F:33,N11059:34,N4383P:37};
+export const AIRCRAFT_SPANS: Record<string, number> = {N6717A:36,N8570B:36,N46201:36,N7108G:36,N6641F:33,N11059:34,N4383P:37};
 export function TrafficVector({reg, shadow=false}: {reg:string;shadow?:boolean}) {
   const type=aircraftType(reg), twin=type==='apache', tandem=type==='citabria';
   const length=type==='150'?72:tandem?67:75;
@@ -17,6 +17,13 @@ export function TrafficVector({reg, shadow=false}: {reg:string;shadow?:boolean})
     {twin&&<><path className="aircraft-maroon" d={`M-2 -25h1v${length/2+25}h-1z M-47 ${wingY-6}h2v12h-2z M45 ${wingY-6}h2v12h-2z`}/><path className="aircraft-black" d={`M-1 -25h1v${length/2+25}h-1z M-45 ${wingY-6}h1v12h-1z M44 ${wingY-6}h1v12h-1z`}/><path className="aircraft-stripe" d={`M-49 ${wingY-6}h2v12h-2z M47 ${wingY-6}h2v12h-2z M0 ${length/2-14}h1v11h-1z`}/><path className="aircraft-maroon" d={`M1 ${length/2-14}h.7v12H1z`}/><path className="aircraft-black" d={`M1.7 ${length/2-14}h.5v13h-.5z`}/></>}
     <path className="aircraft-base" d={`M-17 ${length/2-8} L-3 ${length/2-12} L3 ${length/2-12} L17 ${length/2-8} L16 ${length/2-3} L-16 ${length/2-3} Z`} />
     <path className="aircraft-stripe" d={`M-16 ${length/2-5} L16 ${length/2-5} L16 ${length/2-3} L-16 ${length/2-3} Z`} />
+    {reg==='N46201'&&<>
+      <path className="aircraft-stripe" d={`M0 ${-length/2}C-4 ${-length/2} -6 -24 -5 -12L-3 16L-2 ${length/2}H2L3 16L5 -12C6 -24 4 ${-length/2} 0 ${-length/2}Z M-50 ${wingY-4}h6v8h-6z M44 ${wingY-4}h6v8h-6z M-9 ${wingY-8}h18v14H-9z M-17 ${length/2-8}h4v5h-4z M13 ${length/2-8}h4v5h-4z`}/>
+      <path className="aircraft-base" d={`M-3 -26h.55v55h-.55z M2.45 -26H3v55h-.55z M-49 ${wingY-1}h4v.6h-4z M45 ${wingY-1}h4v.6h-4z M-3 0Q-2 7 0 10Q2 7 3 0L2 11H-2Z`}/>
+      <path className="aircraft-base" d={`M-1 ${length/2-15}h2v14h-2z`}/>
+      <path className="aircraft-stripe" d={`M-1 ${length/2-12}l2 2v1l-2-2z M-1 ${length/2-8}l2 2v1l-2-2z M-1 ${length/2-4}l2 2v1l-2-2z`}/>
+      <path className="aircraft-black" d={`M-10 ${-length/2}h20v1H-10z`}/><path className="aircraft-base" d={`M-10 ${-length/2}h2v1h-2z M8 ${-length/2}h2v1H8z`}/><path className="aircraft-stripe" d={`M-1 ${-length/2}L0 ${-length/2-3}L1 ${-length/2}Z`}/>
+    </>}
     <path className="aircraft-glass" d={tandem?'M-2 -22 L2 -22 L2 -3 L-2 -3 Z':'M-4 -23 L4 -23 L4 -13 L-4 -13 Z'} />
     {tandem&&<path className="aircraft-detail" d="M-2 -12H2"/>}
     {!twin&&<><path className="aircraft-detail" d={`M-10 ${-length/2+1}H10 M-3 8L-19 ${wingY+5} M3 8L19 ${wingY+5}`}/><path className="aircraft-gear" d="M-7 7h2v5h-2z M5 7h2v5H5z"/></>}

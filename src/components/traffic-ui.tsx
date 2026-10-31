@@ -2,6 +2,7 @@ import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from './ui/button';
+import { AircraftMedia } from './aircraft-media';
 
 import { fleet } from '../lib/site-data';
 
@@ -119,7 +120,7 @@ export const TrafficCard = forwardRef<HTMLDivElement, { plane: TrafficPlaneInfo;
     <div ref={ref} data-traffic-card="" className="traffic-card pointer-events-auto fixed left-0 top-0 z-[70] w-[min(60vw,15rem)]" role="dialog" aria-label={`${plane.reg} details`}>
       {/* Stable full-width media slot also reserves space for a future accurate model or spin. */}
         <div data-card-media="" className="traffic-card-media relative mb-2 h-20 w-full">
-          {photo && <img src={photo} alt={`${plane.reg}, the real airplane`} width={480} height={230} decoding="async" className="absolute inset-0 h-full w-full object-contain" />}
+          {photo && <AircraftMedia reg={plane.reg} photo={photo} />}
         </div>
         <span className="block min-w-0">
           <span className="block font-mono text-sm font-bold tracking-wider">{plane.reg}</span>

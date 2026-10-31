@@ -1,9 +1,13 @@
 # Roadmap
 
+- [x] Add Cardinal facts, source-pixel cutout, finger-free walk-around and KLXL rotation (fine alpha-edge limitations reported).
+- [x] Fit airport default zoom to complete patterns and protected UI on phone/desktop (desktop targets cannot fit unchanged copy; actual reduced values reported).
+- [x] Add lazy model-backed card/fleet media with isolated gestures and photo fallback; verify and report.
+
 - [x] Replace retired Apache and correct Phoenix/order everywhere; update traffic paint and factual tests.
 - [x] Inspect 35 owner photos; prepare seven exact-photo cutouts and optimized CDN walk-arounds (masking quality limitations recorded in the report).
 - [x] Add real walk-around/fullscreen zoom and hidden-until-present lazy model slot; verify fleet and traffic on phone/desktop.
-- [ ] Verify accurate 3D rendering after owner supplies the two GLB files.
+- [ ] Verify accurate 3D rendering after owner supplies Phoenix, Apache and Cardinal GLB files.
 
 - [x] Contain airplane photos in a full-width top card area; verify four aircraft types at 375×667 and 390×844.
 

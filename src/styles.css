@@ -40,6 +40,7 @@
   --aircraft-chrome: #bfc4c7;
   --aircraft-phoenix-red: #9f2633;
   --aircraft-phoenix-tan: #b3a585;
+  --aircraft-cardinal-red: #a53627;
   --fleet-ground-shadow: 0 10px 6px color-mix(in oklab, var(--ink) 22%, transparent);
   --aircraft-glass: #3d5258;
   --primary: oklch(0.56 0.22 258);
@@ -212,6 +213,7 @@ html.journey-free, html.journey-free.journey-snap { scroll-snap-type: none !impo
 .paint-n7108g { --plane-stripe:var(--aircraft-hawk-maroon); }
 .paint-n4383p { --plane-stripe:var(--aircraft-apache-red); }
 .paint-n8570b { --plane-stripe:var(--aircraft-phoenix-red); }
+.paint-n46201 { --plane-stripe:var(--aircraft-cardinal-red); }
 .aircraft-maroon { fill:var(--aircraft-apache-maroon); }
 .aircraft-black { fill:var(--aircraft-apache-black); }
 .aircraft-chrome { fill:var(--aircraft-chrome); }

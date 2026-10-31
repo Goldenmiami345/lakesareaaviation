@@ -5,6 +5,8 @@ import n96150Cutout from "../assets/fleet/cutouts/n96150.webp.asset.json";
 import n11059Cutout from "../assets/fleet/cutouts/n11059.webp.asset.json";
 import n7108gCutout from "../assets/fleet/cutouts/n7108g.webp.asset.json";
 import n4383pCutout from "../assets/fleet/cutouts/n4383p.webp.asset.json";
+import n46201Cutout from "../assets/fleet/cutouts/n46201.webp.asset.json";
+import { cardinalWalkaround } from './cardinal-walkaround';
 import { walkarounds, type WalkaroundPhoto } from "./fleet-walkarounds";
 import n6641fPanel from "../assets/fleet/n6641f-panel.png.asset.json";
 import n6717aPanel from "../assets/fleet/n6717a-panel.png.asset.json";
@@ -101,7 +103,10 @@ export const fleet: Array<{ name: string; registration: string; role: FleetRole;
   // FAA N8570B serial 36270 has no year listed; 1957 needs owner confirmation.
   { name: "1957 Cessna 172", registration: "N8570B", role: "trainer" as FleetRole, rate: "$185/hr", prepay: "$175/hr", nickname: "Phoenix", use: "Primary · Instrument · Commercial", note: "A real Lakes Area Aviation training aircraft photographed at the school.", image: n8570bCutout.url, position: "center", walkaround: walkarounds["N8570B"] ?? [], panel: n8570bPanel.url, specs: { Year: "1957", Horsepower: "145", "IFR/VFR": "IFR", Seats: "4", Coms: "4", GPS: "Garmin 430, G5", Equipment: "ADS-B out, Mode C transponder" } },
   // FAA registry: N4383P serial 23-1893, airworthiness August 1960.
+  // Cardinal inserted immediately after Apache below; FAA N46201, serial 17257103,
+  // built 1968, airworthiness 08/13/1968. Rates: confirm rate with owner.
   { name: "1960 Piper Apache", registration: "N4383P", role: "twin", rate: "$395/hr", prepay: "$375/hr", use: "Multi-engine training", note: "Twin-engine systems, procedures, and commercial training.", image: n4383pCutout.url, position: "center", walkaround: walkarounds["N4383P"] ?? [], specs: { Year: "1960", Model: "PA-23-160", Engines: "2 × Lycoming O-320", Seats: "4" } },
+  { name: "1968 Cessna 172I", registration: "N46201", nickname: "Cardinal", role: "trainer", rate: "$185/hr", prepay: "$175/hr", use: "Primary · Instrument · Commercial", note: "A real Lakes Area Aviation training aircraft photographed by the owner.", image: n46201Cutout.url, position: "center", walkaround: cardinalWalkaround, specs: { Year: "1968", Horsepower: "150", Engine: "Lycoming O-320", Seats: "4" } },
   { name: "1956 Cessna 172", registration: "N6717A", role: "trainer" as FleetRole, rate: "$185/hr", prepay: "$175/hr", nickname: "Blue", use: "Primary · Instrument · Commercial", note: "A real Lakes Area Aviation training aircraft photographed at the school.", image: n6717aCutout.url, position: "center", panel: n6717aPanel.url, specs: { Year: "1956", Horsepower: "145", "IFR/VFR": "VFR", Seats: "4", Coms: "4", GPS: "GPSMap 496", Equipment: "ADS-B out, Mode C transponder" } },
   { name: "1966 Cessna 150", registration: "N6641F", role: "trainer" as FleetRole, rate: "$125/hr", prepay: "$115/hr", nickname: "Elliott", use: "Primary training", note: "Efficient time-building and foundational instruction.", image: n6641fCutout.url, position: "center", panel: n6641fPanel.url, specs: { Year: "1966", Horsepower: "100", "IFR/VFR": "VFR", Seats: "2", Coms: "2", GPS: "GPSMap 496", Equipment: "Stratus" } },
   { name: "1946 Taylorcraft BC-12D", registration: "N96150", role: "tailwheel" as FleetRole, rate: "$135/hr", prepay: "$125/hr", nickname: "Tweety", use: "Tailwheel training", note: "Classic stick-and-rudder skill development.", image: n96150Cutout.url, position: "center", specs: { Year: "1946", Horsepower: "100", "IFR/VFR": "VFR", Seats: "2", Coms: "2" } },
@@ -117,7 +122,7 @@ export const fleet: Array<{ name: string; registration: string; role: FleetRole;
 export const airportTraffic = {
   // Runway ends are the FAA NASR (effective 2026-10-29) end coordinates projected
   // with Web Mercator into each 1500 px USGS NAIP aerial, which is centred on the runway midpoint.
-  KLXL: { ident: "KLXL", elevation: 1123, tpaAgl: 1000, runway: "13", runwayFt: 4010, side: "left", threshold: { x: 595, y: 617 }, end: { x: 905, y: 883 }, offset: 126, extension: 65, aircraft: ["N6717A", "N8570B", "N4383P", "N6641F"], ends: [{ runway: "13", side: "left", trueHdg: 131 }, { runway: "31", side: "left", trueHdg: 311 }], calmRunway: "13", wxStation: "KLXL" },
+  KLXL: { ident: "KLXL", elevation: 1123, tpaAgl: 1000, runway: "13", runwayFt: 4010, side: "left", threshold: { x: 595, y: 617 }, end: { x: 905, y: 883 }, offset: 126, extension: 65, aircraft: ["N46201", "N8570B", "N4383P", "N6641F"], ends: [{ runway: "13", side: "left", trueHdg: 131 }, { runway: "31", side: "left", trueHdg: 311 }], calmRunway: "13", wxStation: "KLXL" },
   "18V": { ident: "18V", elevation: 4965, tpaAgl: 1000, runway: "15", runwayFt: 4100, side: "left", threshold: { x: 687, y: 506 }, end: { x: 813, y: 994 }, offset: 202, extension: 101, aircraft: ["N7108G", "N6641F", "N11059"], ends: [{ runway: "15", side: "left", trueHdg: 165 }, { runway: "33", side: "left", trueHdg: 345 }], calmRunway: "15", wxStation: "KDEN" },
   P52: { ident: "P52", elevation: 3560, tpaAgl: 800, runway: "14", runwayFt: 4250, side: "left", threshold: { x: 650, y: 529 }, end: { x: 850, y: 971 }, offset: 166, extension: 83, aircraft: ["N8570B", "N11059", "N6717A"], ends: [{ runway: "14", side: "left", trueHdg: 156 }, { runway: "32", side: "right", trueHdg: 336 }], calmRunway: "32", wxStation: "KSEZ" },
 } as const satisfies Record<string, import("./traffic-pattern").PatternField>;

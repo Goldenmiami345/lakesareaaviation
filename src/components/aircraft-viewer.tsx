@@ -4,16 +4,15 @@ import { ChevronLeft, ChevronRight, Minus, Plus, RotateCcw, X } from "lucide-rea
 import { TransformWrapper, TransformComponent, type ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
 import { Button } from './ui/button';
 import type { fleet } from "../lib/site-data";
+import { aircraftModelUrl } from '../lib/aircraft-models';
 
 const AircraftModel = lazy(() => import('./aircraft-model'));
-const availableModels = import.meta.glob('/public/models/*.glb');
 type Plane = (typeof fleet)[number];
 export default function AircraftViewer({ plane, initialIndex = 0, onClose }: { plane: Plane; initialIndex?: number; onClose: () => void }) {
   const photos = plane.walkaround ?? [{ src: plane.image, small: plane.image, label: 'Exterior' }];
   const [index, setIndex] = useState(initialIndex);
   const [mode, setMode] = useState<'photos' | 'panel' | 'model'>('photos');
-  const modelKey = Object.keys(availableModels).find(key => key.split('/').pop()?.toLowerCase() === `${plane.registration.toLowerCase()}.glb`);
-  const model = modelKey ? modelKey.replace('/public', '') : null;
+  const model = aircraftModelUrl(plane.registration);
   const zoom = useRef<ReactZoomPanPinchRef>(null);
   const photo = photos[index];
   const step = (d: number) => { setIndex(i => (i + d + photos.length) % photos.length); zoom.current?.resetTransform(0); };

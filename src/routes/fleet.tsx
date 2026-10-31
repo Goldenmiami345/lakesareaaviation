@@ -4,6 +4,8 @@ import { ArrowRight, ChevronDown, Maximize } from "lucide-react";
 import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
 import { Button } from "../components/ui/button";
 import { FleetWalkaround } from "../components/fleet-walkaround";
+import { AircraftMedia } from '../components/aircraft-media';
+import { aircraftModelUrl } from '../lib/aircraft-models';
 import { fleet, type FleetRole } from "../lib/site-data";
 
 // The viewer code is only downloaded when a visitor opens it.
@@ -129,6 +131,7 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
           <Maximize className="size-4" /> View photo
         </Button>
       </div>
+      {aircraftModelUrl(f.registration) && <div className="aspect-[4/3] border-t border-border"><AircraftMedia reg={f.registration} photo={f.image} hint /></div>}
       {f.walkaround && <FleetWalkaround photos={f.walkaround} reg={f.registration} onOpen={(i, btn) => onView(btn, i)} />}
       <div className="p-5 sm:p-6">
         <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-primary"><span className="h-px w-5 bg-primary" />{f.registration}</p>
