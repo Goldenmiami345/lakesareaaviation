@@ -28,7 +28,7 @@ export function TrafficPattern({ airport, active }: { airport: PatternAirport; a
   const tpa = patternAltitude(airport);
 
   useEffect(() => {
-    if (!active) return;
+    if (!active) { setHovered(null); return; }
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let raf = 0;
     let visible = true;
