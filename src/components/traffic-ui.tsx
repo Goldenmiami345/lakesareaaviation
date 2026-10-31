@@ -96,6 +96,20 @@ export function placeCard(card: HTMLElement | null, x: number, y: number) {
     py = y - 30 - h >= T ? y - 30 - h : y + 30 + LIFT;
   }
   py = Math.max(T, Math.min(B - h, py));
+  // Keep clear of the top-left HUD (address + wind readout).
+  const hudEl = section?.querySelector(".journey-hud");
+  const hud = hudEl?.getBoundingClientRect();
+  if (hud && hud.width && hud.height) {
+    const hb = { l: hud.left - 8, t: hud.top - 8 - LIFT, r: hud.right + 8, b: hud.bottom + 8 };
+    if (px < hb.r && px + w > hb.l && py < hb.b && py + h > hb.t) {
+      const below = hb.b + LIFT;
+      const coversPlane = (ty: number, tx: number) => x > tx - 4 && x < tx + w + 4 && y > ty - LIFT - 4 && y < ty + h + 4;
+      if (below + h <= B && !coversPlane(below, px)) py = below;
+      else if (hb.r + w <= R && !coversPlane(py, hb.r)) px = hb.r;
+      else if (below + h <= B) py = below;
+      else px = Math.min(R - w, hb.r);
+    }
+  }
   card.style.transform = `translate3d(${px.toFixed(0)}px, ${py.toFixed(0)}px, 0)`;
 }
 
