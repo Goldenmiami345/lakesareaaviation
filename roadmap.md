@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Disable visitor models/sprites with one flag; add hidden prerendered models preview; verify phone/desktop and SSR.
+
 - [x] Install supplied GLBs and exact top sprites; verify three cards/fleet rotation/drag/pinch isolation and dev SSR; report production limitations.
 
 - [x] Add production HTML gate for all 26 routes, fleet order and unfinished Suspense; validate gate against empty shell.
