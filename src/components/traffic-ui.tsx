@@ -173,9 +173,8 @@ export function layoutTag(g: SVGGElement | null | undefined) {
   const { ox, oy, sy } = best;
   pill.setAttribute("x", ox.toFixed(1)); pill.setAttribute("y", oy.toFixed(1)); pill.setAttribute("width", String(W));
   text.setAttribute("x", (ox + 7).toFixed(1)); text.setAttribute("y", (oy + 12.5).toFixed(1));
-  const ax = Math.min(Math.max(0, ox + 4), ox + W - 4) || 0;
-  const tx = ax < ox + 2 || ax > ox + W - 2 ? ax : Math.max(ox + 4, Math.min(ox + W - 4, 0));
-  const ty = sy < 0 ? oy + H : oy;
+  const tx = Math.min(Math.max(0, ox), ox + W);
+  const ty = Math.min(Math.max(0, oy), oy + H) || (sy < 0 ? oy + H : oy);
   const len = Math.hypot(tx, ty) || 1;
   line.setAttribute("x1", (tx / len * 6).toFixed(1)); line.setAttribute("y1", (ty / len * 6).toFixed(1));
   line.setAttribute("x2", tx.toFixed(1)); line.setAttribute("y2", ty.toFixed(1));
