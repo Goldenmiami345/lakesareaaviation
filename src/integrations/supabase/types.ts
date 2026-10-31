@@ -39,7 +39,9 @@ export type Database = {
         Row: {
           aircraft_note: string | null
           airport_pickup: boolean
+          buffered_total: number | null
           car: boolean
+          contingency: number | null
           created_at: string
           email: string
           estimated_total: number
@@ -60,7 +62,9 @@ export type Database = {
         Insert: {
           aircraft_note?: string | null
           airport_pickup?: boolean
+          buffered_total?: number | null
           car?: boolean
+          contingency?: number | null
           created_at?: string
           email: string
           estimated_total?: number
@@ -81,7 +85,9 @@ export type Database = {
         Update: {
           aircraft_note?: string | null
           airport_pickup?: boolean
+          buffered_total?: number | null
           car?: boolean
+          contingency?: number | null
           created_at?: string
           email?: string
           estimated_total?: number

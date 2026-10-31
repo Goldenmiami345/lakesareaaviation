@@ -22,6 +22,13 @@
       "when": 1793467345305,
       "tag": "0002_training_plan_leads",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793476509885,
+      "tag": "0003_lead_contingency",
+      "breakpoints": true
     }
   ]
 }
