@@ -57,7 +57,7 @@ export function useTrafficAnimation(o:Options) {
             const ahead=Array.from({length:11},(_,j)=>{const s=sample(i,secs+j*.25);return s?screen(project(s,regs[i]??''),m):current;});
             const occupied=Array.from(calls.keys()).filter(j=>j!==i).flatMap(j=>Array.from({length:11},(_,n)=>{
               const s=sample(j,secs+n*.25);if(!s)return [];const q=screen(project(s,regs[j]??''),m);const b=tagBounds(tagRefs.current[j],q.x,q.y);return b?[b]:[];
-            }));
+            }).flat());
             if((calls.has(i)||calls.size<MAX_CALLS)&&fitTagSide(tag,ahead,occupied)){
               calls.set(i,now+CALL_DURATION_MS);tag.classList.add('is-calling');
             }

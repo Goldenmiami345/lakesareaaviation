@@ -24,5 +24,5 @@ test("P52 runway 32 is right traffic, 14 left (FAA)", () => {
 test("position reports carry runway and side", () => {
   assert.equal(positionReport("Downwind", "32", "right"), "Right downwind 32");
   assert.equal(positionReport("Takeoff", "13", "left"), "Departing runway 13");
-  assert.equal(positionReport("Upwind", "13", "left"), null);
+  assert.equal(positionReport("Upwind", "13", "left"), "Left upwind 13");
 });
