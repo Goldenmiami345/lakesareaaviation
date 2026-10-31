@@ -35,6 +35,8 @@ export const airportStages: Stage[] = [
 ];
 
 const snapOwners = new Set<Element>();
+// Traffic-pattern airplanes are paused while their design is still being decided.
+const SHOW_TRAFFIC = false;
 
 // Programmatic glide that temporarily disables journey snapping, so jumps
 // (back to top, location shortcuts) travel straight to their target.
@@ -161,9 +163,12 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const total = Math.max(1, el.offsetHeight - vh);
       const progress = Math.max(0, Math.min(1, -el.getBoundingClientRect().top / total));
       const current = progress >= 0.999 ? n : journeyNearestLanding(progress, n);
-      const target = Math.max(-1, Math.min(n, current + dir));
       lockUntil = now + 650;
-      window.scrollTo({ top: stopTop(target), behavior: "smooth" });
+      // Leaving past either end hands the page back to free scrolling so the
+      // visitor is never trapped at the last (or first) stop.
+      if (dir > 0 && current >= n - 1) { glideTo(stopTop(n) + vh); return; }
+      if (dir < 0 && current <= 0) { glideTo(stopTop(-1)); return; }
+      window.scrollTo({ top: stopTop(current + dir), behavior: "smooth" });
     };
     const onJump = (e: Event) => {
       const d = (e as CustomEvent<{ id: string; index: number }>).detail;
@@ -226,7 +231,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
             ) : (
               <img src={st.img} alt={st.alt} width={st.w ?? 1920} height={st.h ?? 1088} loading={i < 2 ? "eager" : "lazy"} decoding="async" className="h-full w-full object-cover" style={{ objectPosition: st.position ?? "center" }} />
             )}
-            {st.traffic && <TrafficPattern airport={st.traffic} active={i === active} />}
+            {SHOW_TRAFFIC && st.traffic && <TrafficPattern airport={st.traffic} active={i === active} />}
           </div>
         ))}
         <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-ink via-ink/40 to-ink/50" />
