@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, ArrowUp, MapPin } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import heroImage from "../assets/photos/sunset-ramp.webp";
 import trainingImage from "../assets/fleet/n3353p-enhanced.webp";
 import { InquiryBand, SiteLayout } from "../components/site-shell";
@@ -83,11 +83,24 @@ function ServiceLink({ eyebrow, title, text, to, slug }: { eyebrow: string; titl
 
 function BackToTop() {
   const [show, setShow] = useState(false);
+  const ref = useRef<HTMLButtonElement>(null);
   useEffect(() => {
-    const onScroll = () => setShow(window.scrollY > window.innerHeight * 1.5);
+    // Hidden whenever the inquiry band/footer is on screen or any interactive control sits under it.
+    const onScroll = () => {
+      let ok = window.scrollY > window.innerHeight * 1.5;
+      if (ok) ok = ![...document.querySelectorAll("[data-no-float]")].some((el) => { const r = el.getBoundingClientRect(); return r.top < window.innerHeight && r.bottom > 0; });
+      const btn = ref.current;
+      if (ok && btn) {
+        const r = btn.getBoundingClientRect();
+        const pts: [number, number][] = [[r.left - 6, r.top - 6], [r.right + 6, r.top - 6], [r.left - 6, r.bottom + 6], [r.right + 6, r.bottom + 6], [r.left + r.width / 2, r.top + r.height / 2]];
+        ok = !pts.some(([x, y]) => document.elementsFromPoint(x, y).some((el) => el !== btn && !btn.contains(el) && !!el.closest("a,button,input,select,textarea,[role=button]") && !el.closest("[aria-hidden=true]")));
+      }
+      setShow(ok);
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("resize", onScroll);
+    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); };
   }, []);
-  return <button type="button" aria-label="Back to top" tabIndex={show ? 0 : -1} onClick={() => glideTo(0)} className={`fixed bottom-24 right-4 z-40 grid size-11 place-items-center rounded-full border border-background/25 bg-ink/80 text-background shadow-xl backdrop-blur-md transition-all duration-300 hover:bg-primary md:bottom-6 md:right-6 ${show ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`}><ArrowUp className="size-4" /></button>;
+  return <button ref={ref} type="button" aria-label="Back to top" tabIndex={show ? 0 : -1} onClick={() => glideTo(0)} className={`fixed bottom-[calc(5.75rem+env(safe-area-inset-bottom))] right-4 z-40 grid size-11 place-items-center rounded-full border border-background/25 bg-ink/80 text-background shadow-xl backdrop-blur-md transition-all duration-300 hover:bg-primary md:bottom-6 md:right-6 ${show ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`}><ArrowUp className="size-4" /></button>;
 }
