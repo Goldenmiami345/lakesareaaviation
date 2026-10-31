@@ -176,6 +176,19 @@ function installController() {
   // events for 150ms is treated as lifted so the landing guard and settling still run.
   let lastTouchAt = 0;
   const fingerDown = () => touching && performance.now() - lastTouchAt < 150;
+  // Hero → Discovery and The Right Seat → Little Falls follow the finger 1:1, then
+  // complete (or spring back) on release; every other step fires a glide at 8px.
+  let follow: { base: number; target: number; dy: number; max: number } | null = null;
+  let followTimer = 0;
+  const releaseFollow = () => {
+    window.clearTimeout(followTimer);
+    const f = follow; follow = null;
+    if (!f) return;
+    paging = false;
+    const go = f.dy >= PAGE_SWIPE_PX && f.dy >= f.max - 24;
+    runPath([{ y: go ? f.target : f.base, instant: false }], true);
+  };
+  const followable = (pages: JourneyPage[], j: number) => j === 0 || (pages[j]?.hold !== undefined && j + 2 < pages.length);
   const onTouchStart = (e: TouchEvent) => {
     touching = true; rejected = false; landedUntil = 0; lastTouchAt = performance.now();
     const t = e.touches[0];
@@ -197,10 +210,30 @@ function installController() {
       if (!g.claimed) { g = null; rejected = true; return; }
     }
     if (e.cancelable) e.preventDefault();
+    if (!g.fired && !busy() && dy > 0 && !follow) {
+      const pages = journeyPages();
+      const j = currentPage(pages, window.scrollY);
+      const path = j >= 0 && followable(pages, j) ? pageStep(pages, window.scrollY, 1) : null;
+      const target = path?.[path.length - 1]?.y;
+      if (path && target !== undefined) {
+        g.fired = true;
+        const base = path.length > 1 ? path[0]!.y : window.scrollY;
+        cancelAnimationFrame(tweenFrame);
+        paging = true; root.classList.add("journey-paging");
+        follow = { base, target, dy: 0, max: 0 };
+      }
+    }
+    if (follow) {
+      follow.dy = dy; follow.max = Math.max(follow.max, dy);
+      window.scrollTo({ top: Math.max(follow.base, Math.min(follow.target, follow.base + dy)), behavior: "instant" });
+      window.clearTimeout(followTimer);
+      followTimer = window.setTimeout(releaseFollow, 350);
+      return;
+    }
     if (!g.fired && !busy() && Math.abs(dy) >= PAGE_SWIPE_PX) { g.fired = true; step(dy > 0 ? 1 : -1, true); }
   };
   let settleTimer = 0;
-  const onTouchEnd = (e: TouchEvent) => { if (e.touches.length === 0) { touching = false; g = null; scheduleSettle(); } };
+  const onTouchEnd = (e: TouchEvent) => { if (e.touches.length === 0) { touching = false; g = null; releaseFollow(); scheduleSettle(); } };
   // Native momentum arriving from below stops at the exit page; anything left
   // resting between pages (keyboard, scrollbar) settles onto the nearest one.
   let lastY = window.scrollY;
@@ -239,6 +272,7 @@ function installController() {
     window.removeEventListener("touchcancel", onTouchEnd);
     window.removeEventListener("scroll", onScroll);
     window.clearTimeout(settleTimer);
+    window.clearTimeout(followTimer);
     cancelAnimationFrame(tweenFrame);
     paging = false;
     root.classList.remove("journey-paging");
