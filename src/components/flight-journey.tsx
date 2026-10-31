@@ -353,8 +353,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const onJump = (e: Event) => {
       const d = (e as CustomEvent<{ id: string; index: number; animate?: boolean }>).detail;
       if (d?.id !== id || !el) return;
-      const page = journeyPages().find((p) => Math.abs(p.y - (window.scrollY + el.getBoundingClientRect().top + Math.max(1, el.offsetHeight - vh()) * journeyStop(d.index, n))) < 3) ;
-      const y = page?.y ?? Math.round(window.scrollY + el.getBoundingClientRect().top + Math.max(1, el.offsetHeight - vh()) * journeyStop(d.index, n));
+      const base = window.scrollY + el.getBoundingClientRect().top, total = Math.max(1, el.offsetHeight - vh());
+      const y = Math.round(d.index >= n - 1 ? base + total : base + total * journeyStop(d.index, n));
       goToJourneyPage(y, !d.animate);
     };
     render();
