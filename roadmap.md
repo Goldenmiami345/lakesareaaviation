@@ -1,5 +1,9 @@
 # Roadmap
 
+- [ ] Add Cardinal facts, exact-photo cutout, finger-free walk-around and KLXL rotation.
+- [ ] Fit airport default zoom to complete patterns and protected UI on phone/desktop.
+- [ ] Add lazy model-backed card/fleet media with isolated gestures and photo fallback; verify and report.
+
 - [x] Replace retired Apache and correct Phoenix/order everywhere; update traffic paint and factual tests.
 - [x] Inspect 35 owner photos; prepare seven exact-photo cutouts and optimized CDN walk-arounds (masking quality limitations recorded in the report).
 - [x] Add real walk-around/fullscreen zoom and hidden-until-present lazy model slot; verify fleet and traffic on phone/desktop.
