@@ -122,6 +122,8 @@ export function RadarTag({ reg, index, seed, label, tabIndex, hit, tagRef, textR
 
 type Box = { l: number; t: number; r: number; b: number };
 const hits = (a: Box, b: Box) => a.l < b.r && a.r > b.l && a.t < b.b && a.b > b.t;
+const placed: Box[] = [];
+let placedAt = 0;
 let obstacleCache: { at: number; key: Element | null; list: Box[]; safe: Box } | null = null;
 function obstacles(g: SVGGElement) {
   const now = performance.now();
@@ -134,7 +136,7 @@ function obstacles(g: SVGGElement) {
     if (r.width && r.height) list.push({ l: r.left - 6, t: r.top - 6, r: r.right + 6, b: r.bottom + 6 });
   };
   add(document.querySelector("header"));
-  section?.querySelectorAll(".journey-copy").forEach(add);
+  section?.querySelectorAll(".journey-copy, .journey-hud").forEach(add);
   const rail = w < 768 ? 56 : 16;
   obstacleCache = { at: now, key: section, list, safe: { l: 16, t: 16, r: w - rail, b: h - 16 } };
   return obstacleCache;
@@ -151,14 +153,19 @@ export function layoutTag(g: SVGGElement | null | undefined) {
   const pill = g.querySelector<SVGRectElement>(".traffic-pill");
   const line = g.querySelector<SVGLineElement>(".traffic-leader");
   if (!m || !text || !pill || !line) return;
-  const { list, safe } = obstacles(g);
+  const { list: fixed, safe } = obstacles(g);
+  const now = performance.now();
+  if (now - placedAt > 6) placed.length = 0;
+  placedAt = now;
+  const list = fixed.concat(placed);
   const W = Math.ceil(text.getComputedTextLength()) + 14, H = 18;
   const px = m.e, py = m.f;
   let best: { sx: number; sy: number; ox: number; oy: number; score: number } | null = null;
-  for (const [sx, sy] of [[1, -1], [-1, -1], [1, 1], [-1, 1], [0, -1], [0, 1]] as const) {
+  for (const [sx, sy] of [[1, -1], [-1, -1], [1, 1], [-1, 1], [0, -1], [0, 1], [1, -2], [-1, -2], [1, 2], [-1, 2]] as const) {
     let ox = sx > 0 ? 14 : sx < 0 ? -14 - W : -W / 2;
     let oy = sy < 0 ? -27 : 9;
     if (sx === 0) oy = sy < 0 ? -34 : 16;
+    if (Math.abs(sy) === 2) oy = sy < 0 ? -48 : 30;
     // clamp horizontally into the safe area
     const cl = Math.min(Math.max(px + ox, safe.l), safe.r - W) - px;
     const shift = Math.abs(cl - ox); ox = cl;
@@ -170,6 +177,7 @@ export function layoutTag(g: SVGGElement | null | undefined) {
     if (score === 0) break;
   }
   if (!best) return;
+  placed.push({ l: px + best.ox - 4, t: py + best.oy - 3, r: px + best.ox + W + 4, b: py + best.oy + H + 3 });
   const { ox, oy, sy } = best;
   pill.setAttribute("x", ox.toFixed(1)); pill.setAttribute("y", oy.toFixed(1)); pill.setAttribute("width", String(W));
   text.setAttribute("x", (ox + 7).toFixed(1)); text.setAttribute("y", (oy + 12.5).toFixed(1));
