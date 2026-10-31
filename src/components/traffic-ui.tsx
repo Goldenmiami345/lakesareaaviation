@@ -106,12 +106,13 @@ export const TrafficCard = forwardRef<HTMLDivElement, { plane: TrafficPlaneInfo;
     <div ref={ref} data-traffic-card="" className="traffic-card pointer-events-auto fixed left-0 top-0 z-[70] w-[min(60vw,15rem)]" role="dialog" aria-label={`${plane.reg} details`}>
       <div className="flex items-start gap-2.5">
         {/* Media slot: fixed 40% width and aspect, so a future 3D model or 360° spin drops in without changing the layout. */}
-        <div data-card-media="" className="traffic-card-media relative -mt-[34px] aspect-[480/210] w-[45%] shrink-0">
+        <div data-card-media="" className="traffic-card-media relative -mt-[24px] aspect-[480/210] w-[45%] shrink-0">
           {photo && <img src={photo} alt={`${plane.reg}, the real airplane`} width={480} height={210} decoding="async" className="absolute inset-0 h-full w-full object-contain object-bottom" />}
         </div>
         <span className="min-w-0 flex-1">
-          <span className="block truncate font-mono text-sm font-bold tracking-wider">{plane.reg}{plane.nickname ? <span className="font-sans text-xs font-normal tracking-normal text-background/70"> “{plane.nickname}”</span> : null}</span>
-          <span className="block truncate text-[11px] leading-tight text-background/70">{plane.type}</span>
+          <span className="block font-mono text-sm font-bold tracking-wider">{plane.reg}</span>
+          {plane.nickname && <span className="block truncate text-xs leading-tight text-background">“{plane.nickname}”</span>}
+          <span className="block truncate text-[11px] leading-tight text-background/65">{plane.type}</span>
         </span>
       </div>
       <span className="mt-1.5 flex items-center justify-between gap-2 font-mono text-[11px] tabular-nums">
