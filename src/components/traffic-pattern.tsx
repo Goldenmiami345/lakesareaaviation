@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { fleet } from "../lib/site-data";
 import { feetPerPixel, lapSeconds, patternAltitude, patternWaypoints, positionReport, sampleAtTime, type PatternAirport } from "../lib/traffic-pattern";
-import { RadarTag, layoutTag, TrafficCard, placeCard, useTrafficSelection, usePreloadCardPhotos, writeCard } from "./traffic-ui";
+import { RadarTag, fitTagSide, setTagPosition, TrafficCard, placeCard, useTrafficSelection, usePreloadCardPhotos, writeCard } from "./traffic-ui";
 import n6717a from "../assets/traffic/n6717a.webp";
 import n8570b from "../assets/traffic/n8570b.webp";
 import n3353p from "../assets/traffic/n3353p.webp";
@@ -54,20 +54,20 @@ export function TrafficPattern({ airport, active, viewBox = "0 0 1500 1500" }: {
     let queue: { i: number; text: string; at: number }[] = [];
     let current: { i: number; until: number } | null = null;
     let nextAt = 0;
+    const at = (i: number, secs: number) => sampleAtTime(airport, secs + (lap * i) / planes.length + lap * 0.05, points);
     const draw = (now: number) => {
       // Played at one-third real time so the airplanes drift calmly across the aerial.
       const secs = reduce ? 0 : ((now - start) / 1000) * 0.33;
       const m = svgRef.current?.getScreenCTM();
-      const k = m ? Math.hypot(m.a, m.b) || 1 : 1;
       planes.forEach((p, i) => {
         // Evenly staggered around the circuit so takeoff, crosswind, downwind, base and final are all occupied.
-        const s = sampleAtTime(airport, secs + (lap * i) / planes.length + lap * 0.05, points);
+        const s = at(i, secs);
         const lift = s.agl / airport.tpaAgl;
         const scale = 1 + lift * 0.12;
         planeRefs.current[i]?.setAttribute("transform", `translate(${s.x.toFixed(1)} ${s.y.toFixed(1)}) rotate(${s.heading.toFixed(1)}) scale(${scale.toFixed(3)})`);
         shadowRefs.current[i]?.setAttribute("transform", `translate(${(s.x + 2 + lift * 10).toFixed(1)} ${(s.y + 2.5 + lift * 12).toFixed(1)}) rotate(${s.heading.toFixed(1)})`);
         shadowRefs.current[i]?.setAttribute("opacity", (0.45 - lift * 0.25).toFixed(2));
-        tagRefs.current[i]?.setAttribute("transform", `translate(${s.x.toFixed(1)} ${s.y.toFixed(1)}) scale(${(1 / k).toFixed(4)})`);
+        setTagPosition(tagRefs.current[i], m, s.x, s.y);
         if (prev[i] !== s.phase) {
           const report = prev[i] !== null && !reduce ? positionReport(s.phase, airport.runway, airport.side) : null;
           prev[i] = s.phase;
@@ -83,14 +83,21 @@ export function TrafficPattern({ airport, active, viewBox = "0 0 1500 1500" }: {
         current = null; nextAt = now + CALLOUT_GAP_MS;
       }
       queue = queue.filter((q) => now - q.at < CALLOUT_STALE_MS);
-      if (!current && now >= nextAt && queue.length) {
+      while (!current && now >= nextAt && queue.length && m) {
         const q = queue.shift()!;
         const t = textRefs.current[q.i];
         if (t) t.textContent = q.text;
+        // Side is chosen once for the whole call, from the airplane's path over the
+        // display window; a call with no side that stays clear is skipped.
+        const ahead = [];
+        for (let ms = 0; ms <= CALLOUT_MS; ms += 250) {
+          const f = at(q.i, secs + (ms / 1000) * 0.33);
+          ahead.push({ x: m.a * f.x + m.c * f.y + m.e, y: m.b * f.x + m.d * f.y + m.f });
+        }
+        if (!fitTagSide(tagRefs.current[q.i], ahead)) continue;
         current = { i: q.i, until: now + CALLOUT_MS };
         tagRefs.current[q.i]?.classList.add("is-calling");
       }
-      if (current) layoutTag(tagRefs.current[current.i]);
     };
     const loop = () => {
       cancelAnimationFrame(raf);
