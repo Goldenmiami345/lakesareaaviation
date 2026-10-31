@@ -1,0 +1,106 @@
+{
+  "/": {
+    "heading": "Zero to Hero.",
+    "copy": "From your first flight to commercial pilot and instructor."
+  },
+  "/about": {
+    "heading": "A practical place to become a better pilot.",
+    "copy": "Lakes Area Aviation provides flight instruction, pilot services, aircraft management, and specialized training from bases in Minnesota, Colorado, and Arizona."
+  },
+  "/accelerated-training": {
+    "heading": "Turn open calendar days into your next rating.",
+    "copy": "Concentrated flight and ground training for pilots who arrive prepared and want every day to move the plan forward."
+  },
+  "/admin": {
+    "heading": "Site appearance",
+    "copy": "Sign in to change the accent color for every visitor."
+  },
+  "/contact": {
+    "heading": "Build your training plan.",
+    "copy": "Check what you already hold, choose what comes next, and see the published commitment before you call. All prices are estimates."
+  },
+  "/fleet": {
+    "heading": "The airplanes you\u2019ll actually fly.",
+    "copy": "Real photos, real tail numbers and the published rates for every airplane in the Lakes Area Aviation fleet."
+  },
+  "/hero-options": {
+    "heading": "Zero to Hero.",
+    "copy": "Accelerated flight training"
+  },
+  "/introductory-flights": {
+    "heading": "Take the pilot's seat for $100.",
+    "copy": "An introductory flight is a hands-on first lesson and the clearest way to find out if flight training is right for you."
+  },
+  "/local-training": {
+    "heading": "Train at your own pace, close to home.",
+    "copy": "While we specialize in accelerated, full-time training, we value our local students \u2014 one of our main goals is to grow a community of aviators."
+  },
+  "/locations": {
+    "heading": "Three places to move your training forward.",
+    "copy": "Contact the school to confirm which ratings, aircraft, and accelerated dates are available at each location."
+  },
+  "/new-students": {
+    "heading": "Three steps to your first day.",
+    "copy": "We do all of our flight scheduling, billing, and more directly through Flight Schedule Pro."
+  },
+  "/programs": {
+    "heading": "Choose the rating. Set the timeline.",
+    "copy": "From your first solo to your first instructor student, build a focused training plan around the rating ahead."
+  },
+  "/rates": {
+    "heading": "Every published rate, in one place.",
+    "copy": "We strive to keep our aircraft costs low to make aviation accessible for everyone. All aircraft rates are wet and include fuel and insurance."
+  },
+  "/scenic-flights": {
+    "heading": "See your world from the sky.",
+    "copy": "Have you ever wondered what the Minnesota fall leaves look like from above, wanted to see the Rocky Mountains from the sky, or fly over your childhood landmarks?"
+  },
+  "/specialized-training": {
+    "heading": "Endorsements and courses beyond the ratings.",
+    "copy": "Along with our commitment to providing you the best training to fit your needs and schedule, we also offer specialized training in a variety of endorsements and ratings."
+  },
+  "/student-success": {
+    "heading": "Progress measured in ratings earned.",
+    "copy": "Students come with different experience, preparation, and goals. Their stories show what focused training can make possible."
+  },
+  "/team": {
+    "heading": "Reach your goals with our instructors.",
+    "copy": "A talented and dedicated team of flight instructors across airplane, instrument, multi-engine, and helicopter training."
+  },
+  "/services": {
+    "heading": "Every rating, endorsement, and experience.",
+    "copy": "Whether you have zero flight hours or have three-hundred and are looking to finish a multi-engine commercial certificate, we are the school for you. We offer a wide variety of ratings, endorsements, and aviation experiences. All of our offerings are tailored to suit your individual needs."
+  },
+  "/students": {
+    "heading": "Helping you reach your aviation goals in three great locations.",
+    "copy": "New to Lakes Area Aviation or already training with us \u2014 start here."
+  },
+  "/programs/private-pilot": {
+    "heading": "Private Pilot",
+    "copy": "Build the foundation for every rating that follows with concentrated ground and flight instruction."
+  },
+  "/programs/instrument-rating": {
+    "heading": "Instrument Rating",
+    "copy": "Develop the skills and judgment to operate safely by reference to instruments."
+  },
+  "/programs/commercial-single-engine": {
+    "heading": "Commercial Single-Engine",
+    "copy": "Advance your flying to commercial standards through concentrated maneuver, ground, and practical-test preparation."
+  },
+  "/programs/commercial-multi-engine": {
+    "heading": "Commercial Multi-Engine",
+    "copy": "Train for commercial multi-engine privileges in Lakes Area Aviation\u2019s Piper Apache."
+  },
+  "/programs/cfi-cfii": {
+    "heading": "CFI & CFII",
+    "copy": "Choose an accelerated initial flight-instructor course, add instrument-instructor privileges, or plan both ratings back to back."
+  },
+  "/programs/mei": {
+    "heading": "Multi-Engine Instructor",
+    "copy": "Add multi-engine instructor privileges in the Piper Apache through a short, concentrated course."
+  },
+  "/programs/zero-to-hero": {
+    "heading": "Zero to Hero",
+    "copy": "See the complete sequence Lakes Area Aviation publishes for progressing from no flight time toward professional flying."
+  }
+}

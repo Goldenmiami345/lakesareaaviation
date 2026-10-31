@@ -1,5 +1,8 @@
 # Roadmap
 
+- [x] Add production HTML gate for all 26 routes, fleet order and unfinished Suspense; validate gate against empty shell.
+- [ ] Confirm production SSR repair/root cause and production mobile hydration: awaiting new hosted build/artifacts (current hosted build predates edits; dev-only checks pass).
+
 - [x] Add Cardinal facts, source-pixel cutout, finger-free walk-around and KLXL rotation (fine alpha-edge limitations reported).
 - [x] Fit airport default zoom to complete patterns and protected UI on phone/desktop (desktop targets cannot fit unchanged copy; actual reduced values reported).
 - [x] Add lazy model-backed card/fleet media with isolated gestures and photo fallback; verify and report.
