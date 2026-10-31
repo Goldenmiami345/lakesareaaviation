@@ -172,7 +172,7 @@ html.journey-free, html.journey-free.journey-snap { scroll-snap-type: none !impo
 .traffic-trim { fill: var(--primary); }
 .traffic-plane:focus { outline: none; }
 .traffic-plane.is-hovered .traffic-body, .traffic-plane:hover .traffic-body { fill: var(--primary); stroke: var(--primary-foreground); }
-.traffic-tag { color: var(--radar); }
+.traffic-tag { color: var(--radar); transition: opacity .3s ease; }
 .traffic-callouts .traffic-tag :is(.traffic-pill, .traffic-label, .traffic-leader) { opacity: 0; transition: opacity .45s ease; }
 .traffic-callouts .traffic-tag.is-calling :is(.traffic-pill, .traffic-label, .traffic-leader) { opacity: 1; }
 .traffic-label { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: 11px; font-weight: 600; letter-spacing: .05em; fill: currentColor; fill-opacity: .88; pointer-events: none; }
