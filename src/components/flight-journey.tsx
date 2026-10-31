@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Phone } from "lucide-react";
 import { Button } from "./ui/button";
 import { journeyFrame, journeyStop, JOURNEY_STAGE_SVH, pageStep, nearestPage, currentPage, type JourneyPage, type PageSegment } from "../lib/journey-pacing";
 import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
-import type { PatternAirport } from "../lib/traffic-pattern";
+import { patternFor, pickRunway, type PatternField } from "../lib/traffic-pattern";
+import { useMetar } from "../lib/use-metar";
 import { TrafficPattern } from "./traffic-pattern";
 import { TrafficPerspective } from "./traffic-perspective";
 import airlineVideo from "../assets/journey/airline-approach.mp4.asset.json";
@@ -39,7 +40,7 @@ function useIsPhone() {
 // Overlay viewBox (in the original image's pixel space) covering the whole phone canvas.
 const AERIAL_PHONE_VIEW = "-100 -950 1700 3400";
 
-type Stage = { code: string; label: string; time: string; title: string; text: string; img: string; alt: string; cta: string; slug?: string; location?: string; to?: "/introductory-flights" | "/contact" | "/locations"; hud?: string; zoom?: number; zoomIn?: number; w?: number; h?: number; video?: string; position?: string; traffic?: PatternAirport; perspective?: boolean; phoneImg?: string; phoneView?: string };
+type Stage = { code: string; label: string; time: string; title: string; text: string; img: string; alt: string; cta: string; slug?: string; location?: string; to?: "/introductory-flights" | "/contact" | "/locations"; hud?: string; zoom?: number; zoomIn?: number; w?: number; h?: number; video?: string; position?: string; traffic?: PatternField; perspective?: boolean; phoneImg?: string; phoneView?: string };
 
 const journeyStages: Stage[] = [
   { code: "01", label: "Discovery flight", time: "$100", title: "Take the controls on day one.", text: "Left seat, instructor beside you.", img: clouds, phoneImg: cloudsPhone, alt: "Sunrise above a sea of clouds", cta: "Book an intro flight", to: "/introductory-flights" },
@@ -427,6 +428,14 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const jump = (i: number) => jumpToJourney(id, i);
 
   const isPhone = useIsPhone();
+  const metar = useMetar();
+  // Active runway per airport stage from live wind; calm-wind runway (and no readout) without weather.
+  const ops = useMemo(() => stages.map((st) => {
+    if (!st.traffic) return null;
+    const obs = metar?.[st.traffic.wxStation] ?? null;
+    const rwy = pickRunway(st.traffic, obs ? { dir: obs.dir, kt: obs.kt } : null);
+    return { obs, rwy, pattern: patternFor(st.traffic, rwy) };
+  }), [stages, metar]);
   const s = stages[active] ?? stages[0];
   if (!s) return null;
   return (
@@ -456,7 +465,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
                 <img src={st.img} alt={st.alt} width={st.w ?? 1920} height={st.h ?? 1088} loading={i <= active + 2 ? "eager" : "lazy"} decoding="async" className="h-full w-full bg-ink object-cover" style={{ objectPosition: st.position ?? "center" }} />
               </picture>
             )}
-            {SHOW_TRAFFIC && st.traffic && <TrafficPattern airport={st.traffic} active={i === active} {...(isPhone && st.phoneView ? { viewBox: st.phoneView } : {})} />}
+            {SHOW_TRAFFIC && st.traffic && <TrafficPattern airport={ops[i]?.pattern ?? st.traffic} active={i === active} {...(isPhone && st.phoneView ? { viewBox: st.phoneView } : {})} />}
             {st.perspective && <TrafficPerspective active={i === active} {...(isPhone && st.phoneView ? { viewBox: st.phoneView } : {})} />}
           </div>
         ))}
@@ -467,7 +476,12 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
 
         {/* HUD */}
         <div className="journey-hud absolute left-5 top-24 z-20 font-mono text-[11px] uppercase tracking-[0.2em] text-background/70 lg:left-8">
-          {mode === "alt" ? <p>Alt <span ref={hudRef} className="tabular-nums text-background">0</span> ft</p> : <><p className="text-background">{s.hud}</p>{s.traffic && <p className="mt-1 hidden sm:block">RWY {s.traffic.runway} · {s.traffic.side} traffic · TPA {(s.traffic.elevation + s.traffic.tpaAgl).toLocaleString("en-US")} MSL</p>}</>}
+          {mode === "alt" ? <p>Alt <span ref={hudRef} className="tabular-nums text-background">0</span> ft</p> : <><p className="text-background">{s.hud}</p>{(() => { const o = ops[active]; if (!o?.obs) return null; const w = o.obs; return (
+            <p className="mt-1.5 flex items-center gap-1.5 text-background" data-wind aria-label={`Wind at ${w.station}: ${w.dir === null ? (w.kt ? "variable" : "calm") : `${w.dir} degrees`} ${w.kt} knots${w.gust ? ` gusting ${w.gust}` : ""}. Active runway ${o.rwy.runway}`}>
+              {w.dir !== null && w.kt > 0 && <svg viewBox="0 0 12 12" className="size-3 text-[color:var(--radar)]" style={{ transform: `rotate(${w.dir + 180}deg)` }} aria-hidden><path d="M6 1v10M2.5 4.5 6 1l3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>}
+              <span>Wind {w.kt === 0 ? "calm" : `${w.dir === null ? "VRB" : String(w.dir).padStart(3, "0") + "°"} ${w.kt}${w.gust ? `G${w.gust}` : ""}KT`}</span>
+              <span className="text-background/60">{w.station} · RWY {o.rwy.runway}</span>
+            </p>); })()}{s.traffic && <p className="mt-1 hidden sm:block">RWY {ops[active]?.rwy.runway ?? s.traffic.runway} · {ops[active]?.rwy.side ?? s.traffic.side} traffic · TPA {(s.traffic.elevation + s.traffic.tpaAgl).toLocaleString("en-US")} MSL</p>}</>}
           <p className="mt-1 hidden sm:block">Stage {s.code} / 0{stages.length}</p>
         </div>
 

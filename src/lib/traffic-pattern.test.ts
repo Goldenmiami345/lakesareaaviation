@@ -53,3 +53,31 @@ test("runway midpoint is centred in each aerial (within 40 px of 750,750)", () =
     assert.ok(Math.abs((a.threshold.x + a.end.x) / 2 - 750) < 40 && Math.abs((a.threshold.y + a.end.y) / 2 - 750) < 40, a.ident);
   }
 });
+
+import { pickRunway, patternFor, positionReport, headwind } from "./traffic-pattern";
+import { airportTraffic } from "./site-data";
+describe("active runway from wind", () => {
+  it("uses the calm-wind runway under 5 kt", () => {
+    expect(pickRunway(airportTraffic.P52, { dir: 150, kt: 4 }).runway).toBe("32");
+    expect(pickRunway(airportTraffic.KLXL, null).runway).toBe("13");
+  });
+  it("uses the calm-wind runway for variable wind", () => {
+    expect(pickRunway(airportTraffic["18V"], { dir: null, kt: 6 }).runway).toBe("15");
+  });
+  it("picks the end with the best headwind", () => {
+    expect(pickRunway(airportTraffic.KLXL, { dir: 320, kt: 10 }).runway).toBe("31");
+    expect(pickRunway(airportTraffic.P52, { dir: 150, kt: 12 }).runway).toBe("14");
+    expect(headwind({ dir: 131, kt: 10 }, 131)).toBeCloseTo(10);
+  });
+  it("flies P52 runway 32 right traffic and 14 left traffic (FAA)", () => {
+    const r32 = patternFor(airportTraffic.P52, pickRunway(airportTraffic.P52, null));
+    expect(r32.side).toBe("right");
+    expect(r32.threshold).toEqual(airportTraffic.P52.end);
+    expect(patternFor(airportTraffic.P52, airportTraffic.P52.ends[0]).side).toBe("left");
+  });
+  it("words position reports with runway and side", () => {
+    expect(positionReport("Downwind", "32", "right")).toBe("Right downwind 32");
+    expect(positionReport("Takeoff", "13", "left")).toBe("Departing runway 13");
+    expect(positionReport("Upwind", "13", "left")).toBeNull();
+  });
+});
