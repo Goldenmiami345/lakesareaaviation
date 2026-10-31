@@ -108,7 +108,9 @@ export const fleet = [
 // field elevation, pattern altitude, active runway and pattern direction.
 // Runway endpoints are measured on each USGS aerial (1500 x 1500 px).
 export const airportTraffic = {
-  KLXL: { ident: "KLXL", elevation: 1123, tpaAgl: 1000, runway: "13", runwayFt: 4010, side: "left", threshold: { x: 566, y: 597 }, end: { x: 932, y: 911 }, offset: 297, extension: 153, aircraft: ["N6717A", "N8570B", "N3353P"] },
-  "18V": { ident: "18V", elevation: 4965, tpaAgl: 1000, runway: "15", runwayFt: 4100, side: "left", threshold: { x: 733, y: 632 }, end: { x: 840, y: 950 }, offset: 270, extension: 135, aircraft: ["N7108G", "N6641F"] },
-  P52: { ident: "P52", elevation: 3560, tpaAgl: 800, runway: "14", runwayFt: 4250, side: "left", threshold: { x: 680, y: 590 }, end: { x: 885, y: 925 }, offset: 270, extension: 135, aircraft: ["N8570B", "N11059"] },
+  // Runway ends are the FAA NASR (effective 2026-10-29) end coordinates projected
+  // with Web Mercator into each 1500 px USGS NAIP aerial, which is centred on the runway midpoint.
+  KLXL: { ident: "KLXL", elevation: 1123, tpaAgl: 1000, runway: "13", runwayFt: 4010, side: "left", threshold: { x: 595, y: 617 }, end: { x: 905, y: 883 }, offset: 126, extension: 65, aircraft: ["N6717A", "N8570B", "N3353P", "N6641F"] },
+  "18V": { ident: "18V", elevation: 4965, tpaAgl: 1000, runway: "15", runwayFt: 4100, side: "left", threshold: { x: 687, y: 506 }, end: { x: 813, y: 994 }, offset: 202, extension: 101, aircraft: ["N7108G", "N6641F", "N11059"] },
+  P52: { ident: "P52", elevation: 3560, tpaAgl: 800, runway: "14", runwayFt: 4250, side: "left", threshold: { x: 650, y: 529 }, end: { x: 850, y: 971 }, offset: 166, extension: 83, aircraft: ["N8570B", "N11059", "N6717A"] },
 } as const satisfies Record<string, import("./traffic-pattern").PatternAirport>;
