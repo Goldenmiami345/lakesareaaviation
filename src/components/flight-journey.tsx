@@ -88,7 +88,7 @@ function journeyPages(): JourneyPage[] {
   for (const [el, { n, vh }] of list) {
     const base = window.scrollY + el.getBoundingClientRect().top;
     const total = Math.max(1, el.offsetHeight - vh());
-    for (let i = 0; i < n; i += 1) pages.push({ y: Math.round(base + total * journeyStop(i, n)), hold: i === n - 1 ? Math.round(base + total) : undefined });
+    for (let i = 0; i < n; i += 1) pages.push(i === n - 1 ? { y: Math.round(base + total * journeyStop(i, n)), hold: Math.round(base + total) } : { y: Math.round(base + total * journeyStop(i, n)) });
     after = Math.round(base + el.offsetHeight);
   }
   pages.push({ y: after });
