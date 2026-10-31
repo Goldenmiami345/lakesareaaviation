@@ -13,6 +13,9 @@ import n6717aPanel from "../assets/fleet/n6717a-panel.png.asset.json";
 import n7018gPanel from "../assets/fleet/n7018g-panel.png.asset.json";
 import n8570bPanel from "../assets/fleet/n8570b-panel.png.asset.json";
 
+// Keep visitor models and model-rendered map sprites hidden until photo-textured approval.
+export const SHOW_3D_MODELS: boolean = false;
+
 export type Program = {
   slug: string;
   name: string;

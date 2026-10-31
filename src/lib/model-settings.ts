@@ -1,3 +1,4 @@
+import { SHOW_3D_MODELS } from './site-data';
 export const MODEL_SETTINGS = {
   'camera-controls': true, 'touch-action': 'none', 'camera-orbit': '35deg 75deg auto',
   'min-camera-orbit': 'auto 20deg auto', 'max-camera-orbit': 'auto 100deg auto',
@@ -7,4 +8,4 @@ export const MODEL_SETTINGS = {
 } as const;
 export const MODEL_WINGSPANS_M: Record<string, number> = { N4383P: 11.28, N8570B: 10.97, N46201: 11.02 };
 /** Supplied renders use literal map scale; retain the legacy footprint for other SVGs. */
-export function trafficPresentationScale(reg: string) { return MODEL_WINGSPANS_M[reg] ? 1 : 3; }
+export function trafficPresentationScale(reg: string, showModels = SHOW_3D_MODELS) { return showModels && MODEL_WINGSPANS_M[reg] ? 1 : 3; }

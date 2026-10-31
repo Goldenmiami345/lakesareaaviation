@@ -4,8 +4,8 @@ import { Button } from './ui/button';
 
 const AircraftModel = lazy(() => import('./aircraft-model'));
 /** A stable photo slot. Available models hydrate only once this slot is opened/visible. */
-export function AircraftMedia({ reg, photo, hint = false }: { reg: string; photo: string; hint?: boolean }) {
-  const model = aircraftModelUrl(reg);
+export function AircraftMedia({ reg, photo, hint = false, preview = false }: { reg: string; photo: string; hint?: boolean; preview?: boolean }) {
+  const model = aircraftModelUrl(reg, preview);
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [interacted, setInteracted] = useState(false);

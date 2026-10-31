@@ -19,6 +19,7 @@ import { Route as HeroOptionsRouteImport } from './routes/hero-options'
 import { Route as IntroductoryFlightsRouteImport } from './routes/introductory-flights'
 import { Route as LocalTrainingRouteImport } from './routes/local-training'
 import { Route as LocationsRouteImport } from './routes/locations'
+import { Route as ModelsPreviewRouteImport } from './routes/models-preview'
 import { Route as NewStudentsRouteImport } from './routes/new-students'
 import { Route as ProgramsRouteImport } from './routes/programs'
 import { Route as RatesRouteImport } from './routes/rates'
@@ -81,6 +82,11 @@ const LocalTrainingRoute = LocalTrainingRouteImport.update({
 const LocationsRoute = LocationsRouteImport.update({
   id: '/locations',
   path: '/locations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ModelsPreviewRoute = ModelsPreviewRouteImport.update({
+  id: '/models-preview',
+  path: '/models-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NewStudentsRoute = NewStudentsRouteImport.update({
@@ -160,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/introductory-flights': typeof IntroductoryFlightsRoute
   '/local-training': typeof LocalTrainingRoute
   '/locations': typeof LocationsRoute
+  '/models-preview': typeof ModelsPreviewRoute
   '/new-students': typeof NewStudentsRoute
   '/programs': typeof ProgramsRouteWithChildren
   '/rates': typeof RatesRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/introductory-flights': typeof IntroductoryFlightsRoute
   '/local-training': typeof LocalTrainingRoute
   '/locations': typeof LocationsRoute
+  '/models-preview': typeof ModelsPreviewRoute
   '/new-students': typeof NewStudentsRoute
   '/rates': typeof RatesRoute
   '/scenic-flights': typeof ScenicFlightsRoute
@@ -210,6 +218,7 @@ export interface FileRoutesById {
   '/introductory-flights': typeof IntroductoryFlightsRoute
   '/local-training': typeof LocalTrainingRoute
   '/locations': typeof LocationsRoute
+  '/models-preview': typeof ModelsPreviewRoute
   '/new-students': typeof NewStudentsRoute
   '/programs': typeof ProgramsRouteWithChildren
   '/rates': typeof RatesRoute
@@ -237,6 +246,7 @@ export interface FileRouteTypes {
     | '/introductory-flights'
     | '/local-training'
     | '/locations'
+    | '/models-preview'
     | '/new-students'
     | '/programs'
     | '/rates'
@@ -262,6 +272,7 @@ export interface FileRouteTypes {
     | '/introductory-flights'
     | '/local-training'
     | '/locations'
+    | '/models-preview'
     | '/new-students'
     | '/rates'
     | '/scenic-flights'
@@ -286,6 +297,7 @@ export interface FileRouteTypes {
     | '/introductory-flights'
     | '/local-training'
     | '/locations'
+    | '/models-preview'
     | '/new-students'
     | '/programs'
     | '/rates'
@@ -312,6 +324,7 @@ export interface RootRouteChildren {
   IntroductoryFlightsRoute: typeof IntroductoryFlightsRoute
   LocalTrainingRoute: typeof LocalTrainingRoute
   LocationsRoute: typeof LocationsRoute
+  ModelsPreviewRoute: typeof ModelsPreviewRoute
   NewStudentsRoute: typeof NewStudentsRoute
   ProgramsRoute: typeof ProgramsRouteWithChildren
   RatesRoute: typeof RatesRoute
@@ -395,6 +408,13 @@ declare module '@tanstack/react-router' {
       path: '/locations'
       fullPath: '/locations'
       preLoaderRoute: typeof LocationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/models-preview': {
+      id: '/models-preview'
+      path: '/models-preview'
+      fullPath: '/models-preview'
+      preLoaderRoute: typeof ModelsPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/new-students': {
@@ -516,6 +536,7 @@ const rootRouteChildren: RootRouteChildren = {
   IntroductoryFlightsRoute: IntroductoryFlightsRoute,
   LocalTrainingRoute: LocalTrainingRoute,
   LocationsRoute: LocationsRoute,
+  ModelsPreviewRoute: ModelsPreviewRoute,
   NewStudentsRoute: NewStudentsRoute,
   ProgramsRoute: ProgramsRouteWithChildren,
   RatesRoute: RatesRoute,
