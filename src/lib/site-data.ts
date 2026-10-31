@@ -108,7 +108,7 @@ export const fleet = [
 // field elevation, pattern altitude, active runway and pattern direction.
 // Runway endpoints are measured on each USGS aerial (1500 x 1500 px).
 export const airportTraffic = {
-  KLXL: { ident: "KLXL", elevation: 1123, tpaAgl: 1000, runway: "13", side: "left", threshold: { x: 566, y: 597 }, end: { x: 932, y: 911 }, offset: 330, extension: 170, aircraft: ["N6717A", "N8570B", "N3353P"] },
-  "18V": { ident: "18V", elevation: 4965, tpaAgl: 1000, runway: "15", side: "left", threshold: { x: 733, y: 632 }, end: { x: 840, y: 950 }, offset: 300, extension: 150, aircraft: ["N7108G", "N6641F"] },
-  P52: { ident: "P52", elevation: 3560, tpaAgl: 800, runway: "14", side: "left", threshold: { x: 680, y: 590 }, end: { x: 885, y: 925 }, offset: 300, extension: 150, aircraft: ["N8570B", "N11059"] },
+  KLXL: { ident: "KLXL", elevation: 1123, tpaAgl: 1000, runway: "13", runwayFt: 4010, side: "left", threshold: { x: 566, y: 597 }, end: { x: 932, y: 911 }, offset: 330, extension: 170, aircraft: ["N6717A", "N8570B", "N3353P"] },
+  "18V": { ident: "18V", elevation: 4965, tpaAgl: 1000, runway: "15", runwayFt: 4100, side: "left", threshold: { x: 733, y: 632 }, end: { x: 840, y: 950 }, offset: 300, extension: 150, aircraft: ["N7108G", "N6641F"] },
+  P52: { ident: "P52", elevation: 3560, tpaAgl: 800, runway: "14", runwayFt: 4250, side: "left", threshold: { x: 680, y: 590 }, end: { x: 885, y: 925 }, offset: 300, extension: 150, aircraft: ["N8570B", "N11059"] },
 } as const satisfies Record<string, import("./traffic-pattern").PatternAirport>;

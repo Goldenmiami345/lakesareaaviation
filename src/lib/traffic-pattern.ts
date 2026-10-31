@@ -19,6 +19,8 @@ export type PatternAirport = {
   offset: number;
   /** Upwind / final extension beyond each runway end, image px. */
   extension: number;
+  /** Published length of the active runway, feet. */
+  runwayFt: number;
   aircraft: readonly string[];
 };
 
@@ -76,4 +78,40 @@ export function samplePattern(a: PatternAirport, t: number, points = patternWayp
   }
   const p = points[0]!;
   return { x: p.x, y: p.y, heading: 0, agl: 0, msl: a.elevation, knots: 0, phase: p.phase };
+}
+
+/** Feet per image pixel, measured from the active runway's published length. */
+export function feetPerPixel(a: PatternAirport) {
+  return a.runwayFt / (Math.hypot(a.end.x - a.threshold.x, a.end.y - a.threshold.y) || 1);
+}
+
+/** Seconds for one full circuit flown at each leg's real ground speed. */
+export function lapSeconds(a: PatternAirport, points = patternWaypoints(a)) {
+  const fpp = feetPerPixel(a);
+  let s = 0;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p = points[i]!, q = points[i + 1]!;
+    const kt = Math.max(30, (p.knots + q.knots) / 2);
+    s += (Math.hypot(q.x - p.x, q.y - p.y) * fpp) / (kt * 1.68781);
+  }
+  return s;
+}
+
+/** Position after `seconds` of real-time flight around the circuit. */
+export function sampleAtTime(a: PatternAirport, seconds: number, points = patternWaypoints(a)): PatternSample {
+  const fpp = feetPerPixel(a);
+  const durs = points.slice(0, -1).map((p, i) => {
+    const q = points[i + 1]!;
+    return (Math.hypot(q.x - p.x, q.y - p.y) * fpp) / (Math.max(30, (p.knots + q.knots) / 2) * 1.68781);
+  });
+  const lap = durs.reduce((s, d) => s + d, 0) || 1;
+  let t = ((seconds % lap) + lap) % lap;
+  let dist = 0;
+  const lens = points.slice(0, -1).map((p, i) => Math.hypot(points[i + 1]!.x - p.x, points[i + 1]!.y - p.y));
+  const total = lens.reduce((s, l) => s + l, 0) || 1;
+  for (let i = 0; i < durs.length; i++) {
+    if (t <= durs[i]! || i === durs.length - 1) { dist += lens[i]! * Math.min(1, t / (durs[i]! || 1)); break; }
+    t -= durs[i]!; dist += lens[i]!;
+  }
+  return samplePattern(a, dist / total, points);
 }
