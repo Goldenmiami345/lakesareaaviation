@@ -84,15 +84,14 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const renderScroll = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(render); };
     const onScroll = () => { renderScroll(); scheduleSettle(); };
     const onMove = (e: PointerEvent) => { mx = e.clientX / window.innerWidth - 0.5; my = e.clientY / window.innerHeight - 0.5; renderScroll(); };
-    // One gesture = one stage: a wheel burst or swipe advances exactly one step
-    // and locks until the gesture settles, so momentum can never skip stages.
-    let locked = false;
-    let unlockTimer = 0;
-    const lock = () => {
-      locked = true;
-      window.clearTimeout(unlockTimer);
-      unlockTimer = window.setTimeout(() => { locked = false; }, JOURNEY_GESTURE_LOCK_MS);
-    };
+    // One gesture = one stage. Each step is an eased glide driven here (native
+    // smooth scroll varies by browser and can crawl), and a fresh gesture during
+    // a glide chains straight to the next stage, so the page never feels frozen.
+    let anim = 0;
+    let animTarget: number | null = null;
+    let lastStepAt = -1e9;
+    let lastWheelAt = 0;
+    let lastWheelDelta = 0;
     const gestureProgress = () => {
       const el = sectionRef.current;
       if (!el) return null;
@@ -102,36 +101,63 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const total = Math.max(1, el.offsetHeight - vh);
       return Math.max(0, Math.min(1, -rect.top / total));
     };
+    // While gliding, gestures count from the stage being travelled to.
+    const currentProgress = () => (animTarget !== null ? journeyLanding(animTarget, n) : gestureProgress());
     const stepTo = (target: number) => {
       const el = sectionRef.current;
       if (!el) return;
       const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
       const total = Math.max(1, el.offsetHeight - vh);
       const top = window.scrollY + el.getBoundingClientRect().top + total * journeyLanding(target, n);
-      window.scrollTo({ top, behavior: reduce ? "instant" : "smooth" });
+      lastStepAt = performance.now();
+      cancelAnimationFrame(anim);
+      if (reduce) { anim = 0; animTarget = null; window.scrollTo({ top, behavior: "instant" }); return; }
+      animTarget = target;
+      const from = window.scrollY;
+      const start = performance.now();
+      const tick = (now: number) => {
+        const t = Math.min(1, (now - start) / JOURNEY_GLIDE_MS);
+        window.scrollTo({ top: from + (top - from) * journeyEase(t), behavior: "instant" });
+        if (t < 1) anim = requestAnimationFrame(tick);
+        else { anim = 0; animTarget = null; }
+      };
+      anim = requestAnimationFrame(tick);
     };
     const onWheel = (e: WheelEvent) => {
-      const progress = gestureProgress();
-      if (progress === null) return;
-      if (locked) { e.preventDefault(); lock(); return; }
+      const progress = currentProgress();
+      if (progress === null || e.deltaY === 0) return;
+      const now = performance.now();
+      const gapMs = now - lastWheelAt;
+      const lastDelta = lastWheelDelta;
+      lastWheelAt = now;
+      lastWheelDelta = e.deltaY;
       const direction: 1 | -1 = e.deltaY > 0 ? 1 : -1;
-      if (direction === 1 && progress < journeyLanding(0, n)) return;
+      if (direction === 1 && animTarget === null && progress < journeyLanding(0, n)) return;
+      const sinceStepMs = now - lastStepAt;
+      const reversed = Math.sign(lastDelta) !== Math.sign(e.deltaY) && sinceStepMs > 120;
+      const fresh = reversed || journeyWheelStartsGesture({ gapMs, delta: e.deltaY, lastDelta, sinceStepMs });
       const target = journeyGestureTarget(progress, n, direction);
+      if (!fresh) {
+        // Inertia from the gesture that already stepped: absorb it.
+        if (anim || sinceStepMs < 1600) e.preventDefault();
+        return;
+      }
       if (target === null) return;
       e.preventDefault();
-      lock();
       stepTo(target);
     };
     let touchY = 0;
     let touchX = 0;
     let touchActive = false;
+    let touchStepped = false;
     let touchTarget: number | null = null;
     let touchProgress: number | null = null;
     const onTouchStart = (e: TouchEvent) => {
       const touch = e.touches[0];
       touchActive = !reduce && e.touches.length === 1 && Boolean(touch);
       touchTarget = null;
-      touchProgress = touchActive ? gestureProgress() : null;
+      touchStepped = false;
+      touchProgress = touchActive ? currentProgress() : null;
       touchY = touch?.clientY ?? 0;
       touchX = touch?.clientX ?? 0;
       clearSettle();
@@ -146,22 +172,25 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       if (target === null) return;
       if (e.cancelable) e.preventDefault();
       touchTarget = target;
+      // Start gliding as soon as the swipe is clear — no waiting for the finger to lift.
+      if (!touchStepped && Math.abs(dy) >= JOURNEY_SWIPE_PX) {
+        touchStepped = true;
+        stepTo(target);
+      }
     };
     const onTouchCancel = () => { touchActive = false; touchTarget = null; touchProgress = null; };
     const onTouchEnd = (e: TouchEvent) => {
       const target = touchTarget;
+      const stepped = touchStepped;
       onTouchCancel();
-      if (target === null) return;
+      if (target === null || stepped) return;
+      // A short, quick flick still counts as one step.
       const dy = touchY - (e.changedTouches[0]?.clientY ?? touchY);
-      if (Math.abs(dy) < JOURNEY_SWIPE_PX) return;
-      if (locked) return;
-      lock();
-      stepTo(target);
+      if (Math.abs(dy) >= 20) stepTo(target);
     };
     // Momentum catch-up: a fling that starts before the section pins scrolls
     // natively and can stop mid-stage. Once the scroll goes quiet while the
-    // viewport is pinned, snap to the nearest stage landing — one swipe still
-    // covers exactly one page.
+    // viewport is pinned, glide to the nearest stage landing.
     const SETTLE_DELAY_MS = 160;
     const SETTLE_TOLERANCE_PX = 40;
     let settleTimer = 0;
@@ -173,10 +202,10 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     };
     const scheduleSettle = () => {
       clearSettle();
+      if (anim) return;
       settleTimer = window.setTimeout(() => {
         settleTimer = 0;
-        if (reduce || touchActive) return;
-        if (locked) { scheduleSettle(); return; }
+        if (reduce || touchActive || anim) return;
         const el = sectionRef.current;
         if (!el) return;
         const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
