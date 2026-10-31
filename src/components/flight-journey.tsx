@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { Button } from "./ui/button";
-import { journeyFrame, journeyStop, journeyNearestLanding, JOURNEY_STAGE_SVH } from "../lib/journey-pacing";
+import { journeyFrame, journeyStop, JOURNEY_STAGE_SVH, pageStep, nearestPage, currentPage, type JourneyPage, type PageSegment } from "../lib/journey-pacing";
 import { airportTraffic } from "../lib/site-data";
 import type { PatternAirport } from "../lib/traffic-pattern";
 import { TrafficPattern } from "./traffic-pattern";
@@ -35,7 +35,6 @@ export const airportStages: Stage[] = [
   { code: "AZ", label: "Cottonwood", hud: "P52 · 1001 W Mingus Ave", time: "P52", title: "Cottonwood, Arizona.", text: "Cottonwood Municipal Airport", img: cw, alt: "Public-domain USGS aerial photo of Cottonwood Municipal Airport (P52) runway 14/32, ramp and surrounding Verde Valley terrain", cta: "Build my training plan", location: "P52", w: 1500, h: 1500, zoom: 0.18, zoomIn: 0.03, traffic: airportTraffic.P52 },
 ];
 
-const snapOwners = new Set<Element>();
 // Traffic-pattern airplanes on the airport aerials.
 const SHOW_TRAFFIC = true;
 
@@ -57,14 +56,168 @@ export function glideTo(top: number, instant = false) {
 // drop any engaged snap first so mandatory snapping can't pull the page onto a stop.
 export function jumpToPageTop() {
   const root = document.documentElement;
-  snapOwners.clear();
-  root.classList.remove("journey-snap");
   root.classList.add("journey-free");
+  cancelAnimationFrame(tweenFrame); paging = false;
   window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
     if (window.scrollY !== 0) window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     root.classList.remove("journey-free");
   }));
+}
+
+
+// ---- One swipe = one page ----
+// Inside the home journeys we page ourselves instead of native snap: iOS only
+// advances a mandatory snap past a distance/velocity threshold, so gentle
+// swipes sprang back. Any swipe past PAGE_SWIPE_PX, or any fresh wheel
+// notch, animates to the adjacent page; input is ignored until it lands.
+const PAGE_SWIPE_PX = 8;
+const PAGE_MS = 500;
+const journeys = new Map<HTMLElement, { n: number; vh: () => number }>();
+let paging = false;
+let pagingUntil = 0;
+let tweenFrame = 0;
+let controllerRefs = 0;
+let removeController: (() => void) | null = null;
+
+function journeyPages(): JourneyPage[] {
+  const list = [...journeys].sort((a, b) => a[0].offsetTop - b[0].offsetTop);
+  if (!list.length) return [];
+  const pages: JourneyPage[] = [{ y: 0 }];
+  let after = 0;
+  for (const [el, { n, vh }] of list) {
+    const base = window.scrollY + el.getBoundingClientRect().top;
+    const total = Math.max(1, el.offsetHeight - vh());
+    for (let i = 0; i < n; i += 1) pages.push(i === n - 1 ? { y: Math.round(base + total * journeyStop(i, n)), hold: Math.round(base + total) } : { y: Math.round(base + total * journeyStop(i, n)) });
+    after = Math.round(base + el.offsetHeight);
+  }
+  pages.push({ y: after });
+  return pages;
+}
+
+const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
+
+function runPath(path: PageSegment[]) {
+  cancelAnimationFrame(tweenFrame);
+  paging = true;
+  const moving = path.filter((s) => !s.instant).length || 1;
+  const dur = PAGE_MS / moving;
+  let k = 0;
+  const nextSeg = () => {
+    const seg = path[k++];
+    if (!seg) { paging = false; pagingUntil = performance.now() + 60; return; }
+    if (seg.instant) { window.scrollTo({ top: seg.y, behavior: "instant" }); nextSeg(); return; }
+    const from = window.scrollY, start = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / dur);
+      window.scrollTo({ top: from + (seg.y - from) * easeOut(t), behavior: "instant" });
+      if (t < 1) tweenFrame = requestAnimationFrame(tick); else nextSeg();
+    };
+    tweenFrame = requestAnimationFrame(tick);
+  };
+  nextSeg();
+}
+
+export function goToJourneyPage(y: number, instant = false) {
+  if (instant) { cancelAnimationFrame(tweenFrame); paging = false; window.scrollTo({ top: y, behavior: "instant" }); return; }
+  runPath([{ y, instant: false }]);
+}
+
+function installController() {
+  controllerRefs += 1;
+  if (import.meta.env.DEV) (window as unknown as { __journeyPages?: () => JourneyPage[] }).__journeyPages = journeyPages;
+  if (removeController) return;
+  const root = document.documentElement;
+  const reduce = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const busy = () => paging || performance.now() < pagingUntil;
+  const inRange = (pages: JourneyPage[]) => pages.length > 0 && window.scrollY <= pages[pages.length - 1]!.y + 2;
+  const step = (dir: 1 | -1) => {
+    const path = pageStep(journeyPages(), window.scrollY, dir);
+    if (!path) return false;
+    runPath(path);
+    return true;
+  };
+  let lastWheel = 0, lastDelta = 0;
+  const onWheel = (e: WheelEvent) => {
+    if (reduce() || e.ctrlKey || Math.abs(e.deltaY) < Math.abs(e.deltaX) || root.classList.contains("journey-free")) return;
+    const pages = journeyPages();
+    if (!inRange(pages)) return;
+    const now = performance.now(), delta = Math.abs(e.deltaY);
+    const fresh = now - lastWheel > 200 || delta > lastDelta * 1.6 + 4;
+    lastWheel = now; lastDelta = delta;
+    const dir = e.deltaY > 0 ? 1 : -1;
+    if (busy() || !fresh) { if (pageStep(pages, window.scrollY, dir) || busy()) e.preventDefault(); return; }
+    if (step(dir)) e.preventDefault();
+  };
+  let g: { x: number; y: number; decided: boolean; claimed: boolean; fired: boolean } | null = null;
+  let touching = false;
+  const onTouchStart = (e: TouchEvent) => {
+    touching = true;
+    const t = e.touches[0];
+    g = e.touches.length === 1 && t && !reduce() ? { x: t.clientX, y: t.clientY, decided: false, claimed: false, fired: false } : null;
+  };
+  const onTouchMove = (e: TouchEvent) => {
+    const t = e.touches[0];
+    if (!g || !t || e.touches.length !== 1) { g = null; return; }
+    const dx = g.x - t.clientX, dy = g.y - t.clientY;
+    if (!g.decided) {
+      if (Math.abs(dx) < 3 && Math.abs(dy) < 3) return; // taps with jitter stay taps
+      g.decided = true;
+      if (Math.abs(dx) > Math.abs(dy) || root.classList.contains("journey-free")) { g = null; return; }
+      const pages = journeyPages();
+      g.claimed = inRange(pages) && (busy() || !!pageStep(pages, window.scrollY, dy > 0 ? 1 : -1));
+      if (!g.claimed) { g = null; return; }
+    }
+    if (e.cancelable) e.preventDefault();
+    if (!g.fired && !busy() && Math.abs(dy) >= PAGE_SWIPE_PX) { g.fired = true; step(dy > 0 ? 1 : -1); }
+  };
+  let settleTimer = 0;
+  const onTouchEnd = (e: TouchEvent) => { if (e.touches.length === 0) { touching = false; g = null; scheduleSettle(); } };
+  // Native momentum arriving from below stops at the exit page; anything left
+  // resting between pages (keyboard, scrollbar) settles onto the nearest one.
+  let lastY = window.scrollY;
+  const scheduleSettle = () => {
+    window.clearTimeout(settleTimer);
+    settleTimer = window.setTimeout(() => {
+      if (touching || busy() || reduce() || root.classList.contains("journey-free")) return;
+      const pages = journeyPages();
+      if (!inRange(pages) || currentPage(pages, window.scrollY) >= 0) return;
+      const p = pages[nearestPage(pages, window.scrollY)];
+      if (p) runPath([{ y: p.y, instant: false }]);
+    }, 180);
+  };
+  const onScroll = () => {
+    const y = window.scrollY;
+    if (!busy() && !touching && !reduce() && !root.classList.contains("journey-free")) {
+      const pages = journeyPages();
+      const exit = pages[pages.length - 1]?.y;
+      if (exit !== undefined && lastY >= exit - 1 && y < exit - 1) { window.scrollTo({ top: exit, behavior: "instant" }); lastY = exit; return; }
+    }
+    lastY = y;
+    scheduleSettle();
+  };
+  window.addEventListener("wheel", onWheel, { passive: false });
+  window.addEventListener("touchstart", onTouchStart, { passive: true });
+  window.addEventListener("touchmove", onTouchMove, { passive: false });
+  window.addEventListener("touchend", onTouchEnd, { passive: true });
+  window.addEventListener("touchcancel", onTouchEnd, { passive: true });
+  window.addEventListener("scroll", onScroll, { passive: true });
+  removeController = () => {
+    window.removeEventListener("wheel", onWheel);
+    window.removeEventListener("touchstart", onTouchStart);
+    window.removeEventListener("touchmove", onTouchMove);
+    window.removeEventListener("touchend", onTouchEnd);
+    window.removeEventListener("touchcancel", onTouchEnd);
+    window.removeEventListener("scroll", onScroll);
+    window.clearTimeout(settleTimer);
+    cancelAnimationFrame(tweenFrame);
+    paging = false;
+  };
+}
+
+function uninstallController() {
+  controllerRefs -= 1;
+  if (controllerRefs <= 0 && removeController) { removeController(); removeController = null; controllerRefs = 0; }
 }
 
 export function jumpToJourney(id: string, index: number) {
@@ -90,16 +243,6 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     let mx = 0, my = 0, frame = 0, last = -1;
     let shown: number | null = null;
     let prevTime = 0;
-    let armed = false, touching = false, settleTimer = 0, holdUntil = 0;
-    const root = document.documentElement;
-    const engage = () => {
-      const node = sectionRef.current;
-      if (!node || !armed || touching || snapOwners.has(node)) return;
-      if (performance.now() < holdUntil) { scheduleSettle(); return; }
-      snapOwners.add(node);
-      root.classList.add("journey-snap");
-    };
-    const scheduleSettle = () => { window.clearTimeout(settleTimer); settleTimer = window.setTimeout(engage, 180); };
     const n = stages.length;
     const render = (now: number = performance.now()) => {
       const el = sectionRef.current;
@@ -108,15 +251,6 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const viewportHeight = viewportRef.current?.offsetHeight ?? window.innerHeight;
       const total = Math.max(1, el.offsetHeight - viewportHeight);
       const scrolled = journeyFrame(-rect.top / total, n);
-      // Snapping only engages between the first and last pages; the way in from
-      // the section above and the way out below scroll 1:1 with the visitor.
-      const along = -rect.top / total;
-      // Snap never switches ON mid-scroll: entering the range only arms it,
-      // and it engages once scrolling has settled (or on a fresh wheel gesture).
-      // Leaving the range switches it off immediately, so corridors stay 1:1.
-      const inRange = !reduce && along >= journeyStop(0, n) - 0.003 && along <= journeyStop(n - 1, n) + 0.003;
-      armed = inRange;
-      if (!inRange && snapOwners.delete(el)) root.classList.toggle("journey-snap", snapOwners.size > 0);
       if (fadeTopRef.current) fadeTopRef.current.style.opacity = Math.max(0, Math.min(1, rect.top / (viewportHeight * 0.6))).toFixed(3);
       if (fadeBottomRef.current) fadeBottomRef.current.style.opacity = Math.max(0, Math.min(1, (viewportHeight - rect.bottom) / (viewportHeight * 0.6))).toFixed(3);
       // Native snap glides are quick; ease a continuous "slide position" toward the
@@ -163,119 +297,28 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     };
     const renderScroll = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(render); };
     const onMove = (e: PointerEvent) => { mx = e.clientX / window.innerWidth - 0.5; my = e.clientY / window.innerHeight - 0.5; renderScroll(); };
-    const onScroll = () => { renderScroll(); scheduleSettle(); };
-    // One page per swipe/flick is enforced by native mandatory snap stops (see
-    // JSX), enabled on <html> only while this journey is pinned. A mouse wheel
-    // notch steps exactly one page: the first event of a gesture glides to the
-    // adjacent stop; following events are swallowed for a fixed, non-extending
-    // window so trackpad inertia can't skip pages or freeze the page.
     const el = sectionRef.current;
-    let lastWheel = 0, lastDelta = 0, lockUntil = 0;
-    const stopTop = (i: number) => {
-      if (!el) return 0;
-      const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
-      const total = Math.max(1, el.offsetHeight - vh);
-      const base = window.scrollY + el.getBoundingClientRect().top;
-      if (i < 0) return base - vh;
-      if (i >= n) return base + total;
-      return base + total * journeyStop(i, n);
-    };
-    const onWheel = (e: WheelEvent) => {
-      if (!el || reduce || e.ctrlKey || Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
-      if (root.classList.contains("journey-free")) return;
-      const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
-      const rect = el.getBoundingClientRect();
-      const dir = e.deltaY > 0 ? 1 : -1;
-      if (!snapOwners.has(el)) {
-        // Entering from a corridor: follow the wheel 1:1 but stop exactly on
-        // the first (or, from below, last) page instead of overshooting it.
-        const px = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * vh : e.deltaY;
-        const edge = dir > 0 ? stopTop(0) : stopTop(n - 1);
-        const y = window.scrollY;
-        if (performance.now() >= holdUntil && ((dir > 0 && y < edge - 1 && y + px > edge) || (dir < 0 && y > edge + 1 && y + px < edge))) {
-          e.preventDefault();
-          window.scrollTo({ top: edge, behavior: Math.abs(px) >= 50 ? "smooth" : "instant" });
-          lastWheel = performance.now(); lastDelta = Math.abs(e.deltaY);
-          return;
-        }
-        // A fresh wheel gesture inside the armed range engages stepping; a
-        // continuing stream (still crossing the corridor) stays native 1:1.
-        const gap = performance.now() - lastWheel;
-        lastWheel = performance.now(); lastDelta = Math.abs(e.deltaY);
-        if (!armed || gap < 180) return;
-        engage();
-        if (!snapOwners.has(el)) return;
-        lastWheel = 0;
-      }
-      const total = Math.max(1, el.offsetHeight - vh);
-      const current = journeyNearestLanding(Math.max(0, Math.min(1, -rect.top / total)), n);
-      // At the first/last page, leaving is plain native scrolling, 1:1.
-      if ((dir > 0 && current >= n - 1) || (dir < 0 && current <= 0)) {
-        // Snap goes off before the exit corridor; we move the page by exactly
-        // the wheel's delta so leaving stays 1:1 (Chromium would re-snap a
-        // native wheel scroll that began while snapping was on).
-        release();
-        e.preventDefault();
-        const px = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * vh : e.deltaY;
-        window.scrollBy({ top: px, behavior: Math.abs(px) >= 50 ? "smooth" : "instant" });
-        return;
-      }
-      const now = performance.now();
-      const delta = Math.abs(e.deltaY);
-      const fresh = now - lastWheel > 180 || delta > lastDelta * 1.6 + 4;
-      lastWheel = now; lastDelta = delta;
-      e.preventDefault();
-      if (now < lockUntil || !fresh) return;
-      lockUntil = now + 650;
-      window.scrollTo({ top: stopTop(current + dir), behavior: "smooth" });
-    };
-    // Briefly lift snapping so an outward scroll at either end isn't pulled back.
-    let releaseTimer = 0;
-    const release = () => {
-      if (el) snapOwners.delete(el);
-      root.classList.toggle("journey-snap", snapOwners.size > 0);
-      holdUntil = performance.now() + 700;
-      window.clearTimeout(releaseTimer);
-    };
-    let touchY = 0;
-    const onTouchStart = (e: TouchEvent) => { touching = true; window.clearTimeout(settleTimer); touchY = e.touches[0]?.clientY ?? 0; };
-    const onTouchEnd = (e: TouchEvent) => { if (e.touches.length === 0) { touching = false; scheduleSettle(); } };
-    const onTouchMove = (e: TouchEvent) => {
-      if (!el || reduce || !snapOwners.has(el) || e.touches.length !== 1) return;
-      const dy = touchY - (e.touches[0]?.clientY ?? touchY);
-      if (Math.abs(dy) < 6) return;
-      const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
-      const total = Math.max(1, el.offsetHeight - vh);
-      const current = journeyNearestLanding(Math.max(0, Math.min(1, -el.getBoundingClientRect().top / total)), n);
-      if ((dy > 0 && current >= n - 1) || (dy < 0 && current <= 0)) release();
-    };
+    const vh = () => viewportRef.current?.offsetHeight ?? window.innerHeight;
+    if (el) journeys.set(el, { n, vh });
+    installController();
     const onJump = (e: Event) => {
-      const d = (e as CustomEvent<{ id: string; index: number }>).detail;
-      if (d?.id === id) glideTo(stopTop(d.index), true);
+      const d = (e as CustomEvent<{ id: string; index: number; animate?: boolean }>).detail;
+      if (d?.id !== id || !el) return;
+      const page = journeyPages().find((p, k, all) => k > 0 && Math.abs(p.y - (window.scrollY + el.getBoundingClientRect().top + Math.max(1, el.offsetHeight - vh()) * journeyStop(d.index, n))) < 3) ;
+      const y = page?.y ?? Math.round(window.scrollY + el.getBoundingClientRect().top + Math.max(1, el.offsetHeight - vh()) * journeyStop(d.index, n));
+      goToJourneyPage(y, !d.animate);
     };
     render();
-    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("scroll", renderScroll, { passive: true });
     window.addEventListener("resize", renderScroll);
-    window.addEventListener("wheel", onWheel, { passive: false });
     window.addEventListener("journey:jump", onJump);
-    window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchmove", onTouchMove, { passive: true });
-    window.addEventListener("touchend", onTouchEnd, { passive: true });
-    window.addEventListener("touchcancel", onTouchEnd, { passive: true });
     if (!reduce) window.addEventListener("pointermove", onMove, { passive: true });
     return () => {
       cancelAnimationFrame(frame);
-      window.removeEventListener("wheel", onWheel);
+      if (el) journeys.delete(el);
+      uninstallController();
       window.removeEventListener("journey:jump", onJump);
-      window.removeEventListener("touchstart", onTouchStart);
-      window.removeEventListener("touchmove", onTouchMove);
-      window.clearTimeout(releaseTimer);
-      window.clearTimeout(settleTimer);
-      window.removeEventListener("touchend", onTouchEnd);
-      window.removeEventListener("touchcancel", onTouchEnd);
-      if (el) snapOwners.delete(el);
-      root.classList.toggle("journey-snap", snapOwners.size > 0);
-      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("scroll", renderScroll);
       window.removeEventListener("resize", renderScroll);
       window.removeEventListener("pointermove", onMove);
     };
@@ -287,6 +330,12 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       if (!video) return;
       if (videoIndex === active && !reduce) void video.play().catch(() => undefined);
       else video.pause();
+    });
+    // Decode the next/previous stage images before they can become visible.
+    layerRefs.current.forEach((layer, i) => {
+      if (Math.abs(i - active) > 1) return;
+      const img = layer?.querySelector("img");
+      if (img) void img.decode().catch(() => undefined);
     });
   }, [active]);
 
@@ -301,7 +350,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       ))}
       <div ref={viewportRef} className="sticky top-0 h-svh overflow-hidden">
         {stages.map((st, i) => (
-          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="journey-layer absolute -inset-[2%] will-change-transform backface-hidden" style={{ zIndex: stages.length - i }}>
+          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="journey-layer absolute -inset-[2%] bg-ink will-change-transform backface-hidden" style={{ zIndex: stages.length - i }}>
             {st.video ? (
               <video
                 ref={(el) => { videoRefs.current[i] = el; }}
@@ -312,11 +361,11 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
                 loop
                 playsInline
                 preload="metadata"
-                className="h-full w-full object-cover"
+                className="h-full w-full bg-ink object-cover"
                 style={{ objectPosition: st.position ?? "center" }}
               />
             ) : (
-              <img src={st.img} alt={st.alt} width={st.w ?? 1920} height={st.h ?? 1088} loading={i < 2 ? "eager" : "lazy"} decoding="async" className="h-full w-full object-cover" style={{ objectPosition: st.position ?? "center" }} />
+              <img src={st.img} alt={st.alt} width={st.w ?? 1920} height={st.h ?? 1088} loading={i <= active + 2 ? "eager" : "lazy"} decoding="async" className="h-full w-full bg-ink object-cover" style={{ objectPosition: st.position ?? "center" }} />
             )}
             {SHOW_TRAFFIC && st.traffic && <TrafficPattern airport={st.traffic} active={i === active} />}
             {st.perspective && <TrafficPerspective active={i === active} />}

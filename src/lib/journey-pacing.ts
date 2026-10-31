@@ -43,3 +43,51 @@ export function journeyNearestLanding(progress: number, count: number) {
 export function journeyStop(index: number, count: number) {
   return index <= 0 ? 0 : journeyLanding(index, count);
 }
+
+// ---- Custom paging (replaces native snap) ----
+// A page is a resting scroll position. `hold` marks the end of a stretch that
+// renders the same frame as `y` (the pinned tail after a journey's last stage),
+// which paging skips instantly so no swipe is spent on dead length.
+export type JourneyPage = { y: number; hold?: number };
+export type PageSegment = { y: number; instant: boolean };
+
+const TOL = 2;
+
+export function currentPage(pages: JourneyPage[], y: number) {
+  return pages.findIndex((p) => y >= p.y - TOL && y <= (p.hold ?? p.y) + TOL);
+}
+
+// Path for one swipe/notch in `dir` from scroll position `y`, or null when the
+// move leaves the paged range (native scrolling takes over).
+export function pageStep(pages: JourneyPage[], y: number, dir: 1 | -1): PageSegment[] | null {
+  if (!pages.length) return null;
+  const j = currentPage(pages, y);
+  if (dir > 0) {
+    if (j >= 0) {
+      const next = pages[j + 1];
+      if (!next) return null;
+      const from = pages[j]!;
+      const path: PageSegment[] = [];
+      if (from.hold !== undefined && y < from.hold - TOL) path.push({ y: from.hold, instant: true });
+      path.push({ y: next.y, instant: false });
+      return path;
+    }
+    const next = pages.find((p) => p.y > y);
+    return next ? [{ y: next.y, instant: false }] : null;
+  }
+  const prevIndex = j >= 0 ? j - 1 : pages.map((p) => (p.hold ?? p.y) < y).lastIndexOf(true);
+  const prev = pages[prevIndex];
+  if (!prev) return null;
+  const path: PageSegment[] = [{ y: prev.hold ?? prev.y, instant: false }];
+  if (prev.hold !== undefined) path.push({ y: prev.y, instant: true });
+  return path;
+}
+
+export function nearestPage(pages: JourneyPage[], y: number) {
+  let best = 0, dist = Infinity;
+  pages.forEach((p, i) => {
+    const d = y < p.y ? p.y - y : y > (p.hold ?? p.y) ? y - (p.hold ?? p.y) : 0;
+    if (d < dist) { dist = d; best = i; }
+  });
+  return best;
+}
