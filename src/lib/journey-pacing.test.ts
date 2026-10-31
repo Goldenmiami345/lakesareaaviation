@@ -1,6 +1,6 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { journeyFrame, journeyLanding, journeyNearestLanding, JOURNEY_HOLD, JOURNEY_STAGE_SVH , journeyStop } from "./journey-pacing";
+import { journeyFrame, journeyLanding, journeyNearestLanding, JOURNEY_HOLD, JOURNEY_STAGE_SVH, journeyStop, pageStep, nearestPage } from "./journey-pacing";
 
 describe("homepage journey pacing", () => {
 
@@ -59,4 +59,27 @@ describe("homepage journey pacing", () => {
 test("first journey page rests at the top of the section; later pages at their landings", () => {
   assert.equal(journeyStop(0, 6), 0);
   for (let i = 1; i < 6; i += 1) assert.equal(journeyStop(i, 6), journeyLanding(i, 6));
+});
+
+describe("one swipe = one page", () => {
+  // hero, 2 stages (last holds to 3000), exit page.
+  const pages = [{ y: 0 }, { y: 800 }, { y: 2000, hold: 3000 }, { y: 3800 }];
+  test("down from each page lands on exactly the next page", () => {
+    assert.deepEqual(pageStep(pages, 0, 1), [{ y: 800, instant: false }]);
+    assert.deepEqual(pageStep(pages, 800, 1), [{ y: 2000, instant: false }]);
+    assert.deepEqual(pageStep(pages, 2000, 1), [{ y: 3000, instant: true }, { y: 3800, instant: false }]);
+    assert.equal(pageStep(pages, 3800, 1), null);
+  });
+  test("up from each page lands on exactly the previous page, skipping dead length", () => {
+    assert.deepEqual(pageStep(pages, 3800, -1), [{ y: 3000, instant: false }, { y: 2000, instant: true }]);
+    assert.deepEqual(pageStep(pages, 2000, -1), [{ y: 800, instant: false }]);
+    assert.deepEqual(pageStep(pages, 800, -1), [{ y: 0, instant: false }]);
+    assert.equal(pageStep(pages, 0, -1), null);
+  });
+  test("between pages, a swipe goes to the neighbouring page in its direction", () => {
+    assert.deepEqual(pageStep(pages, 400, 1), [{ y: 800, instant: false }]);
+    assert.deepEqual(pageStep(pages, 400, -1), [{ y: 0, instant: false }]);
+    assert.equal(nearestPage(pages, 2500), 2);
+    assert.equal(nearestPage(pages, 3500), 3);
+  });
 });
