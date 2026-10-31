@@ -227,7 +227,7 @@ function installController() {
       follow.dy = dy; follow.max = Math.max(follow.max, dy);
       window.scrollTo({ top: Math.max(follow.base, Math.min(follow.target, follow.base + dy)), behavior: "instant" });
       window.clearTimeout(followTimer);
-      followTimer = window.setTimeout(releaseFollow, 150);
+      followTimer = window.setTimeout(releaseFollow, 350);
       return;
     }
     if (!g.fired && !busy() && Math.abs(dy) >= PAGE_SWIPE_PX) { g.fired = true; step(dy > 0 ? 1 : -1, true); }
