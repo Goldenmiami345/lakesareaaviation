@@ -17,6 +17,5 @@
 - The global accent theme is read from the public site_settings row; only a database-verified admin role may change it.
 - Scroll-journey stages may use optimized CDN video with a real-photo poster; video plays only while its stage is active to protect mobile performance.
 - Both homepage journeys use the shared pure journey-pacing mapping for reading windows, transitions, active steps, and click destinations; measure scrolling against the sticky viewport so imagery and copy stay synchronized on mobile.
-- Journey touch interception owns only interior vertical single-touch gestures; endpoint exits, pinch zoom, and reduced-motion scrolling remain native to prevent mobile scroll traps.
-- Journey steps glide with a fixed eased rAF animation (not native smooth scroll), absorb trailing wheel inertia instead of extending a timed lock, and let a fresh gesture chain mid-glide — so one gesture is one step without the page feeling frozen.
+- Journey one-page-per-swipe uses native mandatory scroll-snap stops (scroll-snap-stop: always), enabled on <html> only while a journey intersects the viewport; no custom wheel/touch interception, which previously caused stuck or frozen scrolling.
 - Scroll management is explicit in src/router.tsx (top-of-page reset on real navigations via an onResolved subscription); never re-enable TanStack's built-in scrollRestoration — its reset can fire from a late hydration settle and yank a scrolling visitor to the top.
