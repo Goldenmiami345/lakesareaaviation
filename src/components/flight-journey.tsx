@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Phone } from "lucide-react";
 import { Button } from "./ui/button";
-import { journeyFrame, journeyStop, JOURNEY_STAGE_SVH, pageStep, nearestPage, currentPage, type JourneyPage, type PageSegment } from "../lib/journey-pacing";
+import { journeyFrame, journeyStop, JOURNEY_STAGE_SVH, sectionAt, sectionStep, nearestSectionPage, type SectionPage, type PageSegment } from "../lib/journey-pacing";
 import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
 import { patternFor, pickRunway, type PatternField } from "../lib/traffic-pattern";
 import { useMetar } from "../lib/use-metar";
@@ -164,7 +164,7 @@ export function goToJourneyPage(y: number, instant = false) {
 
 function installController() {
   controllerRefs += 1;
-  if (import.meta.env.DEV) (window as unknown as { __journeyPages?: () => JourneyPage[] }).__journeyPages = journeyPages;
+  if (import.meta.env.DEV) (window as unknown as { __journeyPages?: () => SectionPage[] }).__journeyPages = journeyPages;
   if (removeController) return;
   const root = document.documentElement;
   const reduce = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -353,7 +353,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const onJump = (e: Event) => {
       const d = (e as CustomEvent<{ id: string; index: number; animate?: boolean }>).detail;
       if (d?.id !== id || !el) return;
-      const page = journeyPages().find((p, k, all) => k > 0 && Math.abs(p.y - (window.scrollY + el.getBoundingClientRect().top + Math.max(1, el.offsetHeight - vh()) * journeyStop(d.index, n))) < 3) ;
+      const page = journeyPages().find((p) => Math.abs(p.y - (window.scrollY + el.getBoundingClientRect().top + Math.max(1, el.offsetHeight - vh()) * journeyStop(d.index, n))) < 3) ;
       const y = page?.y ?? Math.round(window.scrollY + el.getBoundingClientRect().top + Math.max(1, el.offsetHeight - vh()) * journeyStop(d.index, n));
       goToJourneyPage(y, !d.animate);
     };
