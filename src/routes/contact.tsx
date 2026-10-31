@@ -3,7 +3,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { Car, Check, House, PlaneLanding } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageIntro, SiteLayout } from "../components/site-shell";
-import { locations, SCHOOL_PHONE, SCHOOL_PHONE_TEL } from "../lib/site-data";
+import { locations, SCHOOL_PHONE, SCHOOL_PHONE_TEL , fleet } from "../lib/site-data";
 
 type Rating = { id: string; name: string; days: number; cost: number; prerequisite?: string };
 const ratings: Rating[] = [
@@ -19,7 +19,8 @@ const ratings: Rating[] = [
 export const Route = createFileRoute("/contact")({
   staticData: { sitemap: true },
   head: () => ({ meta: meta("Build Your Training Plan | Lakes Area Aviation", "Select the ratings you have and want, then estimate your minimum training timeline, housing, and transportation.") }),
-  validateSearch: (search: Record<string, unknown>): { location?: string; program?: string } => ({
+  validateSearch: (search: Record<string, unknown>): { location?: string; program?: string; aircraft?: string } => ({
+    ...(typeof search["aircraft"] === "string" ? { aircraft: search["aircraft"] } : {}),
     ...(typeof search["location"] === "string" ? { location: search["location"] } : {}),
     ...(typeof search["program"] === "string" ? { program: search["program"] } : {}),
   }),
@@ -27,7 +28,8 @@ export const Route = createFileRoute("/contact")({
 });
 
 function ContactPage() {
-  const { location } = Route.useSearch();
+  const { location, aircraft } = Route.useSearch();
+  const plane = fleet.find((f) => aircraft && f.registration.toUpperCase() === aircraft.toUpperCase());
   const preferred = locations.find((l) => location && l.airport.toUpperCase().includes(location.toUpperCase()))?.city ?? "";
   const [earned, setEarned] = useState<string[]>([]);
   const [planned, setPlanned] = useState<string[]>(["cfi", "cfii"]);
@@ -93,7 +95,7 @@ function ContactPage() {
         {sent ? <div className="grid min-h-80 place-items-center bg-secondary p-8 text-center"><div><Check className="mx-auto size-10 text-primary" /><h2 className="mt-5 font-display text-4xl">Your plan is ready to review.</h2><p className="mt-3 text-muted-foreground">Call {SCHOOL_PHONE} to confirm dates, availability, pickup, and your written estimate.</p></div></div> : <div className="grid gap-10 lg:grid-cols-[.7fr_1.3fr]"><div><p className="eyebrow text-primary">Request a review</p><h2 className="mt-4 font-display text-4xl">Put real dates around your plan.</h2><a href={SCHOOL_PHONE_TEL} className="mt-7 inline-block font-display text-2xl text-primary">{SCHOOL_PHONE}</a></div><form onSubmit={(event: FormEvent<HTMLFormElement>) => { event.preventDefault(); setSent(true); }} className="grid gap-5 sm:grid-cols-2">
           <Field label="First name" /><Field label="Last name" /><Field label="Email" type="email" /><Field label="Phone" type="tel" />
           <Select key={preferred} label="Preferred location" options={locations.map(l => l.city)} defaultValue={preferred} /><Field label="Target start date" type="date" />
-          <label className="sm:col-span-2"><span className="mb-2 block text-xs font-bold uppercase">Anything else we should know?</span><textarea className="min-h-28 w-full border border-input bg-background p-4 outline-none focus:border-primary" /></label>
+          <label className="sm:col-span-2"><span className="mb-2 block text-xs font-bold uppercase">Anything else we should know?</span><textarea key={plane?.registration ?? ""} defaultValue={plane ? `I’d like to train in ${plane.registration} “${plane.nickname}” (${plane.name}).` : ""} className="min-h-28 w-full border border-input bg-background p-4 outline-none focus:border-primary" /></label>
           <Button className="min-h-14 rounded-none sm:col-span-2">Send my training plan request</Button>
           <p className="text-xs text-muted-foreground sm:col-span-2">This preview confirms your request on screen. Connect the final form destination before publishing to receive submissions.</p>
         </form></div>}
