@@ -39,7 +39,7 @@ function useIsPhone() {
   );
 }
 // Overlay viewBox (in the original image's pixel space) covering the whole phone canvas.
-const AERIAL_PHONE_VIEW = "-100 -950 1700 3400";
+const AERIAL_PHONE_VIEW = "265 -300 970 2100";
 
 type Stage = { code: string; label: string; time: string; title: string; text: string; img: string; alt: string; cta: string; slug?: string; location?: string; to?: "/introductory-flights" | "/contact" | "/locations"; hud?: string; zoom?: number; zoomIn?: number; w?: number; h?: number; video?: string; position?: string; traffic?: PatternField; perspective?: boolean; phoneImg?: string; phoneView?: string };
 
