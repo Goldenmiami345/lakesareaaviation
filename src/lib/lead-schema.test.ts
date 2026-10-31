@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { describe, test } from "node:test";
+import assert from "node:assert/strict";
 import { leadSchema } from "./lead-schema";
 
 const base = {
@@ -8,8 +9,8 @@ const base = {
 };
 
 describe("leadSchema", () => {
-  it("accepts a valid lead", () => expect(leadSchema.safeParse(base).success).toBe(true));
-  it("rejects a bad email", () => expect(leadSchema.safeParse({ ...base, email: "nope" }).success).toBe(false));
-  it("rejects a too-short phone", () => expect(leadSchema.safeParse({ ...base, phone: "12345" }).success).toBe(false));
-  it("rejects notes over 2000 chars", () => expect(leadSchema.safeParse({ ...base, notes: "x".repeat(2001) }).success).toBe(false));
+  test("accepts a valid lead", () => assert.equal(leadSchema.safeParse(base).success, true));
+  test("rejects a bad email", () => assert.equal(leadSchema.safeParse({ ...base, email: "nope" }).success, false));
+  test("rejects a too-short phone", () => assert.equal(leadSchema.safeParse({ ...base, phone: "12345" }).success, false));
+  test("rejects notes over 2000 chars", () => assert.equal(leadSchema.safeParse({ ...base, notes: "x".repeat(2001) }).success, false));
 });
