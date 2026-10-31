@@ -25,7 +25,7 @@ export function TrafficPerspective({ active, viewBox }: { active: boolean; viewB
   const textRefs = useRef<(SVGTextElement | null)[]>([]);
   const cardRef = useRef<HTMLDivElement>(null);
   const { selected, selectedRef, open, hitProps } = useTrafficSelection(active);
-  usePreloadCardPhotos(PRELOAD_REGS, active);
+  usePreloadCardPhotos(a.aircraft, active);
   const a = KLXL_OBLIQUE_PATTERN;
   const points = useMemo(() => patternWaypoints(a), [a]);
   const planes = useMemo(() => a.aircraft.map((reg) => {

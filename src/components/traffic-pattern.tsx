@@ -31,7 +31,7 @@ export function TrafficPattern({ airport, active, viewBox = "0 0 1500 1500" }: {
   const textRefs = useRef<(SVGTextElement | null)[]>([]);
   const cardRef = useRef<HTMLDivElement>(null);
   const { selected, selectedRef, open, hitProps } = useTrafficSelection(active);
-  usePreloadCardPhotos(PRELOAD_REGS, active);
+  usePreloadCardPhotos(airport.aircraft, active);
   const points = useMemo(() => patternWaypoints(airport), [airport]);
   const planes = useMemo(() => airport.aircraft.map((reg) => {
     const f = fleet.find((x) => x.registration === reg);
