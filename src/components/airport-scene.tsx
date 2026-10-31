@@ -2,15 +2,14 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { airportFraming } from '../lib/airport-framing';
 import type { PatternAirport, Wind } from '../lib/traffic-pattern';
 import { TrafficPattern } from './traffic-pattern';
+import { airportBackdrops } from '../lib/airport-backdrops';
 export function AirportScene({ airport, active, photo, original, wind, runwayHeading }: { airport: PatternAirport; active: boolean; photo: string; original: string; wind: Wind|null; runwayHeading: number }) {
   const ref=useRef<HTMLDivElement>(null);
   const [frame,setFrame]=useState<ReturnType<typeof airportFraming>|null>(null);
-  const [phone,setPhone]=useState(false);
   useLayoutEffect(()=>{
     const el=ref.current;if(!el)return;
     const update=()=>{
       const w=el.clientWidth,h=el.clientHeight,section=el.closest('section');
-      setPhone(w<640);
       const vp=section?.querySelector('.journey-viewport')?.getBoundingClientRect();
       const copy=section?.querySelector('.journey-copy-wrap')?.getBoundingClientRect();
       const hud=section?.querySelector('.journey-hud')?.getBoundingClientRect();
@@ -21,8 +20,8 @@ export function AirportScene({ airport, active, photo, original, wind, runwayHea
     update();const ro=new ResizeObserver(update);ro.observe(el);window.addEventListener('resize',update);
     return()=>{ro.disconnect();window.removeEventListener('resize',update);};
   },[airport,active]);
+  const backdrop=airportBackdrops[airport.ident];
   return <div ref={ref} data-airport-framing={airport.ident} data-default-zoom={frame?.multiplier.toFixed(4)} className="absolute inset-0">
-    <img src={phone?photo:original} alt="" className="absolute inset-0 h-full w-full object-cover" aria-hidden />
-    {frame&&<><svg viewBox={frame.viewBox} preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden><image href={photo} x="265" y="-300" width="970" height="2100" preserveAspectRatio="none" /><image href={original} x="0" y="0" width="1500" height="1500" preserveAspectRatio="none" /></svg><TrafficPattern airport={airport} active={active} viewBox={frame.viewBox} wind={wind} runwayHeading={runwayHeading}/></>}
+    {frame&&<><svg viewBox={frame.viewBox} preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden>{backdrop&&<image href={backdrop.url} width="1920" height="1920" transform={backdrop.transform} preserveAspectRatio="none" />}<image href={photo} x="265" y="-300" width="970" height="2100" preserveAspectRatio="none" /><image href={original} x="0" y="0" width="1500" height="1500" preserveAspectRatio="none" /></svg><TrafficPattern airport={airport} active={active} viewBox={frame.viewBox} wind={wind} runwayHeading={runwayHeading}/></>}
   </div>;
 }
