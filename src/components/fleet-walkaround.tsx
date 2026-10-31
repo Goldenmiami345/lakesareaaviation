@@ -12,7 +12,7 @@ export function FleetWalkaround({ photos, reg, onOpen }: { photos: WalkaroundPho
   const step = (n: number) => setIndex(i => (i + n + photos.length) % photos.length);
   return <div className="border-t border-border px-4 py-3">
     <div className="mb-2 flex items-center justify-between"><span className="text-xs font-bold uppercase">Walk around</span><span className="font-mono text-xs text-muted-foreground">{index + 1} / {photos.length}</span></div>
-    <div className="relative aspect-[4/3] overflow-hidden" style={{ touchAction: 'pan-y' }}
+    <div className="relative aspect-[4/3] touch-pan-y overflow-hidden"
       onPointerDown={e => { drag.current = { x: e.clientX, index }; moved.current = false; e.currentTarget.setPointerCapture(e.pointerId); }}
       onPointerMove={e => { const d = drag.current; if (!d) return; const delta = e.clientX - d.x; if (Math.abs(delta) > 24) { moved.current = true; setIndex((d.index + Math.round(-delta / 55) + photos.length * 20) % photos.length); } }}
       onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }}>

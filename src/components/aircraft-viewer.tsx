@@ -6,12 +6,14 @@ import { Button } from './ui/button';
 import type { fleet } from "../lib/site-data";
 
 const AircraftModel = lazy(() => import('./aircraft-model'));
+const availableModels = import.meta.glob('/public/models/*.glb');
 type Plane = (typeof fleet)[number];
 export default function AircraftViewer({ plane, initialIndex = 0, onClose }: { plane: Plane; initialIndex?: number; onClose: () => void }) {
   const photos = plane.walkaround ?? [{ src: plane.image, small: plane.image, label: 'Exterior' }];
   const [index, setIndex] = useState(initialIndex);
   const [mode, setMode] = useState<'photos' | 'panel' | 'model'>('photos');
-  const [model, setModel] = useState<string | null>(null);
+  const modelKey = Object.keys(availableModels).find(key => key.split('/').pop()?.toLowerCase() === `${plane.registration.toLowerCase()}.glb`);
+  const model = modelKey ? modelKey.replace('/public', '') : null;
   const zoom = useRef<ReactZoomPanPinchRef>(null);
   const photo = photos[index];
   const step = (d: number) => { setIndex(i => (i + d + photos.length) % photos.length); zoom.current?.resetTransform(0); };
@@ -21,18 +23,6 @@ export default function AircraftViewer({ plane, initialIndex = 0, onClose }: { p
     window.addEventListener('keydown', key);
     return () => { document.body.style.overflow = old; window.removeEventListener('keydown', key); };
   }, [onClose]);
-  useEffect(() => {
-    const controller = new AbortController();
-    const url = `/models/${plane.registration.toLowerCase()}.glb`;
-    // Check GLB magic bytes, not just 200: static hosts can return HTML for missing files.
-    void fetch(url, { headers: { Range: 'bytes=0-3' }, signal: controller.signal }).then(async r => {
-      if (!r.ok || (r.headers.get('content-type') ?? '').includes('text/html')) return;
-      const reader = r.body?.getReader(); if (!reader) return;
-      const { value } = await reader.read(); await reader.cancel();
-      if (value && value.length >= 4 && String.fromCharCode(...value.slice(0, 4)) === 'glTF') setModel(url);
-    }).catch(() => {});
-    return () => controller.abort();
-  }, [plane.registration]);
   return createPortal(<div role="dialog" aria-modal="true" aria-label={`${plane.registration} viewer`} className="fixed inset-0 z-[80] flex flex-col bg-ink text-background">
     <div className="flex items-center justify-between gap-3 px-4 pb-2 pt-[max(.75rem,env(safe-area-inset-top))]">
       <div><p className="font-mono text-xs">{plane.registration}{plane.nickname ? ` · “${plane.nickname}”` : ''}</p><p className="font-display text-lg">{plane.name}</p></div>
