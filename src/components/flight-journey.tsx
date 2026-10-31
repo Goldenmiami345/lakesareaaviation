@@ -340,7 +340,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         {/* Copy */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 mx-auto max-w-7xl px-5 pb-24 pr-14 md:pb-12 lg:px-8 lg:pb-16">
           <div ref={copyRef} className="journey-copy max-w-2xl">
-            <p className="stage-label max-sm:tracking-[0.18em]">{s.code} · {s.label}<span className="sm:hidden"> · {s.time}</span></p>
+            <p className="stage-label max-sm:tracking-[0.18em]"><span className="max-sm:hidden">{s.code} · </span>{s.label}<span className="sm:hidden"> · {s.time}</span></p>
             <p className="mt-2 hidden font-display text-5xl leading-none sm:block">{s.time}</p>
             <h2 className="mt-1.5 font-display text-lg leading-[1.1] min-[380px]:text-xl sm:mt-2 sm:text-2xl">{s.title}</h2>
             <p className="mt-1 max-w-lg truncate text-sm leading-snug text-background/80 sm:mt-2 sm:text-base">{s.text}</p>
