@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 import { Car, Check, House, PlaneLanding } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useServerFn } from "@tanstack/react-start";
@@ -45,11 +46,16 @@ function ContactPage() {
   const [sentPhone, setSentPhone] = useState("");
   const plannerRef = useRef<HTMLDivElement>(null);
   const [inPlanner, setInPlanner] = useState(false);
+  const [breakdownVisible, setBreakdownVisible] = useState(false);
+  const [mounted, setMounted] = useState(false);
   useEffect(() => {
-    const el = plannerRef.current; if (!el) return;
+    setMounted(true);
+    const el = plannerRef.current; const bd = document.getElementById("breakdown"); if (!el || !bd) return;
     const io = new IntersectionObserver(([e]) => setInPlanner(!!e?.isIntersecting), { rootMargin: "0px 0px -30% 0px" });
-    io.observe(el); return () => io.disconnect();
+    const io2 = new IntersectionObserver(([e]) => setBreakdownVisible(!!e?.isIntersecting), { rootMargin: "0px 0px -25% 0px" });
+    io.observe(el); io2.observe(bd); return () => { io.disconnect(); io2.disconnect(); };
   }, []);
+  const showBar = inPlanner && !breakdownVisible;
   const submitLead = useServerFn(submitTrainingLead);
   const aircraftNote = plane ? `I’d like to train in ${plane.registration} “${plane.nickname}” (${plane.name}).` : "";
   const selected = ratings.filter(r => planned.includes(r.id) && !earned.includes(r.id));
@@ -145,12 +151,12 @@ function ContactPage() {
         </form></div>}
       </section>
     </main>
-    <div aria-live="polite" className={`fixed inset-x-0 bottom-0 z-40 border-t border-background/15 bg-ink px-4 pb-[calc(.75rem+env(safe-area-inset-bottom))] pt-3 text-background shadow-2xl transition-transform duration-300 lg:hidden ${inPlanner ? "translate-y-0" : "translate-y-full"}`}>
+    {mounted && createPortal(<div aria-live="polite" className={`fixed inset-x-0 bottom-0 z-40 border-t border-background/15 bg-ink px-4 pb-[calc(.75rem+env(safe-area-inset-bottom))] pt-3 text-background shadow-2xl transition-transform duration-300 lg:hidden ${showBar ? "translate-y-0" : "pointer-events-none translate-y-full"}`}>
       <div className="mx-auto flex max-w-xl items-center justify-between gap-3">
         <div className="min-w-0"><p className="font-display text-2xl leading-none">{money(totals.buffered)}</p><p className="mt-1 truncate text-[.65rem] font-bold uppercase text-background/60">{totals.days}+ days · est. incl. 20% buffer</p></div>
         <a href="#breakdown" className="flex min-h-11 shrink-0 items-center border border-background/40 px-4 text-xs font-bold uppercase">See breakdown</a>
       </div>
-    </div>
+    </div>, document.body)}
   </SiteLayout>;
 }
 
