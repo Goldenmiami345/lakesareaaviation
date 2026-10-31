@@ -79,14 +79,14 @@ export function useTrafficSelection(active: boolean) {
 /** Position a fixed card next to a screen point: inside a 16px safe area, clear of the
  * side-dot rail, header and stage copy, and never over the tapped airplane. */
 const cardPositions = new WeakMap<HTMLElement, {x:number;y:number}>();
-export function placeCard(card: HTMLElement | null, x: number, y: number) {
+export function placeCard(card: HTMLElement | null, x: number, y: number, activeSection?: HTMLElement | null) {
   if (!card) return;
   const w = card.offsetWidth || 220, h = card.offsetHeight || 150;
   const W = window.innerWidth, H = window.innerHeight;
   const locked = cardPositions.get(card);
   if (locked && locked.x >= 16 && locked.x + w <= W - 16 && locked.y >= 16 && locked.y + h <= H - 16) return;
   const header = document.querySelector("header")?.getBoundingClientRect().bottom ?? 64;
-  const section = document.elementFromPoint(Math.min(W - 1, Math.max(0, x)), Math.min(H - 1, Math.max(0, y)))?.closest("section");
+  const section = activeSection ?? document.elementFromPoint(Math.min(W - 1, Math.max(0, x)), Math.min(H - 1, Math.max(0, y)))?.closest("section");
   const copy = section?.querySelector(".journey-copy");
   const copyTop = copy && getComputedStyle(copy.closest(".journey-copy-wrap") ?? copy).opacity !== "0" ? copy.getBoundingClientRect().top : H;
   const rail = section?.querySelector('nav[aria-label$="stages"]')?.getBoundingClientRect();
