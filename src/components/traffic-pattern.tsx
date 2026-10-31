@@ -84,7 +84,7 @@ export function TrafficPattern({ airport, active }: { airport: PatternAirport; a
     return () => { cancelAnimationFrame(raf); io.disconnect(); };
   }, [active, airport, planes, points]);
 
-  const open = (reg: string) => void navigate({ to: "/fleet", hash: reg.toLowerCase() });
+  const open = (reg: string) => void navigate({ to: "/fleet", hash: reg.toLowerCase(), hashScrollIntoView: false });
   const info = hovered !== null ? planes[hovered] : null;
 
   return (

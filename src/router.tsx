@@ -12,6 +12,8 @@ export const getRouter = () => {
     defaultPreloadStaleTime: 0,
     defaultPreload: "intent",
     defaultPreloadDelay: 50,
+    // One soft cross-fade per page change instead of old/new page flashes.
+    defaultViewTransition: true,
   });
 
   // Scroll management is handled here instead of the built-in scrollRestoration:
@@ -23,6 +25,13 @@ export const getRouter = () => {
       document.documentElement.classList.remove("journey-snap");
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     }
+  });
+  // Links with a #hash (e.g. a tail number on Fleet) land on that spot in one
+  // instant jump once the page is in place, never a second visible scroll.
+  router.subscribe("onResolved", (event) => {
+    const hash = event.toLocation.hash;
+    if (!hash || event.fromLocation?.href === event.toLocation.href) return;
+    requestAnimationFrame(() => document.getElementById(hash)?.scrollIntoView({ behavior: "instant", block: "start" }));
   });
 
   return router;
