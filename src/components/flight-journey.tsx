@@ -439,8 +439,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
                 <img src={st.img} alt={st.alt} width={st.w ?? 1920} height={st.h ?? 1088} loading={i <= active + 2 ? "eager" : "lazy"} decoding="async" className="h-full w-full bg-ink object-cover" style={{ objectPosition: st.position ?? "center" }} />
               </picture>
             )}
-            {SHOW_TRAFFIC && st.traffic && <TrafficPattern airport={ops[i]?.pattern ?? st.traffic} active={i === active} {...(isPhone && st.phoneView ? { viewBox: st.phoneView } : {})} />}
-            {st.perspective && <TrafficPerspective active={i === active} {...(isPhone && st.phoneView ? { viewBox: st.phoneView } : {})} />}
+            {SHOW_TRAFFIC && st.traffic && <TrafficPattern airport={ops[i]?.pattern ?? st.traffic} wind={ops[i]?.obs ?? null} runwayHeading={ops[i]?.rwy.trueHdg ?? Number(st.traffic.runway)*10} active={i === active} {...(isPhone && st.phoneView ? { viewBox: st.phoneView } : {})} />}
+            {st.perspective && <TrafficPerspective wind={metar?.['KLXL'] ?? null} active={i === active} {...(isPhone && st.phoneView ? { viewBox: st.phoneView } : {})} />}
             </div>
           </div>
         ))}

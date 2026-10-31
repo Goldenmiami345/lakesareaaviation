@@ -1,121 +1,40 @@
-import { useEffect, useMemo, useRef } from "react";
-import { RadarTag, fitTagSide, tagSideHolds, setTagPosition, TrafficCard, placeCard, radarAltitude, useTrafficSelection, usePreloadCardPhotos, writeCard } from "./traffic-ui";
-import { fleet } from "../lib/site-data";
-import { lapSeconds, patternWaypoints, sampleAtTime } from "../lib/traffic-pattern";
-import { KLXL_OBLIQUE, KLXL_OBLIQUE_PATTERN, PX_PER_FT_MID, obliqueProject } from "../lib/oblique-view";
-import n6717a from "../assets/traffic-side/n6717a.webp";
-import n8570b from "../assets/traffic-side/n8570b.webp";
-import n3353p from "../assets/traffic-side/n3353p.webp";
-
-// Three-quarter cut-outs of each real fleet photo (same paint and tail number).
-const SIDE: Record<string, { src: string; aspect: number; span: number }> = {
-  N6717A: { src: n6717a, aspect: 360 / 157, span: 36 },
-  N8570B: { src: n8570b, aspect: 360 / 160, span: 36 },
-  N3353P: { src: n3353p, aspect: 360 / 150, span: 37 },
-};
-// Real size is a few pixels at this distance; drawn 3x like the aerial views.
-const VISUAL_SCALE = 3;
-
-/** KLXL runway 13 left traffic, drawn into the oblique Private Pilot approach photo. */
-export function TrafficPerspective({ active, viewBox }: { active: boolean; viewBox?: string }) {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const planeRefs = useRef<(SVGGElement | null)[]>([]);
-  const shadowRefs = useRef<(SVGEllipseElement | null)[]>([]);
-  const tagRefs = useRef<(SVGGElement | null)[]>([]);
-  const textRefs = useRef<(SVGTextElement | null)[]>([]);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const { selected, selectedRef, open, hitProps } = useTrafficSelection(active);
-  usePreloadCardPhotos(KLXL_OBLIQUE_PATTERN.aircraft, active);
-  const a = KLXL_OBLIQUE_PATTERN;
-  const points = useMemo(() => patternWaypoints(a), [a]);
-  const planes = useMemo(() => a.aircraft.map((reg) => {
-    const f = fleet.find((x) => x.registration === reg);
-    return { reg, sp: SIDE[reg]!, type: f?.name ?? "Training aircraft", nickname: f?.nickname ?? "" };
-  }), [a]);
-
-  useEffect(() => {
-    if (!active) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const lap = lapSeconds(a, points);
-    const start = performance.now();
-    let raf = 0;
-    const draw = (now: number) => {
-      // Same calm one-third real-time pace as the airport aerials.
-      const secs = reduce ? 0 : ((now - start) / 1000) * 0.33;
-      const m = svgRef.current?.getScreenCTM();
-      planes.forEach((p, i) => {
-        const t = secs + lap * [0.08, 0.68, 0.95][i]!;
-        const s = sampleAtTime(a, t, points);
-        const ahead = sampleAtTime(a, t + 1.5, points);
-        // True 3D projection through the picture's camera: altitude lifts the plane.
-        const g = obliqueProject(s.x, s.y);
-        const air = obliqueProject(s.x, s.y, s.agl);
-        const air2 = obliqueProject(ahead.x, ahead.y, ahead.agl);
-        const dx = air2.x - air.x, dy = air2.y - air.y;
-        const flip = dx < 0;
-        const ang = Math.max(-14, Math.min(14, (Math.atan2(flip ? -dy : dy, Math.abs(dx) || 0.001) * 180) / Math.PI * 0.6));
-        const w = p.sp.span * air.scale * PX_PER_FT_MID * VISUAL_SCALE;
-        planeRefs.current[i]?.setAttribute("transform", `translate(${air.x.toFixed(1)} ${air.y.toFixed(1)}) rotate(${ang.toFixed(1)}) scale(${flip ? -w : w} ${w})`);
-        const sh = shadowRefs.current[i];
-        if (sh) {
-          sh.setAttribute("cx", g.x.toFixed(1)); sh.setAttribute("cy", g.y.toFixed(1));
-          sh.setAttribute("rx", (w * 0.42).toFixed(1)); sh.setAttribute("ry", (w * 0.09).toFixed(1));
-          sh.setAttribute("opacity", Math.max(0.06, 0.4 - (s.agl / a.tpaAgl) * 0.32).toFixed(2));
-        }
-        const cy = air.y - w * 0.15;
-        const tag = tagRefs.current[i];
-        setTagPosition(tag, m, air.x, cy);
-        const label = `${p.reg} / ${radarAltitude(s.msl)}`;
-        const tx = textRefs.current[i];
-        if (tx && tx.textContent !== label) tx.textContent = label;
-        // Always-on tags keep one side; it is re-chosen (with a 4 s look-ahead) only
-        // when the fixed side would actually leave the safe area within the next second.
-        if (m && tag) {
-          const scr = (dt: number) => {
-            const f = sampleAtTime(a, t + dt * 0.33, points);
-            const o = obliqueProject(f.x, f.y, f.agl);
-            const fy = o.y - p.sp.span * o.scale * PX_PER_FT_MID * VISUAL_SCALE * 0.15;
-            return { x: m.a * o.x + m.c * fy + m.e, y: m.b * o.x + m.d * fy + m.f };
-          };
-          const soon = [0, 0.5, 1].map(scr);
-          let shown = tagSideHolds(tag, soon);
-          if (!shown) {
-            const long = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4].map(scr);
-            shown = fitTagSide(tag, long) || fitTagSide(tag, soon);
-          }
-          // No side stays clear (airplane at the screen edge or under the dot rail): fade the tag out rather than clip it.
-          const op = shown ? "" : "0";
-          if (tag.style.opacity !== op) tag.style.opacity = op;
-        }
-        if (selectedRef.current === i && m) {
-          placeCard(cardRef.current, m.a * air.x + m.c * cy + m.e, m.b * air.x + m.d * cy + m.f);
-          writeCard(cardRef.current, s);
-        }
-      });
-      if (!reduce) raf = requestAnimationFrame(draw);
+import { useCallback, useMemo, useRef } from 'react';
+import { RadarTag, TrafficCard, useTrafficSelection, usePreloadCardPhotos } from './traffic-ui';
+import { fleet } from '../lib/site-data';
+import { type PatternSample, type Wind } from '../lib/traffic-pattern';
+import { KLXL_OBLIQUE, KLXL_OBLIQUE_PATTERN, PX_PER_FT_MID, obliqueProject } from '../lib/oblique-view';
+import { AIRCRAFT_SPANS, TrafficVector } from './traffic-vector';
+import { useTrafficAnimation } from './use-traffic-animation';
+const OFFSETS=[.08,.68,.95] as const;
+const VISUAL_SCALE=3;
+export function TrafficPerspective({active,viewBox,wind=null}:{active:boolean;viewBox?:string;wind?:Wind|null}){
+  const a=KLXL_OBLIQUE_PATTERN;
+  const svgRef=useRef<SVGSVGElement>(null),planeRefs=useRef<(SVGGElement|null)[]>([]),shadowRefs=useRef<(SVGGElement|null)[]>([]),tagRefs=useRef<(SVGGElement|null)[]>([]),textRefs=useRef<(SVGTextElement|null)[]>([]),cardRef=useRef<HTMLDivElement>(null);
+  const {selected,selectedRef,open,hitProps}=useTrafficSelection(active);
+  usePreloadCardPhotos(a.aircraft,active);
+  const planes=useMemo(()=>a.aircraft.map(reg=>{const f=fleet.find(x=>x.registration===reg);return {reg,type:f?.name??'Training aircraft',nickname:f?.nickname??''};}),[a]);
+  const project=useCallback((s:PatternSample,reg:string)=>{
+    const air=obliqueProject(s.x,s.y,s.agl),g=obliqueProject(s.x,s.y);
+    const angle=(s.heading-90)*Math.PI/180;
+    // Local SVG x is across the wings, y points toward the tail. Project both
+    // axes through the SAME camera as the runway, retaining the existing span
+    // envelope; no independent tag elevation offset hides the actual airplane.
+    const right={x:-Math.sin(angle),y:Math.cos(angle)},tail={x:-Math.cos(angle),y:-Math.sin(angle)};
+    const projectMatrix=(alt:number,at:{x:number;y:number})=>{
+      const rx=obliqueProject(s.x+right.x,s.y+right.y,alt),ty=obliqueProject(s.x+tail.x,s.y+tail.y,alt);
+      const dx=rx.x-at.x,dy=rx.y-at.y,ex=ty.x-at.x,ey=ty.y-at.y;
+      const unit=Math.max(Math.hypot(dx,dy),Math.hypot(ex,ey),.001);
+      const w=(AIRCRAFT_SPANS[reg]??36)*atScale(alt)*PX_PER_FT_MID*VISUAL_SCALE;
+      return `matrix(${dx/unit*w} ${dy/unit*w} ${ex/unit*w} ${ey/unit*w} ${at.x} ${at.y})`;
     };
-    raf = requestAnimationFrame(draw);
-    return () => cancelAnimationFrame(raf);
-  }, [active, a, points, planes, selectedRef]);
-
-  const info = selected !== null ? planes[selected] : null;
-
-  return (
-    <div className="absolute inset-0">
-      <svg ref={svgRef} viewBox={viewBox ?? `0 0 ${KLXL_OBLIQUE.width} ${KLXL_OBLIQUE.height}`} preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full" role="group" aria-label="Live left traffic for runway 13 at Little Falls, pattern altitude 2,123 feet MSL">
-        <defs><filter id="pp-soft"><feGaussianBlur stdDeviation="1.2" /></filter></defs>
-        {planes.map((p, i) => <ellipse key={`sh-${p.reg}`} ref={(el) => { shadowRefs.current[i] = el; }} fill="black" filter="url(#pp-soft)" aria-hidden className="pointer-events-none" />)}
-        {planes.map((p, i) => (
-          <g key={p.reg} ref={(el) => { planeRefs.current[i] = el; }} className="pointer-events-none" aria-hidden>
-            {/* unit-wide sprite, anchored at its wheels */}
-            <image href={p.sp.src} x={-0.5} y={-1 / p.sp.aspect} width={1} height={1 / p.sp.aspect} style={{ filter: "saturate(0.85) brightness(0.95) drop-shadow(0 0 0.4px rgb(0 0 0 / 0.4))" }} />
-          </g>
-        ))}
-        {active && planes.map((p, i) => (
-          <RadarTag key={`t-${p.reg}`} reg={p.reg} index={i} seed={0} label={`${p.reg}, ${p.type}. Show details`} tabIndex={0} hit={hitProps(i, p.reg)} tagRef={(el) => { tagRefs.current[i] = el; }} textRef={(el) => { textRefs.current[i] = el; }} />
-        ))}
-      </svg>
-      {info && <TrafficCard ref={cardRef} plane={info} runway={a.runway} onOpen={() => open(info.reg)} />}
-    </div>
-  );
+    const atScale=(alt:number)=>alt===s.agl?air.scale:g.scale;
+    return {x:air.x,y:air.y,lift:s.agl/a.tpaAgl,transform:projectMatrix(s.agl,air),shadow:projectMatrix(0,g)};
+  },[a]);
+  useTrafficAnimation({active,airport:a,wind,runwayHeading:131,regs:a.aircraft,svgRef,planeRefs,shadowRefs,tagRefs,textRefs,cardRef,selectedRef,project,offsets:OFFSETS});
+  const info=selected!==null?planes[selected]:null;
+  return <div className="absolute inset-0"><svg ref={svgRef} data-traffic="private-pilot" viewBox={viewBox??`0 0 ${KLXL_OBLIQUE.width} ${KLXL_OBLIQUE.height}`} preserveAspectRatio="xMidYMid slice" className="traffic-callouts absolute inset-0 h-full w-full" role="group" aria-label="Live left traffic for runway 13 at Little Falls, pattern altitude 2,123 feet MSL">
+    {planes.map((p,i)=><g key={`s-${p.reg}`} ref={el=>{shadowRefs.current[i]=el;}} className="pointer-events-none traffic-ground-shadow" aria-hidden><TrafficVector reg={p.reg} shadow/></g>)}
+    {planes.map((p,i)=><g key={p.reg} data-aircraft={p.reg} ref={el=>{planeRefs.current[i]=el;}} className="pointer-events-none" aria-hidden><TrafficVector reg={p.reg}/></g>)}
+    {active&&planes.map((p,i)=><RadarTag key={`t-${p.reg}`} reg={p.reg} index={i} seed={0} label={`${p.reg}, ${p.type}. Show details`} tabIndex={0} hit={hitProps(i,p.reg)} tagRef={el=>{tagRefs.current[i]=el;}} textRef={el=>{textRefs.current[i]=el;}}/>)}
+  </svg>{info&&<TrafficCard key={info.reg} ref={cardRef} plane={info} runway={a.runway} onOpen={()=>open(info.reg)}/>}</div>;
 }

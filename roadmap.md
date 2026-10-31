@@ -1,5 +1,9 @@
 # Roadmap
 
+- [x] Stabilize traffic cards and verify alpha/margins; preserve hero, geometry, legacy footprint and gestures (Citabria thin-edge perfection still needs owner review).
+- [x] Share type-specific vector traffic and radar targets/calls across aerial and oblique views.
+- [x] Use wind-adjusted true-time speeds with tests; verify all four views at 390×844 and 4× zoom and report changes (physical iPhone unverified).
+
 - [x] Create hidden prerendered hero comparison with protected-photo A/B, real-photo C and optional D; keep live hero unchanged.
 - [x] Verify all hero options at 390×844 and 1280×900, report sizes and uncertain AI extensions.
 
