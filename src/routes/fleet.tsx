@@ -123,7 +123,7 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         <img src={f.image} alt={`${f.name} ${f.registration} “${f.nickname}”`} width={1200} height={900} loading="lazy" decoding="async" className="h-full w-full object-cover" />
         <button type="button" onClick={(e) => onView(e.currentTarget)} className="absolute bottom-3 right-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-ink/80 px-4 text-[11px] font-bold uppercase tracking-[0.14em] text-background backdrop-blur-md hover:bg-primary">
-          <Rotate3d className="size-4" /> View in 3D
+          <Rotate3d className="size-4" /> Look around
         </button>
       </div>
       <div className="p-5 sm:p-6">
