@@ -43,7 +43,6 @@ export function TrafficPerspective({ active, viewBox }: { active: boolean; viewB
       // Same calm one-third real-time pace as the airport aerials.
       const secs = reduce ? 0 : ((now - start) / 1000) * 0.33;
       const m = svgRef.current?.getScreenCTM();
-      const k = m ? Math.hypot(m.a, m.b) || 1 : 1;
       planes.forEach((p, i) => {
         const t = secs + lap * [0.08, 0.68, 0.95][i]!;
         const s = sampleAtTime(a, t, points);
