@@ -72,7 +72,7 @@ export function useTrafficAnimation(o:Options) {
         }
         prev[i]=s.phase;
       });
-      if(!reduce)raf=requestAnimationFrame(draw);
+      raf=requestAnimationFrame(draw); // reduced motion keeps static positions but still updates a newly opened card
     };
     raf=requestAnimationFrame(draw);
     const resize=()=>{if(reduce)draw(performance.now());};window.addEventListener('resize',resize);

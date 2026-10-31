@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef } from 'react';
 import { RadarTag, TrafficCard, useTrafficSelection, usePreloadCardPhotos } from './traffic-ui';
 import { fleet } from '../lib/site-data';
-import { feetPerPixel, type PatternSample, type Wind } from '../lib/traffic-pattern';
+import { type PatternSample, type Wind } from '../lib/traffic-pattern';
 import { KLXL_OBLIQUE, KLXL_OBLIQUE_PATTERN, PX_PER_FT_MID, obliqueProject } from '../lib/oblique-view';
 import { AIRCRAFT_SPANS, TrafficVector } from './traffic-vector';
 import { useTrafficAnimation } from './use-traffic-animation';
@@ -28,7 +28,6 @@ export function TrafficPerspective({active,viewBox,wind=null}:{active:boolean;vi
       return `matrix(${dx/unit*w} ${dy/unit*w} ${ex/unit*w} ${ey/unit*w} ${at.x} ${at.y})`;
     };
     const atScale=(alt:number)=>alt===s.agl?air.scale:g.scale;
-    void feetPerPixel; // Camera coordinates retain the original local runway calibration.
     return {x:air.x,y:air.y,lift:s.agl/a.tpaAgl,transform:projectMatrix(s.agl,air),shadow:projectMatrix(0,g)};
   },[a]);
   useTrafficAnimation({active,airport:a,wind,runwayHeading:131,regs:a.aircraft,svgRef,planeRefs,shadowRefs,tagRefs,textRefs,cardRef,selectedRef,project,offsets:OFFSETS});
