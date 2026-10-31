@@ -24,7 +24,7 @@ export const KLXL_OBLIQUE = {
 // Same proportions (offset, extension) as the KLXL aerial pattern, in local units.
 export const KLXL_OBLIQUE_PATTERN: PatternAirport = {
   ident: "KLXL", elevation: 1123, tpaAgl: 1000, runway: "13", runwayFt: 4010, side: "left",
-  threshold: { x: 0, y: 0 }, end: { x: 1000, y: 0 }, offset: 616, extension: 317,
+  threshold: { x: 0, y: 0 }, end: { x: 1000, y: 0 }, offset: 616, extension: 220,
   aircraft: ["N6717A", "N8570B", "N3353P"],
 };
 
