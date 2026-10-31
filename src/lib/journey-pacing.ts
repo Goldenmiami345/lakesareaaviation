@@ -91,3 +91,35 @@ export function nearestPage(pages: JourneyPage[], y: number) {
   });
   return best;
 }
+
+// ---- Section-scoped paging ----
+// Pages carry the section (journey) they belong to. Forced one-swipe paging only
+// moves between pages of the same section; entering or leaving a section is
+// native free scrolling, so this returns null at every section edge.
+export type SectionPage = { y: number; group: number };
+
+export function sectionAt(pages: SectionPage[], y: number) {
+  const groups = [...new Set(pages.map((p) => p.group))];
+  for (const g of groups) {
+    const ys = pages.filter((p) => p.group === g).map((p) => p.y);
+    if (y >= Math.min(...ys) - TOL && y <= Math.max(...ys) + TOL) return g;
+  }
+  return -1;
+}
+
+export function sectionStep(pages: SectionPage[], y: number, dir: 1 | -1): number | null {
+  const g = sectionAt(pages, y);
+  if (g < 0) return null;
+  const own = pages.filter((p) => p.group === g).map((p) => p.y).sort((a, b) => a - b);
+  const on = own.findIndex((p) => Math.abs(p - y) <= TOL);
+  if (on >= 0) return own[on + dir] ?? null;
+  return (dir > 0 ? own.find((p) => p > y) : [...own].reverse().find((p) => p < y)) ?? null;
+}
+
+export function nearestSectionPage(pages: SectionPage[], y: number) {
+  const g = sectionAt(pages, y);
+  if (g < 0) return null;
+  let best: number | null = null;
+  for (const p of pages) if (p.group === g && (best === null || Math.abs(p.y - y) < Math.abs(best - y))) best = p.y;
+  return best;
+}
