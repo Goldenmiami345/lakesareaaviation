@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { fleet } from "../lib/site-data";
 import { feetPerPixel, lapSeconds, patternAltitude, patternWaypoints, sampleAtTime, type PatternAirport } from "../lib/traffic-pattern";
-import { RadarTag, TrafficCard, placeCard, radarAltitude, useTrafficSelection, writeCard } from "./traffic-ui";
+import { RadarTag, layoutTag, TrafficCard, placeCard, radarAltitude, useTrafficSelection, writeCard } from "./traffic-ui";
 import n6717a from "../assets/traffic/n6717a.webp";
 import n8570b from "../assets/traffic/n8570b.webp";
 import n3353p from "../assets/traffic/n3353p.webp";
@@ -59,6 +59,7 @@ export function TrafficPattern({ airport, active }: { airport: PatternAirport; a
         shadowRefs.current[i]?.setAttribute("transform", `translate(${(s.x + 2 + lift * 10).toFixed(1)} ${(s.y + 2.5 + lift * 12).toFixed(1)}) rotate(${s.heading.toFixed(1)})`);
         shadowRefs.current[i]?.setAttribute("opacity", (0.45 - lift * 0.25).toFixed(2));
         tagRefs.current[i]?.setAttribute("transform", `translate(${s.x.toFixed(1)} ${s.y.toFixed(1)}) scale(${(1 / k).toFixed(4)})`);
+        layoutTag(tagRefs.current[i]);
         const label = `${p.reg} / ${radarAltitude(s.msl)}`;
         const t = textRefs.current[i];
         if (t && t.textContent !== label) t.textContent = label;
