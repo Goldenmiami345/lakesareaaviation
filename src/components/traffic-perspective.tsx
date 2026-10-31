@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef } from "react";
+import { RadarTag, TrafficCard, placeCard, radarAltitude, useTrafficSelection, writeCard } from "./traffic-ui";
 import { fleet } from "../lib/site-data";
 import { lapSeconds, patternWaypoints, sampleAtTime } from "../lib/traffic-pattern";
 import { KLXL_OBLIQUE, KLXL_OBLIQUE_PATTERN, PX_PER_FT_MID, obliqueProject } from "../lib/oblique-view";
@@ -18,20 +18,22 @@ const VISUAL_SCALE = 3;
 
 /** KLXL runway 13 left traffic, drawn into the oblique Private Pilot approach photo. */
 export function TrafficPerspective({ active }: { active: boolean }) {
+  const svgRef = useRef<SVGSVGElement>(null);
   const planeRefs = useRef<(SVGGElement | null)[]>([]);
   const shadowRefs = useRef<(SVGEllipseElement | null)[]>([]);
-  const [hovered, setHovered] = useState<number | null>(null);
-  const [info, setInfo] = useState<string>("");
-  const hoveredRef = useRef<number | null>(null);
-  const cardRef = useRef<SVGGElement>(null);
-  hoveredRef.current = hovered;
-  const navigate = useNavigate();
+  const tagRefs = useRef<(SVGGElement | null)[]>([]);
+  const textRefs = useRef<(SVGTextElement | null)[]>([]);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const { selected, selectedRef, open, hitProps } = useTrafficSelection(active);
   const a = KLXL_OBLIQUE_PATTERN;
   const points = useMemo(() => patternWaypoints(a), [a]);
-  const planes = useMemo(() => a.aircraft.map((reg) => ({ reg, sp: SIDE[reg]!, f: fleet.find((x) => x.registration === reg) })), [a]);
+  const planes = useMemo(() => a.aircraft.map((reg) => {
+    const f = fleet.find((x) => x.registration === reg);
+    return { reg, sp: SIDE[reg]!, type: f?.name ?? "Training aircraft", nickname: f?.nickname ?? "" };
+  }), [a]);
 
   useEffect(() => {
-    if (!active) { setHovered(null); return; }
+    if (!active) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const lap = lapSeconds(a, points);
     const start = performance.now();
@@ -39,6 +41,8 @@ export function TrafficPerspective({ active }: { active: boolean }) {
     const draw = (now: number) => {
       // Same calm one-third real-time pace as the airport aerials.
       const secs = reduce ? 0 : ((now - start) / 1000) * 0.33;
+      const m = svgRef.current?.getScreenCTM();
+      const k = m ? Math.hypot(m.a, m.b) || 1 : 1;
       planes.forEach((p, i) => {
         const t = secs + lap * [0.08, 0.68, 0.95][i]!;
         const s = sampleAtTime(a, t, points);
@@ -58,48 +62,40 @@ export function TrafficPerspective({ active }: { active: boolean }) {
           sh.setAttribute("rx", (w * 0.42).toFixed(1)); sh.setAttribute("ry", (w * 0.09).toFixed(1));
           sh.setAttribute("opacity", Math.max(0.06, 0.4 - (s.agl / a.tpaAgl) * 0.32).toFixed(2));
         }
-        if (hoveredRef.current === i) cardRef.current?.setAttribute("transform", `translate(${Math.min(KLXL_OBLIQUE.width - 240, air.x + 14).toFixed(0)} ${(air.y - 70).toFixed(0)})`);
-        if (hoveredRef.current === i) setInfo(`${s.phase} · ${s.msl.toLocaleString("en-US")} ft MSL · ${s.knots} kt`);
+        const cy = air.y - w * 0.15;
+        tagRefs.current[i]?.setAttribute("transform", `translate(${air.x.toFixed(1)} ${cy.toFixed(1)}) scale(${(1 / k).toFixed(4)})`);
+        const label = `${p.reg} / ${radarAltitude(s.msl)}`;
+        const tx = textRefs.current[i];
+        if (tx && tx.textContent !== label) tx.textContent = label;
+        if (selectedRef.current === i && m) {
+          placeCard(cardRef.current, m.a * air.x + m.c * cy + m.e, m.b * air.x + m.d * cy + m.f);
+          writeCard(cardRef.current, s);
+        }
       });
       if (!reduce) raf = requestAnimationFrame(draw);
     };
     raf = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(raf);
-  }, [active, a, points, planes]);
+  }, [active, a, points, planes, selectedRef]);
 
-  const open = (reg: string) => void navigate({ to: "/fleet", hash: reg.toLowerCase(), hashScrollIntoView: false });
+  const info = selected !== null ? planes[selected] : null;
 
   return (
-    <svg viewBox={`0 0 ${KLXL_OBLIQUE.width} ${KLXL_OBLIQUE.height}`} preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full" role="group" aria-label="Live left traffic for runway 13 at Little Falls, pattern altitude 2,123 feet MSL">
-      <defs><filter id="pp-soft"><feGaussianBlur stdDeviation="1.2" /></filter></defs>
-      {planes.map((p, i) => <ellipse key={`sh-${p.reg}`} ref={(el) => { shadowRefs.current[i] = el; }} fill="black" filter="url(#pp-soft)" aria-hidden />)}
-      {planes.map((p, i) => (
-        <g
-          key={p.reg}
-          ref={(el) => { planeRefs.current[i] = el; }}
-          className="traffic-plane cursor-pointer"
-          role="link"
-          tabIndex={active ? 0 : -1}
-          aria-label={`${p.reg}, ${p.f?.name ?? "training aircraft"}. Open in fleet`}
-          onPointerEnter={() => setHovered(i)}
-          onPointerLeave={() => setHovered(null)}
-          onFocus={() => setHovered(i)}
-          onBlur={() => setHovered(null)}
-          onClick={() => open(p.reg)}
-          onKeyDown={(e) => { if (e.key === "Enter") open(p.reg); }}
-        >
-          <rect x={-0.7} y={-0.6} width={1.4} height={1.2} fill="transparent" />
-          {/* unit-wide sprite, anchored at its wheels */}
-          <image href={p.sp.src} x={-0.5} y={-1 / p.sp.aspect} width={1} height={1 / p.sp.aspect} style={{ filter: "saturate(0.85) brightness(0.95) drop-shadow(0 0 0.4px rgb(0 0 0 / 0.4))" }} />
-        </g>
-      ))}
-      {hovered !== null && planes[hovered] && (
-        <g ref={cardRef} className="pointer-events-none" aria-hidden>
-          <rect width={236} height={50} rx={3} fill="rgb(15 20 30 / 0.88)" />
-          <text x={10} y={20} fontSize={13} fontWeight={700} fill="white" fontFamily="monospace">{planes[hovered]!.reg} · {planes[hovered]!.f?.name ?? ""}</text>
-          <text x={10} y={38} fontSize={11} fill="rgb(255 255 255 / 0.75)" fontFamily="monospace">{info}</text>
-        </g>
-      )}
-    </svg>
+    <div className="absolute inset-0">
+      <svg ref={svgRef} viewBox={`0 0 ${KLXL_OBLIQUE.width} ${KLXL_OBLIQUE.height}`} preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full" role="group" aria-label="Live left traffic for runway 13 at Little Falls, pattern altitude 2,123 feet MSL">
+        <defs><filter id="pp-soft"><feGaussianBlur stdDeviation="1.2" /></filter></defs>
+        {planes.map((p, i) => <ellipse key={`sh-${p.reg}`} ref={(el) => { shadowRefs.current[i] = el; }} fill="black" filter="url(#pp-soft)" aria-hidden className="pointer-events-none" />)}
+        {planes.map((p, i) => (
+          <g key={p.reg} ref={(el) => { planeRefs.current[i] = el; }} className="pointer-events-none" aria-hidden>
+            {/* unit-wide sprite, anchored at its wheels */}
+            <image href={p.sp.src} x={-0.5} y={-1 / p.sp.aspect} width={1} height={1 / p.sp.aspect} style={{ filter: "saturate(0.85) brightness(0.95) drop-shadow(0 0 0.4px rgb(0 0 0 / 0.4))" }} />
+          </g>
+        ))}
+        {active && planes.map((p, i) => (
+          <RadarTag key={`t-${p.reg}`} reg={p.reg} index={i} seed={0} label={`${p.reg}, ${p.type}. Show details`} tabIndex={0} hit={hitProps(i, p.reg)} tagRef={(el) => { tagRefs.current[i] = el; }} textRef={(el) => { textRefs.current[i] = el; }} />
+        ))}
+      </svg>
+      {info && <TrafficCard ref={cardRef} plane={info} runway={a.runway} onOpen={() => open(info.reg)} />}
+    </div>
   );
 }

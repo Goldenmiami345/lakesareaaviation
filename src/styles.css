@@ -25,6 +25,7 @@
   --background: oklch(0.975 0.012 75);
   --foreground: oklch(0.19 0.012 55);
   --ink: oklch(0.17 0.035 258);
+  --radar: oklch(0.88 0.14 165);
   --primary: oklch(0.56 0.22 258);
   --primary-foreground: oklch(0.99 0.004 250);
   --secondary: oklch(0.91 0.025 72);
@@ -170,4 +171,12 @@ html.journey-free, html.journey-free.journey-snap { scroll-snap-type: none !impo
 .traffic-trim { fill: var(--primary); }
 .traffic-plane:focus { outline: none; }
 .traffic-plane.is-hovered .traffic-body, .traffic-plane:hover .traffic-body { fill: var(--primary); stroke: var(--primary-foreground); }
+.traffic-tag { color: var(--radar); }
+.traffic-label { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: 10px; letter-spacing: .06em; fill: currentColor; fill-opacity: .82; paint-order: stroke; stroke: color-mix(in oklab, var(--ink) 70%, transparent); stroke-width: 2.5px; pointer-events: none; }
+.traffic-leader { stroke: currentColor; stroke-opacity: .55; stroke-width: 1; pointer-events: none; }
+.traffic-ping { fill: none; stroke: currentColor; stroke-width: 1; opacity: 0; transform-box: fill-box; transform-origin: center; animation: traffic-ping 6s ease-out infinite; pointer-events: none; }
+@keyframes traffic-ping { 0% { transform: scale(.35); opacity: .6; } 35% { transform: scale(2.6); opacity: 0; } 100% { transform: scale(2.6); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .traffic-ping { animation: none; opacity: 0; } }
 .traffic-card { background: color-mix(in oklab, var(--ink) 88%, transparent); color: var(--background); border: 1px solid color-mix(in oklab, var(--background) 22%, transparent); border-radius: 10px; padding: .7rem .8rem; backdrop-filter: blur(10px); box-shadow: 0 12px 30px color-mix(in oklab, var(--ink) 50%, transparent); will-change: transform; }
+.traffic-tag circle:focus { outline: none; }
+.traffic-tag circle:focus-visible { outline: none; stroke: var(--radar); stroke-opacity: .6; stroke-width: 1; }
