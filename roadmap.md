@@ -1,8 +1,9 @@
 # Roadmap
 
-- [ ] Replace retired Apache and correct Phoenix/order everywhere; update traffic paint and factual tests.
-- [ ] Inspect 35 owner photos; prepare seven exact-photo cutouts and optimized CDN walk-arounds.
-- [ ] Add real walk-around/fullscreen zoom and hidden-until-present lazy model slot; verify fleet and traffic on phone/desktop.
+- [x] Replace retired Apache and correct Phoenix/order everywhere; update traffic paint and factual tests.
+- [x] Inspect 35 owner photos; prepare seven exact-photo cutouts and optimized CDN walk-arounds (masking quality limitations recorded in the report).
+- [x] Add real walk-around/fullscreen zoom and hidden-until-present lazy model slot; verify fleet and traffic on phone/desktop.
+- [ ] Verify accurate 3D rendering after owner supplies the two GLB files.
 
 - [x] Contain airplane photos in a full-width top card area; verify four aircraft types at 375×667 and 390×844.
 
