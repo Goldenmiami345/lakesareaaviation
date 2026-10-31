@@ -78,37 +78,36 @@ export function useTrafficSelection(active: boolean) {
 
 /** Position a fixed card next to a screen point: inside a 16px safe area, clear of the
  * side-dot rail, header and stage copy, and never over the tapped airplane. */
-const LIFT = 22; // the photo rises this far above the card's top edge
 const cardPositions = new WeakMap<HTMLElement, {x:number;y:number}>();
 export function placeCard(card: HTMLElement | null, x: number, y: number) {
   if (!card) return;
   const w = card.offsetWidth || 220, h = card.offsetHeight || 150;
   const W = window.innerWidth, H = window.innerHeight;
   const locked = cardPositions.get(card);
-  if (locked && locked.x >= 16 && locked.x + w <= W - 16 && locked.y >= LIFT + 16 && locked.y + h <= H - 16) return;
+  if (locked && locked.x >= 16 && locked.x + w <= W - 16 && locked.y >= 16 && locked.y + h <= H - 16) return;
   const header = document.querySelector("header")?.getBoundingClientRect().bottom ?? 64;
   const section = document.elementFromPoint(Math.min(W - 1, Math.max(0, x)), Math.min(H - 1, Math.max(0, y)))?.closest("section");
   const copy = section?.querySelector(".journey-copy");
   const copyTop = copy && getComputedStyle(copy.closest(".journey-copy-wrap") ?? copy).opacity !== "0" ? copy.getBoundingClientRect().top : H;
   const rail = section?.querySelector('nav[aria-label$="stages"]')?.getBoundingClientRect();
-  const L = 16, R = Math.min(W - 16, rail?.left ? rail.left - 8 : W - (W < 768 ? 76 : 16)), T = header + 8 + LIFT, B = Math.min(H - 16, copyTop - 8);
+  const L = 16, R = Math.min(W - 16, rail?.left ? rail.left - 8 : W - (W < 768 ? 76 : 16)), T = header + 8, B = Math.min(H - 16, copyTop - 8);
   let px: number, py: number;
   if (x + 26 + w <= R) { px = x + 26; py = y - h / 2; }
   else if (x - 26 - w >= L) { px = x - 26 - w; py = y - h / 2; }
   else {
     // Narrow screens: stack above (or below) so the card never covers the airplane's tap target.
     px = Math.max(L, Math.min(R - w, x - w / 2));
-    py = y - 30 - h >= T ? y - 30 - h : y + 30 + LIFT;
+    py = y - 30 - h >= T ? y - 30 - h : y + 30;
   }
   py = Math.max(T, Math.min(B - h, py));
   // Keep clear of the top-left HUD (address + wind readout).
   const hudEl = section?.querySelector(".journey-hud");
   const hud = hudEl?.getBoundingClientRect();
   if (hud && hud.width && hud.height) {
-    const hb = { l: hud.left - 8, t: hud.top - 8 - LIFT, r: hud.right + 8, b: hud.bottom + 8 };
+    const hb = { l: hud.left - 8, t: hud.top - 8, r: hud.right + 8, b: hud.bottom + 8 };
     if (px < hb.r && px + w > hb.l && py < hb.b && py + h > hb.t) {
-      const below = hb.b + LIFT;
-      const coversPlane = (ty: number, tx: number) => x > tx - 4 && x < tx + w + 4 && y > ty - LIFT - 4 && y < ty + h + 4;
+      const below = hb.b;
+      const coversPlane = (ty: number, tx: number) => x > tx - 4 && x < tx + w + 4 && y > ty - 4 && y < ty + h + 4;
       if (below + h <= B && !coversPlane(below, px)) py = below;
       else if (hb.r + w <= R && !coversPlane(py, hb.r)) px = hb.r;
       else if (below + h <= B) py = below;
@@ -124,17 +123,15 @@ export const TrafficCard = forwardRef<HTMLDivElement, { plane: TrafficPlaneInfo;
   const photo = CARD_PHOTOS[plane.reg];
   return createPortal(
     <div ref={ref} data-traffic-card="" className="traffic-card pointer-events-auto fixed left-0 top-0 z-[70] w-[min(60vw,15rem)]" role="dialog" aria-label={`${plane.reg} details`}>
-      <div className="flex items-start gap-2.5">
-        {/* Media slot: fixed 40% width and aspect, so a future 3D model or 360° spin drops in without changing the layout. */}
-        <div data-card-media="" className="traffic-card-media relative aspect-[480/230] w-[45%] shrink-0">
+      {/* Stable full-width media slot also reserves space for a future accurate model or spin. */}
+        <div data-card-media="" className="traffic-card-media relative mb-2 h-20 w-full">
           {photo && <img src={photo} alt={`${plane.reg}, the real airplane`} width={480} height={230} decoding="async" className="absolute inset-0 h-full w-full object-contain" />}
         </div>
-        <span className="min-w-0 flex-1">
+        <span className="block min-w-0">
           <span className="block font-mono text-sm font-bold tracking-wider">{plane.reg}</span>
           {plane.nickname && <span className="block truncate text-xs leading-tight text-background">“{plane.nickname}”</span>}
           <span className="block truncate text-[11px] leading-tight text-background/65">{plane.type}</span>
         </span>
-      </div>
       <span className="mt-1.5 flex items-center justify-between gap-2 font-mono text-[11px] tabular-nums">
         <span data-k="alt" /><span data-k="kt" /><span data-k="phase" className="truncate font-bold uppercase tracking-[0.08em] text-[color:var(--radar)]" />
       </span>
