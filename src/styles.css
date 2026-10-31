@@ -202,3 +202,11 @@ html.journey-paging { overflow: hidden; overscroll-behavior: none; }
 .journey-viewport[data-zoomed] .journey-copy-wrap { opacity: 0; pointer-events: none !important; }
 .journey-viewport[data-zoomed] .journey-copy-wrap * { pointer-events: none !important; }
 .journey-viewport[data-zoomed] .journey-shade { opacity: .3; }
+
+/* Display headings: safe leading for Andada Pro so multi-line descenders/ascenders never touch. */
+h1.font-display { line-height: 1.08; }
+h2.font-display, h3.font-display { line-height: 1.14; }
+
+/* Soft eased blend from ink bands into light sections; reads --surface-light so the color trial reverts cleanly. */
+@utility edge-fade-b { position: relative; &::after { content: ""; position: absolute; inset: auto 0 0 0; height: 96px; pointer-events: none; z-index: 0; background: linear-gradient(to bottom, transparent 0%, color-mix(in oklab, var(--surface-light) 8%, transparent) 25%, color-mix(in oklab, var(--surface-light) 35%, transparent) 55%, color-mix(in oklab, var(--surface-light) 75%, transparent) 80%, var(--surface-light) 100%); } }
+@utility edge-fade-t { position: relative; &::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 96px; pointer-events: none; z-index: 0; background: linear-gradient(to top, transparent 0%, color-mix(in oklab, var(--surface-light) 8%, transparent) 25%, color-mix(in oklab, var(--surface-light) 35%, transparent) 55%, color-mix(in oklab, var(--surface-light) 75%, transparent) 80%, var(--surface-light) 100%); } }
