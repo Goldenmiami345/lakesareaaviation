@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
+import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { Car, Check, House, PlaneLanding } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useServerFn } from "@tanstack/react-start";
@@ -44,6 +46,16 @@ function ContactPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [sentPhone, setSentPhone] = useState("");
+  const [summary, setSummary] = useState<{ name: string; ratings: string[]; location: string; start: string; total: number } | null>(null);
+  const confirmRef = useRef<HTMLHeadingElement>(null);
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (!sent) return;
+    const h = confirmRef.current; if (!h) return;
+    const t = setTimeout(() => { h.scrollIntoView({ behavior: "smooth", block: "center" }); h.focus({ preventScroll: true }); }, 250);
+    return () => clearTimeout(t);
+  }, [sent]);
+  useEffect(() => { if (error) errorRef.current?.focus(); }, [error]);
   const plannerRef = useRef<HTMLDivElement>(null);
   const [inPlanner, setInPlanner] = useState(false);
   const [breakdownVisible, setBreakdownVisible] = useState(false);
@@ -94,7 +106,13 @@ function ContactPage() {
     setBusy(true); setError("");
     try {
       const res = await submitLead({ data: check.data });
-      if (res.ok) { setSentPhone(formatPhone(check.data.phone)); setSent(true); }
+      if (res.ok) {
+        (document.activeElement as HTMLElement | null)?.blur();
+        setSentPhone(formatPhone(check.data.phone));
+        setSummary({ name: check.data.firstName, ratings: check.data.ratingsPlanned, location: check.data.preferredLocation, start: check.data.targetStartDate, total: totals.buffered });
+        setSent(true);
+        toast.success("Request received. We'll be in touch soon.", { duration: 4000 });
+      }
       else setError(res.error === "rate_limited" ? `Too many requests in a short time. Please call ${SCHOOL_PHONE} or try again in a few minutes.` : `We couldn't send your request. Please call ${SCHOOL_PHONE} and we'll take care of you.`);
     } catch {
       setError(`We couldn't send your request. Please call ${SCHOOL_PHONE} and we'll take care of you.`);
@@ -141,16 +159,25 @@ function ContactPage() {
       </div>
 
       <section id="request" className="mt-20 scroll-mt-24 border-t border-border pt-14">
-        {sent ? <div className="grid min-h-80 place-items-center bg-secondary p-8 text-center"><div><Check className="mx-auto size-10 text-primary" /><h2 className="mt-5 font-display text-4xl">Request received.</h2><p className="mt-3 text-muted-foreground">Our team will reach out soon. We’ll call you at {sentPhone}. To talk now, call {SCHOOL_PHONE}.</p></div></div> : <div className="grid gap-10 lg:grid-cols-[.7fr_1.3fr]"><div><p className="eyebrow text-primary">Request a review</p><h2 className="mt-4 font-display text-4xl">Put real dates around your plan.</h2><a href={SCHOOL_PHONE_TEL} className="mt-7 inline-block font-display text-2xl text-primary">{SCHOOL_PHONE}</a></div><form onSubmit={onSubmit} className="relative grid min-w-0 gap-5 sm:grid-cols-2">
+        {sent ? <div className="bg-secondary p-6 sm:p-10"><Check className="size-10 text-primary" aria-hidden="true" /><h2 ref={confirmRef} tabIndex={-1} className="mt-4 font-display text-4xl outline-none">Request received{summary?.name ? `, ${summary.name}` : ""}.</h2>
+          {summary && <dl className="mt-6 grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
+            <div><dt className="text-xs font-bold uppercase text-muted-foreground">Ratings planned</dt><dd className="mt-1">{summary.ratings.length ? summary.ratings.join(", ") : "To discuss"}</dd></div>
+            <div><dt className="text-xs font-bold uppercase text-muted-foreground">Preferred location</dt><dd className="mt-1">{summary.location}</dd></div>
+            <div><dt className="text-xs font-bold uppercase text-muted-foreground">Target start date</dt><dd className="mt-1">{summary.start ? new Date(summary.start + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "Flexible"}</dd></div>
+            <div><dt className="text-xs font-bold uppercase text-muted-foreground">Estimated total, incl. 20% buffer</dt><dd className="mt-1">{money(summary.total)}</dd></div>
+          </dl>}
+          <p className="mt-6 max-w-2xl text-muted-foreground"><strong className="text-foreground">What happens next:</strong> our team reviews your plan and contacts you to confirm dates{sentPhone ? ` at ${sentPhone}` : ""}.</p>
+          <a href={SCHOOL_PHONE_TEL} className="mt-6 inline-flex min-h-12 items-center bg-primary px-6 text-sm font-bold uppercase text-primary-foreground">Call {SCHOOL_PHONE}</a></div> : <div className="grid gap-10 lg:grid-cols-[.7fr_1.3fr]"><div><p className="eyebrow text-primary">Request a review</p><h2 className="mt-4 font-display text-4xl">Put real dates around your plan.</h2><a href={SCHOOL_PHONE_TEL} className="mt-7 inline-block font-display text-2xl text-primary">{SCHOOL_PHONE}</a></div><form onSubmit={onSubmit} className="relative grid min-w-0 gap-5 sm:grid-cols-2">
           <Field name="firstName" label="First name" /><Field name="lastName" label="Last name" /><Field name="email" label="Email" type="email" /><Field name="phone" label="Phone" type="tel" />
           <Select key={preferred} label="Preferred location" options={locations.map(l => l.city)} defaultValue={preferred} /><Field name="targetStartDate" label="Target start date" type="date" required={false} />
           <label className="sm:col-span-2"><span className="mb-2 block text-xs font-bold uppercase">Anything else we should know?</span><textarea name="notes" maxLength={2000} key={plane?.registration ?? ""} defaultValue={plane ? aircraftNote : ""} className="min-h-28 w-full border border-input bg-background p-4 outline-none focus:border-primary" /></label>
           <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden"><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
           <Button disabled={busy} className="min-h-14 rounded-none sm:col-span-2">{busy ? "Sending…" : "Send my training plan request"}</Button>
-          {error && <p role="alert" className="text-sm text-destructive sm:col-span-2">{error}</p>}
+          {error && <p ref={errorRef} tabIndex={-1} role="alert" className="outline-none text-sm text-destructive sm:col-span-2">{error}</p>}
         </form></div>}
       </section>
     </main>
+    {mounted && createPortal(<Toaster position="top-center" offset={84} mobileOffset={{ top: 84 }} icons={{ success: <Check className="size-4 text-primary" /> }} />, document.body)}
     {mounted && createPortal(<div aria-live="polite" className={`fixed inset-x-0 bottom-0 z-40 border-t border-background/15 bg-ink px-4 pb-[calc(.75rem+env(safe-area-inset-bottom))] pt-3 text-background shadow-2xl transition-transform duration-300 lg:hidden ${showBar ? "translate-y-0" : "pointer-events-none translate-y-full"}`}>
       <div className="mx-auto flex max-w-xl items-center justify-between gap-3">
         <div className="min-w-0"><p className="font-display text-2xl leading-none">{money(totals.buffered)}</p><p className="mt-1 truncate text-[.65rem] font-bold uppercase text-background/60">{totals.days}+ days · est. incl. 20% buffer</p></div>
