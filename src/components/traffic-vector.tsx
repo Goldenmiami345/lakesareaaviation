@@ -1,10 +1,20 @@
 import { aircraftType } from '../lib/traffic-flight';
+import apache from '../assets/models/n4383p_top.png.asset.json';
+import phoenix from '../assets/models/n8570b_top.png.asset.json';
+import cardinal from '../assets/models/n46201_top.png.asset.json';
+import { MODEL_WINGSPANS_M } from '../lib/model-settings';
+const renders: Record<string, { url: string; height: number }> = { N4383P: {url:apache.url,height:766}, N8570B:{url:phoenix.url,height:748}, N46201:{url:cardinal.url,height:769} };
+export function trafficSpanFeet(reg: string) { return MODEL_WINGSPANS_M[reg] ? MODEL_WINGSPANS_M[reg] / 0.3048 : AIRCRAFT_SPANS[reg] ?? 36; }
 
 // Original SVG source, not traced logos or invented tail lettering. Wingspan is
 // one local unit; lengths are proportional to published type dimensions. Paint
 // tokens were sampled on the real fleet photo's sunlit base/stripe panels.
 export const AIRCRAFT_SPANS: Record<string, number> = {N6717A:36,N8570B:36,N46201:36,N7108G:36,N6641F:33,N11059:34,N4383P:37};
 export function TrafficVector({reg, shadow=false}: {reg:string;shadow?:boolean}) {
+  const render=renders[reg];
+  // Transparent wings reach x=19..1005: normalize the actual 986px wingspan,
+  // not the padded 1024px canvas. Nose-up is the same local axis as the SVG.
+  if(render) return <image className={shadow?'aircraft-render-shadow':undefined} href={render.url} x={-512/986} y={-render.height/1972} width={1024/986} height={render.height/986} preserveAspectRatio="none" />;
   const type=aircraftType(reg), twin=type==='apache', tandem=type==='citabria';
   const length=type==='150'?72:tandem?67:75;
   const wingY=twin?4:-7;

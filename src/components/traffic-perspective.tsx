@@ -3,7 +3,7 @@ import { RadarTag, TrafficCard, useTrafficSelection, usePreloadCardPhotos } from
 import { fleet } from '../lib/site-data';
 import { type PatternSample, type Wind } from '../lib/traffic-pattern';
 import { KLXL_OBLIQUE, KLXL_OBLIQUE_PATTERN, PX_PER_FT_MID, obliqueProject } from '../lib/oblique-view';
-import { AIRCRAFT_SPANS, TrafficVector } from './traffic-vector';
+import { trafficSpanFeet, TrafficVector } from './traffic-vector';
 import { useTrafficAnimation } from './use-traffic-animation';
 const OFFSETS=[.08,.68,.95] as const;
 const VISUAL_SCALE=3;
@@ -24,7 +24,7 @@ export function TrafficPerspective({active,viewBox,wind=null}:{active:boolean;vi
       const rx=obliqueProject(s.x+right.x,s.y+right.y,alt),ty=obliqueProject(s.x+tail.x,s.y+tail.y,alt);
       const dx=rx.x-at.x,dy=rx.y-at.y,ex=ty.x-at.x,ey=ty.y-at.y;
       const unit=Math.max(Math.hypot(dx,dy),Math.hypot(ex,ey),.001);
-      const w=(AIRCRAFT_SPANS[reg]??36)*atScale(alt)*PX_PER_FT_MID*VISUAL_SCALE;
+      const w=trafficSpanFeet(reg)*atScale(alt)*PX_PER_FT_MID*VISUAL_SCALE;
       return `matrix(${dx/unit*w} ${dy/unit*w} ${ex/unit*w} ${ey/unit*w} ${at.x} ${at.y})`;
     };
     const atScale=(alt:number)=>alt===s.agl?air.scale:g.scale;
