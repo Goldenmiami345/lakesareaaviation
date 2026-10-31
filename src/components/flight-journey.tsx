@@ -47,14 +47,26 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let mx = 0, my = 0, frame = 0, last = -1;
+    let shown: number | null = null;
+    let prevTime = 0;
     const n = stages.length;
-    const render = () => {
+    const render = (now: number = performance.now()) => {
       const el = sectionRef.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
       const viewportHeight = viewportRef.current?.offsetHeight ?? window.innerHeight;
       const total = Math.max(1, el.offsetHeight - viewportHeight);
-      const state = journeyFrame(-rect.top / total, n);
+      const target = Math.max(0, Math.min(1, -rect.top / total));
+      // Snap glides are fast; ease the displayed progress toward the scroll position
+      // so slides phase into each other (zoom + crossfade) over ~0.9s instead of flashing.
+      const dt = prevTime ? Math.min(64, now - prevTime) : 16;
+      prevTime = now;
+      if (shown === null || reduce || Math.abs(target - shown) > 2 / n) shown = target;
+      else shown += (target - shown) * (1 - Math.exp(-dt / 260));
+      if (Math.abs(target - shown) < 0.0002) shown = target;
+      if (shown !== target) frame = requestAnimationFrame(render);
+      else prevTime = 0;
+      const state = journeyFrame(shown, n);
       layerRefs.current.forEach((layer, i) => {
         if (!layer) return;
         const st = stages[i];
