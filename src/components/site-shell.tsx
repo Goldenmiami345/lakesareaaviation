@@ -4,6 +4,7 @@ import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
 import logoAsset from "../assets/lakes-logo-transparent.png.asset.json";
 import { MotionExperience } from "./motion-experience";
 import { jumpToPageTop } from "./flight-journey";
+import { sitePath } from '../lib/site-path';
 
 const nav = [
   ["Services", "/services"],
@@ -16,7 +17,7 @@ const nav = [
 
 export function Header({ overlay = false }: { overlay?: boolean }) {
   const [open, setOpen] = useState(false);
-  const { pathname } = useLocation();
+  const pathname = useLocation({ select: location => sitePath(location.pathname) });
   const onHome = (e: MouseEvent) => { if (pathname !== "/") return; e.preventDefault(); setOpen(false); jumpToPageTop(); };
   return <header className={`fixed inset-x-0 top-0 z-50 border-b transition-colors ${overlay ? "border-white/15 bg-ink/25 text-white backdrop-blur-md" : "border-border bg-background/95 text-foreground backdrop-blur-md"}`}>
     <div className="mx-auto grid h-16 max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 sm:h-20 lg:flex lg:justify-between lg:px-8">
@@ -54,7 +55,7 @@ function FooterGroup({ title, links }: { title: string; links: [string, string][
 }
 
 export function MobileActions() {
-  const { pathname } = useLocation();
+  const pathname = useLocation({ select: location => sitePath(location.pathname) });
   const [show, setShow] = useState(false);
   useEffect(() => {
     const onScroll = () => {

@@ -1,11 +1,15 @@
 # Roadmap
 
+- [ ] Fix the production contact hydration mismatch and verify four pages.
+- [ ] Restore desktop airport zoom ≥1.0×, target 1.15×; preserve phone fit.
+- [ ] Draw exact traffic paths, safe leg labels and stronger radar targets; verify six airport screenshots and SSR guard.
+
 - [x] Disable visitor models/sprites with one flag; add hidden prerendered models preview; verify 390×844/1280×900, 28 tests and dev SSR (production verification remains blocked below).
 
 - [x] Install supplied GLBs and exact top sprites; verify three cards/fleet rotation/drag/pinch isolation and dev SSR; report production limitations.
 
 - [x] Add production HTML gate for all 26 routes, fleet order and unfinished Suspense; validate gate against empty shell.
-- [ ] Confirm production SSR repair/root cause and production mobile hydration: awaiting new hosted build/artifacts (current hosted build predates edits; dev-only checks pass).
+- [x] Confirm production SSR repair: owner verified deployment bd791aef returns complete server HTML; hydration follow-up tracked above.
 
 - [x] Add Cardinal facts, source-pixel cutout, finger-free walk-around and KLXL rotation (fine alpha-edge limitations reported).
 - [x] Fit airport default zoom to complete patterns and protected UI on phone/desktop (desktop targets cannot fit unchanged copy; actual reduced values reported).
