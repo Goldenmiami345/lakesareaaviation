@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { Button } from "./ui/button";
-import { journeyFrame, journeyGestureTarget, journeyLanding, journeyNearestLanding, journeyShouldSettle, JOURNEY_GESTURE_LOCK_MS, JOURNEY_STAGE_SVH, JOURNEY_SWIPE_PX } from "../lib/journey-pacing";
+import { journeyEase, journeyFrame, journeyGestureTarget, journeyLanding, journeyNearestLanding, journeyShouldSettle, journeyWheelStartsGesture, JOURNEY_GLIDE_MS, JOURNEY_STAGE_SVH, JOURNEY_SWIPE_PX } from "../lib/journey-pacing";
 import clouds from "../assets/journey/01-clouds.webp";
 import runway from "../assets/journey/02-runway-corrected.webp";
 import instrument from "../assets/journey/instrument-imc-cockpit.webp";
@@ -232,7 +232,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     viewportEl?.addEventListener("touchcancel", onTouchCancel, { passive: true });
     return () => {
       cancelAnimationFrame(frame);
-      window.clearTimeout(unlockTimer);
+      cancelAnimationFrame(anim);
       window.clearTimeout(settleTimer);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", renderScroll);
