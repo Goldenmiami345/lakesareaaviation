@@ -173,6 +173,17 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const rect = el.getBoundingClientRect();
       const dir = e.deltaY > 0 ? 1 : -1;
       if (!snapOwners.has(el)) {
+        // Entering from a corridor: follow the wheel 1:1 but stop exactly on
+        // the first (or, from below, last) page instead of overshooting it.
+        const px = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * vh : e.deltaY;
+        const edge = dir > 0 ? stopTop(0) : stopTop(n - 1);
+        const y = window.scrollY;
+        if (performance.now() >= holdUntil && ((dir > 0 && y < edge - 1 && y + px > edge) || (dir < 0 && y > edge + 1 && y + px < edge))) {
+          e.preventDefault();
+          window.scrollTo({ top: edge, behavior: Math.abs(px) >= 50 ? "smooth" : "instant" });
+          lastWheel = performance.now(); lastDelta = Math.abs(e.deltaY);
+          return;
+        }
         // A fresh wheel gesture inside the armed range engages stepping; a
         // continuing stream (still crossing the corridor) stays native 1:1.
         const gap = performance.now() - lastWheel;
