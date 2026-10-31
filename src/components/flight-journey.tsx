@@ -108,6 +108,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         const depth = reduce ? 0 : 10 + i * 3;
         layer.style.transform = `translate3d(${(mx * -depth).toFixed(2)}px, ${(my * -depth).toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
         layer.style.opacity = opacity.toFixed(3);
+        layer.style.pointerEvents = opacity > 0.5 ? "auto" : "none";
       });
       if (copyRef.current) {
         copyRef.current.style.opacity = reduce ? "1" : state.copyOpacity.toFixed(3);
