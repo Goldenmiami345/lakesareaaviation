@@ -139,7 +139,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const target = journeyGestureTarget(progress, n, direction);
       if (!fresh) {
         // Inertia from the gesture that already stepped: absorb it.
-        if (anim || sinceStepMs < 1600) e.preventDefault();
+        if (anim || target !== null || sinceStepMs < 1600) e.preventDefault();
         return;
       }
       if (target === null) return;
