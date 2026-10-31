@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { Button } from "./ui/button";
-import { journeyEase, journeyFrame, journeyGestureTarget, journeyLanding, journeyNearestLanding, journeyShouldSettle, journeyWheelStartsGesture, JOURNEY_GLIDE_MS, JOURNEY_STAGE_SVH, JOURNEY_SWIPE_PX } from "../lib/journey-pacing";
+import { journeyFrame, journeyLanding, JOURNEY_STAGE_SVH } from "../lib/journey-pacing";
 import clouds from "../assets/journey/01-clouds.webp";
 import runway from "../assets/journey/02-runway-corrected.webp";
 import instrument from "../assets/journey/instrument-imc-cockpit.webp";
@@ -29,6 +29,8 @@ export const airportStages: Stage[] = [
   { code: "CO", label: "Fort Lupton", hud: "18V · 7507 Co Rd 39", time: "18V", title: "Fort Lupton, Colorado.", text: "Platte Valley Airpark", img: fl, alt: "Public-domain USGS aerial photo of Platte Valley Airpark (18V) runway, hangars and surrounding Colorado farm fields", cta: "See our locations", to: "/locations", w: 1500, h: 1500, zoom: 0.12, zoomIn: 0.02 },
   { code: "AZ", label: "Cottonwood", hud: "P52 · 1001 W Mingus Ave", time: "P52", title: "Cottonwood, Arizona.", text: "Cottonwood Municipal Airport", img: cw, alt: "Public-domain USGS aerial photo of Cottonwood Municipal Airport (P52) runway 14/32, ramp and surrounding Verde Valley terrain", cta: "Build my training plan", to: "/contact", w: 1500, h: 1500, zoom: 0.18, zoomIn: 0.03 },
 ];
+
+const snapOwners = new Set<Element>();
 
 type Props = { stages?: Stage[]; id?: string; label?: string; mode?: "alt" | "code" };
 
@@ -82,166 +84,29 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       }
     };
     const renderScroll = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(render); };
-    const onScroll = () => { renderScroll(); scheduleSettle(); };
     const onMove = (e: PointerEvent) => { mx = e.clientX / window.innerWidth - 0.5; my = e.clientY / window.innerHeight - 0.5; renderScroll(); };
-    // One gesture = one stage. Each step is an eased glide driven here (native
-    // smooth scroll varies by browser and can crawl), and a fresh gesture during
-    // a glide chains straight to the next stage, so the page never feels frozen.
-    let anim = 0;
-    let animTarget: number | null = null;
-    let lastStepAt = -1e9;
-    let lastWheelAt = 0;
-    let lastWheelDelta = 0;
-    const gestureProgress = () => {
-      const el = sectionRef.current;
-      if (!el) return null;
-      const rect = el.getBoundingClientRect();
-      const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
-      if (rect.top > 0 || rect.bottom < vh) return null;
-      const total = Math.max(1, el.offsetHeight - vh);
-      return Math.max(0, Math.min(1, -rect.top / total));
-    };
-    // While gliding, gestures count from the stage being travelled to.
-    const currentProgress = () => (animTarget !== null ? journeyLanding(animTarget, n) : gestureProgress());
-    const stepTo = (target: number) => {
-      const el = sectionRef.current;
-      if (!el) return;
-      const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
-      const total = Math.max(1, el.offsetHeight - vh);
-      const top = window.scrollY + el.getBoundingClientRect().top + total * journeyLanding(target, n);
-      lastStepAt = performance.now();
-      cancelAnimationFrame(anim);
-      if (reduce) { anim = 0; animTarget = null; window.scrollTo({ top, behavior: "instant" }); return; }
-      animTarget = target;
-      const from = window.scrollY;
-      const start = performance.now();
-      const tick = (now: number) => {
-        const t = Math.min(1, (now - start) / JOURNEY_GLIDE_MS);
-        window.scrollTo({ top: from + (top - from) * journeyEase(t), behavior: "instant" });
-        if (t < 1) anim = requestAnimationFrame(tick);
-        else { anim = 0; animTarget = null; }
-      };
-      anim = requestAnimationFrame(tick);
-    };
-    const onWheel = (e: WheelEvent) => {
-      const progress = currentProgress();
-      if (progress === null || e.deltaY === 0) return;
-      const now = performance.now();
-      const gapMs = now - lastWheelAt;
-      const lastDelta = lastWheelDelta;
-      lastWheelAt = now;
-      lastWheelDelta = e.deltaY;
-      const direction: 1 | -1 = e.deltaY > 0 ? 1 : -1;
-      if (direction === 1 && animTarget === null && progress < journeyLanding(0, n)) return;
-      const sinceStepMs = now - lastStepAt;
-      const reversed = Math.sign(lastDelta) !== Math.sign(e.deltaY) && sinceStepMs > 120;
-      const fresh = reversed || journeyWheelStartsGesture({ gapMs, delta: e.deltaY, lastDelta, sinceStepMs });
-      const target = journeyGestureTarget(progress, n, direction);
-      if (!fresh) {
-        // Inertia from the gesture that already stepped: absorb it.
-        if (anim || target !== null || sinceStepMs < 1600) e.preventDefault();
-        return;
-      }
-      if (target === null) return;
-      e.preventDefault();
-      stepTo(target);
-    };
-    let touchY = 0;
-    let touchX = 0;
-    let touchActive = false;
-    let touchStepped = false;
-    let touchTarget: number | null = null;
-    let touchProgress: number | null = null;
-    const onTouchStart = (e: TouchEvent) => {
-      const touch = e.touches[0];
-      touchActive = !reduce && e.touches.length === 1 && Boolean(touch);
-      touchTarget = null;
-      touchStepped = false;
-      touchProgress = touchActive ? currentProgress() : null;
-      touchY = touch?.clientY ?? 0;
-      touchX = touch?.clientX ?? 0;
-      clearSettle();
-    };
-    const onTouchMove = (e: TouchEvent) => {
-      const touch = e.touches[0];
-      if (!touchActive || !touch || touchProgress === null || e.touches.length !== 1) return;
-      const dy = touchY - touch.clientY;
-      if (Math.abs(dy) <= Math.abs(touchX - touch.clientX)) return;
-      const target = journeyGestureTarget(touchProgress, n, dy > 0 ? 1 : -1);
-      // Outward endpoint gestures and pinch/horizontal gestures stay native.
-      if (target === null) return;
-      if (e.cancelable) e.preventDefault();
-      touchTarget = target;
-      // Start gliding as soon as the swipe is clear — no waiting for the finger to lift.
-      if (!touchStepped && Math.abs(dy) >= JOURNEY_SWIPE_PX) {
-        touchStepped = true;
-        stepTo(target);
-      }
-    };
-    const onTouchCancel = () => { touchActive = false; touchTarget = null; touchProgress = null; };
-    const onTouchEnd = (e: TouchEvent) => {
-      const target = touchTarget;
-      const stepped = touchStepped;
-      onTouchCancel();
-      if (target === null || stepped) return;
-      // A short, quick flick still counts as one step.
-      const dy = touchY - (e.changedTouches[0]?.clientY ?? touchY);
-      if (Math.abs(dy) >= 20) stepTo(target);
-    };
-    // Momentum catch-up: a fling that starts before the section pins scrolls
-    // natively and can stop mid-stage. Once the scroll goes quiet while the
-    // viewport is pinned, glide to the nearest stage landing.
-    const SETTLE_DELAY_MS = 160;
-    const SETTLE_TOLERANCE_PX = 40;
-    let settleTimer = 0;
-    const clearSettle = () => {
-      if (settleTimer) {
-        window.clearTimeout(settleTimer);
-        settleTimer = 0;
-      }
-    };
-    const scheduleSettle = () => {
-      clearSettle();
-      if (anim) return;
-      settleTimer = window.setTimeout(() => {
-        settleTimer = 0;
-        if (reduce || touchActive || anim) return;
-        const el = sectionRef.current;
-        if (!el) return;
-        const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
-        const rect = el.getBoundingClientRect();
-        if (rect.top > 0 || rect.bottom < vh) return;
-        const total = Math.max(1, el.offsetHeight - vh);
-        const progress = Math.max(0, Math.min(1, -rect.top / total));
-        // Entry and exit bands scroll natively so visitors can always leave the journey.
-        if (!journeyShouldSettle(progress, n)) return;
-        const best = journeyNearestLanding(progress, n);
-        const top = window.scrollY + rect.top + total * journeyLanding(best, n);
-        if (Math.abs(top - window.scrollY) > SETTLE_TOLERANCE_PX) stepTo(best);
-      }, SETTLE_DELAY_MS);
-    };
+    const onScroll = renderScroll;
+    // One page per swipe is enforced by native mandatory snap stops (see JSX);
+    // snapping is enabled on <html> only while this journey is on screen.
+    const el = sectionRef.current;
+    const root = document.documentElement;
+    const io = !reduce && el ? new IntersectionObserver(([entry]) => {
+      if (entry?.isIntersecting) snapOwners.add(entry.target); else if (entry) snapOwners.delete(entry.target);
+      root.classList.toggle("journey-snap", snapOwners.size > 0);
+    }) : null;
+    if (io && el) io.observe(el);
     render();
-    const viewportEl = viewportRef.current;
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", renderScroll);
     if (!reduce) window.addEventListener("pointermove", onMove, { passive: true });
-    viewportEl?.addEventListener("wheel", onWheel, { passive: false });
-    viewportEl?.addEventListener("touchstart", onTouchStart, { passive: true });
-    viewportEl?.addEventListener("touchmove", onTouchMove, { passive: false });
-    viewportEl?.addEventListener("touchend", onTouchEnd, { passive: true });
-    viewportEl?.addEventListener("touchcancel", onTouchCancel, { passive: true });
     return () => {
       cancelAnimationFrame(frame);
-      cancelAnimationFrame(anim);
-      window.clearTimeout(settleTimer);
+      io?.disconnect();
+      if (el) snapOwners.delete(el);
+      root.classList.toggle("journey-snap", snapOwners.size > 0);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", renderScroll);
       window.removeEventListener("pointermove", onMove);
-      viewportEl?.removeEventListener("wheel", onWheel);
-      viewportEl?.removeEventListener("touchstart", onTouchStart);
-      viewportEl?.removeEventListener("touchmove", onTouchMove);
-      viewportEl?.removeEventListener("touchend", onTouchEnd);
-      viewportEl?.removeEventListener("touchcancel", onTouchCancel);
     };
   }, [stages]);
 
@@ -266,6 +131,11 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   if (!s) return null;
   return (
     <section ref={sectionRef} id={id} aria-label={label} className="relative bg-ink text-background" style={{ height: `${stages.length * JOURNEY_STAGE_SVH + 100}svh` }}>
+      <div aria-hidden className="journey-stop pointer-events-none absolute left-0 h-px w-px" style={{ top: "-100svh" }} />
+      {stages.map((st, i) => (
+        <div key={`stop-${st.code}`} aria-hidden className="journey-stop journey-stop-page pointer-events-none absolute left-0 h-px w-px" style={{ top: `${journeyLanding(i, stages.length) * stages.length * JOURNEY_STAGE_SVH}svh` }} />
+      ))}
+      <div aria-hidden className="journey-stop pointer-events-none absolute left-0 h-px w-px" style={{ top: "100%" }} />
       <div ref={viewportRef} className="sticky top-0 h-svh overflow-hidden">
         {stages.map((st, i) => (
           <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="absolute -inset-[2%] will-change-transform backface-hidden" style={{ zIndex: stages.length - i }}>
