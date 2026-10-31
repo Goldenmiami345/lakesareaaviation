@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
 import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
 import { fleet } from "../lib/site-data";
 
@@ -15,13 +14,6 @@ export const Route = createFileRoute("/fleet")({
 });
 
 function Page() {
-  // Aircraft clicked in the home-page traffic pattern open here by tail number.
-  useEffect(() => {
-    const hash = window.location.hash.slice(1);
-    if (!hash) return;
-    const t = window.setTimeout(() => document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" }), 450);
-    return () => window.clearTimeout(t);
-  }, []);
   return (
     <SiteLayout>
       <PageIntro

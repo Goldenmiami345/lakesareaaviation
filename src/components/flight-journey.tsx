@@ -84,7 +84,10 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const viewportHeight = viewportRef.current?.offsetHeight ?? window.innerHeight;
       const total = Math.max(1, el.offsetHeight - viewportHeight);
       const scrolled = journeyFrame(-rect.top / total, n);
-      const pinned = !reduce && rect.top <= 1 && rect.bottom >= viewportHeight - 1;
+      // Snapping only engages between the first and last pages; the way in from
+      // the section above and the way out below scroll 1:1 with the visitor.
+      const along = -rect.top / total;
+      const pinned = !reduce && along >= journeyStop(0, n) - 0.003 && along <= journeyStop(n - 1, n) + 0.003;
       if (pinned) snapOwners.add(el); else snapOwners.delete(el);
       root.classList.toggle("journey-snap", snapOwners.size > 0);
       if (fadeTopRef.current) fadeTopRef.current.style.opacity = Math.max(0, Math.min(1, rect.top / (viewportHeight * 0.6))).toFixed(3);
@@ -157,10 +160,11 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
       const rect = el.getBoundingClientRect();
       const dir = e.deltaY > 0 ? 1 : -1;
-      // The screen right above/below the journey: any wheel nudge toward it
-      // glides straight onto its first/last page.
-      const entering = !snapOwners.has(el) && ((dir > 0 && rect.top > 1 && rect.top <= vh + 1) || (dir < 0 && rect.bottom < vh - 1 && rect.bottom >= -1));
-      if (!snapOwners.has(el) && !entering) return;
+      if (!snapOwners.has(el)) return;
+      const total = Math.max(1, el.offsetHeight - vh);
+      const current = journeyNearestLanding(Math.max(0, Math.min(1, -rect.top / total)), n);
+      // At the first/last page, leaving is plain native scrolling, 1:1.
+      if ((dir > 0 && current >= n - 1) || (dir < 0 && current <= 0)) { release(); return; }
       const now = performance.now();
       const delta = Math.abs(e.deltaY);
       const fresh = now - lastWheel > 180 || delta > lastDelta * 1.6 + 4;
@@ -168,15 +172,25 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       e.preventDefault();
       if (now < lockUntil || !fresh) return;
       lockUntil = now + 650;
-      if (entering) { glideTo(stopTop(dir > 0 ? 0 : n - 1)); return; }
-      const total = Math.max(1, el.offsetHeight - vh);
-      const progress = Math.max(0, Math.min(1, -rect.top / total));
-      const current = progress >= 0.999 ? n : journeyNearestLanding(progress, n);
-      // Leaving past either end hands the page back to free scrolling so the
-      // visitor is never trapped at the last (or first) stop.
-      if (dir > 0 && current >= n - 1) { glideTo(stopTop(n) + vh); return; }
-      if (dir < 0 && current <= 0) { glideTo(stopTop(-1)); return; }
       window.scrollTo({ top: stopTop(current + dir), behavior: "smooth" });
+    };
+    // Briefly lift snapping so an outward scroll at either end isn't pulled back.
+    let releaseTimer = 0;
+    const release = () => {
+      root.classList.add("journey-free");
+      window.clearTimeout(releaseTimer);
+      releaseTimer = window.setTimeout(() => root.classList.remove("journey-free"), 900);
+    };
+    let touchY = 0;
+    const onTouchStart = (e: TouchEvent) => { touchY = e.touches[0]?.clientY ?? 0; };
+    const onTouchMove = (e: TouchEvent) => {
+      if (!el || reduce || !snapOwners.has(el) || e.touches.length !== 1) return;
+      const dy = touchY - (e.touches[0]?.clientY ?? touchY);
+      if (Math.abs(dy) < 6) return;
+      const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
+      const total = Math.max(1, el.offsetHeight - vh);
+      const current = journeyNearestLanding(Math.max(0, Math.min(1, -el.getBoundingClientRect().top / total)), n);
+      if ((dy > 0 && current >= n - 1) || (dy < 0 && current <= 0)) release();
     };
     const onJump = (e: Event) => {
       const d = (e as CustomEvent<{ id: string; index: number }>).detail;
@@ -187,11 +201,16 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     window.addEventListener("resize", renderScroll);
     window.addEventListener("wheel", onWheel, { passive: false });
     window.addEventListener("journey:jump", onJump);
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
     if (!reduce) window.addEventListener("pointermove", onMove, { passive: true });
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("journey:jump", onJump);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.clearTimeout(releaseTimer);
       if (el) snapOwners.delete(el);
       root.classList.toggle("journey-snap", snapOwners.size > 0);
       window.removeEventListener("scroll", onScroll);
@@ -215,11 +234,9 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   if (!s) return null;
   return (
     <section ref={sectionRef} id={id} aria-label={label} className="relative bg-ink text-background" style={{ height: `${stages.length * JOURNEY_STAGE_SVH + 100}svh` }}>
-      <div aria-hidden className="journey-stop pointer-events-none absolute left-0 h-px w-px" style={{ top: "-100svh" }} />
       {stages.map((st, i) => (
         <div key={`stop-${st.code}`} aria-hidden className="journey-stop journey-stop-page pointer-events-none absolute left-0 h-px w-px" style={{ top: `${journeyStop(i, stages.length) * stages.length * JOURNEY_STAGE_SVH}svh` }} />
       ))}
-      <div aria-hidden className="journey-stop pointer-events-none absolute left-0 h-px w-px" style={{ top: `${stages.length * JOURNEY_STAGE_SVH}svh` }} />
       <div ref={viewportRef} className="sticky top-0 h-svh overflow-hidden">
         {stages.map((st, i) => (
           <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="absolute -inset-[2%] will-change-transform backface-hidden" style={{ zIndex: stages.length - i }}>
@@ -272,17 +289,17 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         </nav>
 
         {/* Copy */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 mx-auto max-w-7xl px-5 pb-32 pr-16 md:pb-14 lg:px-8 lg:pb-20">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 mx-auto max-w-7xl px-5 pb-24 pr-14 md:pb-12 lg:px-8 lg:pb-16">
           <div ref={copyRef} className="journey-copy max-w-2xl">
             <p className="eyebrow photo-label">{s.code} · {s.label}</p>
-            <p className="mt-4 font-display text-6xl leading-none sm:text-8xl">{s.time}</p>
-            <h2 className="mt-4 font-display text-3xl sm:text-4xl">{s.title}</h2>
-            <p className="mt-3 max-w-lg text-background/75">{s.text}</p>
+            <p className="mt-2 font-display text-4xl leading-none sm:mt-4 sm:text-7xl lg:text-8xl">{s.time}</p>
+            <h2 className="mt-2 font-display text-xl leading-tight sm:mt-4 sm:text-4xl">{s.title}</h2>
+            <p className="mt-1 max-w-lg truncate text-sm text-background/75 sm:mt-3 sm:text-base">{s.text}</p>
             {s.location
-              ? <Link to="/contact" search={{ location: s.location }} className="interactive-arrow btn-shine pointer-events-auto mt-6 inline-flex min-h-12 items-center gap-3 bg-primary px-6 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>
+              ? <Link to="/contact" search={{ location: s.location }} className="interactive-arrow btn-shine pointer-events-auto mt-4 inline-flex min-h-10 items-center gap-3 bg-primary px-4 text-[11px] sm:mt-6 sm:min-h-12 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>
               : s.slug
-              ? <Link to="/programs/$slug" params={{ slug: s.slug }} className="interactive-arrow btn-shine pointer-events-auto mt-6 inline-flex min-h-12 items-center gap-3 bg-primary px-6 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>
-              : <Link to={s.to ?? "/contact"} className="interactive-arrow btn-shine pointer-events-auto mt-6 inline-flex min-h-12 items-center gap-3 bg-primary px-6 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>}
+              ? <Link to="/programs/$slug" params={{ slug: s.slug }} className="interactive-arrow btn-shine pointer-events-auto mt-4 inline-flex min-h-10 items-center gap-3 bg-primary px-4 text-[11px] sm:mt-6 sm:min-h-12 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>
+              : <Link to={s.to ?? "/contact"} className="interactive-arrow btn-shine pointer-events-auto mt-4 inline-flex min-h-10 items-center gap-3 bg-primary px-4 text-[11px] sm:mt-6 sm:min-h-12 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>}
           </div>
         </div>
       </div>

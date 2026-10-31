@@ -34,9 +34,9 @@ function HomePage() {
             <p className="mt-6 max-w-sm text-base leading-relaxed text-background/80 sm:mt-7 sm:max-w-lg sm:text-lg">From your first flight to commercial pilot and instructor.</p>
           </div>
           <div className="mt-7 reveal-delay"><Link to="/contact" className="interactive-arrow group inline-flex min-h-12 items-center gap-4 border-b border-background/45 pb-1 text-sm font-bold uppercase text-background transition-colors hover:border-primary">Build my training plan <span className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><ArrowRight className="size-4" /></span></Link></div>
-          <nav aria-label="Training locations" className="reveal-delay mt-7 flex flex-wrap items-center gap-x-1 gap-y-2 text-[11px] font-bold uppercase tracking-[0.16em] text-background/75">
-            <span className="mr-2 inline-flex items-center gap-1.5 text-background/55"><MapPin className="size-3.5" />Train at</span>
-            {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} className="rounded-full border border-background/25 px-3 py-1.5 transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground">{a.label}, {a.code} <span className="text-background/50">{a.time}</span></button>)}
+          <nav aria-label="Training locations" className="reveal-delay mt-6 flex flex-nowrap items-center gap-1 text-[10px] font-bold uppercase tracking-[0.08em] text-background/75 sm:gap-2 sm:text-[11px] sm:tracking-[0.14em]">
+            <MapPin aria-hidden className="mr-0.5 size-3.5 shrink-0 text-background/55" />
+            {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} className="shrink-0 whitespace-nowrap rounded-full border border-background/25 px-2 py-1.5 transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground sm:px-3">{a.label}, {a.code}</button>)}
           </nav>
           <ScrollCue targetId="flight-path" />
         </div>

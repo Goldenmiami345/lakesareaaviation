@@ -50,7 +50,8 @@ export function TrafficPattern({ airport, active }: { airport: PatternAirport; a
     const start = performance.now();
     const lap = lapSeconds(airport, points);
     const draw = (now: number) => {
-      const secs = reduce ? 0 : (now - start) / 1000;
+      // Played at one-third real time so the airplanes drift calmly across the aerial.
+      const secs = reduce ? 0 : ((now - start) / 1000) * 0.33;
       planes.forEach((_, i) => {
         const s = sampleAtTime(airport, secs + (lap * i) / planes.length + lap * 0.05, points);
         const lift = s.agl / airport.tpaAgl;
@@ -83,7 +84,7 @@ export function TrafficPattern({ airport, active }: { airport: PatternAirport; a
     return () => { cancelAnimationFrame(raf); io.disconnect(); };
   }, [active, airport, planes, points]);
 
-  const open = (reg: string) => void navigate({ to: "/fleet", hash: reg.toLowerCase() });
+  const open = (reg: string) => void navigate({ to: "/fleet", hash: reg.toLowerCase(), hashScrollIntoView: false });
   const info = hovered !== null ? planes[hovered] : null;
 
   return (
