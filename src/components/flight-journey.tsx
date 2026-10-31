@@ -125,6 +125,7 @@ export function goToJourneyPage(y: number, instant = false) {
 
 function installController() {
   controllerRefs += 1;
+  if (import.meta.env.DEV) (window as unknown as { __journeyPages?: () => JourneyPage[] }).__journeyPages = journeyPages;
   if (removeController) return;
   const root = document.documentElement;
   const reduce = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
