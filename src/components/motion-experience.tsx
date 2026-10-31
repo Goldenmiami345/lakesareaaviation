@@ -3,8 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { programs } from "../lib/site-data";
 
-export function MotionExperience() {
-  const { pathname } = useLocation();
+export function MotionExperience({ pageKey }: { pageKey: string }) {
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -37,7 +36,7 @@ export function MotionExperience() {
       cancelAnimationFrame(frame);
       window.removeEventListener("scroll", updateScroll);
     };
-  }, [pathname]);
+  }, [pageKey]);
 
   return <div className="scroll-progress" aria-hidden="true" />;
 }

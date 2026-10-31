@@ -1,4 +1,4 @@
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useLocation, useRouterState } from "@tanstack/react-router";
 import { ArrowUpRight, Menu, Phone, X } from "lucide-react";
 import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
 import logoAsset from "../assets/lakes-logo-transparent.png.asset.json";
@@ -74,7 +74,11 @@ export function MobileActions() {
 
 export function SiteLayout({ children, overlayHeader = false }: { children: ReactNode; overlayHeader?: boolean }) {
   const { pathname } = useLocation();
-  return <><MotionExperience /><Header overlay={overlayHeader} /><div key={pathname} className="page-enter">{children}</div><Footer /><MobileActions /></>;
+  // Key the single page-enter fade on the RESOLVED leaf match (state.matches only switches
+  // once the new route's loaders and code are ready), never on the raw pathname, so the
+  // old page stays still until the new one renders and the fade plays exactly once.
+  const pageKey = useRouterState({ select: (st) => st.matches[st.matches.length - 1]?.id ?? "" });
+  return <><MotionExperience pageKey={pageKey} /><Header overlay={overlayHeader} /><div key={pageKey} className="page-enter">{children}</div><Footer /><MobileActions /></>;
 }
 
 export function PageIntro({ eyebrow, title, text, image, imageAlt = "" }: { eyebrow: string; title: string; text: string; image?: string; imageAlt?: string }) {

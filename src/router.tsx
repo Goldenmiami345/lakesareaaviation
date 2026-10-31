@@ -10,10 +10,11 @@ export const getRouter = () => {
     context: { queryClient },
     trailingSlash: "preserve",
     defaultPreloadStaleTime: 0,
-    defaultPreload: "intent",
-    defaultPreloadDelay: 50,
-    // One soft cross-fade per page change instead of old/new page flashes.
-    defaultViewTransition: true,
+    // Phones have no hover: preload route code for every link as soon as it is on screen
+    // (header, footer, mobile menu), so a tapped page is ready instantly.
+    defaultPreload: "viewport",
+    defaultPreloadDelay: 0,
+    // No view transition: the CSS page-enter fade in SiteLayout is the ONE page-change animation.
   });
 
   // Scroll management is handled here instead of the built-in scrollRestoration:
