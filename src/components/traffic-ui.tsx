@@ -158,7 +158,7 @@ export function RadarTag({ reg, index, seed, label, tabIndex, hit, tagRef, textR
   void index; void seed;
   return (
     <g ref={tagRef} className="traffic-tag">
-      <g className="traffic-history">{[0,1,2,3].map(i=><circle key={i} r={1.2} opacity={.28-i*.055}/>)}</g>
+      <g className="traffic-history">{[0,1,2,3].map(i=><circle key={i} r={1.75} opacity={.28-i*.055}/>)}</g>
       <circle r={7} className="traffic-target" />
       <circle r={7} className="traffic-ping" />
       <line x1={5} y1={-5} x2={15} y2={-15} className="traffic-leader" />
@@ -170,6 +170,26 @@ export function RadarTag({ reg, index, seed, label, tabIndex, hit, tagRef, textR
 }
 
 type Box = { l: number; t: number; r: number; b: number };
+/** Constant-screen-size leg labels, outside their segment and clear of live UI/cards. */
+export function placePatternLabel(el: SVGTextElement, m: DOMMatrix, p:{x:number;y:number;dx:number;dy:number}, occupied:DOMRect[]) {
+  const k=Math.hypot(m.a,m.b)||1,x=m.a*p.x+m.c*p.y+m.e,y=m.b*p.x+m.d*p.y+m.f;
+  const section=el.closest('section');const blocked:DOMRect[]=[...occupied];
+  document.querySelectorAll('header,[data-traffic-card]').forEach(n=>blocked.push(n.getBoundingClientRect()));
+  section?.querySelectorAll('.journey-hud,nav[aria-label$="stages"],.journey-copy p,.journey-copy h2,.journey-copy a,[aria-label="Reset zoom"]').forEach(n=>{
+    if(getComputedStyle(n).display==='none'||getComputedStyle(n.closest('.journey-copy-wrap')??n).opacity==='0')return;
+    blocked.push(n.getBoundingClientRect());
+  });
+  const w=Math.max(30,el.getComputedTextLength());
+  for(const [offset,tangent] of [[18,0],[30,0],[44,0],[18,-32],[18,32],[30,-48],[30,48]]){
+    const sx=x+p.dx*((offset??18)+w*.25)-p.dy*(tangent??0),sy=y+p.dy*(offset??18)+p.dx*(tangent??0);
+    const b={l:sx-w/2,t:sy-6,r:sx+w/2,b:sy+6};
+    if(b.l<12||b.r>innerWidth-12||b.t<12||b.b>innerHeight-12||blocked.some(r=>hits(b,{l:r.left-7,t:r.top-7,r:r.right+7,b:r.bottom+7})))continue;
+    const point=new DOMPoint(sx,sy).matrixTransform(m.inverse());
+    el.setAttribute('transform',`translate(${point.x} ${point.y}) scale(${1/k})`);el.setAttribute('visibility','visible');
+    occupied.push(new DOMRect(b.l,b.t,w,12));return;
+  }
+  el.setAttribute('visibility','hidden');
+}
 const hits = (a: Box, b: Box) => a.l < b.r && a.r > b.l && a.t < b.b && a.b > b.t;
 let obstacleCache: { at: number; key: Element | null; list: Box[]; safe: Box } | null = null;
 function obstacles(g: SVGGElement) {

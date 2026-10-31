@@ -1,11 +1,16 @@
 # Roadmap
 
+- [x] Fix contact slash-dependent hydration; verify four pages using production React replay of the exact repair and updated preview.
+- [x] Restore all three desktop airports to 1.15×; preserve phone 1.1029×/1.25×/1.25×.
+- [x] Draw exact flight paths, collision-checked labels and stronger targets; six screenshots, 30 tests, 4× pinch and one-notch/native-up checks pass.
+- [ ] Verify fresh production artifacts and deployed hydration after publish: no new dist/server output is available in this workspace; published-before and preview-after all-27 HTML guard checks pass.
+
 - [x] Disable visitor models/sprites with one flag; add hidden prerendered models preview; verify 390×844/1280×900, 28 tests and dev SSR (production verification remains blocked below).
 
 - [x] Install supplied GLBs and exact top sprites; verify three cards/fleet rotation/drag/pinch isolation and dev SSR; report production limitations.
 
 - [x] Add production HTML gate for all 26 routes, fleet order and unfinished Suspense; validate gate against empty shell.
-- [ ] Confirm production SSR repair/root cause and production mobile hydration: awaiting new hosted build/artifacts (current hosted build predates edits; dev-only checks pass).
+- [x] Confirm production SSR repair: owner verified deployment bd791aef returns complete server HTML; hydration follow-up tracked above.
 
 - [x] Add Cardinal facts, source-pixel cutout, finger-free walk-around and KLXL rotation (fine alpha-edge limitations reported).
 - [x] Fit airport default zoom to complete patterns and protected UI on phone/desktop (desktop targets cannot fit unchanged copy; actual reduced values reported).
