@@ -75,7 +75,7 @@ function ContactPage() {
         </div>
 
         <aside className="h-fit bg-ink p-6 text-background lg:sticky lg:top-24 sm:p-8">
-          <p className="eyebrow photo-label">Your minimum plan</p>
+          <p className="stage-label">Your minimum plan</p>
           <div className="mt-6 grid grid-cols-2 gap-px bg-background/20">
             <Result value={`${totals.days}+`} label="Training days" />
             <Result value={money(totals.total)} label="Estimated minimum" />
