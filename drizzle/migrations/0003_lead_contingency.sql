@@ -1,0 +1,1 @@
+ALTER TABLE public.training_plan_leads ADD COLUMN IF NOT EXISTS contingency integer, ADD COLUMN IF NOT EXISTS buffered_total integer;

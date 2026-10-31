@@ -210,3 +210,7 @@ h2.font-display, h3.font-display { line-height: 1.15; }
 /* Soft eased blend from ink bands into light sections; reads --surface-light so the color trial reverts cleanly. */
 @utility edge-fade-b { position: relative; &::after { content: ""; position: absolute; inset: auto 0 0 0; height: 96px; pointer-events: none; z-index: 0; background: linear-gradient(to bottom, transparent 0%, color-mix(in oklab, var(--surface-light) 8%, transparent) 25%, color-mix(in oklab, var(--surface-light) 35%, transparent) 55%, color-mix(in oklab, var(--surface-light) 75%, transparent) 80%, var(--surface-light) 100%); } }
 @utility edge-fade-t { position: relative; &::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 96px; pointer-events: none; z-index: 0; background: linear-gradient(to top, transparent 0%, color-mix(in oklab, var(--surface-light) 8%, transparent) 25%, color-mix(in oklab, var(--surface-light) 35%, transparent) 55%, color-mix(in oklab, var(--surface-light) 75%, transparent) 80%, var(--surface-light) 100%); } }
+
+/* iOS native date inputs ignore width unless appearance is reset. */
+input.date-field { -webkit-appearance: none; appearance: none; display: block; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; height: 3.5rem; padding: 0 1rem; line-height: 3.5rem; text-align: left; }
+input.date-field::-webkit-date-and-time-value { text-align: left; margin: 0; }

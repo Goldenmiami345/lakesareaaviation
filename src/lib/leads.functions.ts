@@ -49,6 +49,8 @@ export const submitTrainingLead = createServerFn({ method: "POST" })
       airport_pickup: data.airportPickup,
       training_days: data.trainingDays,
       estimated_total: data.estimatedTotal,
+      contingency: data.contingency,
+      buffered_total: data.bufferedTotal,
       aircraft_note: data.aircraftNote || null,
       source_url: data.sourceUrl || null,
       ip_hash: ipHash,
