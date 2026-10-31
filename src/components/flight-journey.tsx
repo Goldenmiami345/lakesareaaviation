@@ -18,7 +18,7 @@ import fl from "../assets/journey/loc-fort-lupton.webp";
 import cw from "../assets/journey/loc-cottonwood.webp";
 import commercial from "../assets/photos/sunset-ramp.webp";
 
-type Stage = { code: string; label: string; time: string; title: string; text: string; img: string; alt: string; cta: string; slug?: string; to?: "/introductory-flights" | "/contact" | "/locations"; hud?: string; zoom?: number; zoomIn?: number; w?: number; h?: number; video?: string; position?: string; traffic?: PatternAirport };
+type Stage = { code: string; label: string; time: string; title: string; text: string; img: string; alt: string; cta: string; slug?: string; location?: string; to?: "/introductory-flights" | "/contact" | "/locations"; hud?: string; zoom?: number; zoomIn?: number; w?: number; h?: number; video?: string; position?: string; traffic?: PatternAirport };
 
 const journeyStages: Stage[] = [
   { code: "01", label: "Discovery flight", time: "$100", title: "Take the controls on day one.", text: "Left seat, instructor beside you.", img: clouds, alt: "Sunrise above a sea of clouds", cta: "Book an intro flight", to: "/introductory-flights" },
@@ -30,9 +30,9 @@ const journeyStages: Stage[] = [
 ];
 
 export const airportStages: Stage[] = [
-  { code: "MN", label: "Little Falls", hud: "KLXL · 13129 Airport Rd", time: "KLXL", title: "Little Falls, Minnesota.", text: "Little Falls/Morrison County Airport", img: lf, alt: "USGS aerial of Little Falls/Morrison County Airport (KLXL), updated to show paved runways 13/31 and 18/36", cta: "See our locations", to: "/locations", w: 1500, h: 1500, zoom: 0.4, zoomIn: 0.04, traffic: airportTraffic.KLXL },
-  { code: "CO", label: "Fort Lupton", hud: "18V · 7507 Co Rd 39", time: "18V", title: "Fort Lupton, Colorado.", text: "Platte Valley Airpark", img: fl, alt: "Public-domain USGS aerial photo of Platte Valley Airpark (18V) runway, hangars and surrounding Colorado farm fields", cta: "See our locations", to: "/locations", w: 1500, h: 1500, zoom: 0.12, zoomIn: 0.02, traffic: airportTraffic["18V"] },
-  { code: "AZ", label: "Cottonwood", hud: "P52 · 1001 W Mingus Ave", time: "P52", title: "Cottonwood, Arizona.", text: "Cottonwood Municipal Airport", img: cw, alt: "Public-domain USGS aerial photo of Cottonwood Municipal Airport (P52) runway 14/32, ramp and surrounding Verde Valley terrain", cta: "Build my training plan", to: "/contact", w: 1500, h: 1500, zoom: 0.18, zoomIn: 0.03, traffic: airportTraffic.P52 },
+  { code: "MN", label: "Little Falls", hud: "KLXL · 13129 Airport Rd", time: "KLXL", title: "Little Falls, Minnesota.", text: "Little Falls/Morrison County Airport", img: lf, alt: "USGS aerial of Little Falls/Morrison County Airport (KLXL), updated to show paved runways 13/31 and 18/36", cta: "Build my training plan", location: "KLXL", w: 1500, h: 1500, zoom: 0.4, zoomIn: 0.04, traffic: airportTraffic.KLXL },
+  { code: "CO", label: "Fort Lupton", hud: "18V · 7507 Co Rd 39", time: "18V", title: "Fort Lupton, Colorado.", text: "Platte Valley Airpark", img: fl, alt: "Public-domain USGS aerial photo of Platte Valley Airpark (18V) runway, hangars and surrounding Colorado farm fields", cta: "Build my training plan", location: "18V", w: 1500, h: 1500, zoom: 0.12, zoomIn: 0.02, traffic: airportTraffic["18V"] },
+  { code: "AZ", label: "Cottonwood", hud: "P52 · 1001 W Mingus Ave", time: "P52", title: "Cottonwood, Arizona.", text: "Cottonwood Municipal Airport", img: cw, alt: "Public-domain USGS aerial photo of Cottonwood Municipal Airport (P52) runway 14/32, ramp and surrounding Verde Valley terrain", cta: "Build my training plan", location: "P52", w: 1500, h: 1500, zoom: 0.18, zoomIn: 0.03, traffic: airportTraffic.P52 },
 ];
 
 const snapOwners = new Set<Element>();
@@ -41,7 +41,7 @@ const SHOW_TRAFFIC = true;
 
 // Programmatic glide that temporarily disables journey snapping, so jumps
 // (back to top, location shortcuts) travel straight to their target.
-export function glideTo(top: number) {
+export function glideTo(top: number, instant = false) {
   const root = document.documentElement;
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   root.classList.add("journey-free");
@@ -49,7 +49,8 @@ export function glideTo(top: number) {
   const finish = () => { if (done) return; done = true; root.classList.remove("journey-free"); window.removeEventListener("scrollend", finish); };
   window.addEventListener("scrollend", finish);
   window.setTimeout(finish, 2200);
-  window.scrollTo({ top, behavior: reduce ? "instant" : "smooth" });
+  window.scrollTo({ top, behavior: reduce || instant ? "instant" : "smooth" });
+  if (instant) window.requestAnimationFrame(finish);
 }
 
 export function jumpToJourney(id: string, index: number) {
@@ -179,7 +180,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     };
     const onJump = (e: Event) => {
       const d = (e as CustomEvent<{ id: string; index: number }>).detail;
-      if (d?.id === id) glideTo(stopTop(d.index));
+      if (d?.id === id) glideTo(stopTop(d.index), true);
     };
     render();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -277,7 +278,9 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
             <p className="mt-4 font-display text-6xl leading-none sm:text-8xl">{s.time}</p>
             <h2 className="mt-4 font-display text-3xl sm:text-4xl">{s.title}</h2>
             <p className="mt-3 max-w-lg text-background/75">{s.text}</p>
-            {s.slug
+            {s.location
+              ? <Link to="/contact" search={{ location: s.location }} className="interactive-arrow btn-shine pointer-events-auto mt-6 inline-flex min-h-12 items-center gap-3 bg-primary px-6 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>
+              : s.slug
               ? <Link to="/programs/$slug" params={{ slug: s.slug }} className="interactive-arrow btn-shine pointer-events-auto mt-6 inline-flex min-h-12 items-center gap-3 bg-primary px-6 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>
               : <Link to={s.to ?? "/contact"} className="interactive-arrow btn-shine pointer-events-auto mt-6 inline-flex min-h-12 items-center gap-3 bg-primary px-6 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>}
           </div>

@@ -19,10 +19,13 @@ const ratings: Rating[] = [
 export const Route = createFileRoute("/contact")({
   staticData: { sitemap: true },
   head: () => ({ meta: meta("Build Your Training Plan | Lakes Area Aviation", "Select the ratings you have and want, then estimate your minimum training timeline, housing, and transportation.") }),
+  validateSearch: (search: Record<string, unknown>): { location?: string } => (typeof search.location === "string" ? { location: search.location } : {}),
   component: ContactPage,
 });
 
 function ContactPage() {
+  const { location } = Route.useSearch();
+  const preferred = locations.find((l) => location && l.airport.toUpperCase().includes(location.toUpperCase()))?.city ?? "";
   const [earned, setEarned] = useState<string[]>([]);
   const [planned, setPlanned] = useState<string[]>(["cfi", "cfii"]);
   const [housing, setHousing] = useState(true);
@@ -86,7 +89,7 @@ function ContactPage() {
       <section id="request" className="mt-20 scroll-mt-24 border-t border-border pt-14">
         {sent ? <div className="grid min-h-80 place-items-center bg-secondary p-8 text-center"><div><Check className="mx-auto size-10 text-primary" /><h2 className="mt-5 font-display text-4xl">Your plan is ready to review.</h2><p className="mt-3 text-muted-foreground">Call {SCHOOL_PHONE} to confirm dates, availability, pickup, and your written estimate.</p></div></div> : <div className="grid gap-10 lg:grid-cols-[.7fr_1.3fr]"><div><p className="eyebrow text-primary">Request a review</p><h2 className="mt-4 font-display text-4xl">Put real dates around your plan.</h2><a href={SCHOOL_PHONE_TEL} className="mt-7 inline-block font-display text-2xl text-primary">{SCHOOL_PHONE}</a></div><form onSubmit={(event: FormEvent<HTMLFormElement>) => { event.preventDefault(); setSent(true); }} className="grid gap-5 sm:grid-cols-2">
           <Field label="First name" /><Field label="Last name" /><Field label="Email" type="email" /><Field label="Phone" type="tel" />
-          <Select label="Preferred location" options={locations.map(l => l.city)} /><Field label="Target start date" type="date" />
+          <Select key={preferred} label="Preferred location" options={locations.map(l => l.city)} defaultValue={preferred} /><Field label="Target start date" type="date" />
           <label className="sm:col-span-2"><span className="mb-2 block text-xs font-bold uppercase">Anything else we should know?</span><textarea className="min-h-28 w-full border border-input bg-background p-4 outline-none focus:border-primary" /></label>
           <Button className="min-h-14 rounded-none sm:col-span-2">Send my training plan request</Button>
           <p className="text-xs text-muted-foreground sm:col-span-2">This preview confirms your request on screen. Connect the final form destination before publishing to receive submissions.</p>
@@ -102,6 +105,6 @@ function ServiceChoice({ checked, onChange, icon, title, detail }: { checked: bo
 function Result({ value, label }: { value: string; label: string }) { return <div className="bg-ink p-4"><p className="font-display text-3xl text-background">{value}</p><p className="mt-1 text-[.65rem] font-bold uppercase text-background/55">{label}</p></div>; }
 function Line({ label, value }: { label: string; value: string }) { return <div className="flex items-center justify-between gap-4"><span className="text-background/70">{label}</span><strong>{value}</strong></div>; }
 function Field({ label, type = "text" }: { label: string; type?: string }) { return <label><span className="mb-2 block text-xs font-bold uppercase">{label}</span><input required type={type} className="h-14 w-full border border-input bg-background px-4 outline-none focus:border-primary" /></label>; }
-function Select({ label, options }: { label: string; options: string[] }) { return <label><span className="mb-2 block text-xs font-bold uppercase">{label}</span><select required className="h-14 w-full border border-input bg-background px-4"><option value="">Select</option>{options.map(x => <option key={x}>{x}</option>)}</select></label>; }
+function Select({ label, options, defaultValue = "" }: { label: string; options: string[]; defaultValue?: string }) { return <label><span className="mb-2 block text-xs font-bold uppercase">{label}</span><select required defaultValue={defaultValue} className="h-14 w-full border border-input bg-background px-4"><option value="">Select</option>{options.map(x => <option key={x}>{x}</option>)}</select></label>; }
 function money(value: number) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value); }
 const meta = (title: string, description: string) => [{ title }, { name: "description", content: description }, { property: "og:title", content: title }, { property: "og:description", content: description }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }];

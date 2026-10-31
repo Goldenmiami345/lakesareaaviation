@@ -36,7 +36,7 @@ function HomePage() {
           <div className="mt-7 reveal-delay"><Link to="/contact" className="interactive-arrow group inline-flex min-h-12 items-center gap-4 border-b border-background/45 pb-1 text-sm font-bold uppercase text-background transition-colors hover:border-primary">Build my training plan <span className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><ArrowRight className="size-4" /></span></Link></div>
           <nav aria-label="Training locations" className="reveal-delay mt-7 flex flex-wrap items-center gap-x-1 gap-y-2 text-[11px] font-bold uppercase tracking-[0.16em] text-background/75">
             <span className="mr-2 inline-flex items-center gap-1.5 text-background/55"><MapPin className="size-3.5" />Train at</span>
-            {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} className="rounded-full border border-background/25 px-3 py-1.5 transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground">{a.label} <span className="text-background/50">{a.time}</span></button>)}
+            {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} className="rounded-full border border-background/25 px-3 py-1.5 transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground">{a.label}, {a.code} <span className="text-background/50">{a.time}</span></button>)}
           </nav>
           <ScrollCue targetId="flight-path" />
         </div>
