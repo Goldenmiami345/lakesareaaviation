@@ -34,4 +34,5 @@
 - Light surfaces (cards, popovers/menus) read the single --surface-light token in src/styles.css (beige color trial, see docs/color-trial-beige-2026-10-31.md for values and the one-line revert), so the trial is reversible in one place.
 - Page changes have exactly one animation: the CSS page-enter in SiteLayout keyed on the resolved leaf match id (not the pathname) with no router view transition, and links preload on viewport, because pathname keying replayed the fade on the old page before the new one loaded.
 - SiteLayout reads the presented match via useMatch, not the aggregate router-state store; prerender onSuccess validates actual production HTML against all route headings/copy and fleet order, failing the build on incomplete boundaries.
+- Supplied GLBs stay in public/models under uppercase registrations with public/_headers cache/MIME rules; model camera/lighting and exact wingspans live in model-settings for tested consistency.
 - Hero comparisons live in a standalone noindex, sitemap-excluded prerendered route without shared floating controls; they never modify the production homepage, so photo approval remains independent.
