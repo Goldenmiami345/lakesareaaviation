@@ -3,17 +3,11 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from './ui/button';
 
-import c6717a from "../assets/traffic-card/n6717a.webp";
-import c8570b from "../assets/traffic-card/n8570b.webp";
-import c6641f from "../assets/traffic-card/n6641f.webp";
-import c7108g from "../assets/traffic-card/n7108g.webp";
-import c3353p from "../assets/traffic-card/n3353p.webp";
-import c11059 from "../assets/traffic-card/n11059.webp";
+import { fleet } from '../lib/site-data';
 
-export type TrafficPlaneInfo = { reg: string; type: string; nickname: string };
-
-/** Background-removed cut-outs of each airplane's real fleet photo (480 px WebP with alpha). */
-export const CARD_PHOTOS: Record<string, string> = { N6717A: c6717a, N8570B: c8570b, N6641F: c6641f, N7108G: c7108g, N3353P: c3353p, N11059: c11059 };
+export type TrafficPlaneInfo = { reg: string; type: string; nickname?: string };
+/** Fleet and traffic always share the exact same alpha cutout. */
+export const CARD_PHOTOS: Record<string, string> = Object.fromEntries(fleet.map(p => [p.registration, p.image]));
 
 /** Warm the cache for a stage's airplanes as soon as it becomes active, so the card photo is instant. */
 export function usePreloadCardPhotos(regs: readonly string[], active: boolean) {

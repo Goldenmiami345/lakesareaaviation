@@ -69,7 +69,7 @@ function ContactPage() {
   }, []);
   const showBar = inPlanner && !breakdownVisible;
   const submitLead = useServerFn(submitTrainingLead);
-  const aircraftNote = plane ? `I’d like to train in ${plane.registration} “${plane.nickname}” (${plane.name}).` : "";
+  const aircraftNote = plane ? `I’d like to train in ${plane.registration}${plane.nickname ? ` “${plane.nickname}”` : ""} (${plane.name}).` : "";
   const selected = ratings.filter(r => planned.includes(r.id) && !earned.includes(r.id));
   const totals = useMemo(() => {
     const days = selected.reduce((sum, r) => sum + r.days, 0);

@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { lazy, Suspense, useLayoutEffect, useRef, useState } from "react";
-import { ArrowRight, ChevronDown, Rotate3d } from "lucide-react";
+import { ArrowRight, ChevronDown, Maximize } from "lucide-react";
 import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
+import { Button } from "../components/ui/button";
+import { FleetWalkaround } from "../components/fleet-walkaround";
 import { fleet, type FleetRole } from "../lib/site-data";
 
 // The viewer code is only downloaded when a visitor opens it.
@@ -60,6 +62,7 @@ function Page() {
   const [role, setRole] = useState<FleetRole | "all">("all");
   const [hashId, setHashId] = useState("");
   const [viewer, setViewer] = useState<Plane | null>(null);
+  const [viewIndex, setViewIndex] = useState(0);
   const opener = useRef<HTMLButtonElement | null>(null);
 
   // A #tail link (e.g. from the home-page traffic) opens that card before the first paint.
@@ -99,37 +102,38 @@ function Page() {
         <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {shown.map((f) => (
             <PlaneCard key={f.registration} f={f} open={hashId === f.registration.toLowerCase()}
-              onView={(btn) => { opener.current = btn; setViewer(f); }} />
+              onView={(btn, index = 0) => { opener.current = btn; setViewIndex(index); setViewer(f); }} />
           ))}
         </div>
       </main>
       <InquiryBand />
       {viewer && (
         <Suspense fallback={<div className="fixed inset-0 z-[80] bg-ink" />}>
-          <AircraftViewer plane={viewer} onClose={() => { setViewer(null); opener.current?.focus(); }} />
+          <AircraftViewer plane={viewer} initialIndex={viewIndex} onClose={() => { setViewer(null); opener.current?.focus(); }} />
         </Suspense>
       )}
     </SiteLayout>
   );
 }
 
-function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn: HTMLButtonElement) => void }) {
+function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn: HTMLButtonElement, index?: number) => void }) {
   const id = f.registration.toLowerCase();
   const specs = Object.entries(f.specs ?? {});
   const equipment = specs.filter(([k]) => ["GPS", "Equipment", "IFR/VFR", "Coms"].includes(k));
   const endorsements = ENDORSEMENTS[f.role];
   return (
     <article id={id} className="scroll-mt-20 overflow-hidden border border-border bg-background target:border-primary">
-      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-        <img src={f.image} alt={`${f.name} ${f.registration} “${f.nickname}”`} width={1200} height={900} loading="lazy" decoding="async" className="h-full w-full object-cover" />
-        <button type="button" onClick={(e) => onView(e.currentTarget)} className="absolute bottom-3 right-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-ink/80 px-4 text-[11px] font-bold uppercase tracking-[0.14em] text-background backdrop-blur-md hover:bg-primary">
-          <Rotate3d className="size-4" /> Look around
-        </button>
+      <div className="relative aspect-[4/3] overflow-hidden bg-background">
+        <img src={f.image} alt={`${f.name} ${f.registration}${f.nickname ? ` “${f.nickname}”` : ""}`} width={1200} height={900} loading="lazy" decoding="async" className="fleet-cutout h-full w-full object-contain p-5" />
+        <Button variant="secondary" onClick={(e) => onView(e.currentTarget)} className="absolute bottom-3 right-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-ink/80 px-4 text-[11px] font-bold uppercase tracking-[0.14em] text-background backdrop-blur-md hover:bg-primary">
+          <Maximize className="size-4" /> View photo
+        </Button>
       </div>
+      {f.walkaround && <FleetWalkaround photos={f.walkaround} reg={f.registration} onOpen={(i, btn) => onView(btn, i)} />}
       <div className="p-5 sm:p-6">
         <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-primary"><span className="h-px w-5 bg-primary" />{f.registration}</p>
         <h2 className="mt-2 font-display text-2xl leading-tight sm:text-3xl">{f.name}</h2>
-        <p className="font-display text-base text-muted-foreground">“{f.nickname}”</p>
+        {f.nickname && <p className="font-display text-base text-muted-foreground">“{f.nickname}”</p>}
         <dl className="mt-4 flex flex-wrap gap-2">
           {keyStats(f).map((s) => (
             <div key={s.k} className="rounded-full border border-border px-3 py-1.5 text-xs">
