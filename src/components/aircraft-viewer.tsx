@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import type { fleet } from "../lib/site-data";
 
@@ -98,7 +99,8 @@ export default function AircraftViewer({ plane, onClose }: { plane: Plane; onClo
   };
   const up = (e: React.PointerEvent) => { pointers.current.delete(e.pointerId); if (pointers.current.size < 2) pinch.current = null; };
 
-  return (
+  // Portal to <body> so the page-transition wrapper can’t trap it under the header.
+  return createPortal(
     <div role="dialog" aria-modal="true" aria-label={`${plane.registration} viewer`} className="fixed inset-0 z-[80] flex flex-col bg-ink text-background">
       <div className="flex items-center justify-between gap-3 px-4 pb-2 pt-[max(.75rem,env(safe-area-inset-top))]">
         <div>
@@ -123,6 +125,7 @@ export default function AircraftViewer({ plane, onClose }: { plane: Plane; onClo
         </div>
         <p className="max-w-xs text-[11px] leading-snug text-background/60">Real photos of this airplane. A true-to-paint 3D model isn’t available yet, so we don’t show an invented one.</p>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
