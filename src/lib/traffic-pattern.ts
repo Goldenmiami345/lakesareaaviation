@@ -47,11 +47,12 @@ export function patternWaypoints(a: PatternAirport): Waypoint[] {
   return [
     { ...at(len * 0.08, 0), agl: 0, knots: 60, phase: "Touch-and-go" },
     { ...at(len * 0.45, 0), agl: 0, knots: 60, phase: "Takeoff" },
-    { ...at(len + ext, 0), agl: tpa * 0.55, knots: 75, phase: "Upwind" },
-    { ...at(len + ext, off), agl: tpa * 0.9, knots: 80, phase: "Crosswind" },
+    // Each waypoint names the leg that starts there.
+    { ...at(len + ext, 0), agl: tpa * 0.55, knots: 75, phase: "Crosswind" },
+    { ...at(len + ext, off), agl: tpa * 0.9, knots: 80, phase: "Downwind" },
     { ...at(len * 0.5, off), agl: tpa, knots: 90, phase: "Downwind" },
-    { ...at(-ext, off), agl: tpa, knots: 85, phase: "Downwind" },
-    { ...at(-ext, 0), agl: tpa * 0.55, knots: 75, phase: "Base" },
+    { ...at(-ext, off), agl: tpa, knots: 85, phase: "Base" },
+    { ...at(-ext, 0), agl: tpa * 0.55, knots: 75, phase: "Final" },
     { ...at(len * 0.08, 0), agl: 0, knots: 65, phase: "Final" },
   ];
 }
