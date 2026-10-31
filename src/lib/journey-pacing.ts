@@ -108,6 +108,8 @@ export function sectionAt(pages: SectionPage[], y: number) {
 }
 
 export function sectionStep(pages: SectionPage[], y: number, dir: 1 | -1): number | null {
+  // Upward movement is always free, native scrolling: it never pages.
+  if (dir < 0) return null;
   const g = sectionAt(pages, y);
   if (g < 0) return null;
   const own = pages.filter((p) => p.group === g).map((p) => p.y).sort((a, b) => a - b);

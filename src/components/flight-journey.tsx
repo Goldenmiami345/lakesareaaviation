@@ -169,6 +169,7 @@ function installController() {
   const root = document.documentElement;
   const reduce = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const busy = () => paging || performance.now() < pagingUntil;
+  const cancelGlide = () => { cancelAnimationFrame(tweenFrame); paging = false; pagingUntil = 0; landedUntil = 0; root.classList.remove("journey-paging"); };
   const inSection = (pages: SectionPage[]) => sectionAt(pages, window.scrollY) >= 0;
   const step = (dir: 1 | -1, touch = false) => {
     const y = sectionStep(journeyPages(), window.scrollY, dir);
@@ -181,6 +182,8 @@ function installController() {
     if (reduce() || e.ctrlKey || e.metaKey || Math.abs(e.deltaY) < Math.abs(e.deltaX) || root.classList.contains("journey-free")) return;
     const pages = journeyPages();
     const dir = e.deltaY > 0 ? 1 : -1;
+    // Upward wheel scrolling is always linear and native.
+    if (dir < 0) { if (busy()) { cancelGlide(); } return; }
     if (busy()) { e.preventDefault(); return; }
     if (!inSection(pages)) return;
     const now = performance.now(), delta = Math.abs(e.deltaY);
@@ -222,27 +225,33 @@ function installController() {
       const pages = journeyPages();
       // Only claim swipes that move between stages of the same section; section
       // edges (into/out of a journey) stay native, free scrolling with momentum.
-      g.claimed = busy() || (inSection(pages) && sectionStep(pages, window.scrollY, dy > 0 ? 1 : -1) !== null);
+      // Upward drags are always native 1:1 scrolling; a glide in progress yields to them.
+      if (dy < 0) { if (busy()) cancelGlide(); g = null; rejected = true; return; }
+      g.claimed = busy() || (inSection(pages) && sectionStep(pages, window.scrollY, 1) !== null);
       if (!g.claimed) { g = null; rejected = true; return; }
     }
     if (e.cancelable) e.preventDefault();
-    if (!g.fired && !busy() && Math.abs(dy) >= PAGE_SWIPE_PX) { g.fired = true; step(dy > 0 ? 1 : -1, true); }
+    if (!g.fired && !busy() && dy >= PAGE_SWIPE_PX) { g.fired = true; step(1, true); }
   };
   let settleTimer = 0;
+  // Direction of the latest scroll movement: upward motion never settles or pages.
+  let lastDir = 1, lastScrollY = window.scrollY;
   const onTouchEnd = (e: TouchEvent) => { if (e.touches.length === 0) { multi = false; touching = false; g = null; scheduleSettle(); } };
   // Free scrolling that comes to rest inside a section (which then fully fills
   // the screen) settles onto its nearest stage; outside sections nothing snaps.
   const scheduleSettle = () => {
     window.clearTimeout(settleTimer);
     settleTimer = window.setTimeout(() => {
-      if (fingerDown() || busy() || reduce() || zoomedIn() || root.classList.contains("journey-free")) return;
+      if (fingerDown() || busy() || reduce() || zoomedIn() || root.classList.contains("journey-free") || lastDir < 0) return;
       const near = nearestSectionPage(journeyPages(), window.scrollY);
       if (near !== null && Math.abs(near - window.scrollY) > 2) runPath([{ y: near, instant: false }]);
     }, 180);
   };
   const onScroll = () => {
     const y = window.scrollY;
-    if (!paging && !fingerDown() && performance.now() < landedUntil && Math.abs(y - landedY) > 1) { window.scrollTo({ top: landedY, behavior: "instant" }); return; }
+    if (Math.abs(y - lastScrollY) > 0.5) lastDir = y > lastScrollY ? 1 : -1;
+    lastScrollY = y;
+    if (!paging && !fingerDown() && performance.now() < landedUntil && y - landedY > 1) { window.scrollTo({ top: landedY, behavior: "instant" }); return; }
     scheduleSettle();
   };
   window.addEventListener("wheel", onWheel, { passive: false });
@@ -306,7 +315,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const target = scrolled.stage + scrolled.transition;
       const dt = prevTime ? Math.min(64, now - prevTime) : 16;
       prevTime = now;
-      if (shown === null || reduce || Math.abs(target - shown) > 2) shown = target;
+      // Scrolling back up is tied directly to the scroll position: a continuous crossfade, no easing lag.
+      if (shown === null || reduce || Math.abs(target - shown) > 2 || target < shown) shown = target;
       else shown += (target - shown) * (1 - Math.exp(-dt / 320));
       if (Math.abs(target - shown) < 0.002) shown = target;
       if (shown !== target) frame = requestAnimationFrame(render);

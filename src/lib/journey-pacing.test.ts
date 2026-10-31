@@ -88,7 +88,7 @@ test("section paging: one page inside a section, free scrolling at every section
   const { sectionStep, nearestSectionPage } = await import("./journey-pacing");
   const pages = [{ y: 800, group: 0 }, { y: 1600, group: 0 }, { y: 2400, group: 0 }, { y: 4000, group: 1 }, { y: 4800, group: 1 }];
   assert.equal(sectionStep(pages, 800, 1), 1600);
-  assert.equal(sectionStep(pages, 1600, -1), 800);
+  assert.equal(sectionStep(pages, 1600, -1), null); // upward is always linear
   assert.equal(sectionStep(pages, 800, -1), null); // up out of Discovery to the hero: free
   assert.equal(sectionStep(pages, 2400, 1), null); // down out of The Right Seat: free
   assert.equal(sectionStep(pages, 4000, -1), null); // up out of Little Falls: free
