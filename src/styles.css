@@ -150,3 +150,9 @@
 .tap-scroll-dot { opacity: 0; box-shadow: 0 0 14px color-mix(in oklab, var(--background) 45%, transparent); animation: tap-scroll 1.9s cubic-bezier(.45,0,.2,1) 1 both; }
 @media (prefers-reduced-motion: reduce) { .tap-scroll-dot { animation: none; opacity: .7; } }
 @media (prefers-reduced-motion: reduce) { .landing-scroll-stroke { animation: none; opacity: .7; transform: none; } }
+
+/* Home journey: one page per swipe via native mandatory snap stops. */
+html.journey-snap { scroll-snap-type: y mandatory; }
+.journey-stop { scroll-snap-align: start; }
+.journey-stop-page { scroll-snap-stop: always; }
+@media (prefers-reduced-motion: reduce) { html.journey-snap { scroll-snap-type: none; } }
