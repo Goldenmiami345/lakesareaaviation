@@ -10,6 +10,15 @@ export default function AircraftModel({ src, label, poster, autoRotate = true, o
     el.addEventListener('load',loaded);
     return()=>el.removeEventListener('load',loaded);
   },[ready,onLoad]);
-  useEffect(() => { let alive = true; void import('@google/model-viewer').then(() => { if (alive) setReady(true); }); return () => { alive = false; }; }, []);
+  useEffect(() => {
+    // The SSR guard removes model-viewer from the server bundle entirely. Without it the
+    // production bundler merged model-viewer (top-level `class extends HTMLElement`) into a
+    // shared chunk with the `performance` polyfill used by the site layout, so every
+    // SiteShell page threw "HTMLElement is not defined" during server rendering.
+    if (import.meta.env.SSR) return;
+    let alive = true;
+    void import('@google/model-viewer').then(() => { if (alive) setReady(true); });
+    return () => { alive = false; };
+  }, []);
   return ready ? createElement('model-viewer', { ...MODEL_SETTINGS, ref, src, alt: label, poster, 'auto-rotate': autoRotate || undefined, className: 'aircraft-model relative h-full w-full' }) : null;
 }
