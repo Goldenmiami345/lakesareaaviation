@@ -211,6 +211,7 @@ function installController() {
   };
   const onScroll = () => {
     const y = window.scrollY;
+    if (import.meta.env.DEV) (window as unknown as { __jd?: unknown[] }).__jd?.push([Math.round(performance.now()), y, paging, touching, Math.round(landedUntil), landedY]);
     if (!paging && !touching && performance.now() < landedUntil && Math.abs(y - landedY) > 1) { window.scrollTo({ top: landedY, behavior: "instant" }); lastY = landedY; return; }
     if (!busy() && !touching && !reduce() && !root.classList.contains("journey-free")) {
       const pages = journeyPages();
