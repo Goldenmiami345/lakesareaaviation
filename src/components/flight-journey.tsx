@@ -76,6 +76,16 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     let mx = 0, my = 0, frame = 0, last = -1;
     let shown: number | null = null;
     let prevTime = 0;
+    let armed = false, touching = false, settleTimer = 0, holdUntil = 0;
+    const root = document.documentElement;
+    const engage = () => {
+      const node = sectionRef.current;
+      if (!node || !armed || touching || snapOwners.has(node)) return;
+      if (performance.now() < holdUntil) { scheduleSettle(); return; }
+      snapOwners.add(node);
+      root.classList.add("journey-snap");
+    };
+    const scheduleSettle = () => { window.clearTimeout(settleTimer); settleTimer = window.setTimeout(engage, 180); };
     const n = stages.length;
     const render = (now: number = performance.now()) => {
       const el = sectionRef.current;
@@ -87,9 +97,12 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       // Snapping only engages between the first and last pages; the way in from
       // the section above and the way out below scroll 1:1 with the visitor.
       const along = -rect.top / total;
-      const pinned = !reduce && along >= journeyStop(0, n) - 0.003 && along <= journeyStop(n - 1, n) + 0.003;
-      if (pinned) snapOwners.add(el); else snapOwners.delete(el);
-      root.classList.toggle("journey-snap", snapOwners.size > 0);
+      // Snap never switches ON mid-scroll: entering the range only arms it,
+      // and it engages once scrolling has settled (or on a fresh wheel gesture).
+      // Leaving the range switches it off immediately, so corridors stay 1:1.
+      const inRange = !reduce && along >= journeyStop(0, n) - 0.003 && along <= journeyStop(n - 1, n) + 0.003;
+      armed = inRange;
+      if (!inRange && snapOwners.delete(el)) root.classList.toggle("journey-snap", snapOwners.size > 0);
       if (fadeTopRef.current) fadeTopRef.current.style.opacity = Math.max(0, Math.min(1, rect.top / (viewportHeight * 0.6))).toFixed(3);
       if (fadeBottomRef.current) fadeBottomRef.current.style.opacity = Math.max(0, Math.min(1, (viewportHeight - rect.bottom) / (viewportHeight * 0.6))).toFixed(3);
       // Native snap glides are quick; ease a continuous "slide position" toward the
@@ -136,14 +149,13 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     };
     const renderScroll = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(render); };
     const onMove = (e: PointerEvent) => { mx = e.clientX / window.innerWidth - 0.5; my = e.clientY / window.innerHeight - 0.5; renderScroll(); };
-    const onScroll = renderScroll;
+    const onScroll = () => { renderScroll(); scheduleSettle(); };
     // One page per swipe/flick is enforced by native mandatory snap stops (see
     // JSX), enabled on <html> only while this journey is pinned. A mouse wheel
     // notch steps exactly one page: the first event of a gesture glides to the
     // adjacent stop; following events are swallowed for a fixed, non-extending
     // window so trackpad inertia can't skip pages or freeze the page.
     const el = sectionRef.current;
-    const root = document.documentElement;
     let lastWheel = 0, lastDelta = 0, lockUntil = 0;
     const stopTop = (i: number) => {
       if (!el) return 0;
@@ -160,11 +172,40 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
       const rect = el.getBoundingClientRect();
       const dir = e.deltaY > 0 ? 1 : -1;
-      if (!snapOwners.has(el)) return;
+      if (!snapOwners.has(el)) {
+        // Entering from a corridor: follow the wheel 1:1 but stop exactly on
+        // the first (or, from below, last) page instead of overshooting it.
+        const px = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * vh : e.deltaY;
+        const edge = dir > 0 ? stopTop(0) : stopTop(n - 1);
+        const y = window.scrollY;
+        if (performance.now() >= holdUntil && ((dir > 0 && y < edge - 1 && y + px > edge) || (dir < 0 && y > edge + 1 && y + px < edge))) {
+          e.preventDefault();
+          window.scrollTo({ top: edge, behavior: Math.abs(px) >= 50 ? "smooth" : "instant" });
+          lastWheel = performance.now(); lastDelta = Math.abs(e.deltaY);
+          return;
+        }
+        // A fresh wheel gesture inside the armed range engages stepping; a
+        // continuing stream (still crossing the corridor) stays native 1:1.
+        const gap = performance.now() - lastWheel;
+        lastWheel = performance.now(); lastDelta = Math.abs(e.deltaY);
+        if (!armed || gap < 180) return;
+        engage();
+        if (!snapOwners.has(el)) return;
+        lastWheel = 0;
+      }
       const total = Math.max(1, el.offsetHeight - vh);
       const current = journeyNearestLanding(Math.max(0, Math.min(1, -rect.top / total)), n);
       // At the first/last page, leaving is plain native scrolling, 1:1.
-      if ((dir > 0 && current >= n - 1) || (dir < 0 && current <= 0)) { release(); return; }
+      if ((dir > 0 && current >= n - 1) || (dir < 0 && current <= 0)) {
+        // Snap goes off before the exit corridor; we move the page by exactly
+        // the wheel's delta so leaving stays 1:1 (Chromium would re-snap a
+        // native wheel scroll that began while snapping was on).
+        release();
+        e.preventDefault();
+        const px = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * vh : e.deltaY;
+        window.scrollBy({ top: px, behavior: Math.abs(px) >= 50 ? "smooth" : "instant" });
+        return;
+      }
       const now = performance.now();
       const delta = Math.abs(e.deltaY);
       const fresh = now - lastWheel > 180 || delta > lastDelta * 1.6 + 4;
@@ -177,12 +218,14 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     // Briefly lift snapping so an outward scroll at either end isn't pulled back.
     let releaseTimer = 0;
     const release = () => {
-      root.classList.add("journey-free");
+      if (el) snapOwners.delete(el);
+      root.classList.toggle("journey-snap", snapOwners.size > 0);
+      holdUntil = performance.now() + 700;
       window.clearTimeout(releaseTimer);
-      releaseTimer = window.setTimeout(() => root.classList.remove("journey-free"), 900);
     };
     let touchY = 0;
-    const onTouchStart = (e: TouchEvent) => { touchY = e.touches[0]?.clientY ?? 0; };
+    const onTouchStart = (e: TouchEvent) => { touching = true; window.clearTimeout(settleTimer); touchY = e.touches[0]?.clientY ?? 0; };
+    const onTouchEnd = (e: TouchEvent) => { if (e.touches.length === 0) { touching = false; scheduleSettle(); } };
     const onTouchMove = (e: TouchEvent) => {
       if (!el || reduce || !snapOwners.has(el) || e.touches.length !== 1) return;
       const dy = touchY - (e.touches[0]?.clientY ?? touchY);
@@ -203,6 +246,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     window.addEventListener("journey:jump", onJump);
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: true });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+    window.addEventListener("touchcancel", onTouchEnd, { passive: true });
     if (!reduce) window.addEventListener("pointermove", onMove, { passive: true });
     return () => {
       cancelAnimationFrame(frame);
@@ -211,6 +256,9 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);
       window.clearTimeout(releaseTimer);
+      window.clearTimeout(settleTimer);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchEnd);
       if (el) snapOwners.delete(el);
       root.classList.toggle("journey-snap", snapOwners.size > 0);
       window.removeEventListener("scroll", onScroll);
@@ -292,14 +340,14 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 mx-auto max-w-7xl px-5 pb-24 pr-14 md:pb-12 lg:px-8 lg:pb-16">
           <div ref={copyRef} className="journey-copy max-w-2xl">
             <p className="eyebrow photo-label">{s.code} · {s.label}</p>
-            <p className="mt-2 font-display text-4xl leading-none sm:mt-4 sm:text-7xl lg:text-8xl">{s.time}</p>
-            <h2 className="mt-2 font-display text-xl leading-tight sm:mt-4 sm:text-4xl">{s.title}</h2>
-            <p className="mt-1 max-w-lg truncate text-sm text-background/75 sm:mt-3 sm:text-base">{s.text}</p>
+            <p className="mt-1.5 font-display text-3xl leading-none sm:mt-2 sm:text-5xl">{s.time}</p>
+            <h2 className="mt-1.5 font-display text-lg leading-tight sm:mt-2 sm:text-2xl">{s.title}</h2>
+            <p className="mt-1 max-w-lg truncate text-sm text-background/75 sm:mt-2 sm:text-base">{s.text}</p>
             {s.location
-              ? <Link to="/contact" search={{ location: s.location }} className="interactive-arrow btn-shine pointer-events-auto mt-4 inline-flex min-h-10 items-center gap-3 bg-primary px-4 text-[11px] sm:mt-6 sm:min-h-12 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>
+              ? <Link to="/contact" search={{ location: s.location }} className="interactive-arrow btn-shine pointer-events-auto mt-3 inline-flex min-h-10 items-center gap-3 bg-primary px-4 text-[11px] sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>
               : s.slug
-              ? <Link to="/programs/$slug" params={{ slug: s.slug }} className="interactive-arrow btn-shine pointer-events-auto mt-4 inline-flex min-h-10 items-center gap-3 bg-primary px-4 text-[11px] sm:mt-6 sm:min-h-12 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>
-              : <Link to={s.to ?? "/contact"} className="interactive-arrow btn-shine pointer-events-auto mt-4 inline-flex min-h-10 items-center gap-3 bg-primary px-4 text-[11px] sm:mt-6 sm:min-h-12 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>}
+              ? <Link to="/programs/$slug" params={{ slug: s.slug }} className="interactive-arrow btn-shine pointer-events-auto mt-3 inline-flex min-h-10 items-center gap-3 bg-primary px-4 text-[11px] sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>
+              : <Link to={s.to ?? "/contact"} className="interactive-arrow btn-shine pointer-events-auto mt-3 inline-flex min-h-10 items-center gap-3 bg-primary px-4 text-[11px] sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>}
           </div>
         </div>
       </div>
