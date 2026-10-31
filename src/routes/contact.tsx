@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Car, Check, House, PlaneLanding } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useServerFn } from "@tanstack/react-start";
 import { submitTrainingLead } from "../lib/leads.functions";
-import { leadSchema } from "../lib/lead-schema";
+import { CONTINGENCY_RATE, formatPhone, leadSchema } from "../lib/lead-schema";
 import { PageIntro, SiteLayout } from "../components/site-shell";
 import { locations, SCHOOL_PHONE, SCHOOL_PHONE_TEL , fleet } from "../lib/site-data";
 
@@ -42,6 +42,14 @@ function ContactPage() {
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [sentPhone, setSentPhone] = useState("");
+  const plannerRef = useRef<HTMLDivElement>(null);
+  const [inPlanner, setInPlanner] = useState(false);
+  useEffect(() => {
+    const el = plannerRef.current; if (!el) return;
+    const io = new IntersectionObserver(([e]) => setInPlanner(!!e?.isIntersecting), { rootMargin: "0px 0px -30% 0px" });
+    io.observe(el); return () => io.disconnect();
+  }, []);
   const submitLead = useServerFn(submitTrainingLead);
   const aircraftNote = plane ? `I’d like to train in ${plane.registration} “${plane.nickname}” (${plane.name}).` : "";
   const selected = ratings.filter(r => planned.includes(r.id) && !earned.includes(r.id));
@@ -50,7 +58,9 @@ function ContactPage() {
     const training = selected.reduce((sum, r) => sum + r.cost, 0);
     const lodging = housing ? days * 30 : 0;
     const transportation = car ? days * 20 : 0;
-    return { days, training, lodging, transportation, total: training + lodging + transportation };
+    const total = training + lodging + transportation;
+    const contingency = Math.round(total * CONTINGENCY_RATE);
+    return { days, training, lodging, transportation, total, contingency, buffered: total + contingency };
   }, [selected, housing, car]);
 
   function toggle(list: string[], setList: (value: string[]) => void, id: string) {
@@ -70,7 +80,7 @@ function ContactPage() {
       firstName: v("firstName"), lastName: v("lastName"), email: v("email"), phone: v("phone"),
       preferredLocation: v("preferredLocation"), targetStartDate: v("targetStartDate"), notes: v("notes"),
       ratingsHeld: earned.map(nameOf), ratingsPlanned: selected.map(r => r.name),
-      housing, car, airportPickup: pickup, trainingDays: totals.days, estimatedTotal: totals.total,
+      housing, car, airportPickup: pickup, trainingDays: totals.days, estimatedTotal: totals.total, contingency: totals.contingency, bufferedTotal: totals.buffered,
       aircraftNote, sourceUrl: window.location.href.slice(0, 500), website: v("website"),
     };
     const check = leadSchema.safeParse(payload);
@@ -78,7 +88,7 @@ function ContactPage() {
     setBusy(true); setError("");
     try {
       const res = await submitLead({ data: check.data });
-      if (res.ok) setSent(true);
+      if (res.ok) { setSentPhone(formatPhone(check.data.phone)); setSent(true); }
       else setError(res.error === "rate_limited" ? `Too many requests in a short time. Please call ${SCHOOL_PHONE} or try again in a few minutes.` : `We couldn't send your request. Please call ${SCHOOL_PHONE} and we'll take care of you.`);
     } catch {
       setError(`We couldn't send your request. Please call ${SCHOOL_PHONE} and we'll take care of you.`);
@@ -86,18 +96,18 @@ function ContactPage() {
   }
 
   return <SiteLayout>
-    <PageIntro eyebrow="Start the conversation" title="Build your training plan." text="Check what you already hold, choose what comes next, and see the minimum published commitment before you call." />
+    <PageIntro eyebrow="Training plan estimator" title="Build your training plan." text="Check what you already hold, choose what comes next, and see the published commitment before you call. All prices are estimates." />
     <main className="mx-auto max-w-7xl px-5 py-14 lg:px-8 lg:py-20">
       <div className="grid gap-10 lg:grid-cols-[1.25fr_.75fr]">
-        <div>
+        <div ref={plannerRef}>
           <PlannerStep number="01" title="Ratings you already have">
-            <div className="grid gap-2 sm:grid-cols-2">{ratings.map(r => <Choice key={r.id} checked={earned.includes(r.id)} onChange={() => markEarned(r.id)} label={r.name} detail="Completed" />)}</div>
+            <div className="grid grid-cols-2 gap-2">{ratings.map(r => <Choice key={r.id} checked={earned.includes(r.id)} onChange={() => markEarned(r.id)} label={r.name} detail="Completed" />)}</div>
           </PlannerStep>
           <PlannerStep number="02" title="Ratings you plan to earn">
-            <div className="grid gap-2 sm:grid-cols-2">{ratings.map(r => <Choice key={r.id} checked={planned.includes(r.id)} disabled={earned.includes(r.id)} onChange={() => toggle(planned, setPlanned, r.id)} label={r.name} detail={`${r.days}+ days · ${money(r.cost)}`} />)}</div>
+            {earned.length > 0 && <p className="-mt-2 mb-3 text-xs text-muted-foreground">Ratings you already hold are greyed out.</p>}<div className="grid grid-cols-2 gap-2">{ratings.map(r => <Choice key={r.id} checked={planned.includes(r.id) && !earned.includes(r.id)} disabled={earned.includes(r.id)} onChange={() => toggle(planned, setPlanned, r.id)} label={r.name} detail={earned.includes(r.id) ? "Already completed" : `${r.days}+ days · ${money(r.cost)}`} />)}</div>
           </PlannerStep>
           <PlannerStep number="03" title="Travel support">
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
               <ServiceChoice checked={housing} onChange={() => setHousing(!housing)} icon={<House />} title="Housing" detail="$30 / night" />
               <ServiceChoice checked={car} onChange={() => setCar(!car)} icon={<Car />} title="Student car" detail="$20 / day" />
               <ServiceChoice checked={pickup} onChange={() => setPickup(!pickup)} icon={<PlaneLanding />} title="Airport pickup" detail="Confirm with team" />
@@ -105,25 +115,27 @@ function ContactPage() {
           </PlannerStep>
         </div>
 
-        <aside className="h-fit bg-ink p-6 text-background lg:sticky lg:top-24 sm:p-8">
-          <p className="stage-label">Your minimum plan</p>
+        <aside id="breakdown" className="h-fit scroll-mt-24 bg-ink p-6 text-background lg:sticky lg:top-24 sm:p-8">
+          <p className="stage-label">Your estimate</p>
           <div className="mt-6 grid grid-cols-2 gap-px bg-background/20">
             <Result value={`${totals.days}+`} label="Training days" />
-            <Result value={money(totals.total)} label="Estimated minimum" />
+            <Result value={money(totals.buffered)} label="Estimated total, incl. 20% buffer" />
           </div>
           <div className="mt-6 space-y-3 border-y border-background/20 py-5 text-sm">
             <Line label="Training" value={money(totals.training)} />
             {housing && <Line label={`Housing · ${totals.days} nights`} value={money(totals.lodging)} />}
             {car && <Line label={`Car · ${totals.days} days`} value={money(totals.transportation)} />}
             {pickup && <Line label="Airport pickup" value="To confirm" />}
+            <Line label="Contingency (20%)" value={money(totals.contingency)} />
+            <div className="border-t border-background/20 pt-3"><Line label="Estimated total" value={money(totals.buffered)} /></div>
           </div>
-          <p className="mt-5 text-xs leading-relaxed text-background/60">Planning estimate based on published minimum course days and prices. Weather, proficiency, examiner fees, tax, aircraft availability, prerequisites, and time-building can change the final schedule and cost.</p>
+          <p className="mt-5 text-xs leading-relaxed text-background/60">All prices are estimates, based on published minimum course days and prices, plus a 20% buffer. Weather, proficiency, examiner fees, tax, aircraft availability, prerequisites, and time-building can change the final schedule and cost.</p>
           <a href="#request" className="mt-6 flex min-h-13 items-center justify-center bg-primary px-5 text-center text-sm font-bold uppercase text-primary-foreground">Send this plan</a>
         </aside>
       </div>
 
       <section id="request" className="mt-20 scroll-mt-24 border-t border-border pt-14">
-        {sent ? <div className="grid min-h-80 place-items-center bg-secondary p-8 text-center"><div><Check className="mx-auto size-10 text-primary" /><h2 className="mt-5 font-display text-4xl">Request received.</h2><p className="mt-3 text-muted-foreground">Our team will reach out soon. To talk now, call {SCHOOL_PHONE}.</p></div></div> : <div className="grid gap-10 lg:grid-cols-[.7fr_1.3fr]"><div><p className="eyebrow text-primary">Request a review</p><h2 className="mt-4 font-display text-4xl">Put real dates around your plan.</h2><a href={SCHOOL_PHONE_TEL} className="mt-7 inline-block font-display text-2xl text-primary">{SCHOOL_PHONE}</a></div><form onSubmit={onSubmit} className="relative grid gap-5 sm:grid-cols-2">
+        {sent ? <div className="grid min-h-80 place-items-center bg-secondary p-8 text-center"><div><Check className="mx-auto size-10 text-primary" /><h2 className="mt-5 font-display text-4xl">Request received.</h2><p className="mt-3 text-muted-foreground">Our team will reach out soon. We’ll call you at {sentPhone}. To talk now, call {SCHOOL_PHONE}.</p></div></div> : <div className="grid gap-10 lg:grid-cols-[.7fr_1.3fr]"><div><p className="eyebrow text-primary">Request a review</p><h2 className="mt-4 font-display text-4xl">Put real dates around your plan.</h2><a href={SCHOOL_PHONE_TEL} className="mt-7 inline-block font-display text-2xl text-primary">{SCHOOL_PHONE}</a></div><form onSubmit={onSubmit} className="relative grid min-w-0 gap-5 sm:grid-cols-2">
           <Field name="firstName" label="First name" /><Field name="lastName" label="Last name" /><Field name="email" label="Email" type="email" /><Field name="phone" label="Phone" type="tel" />
           <Select key={preferred} label="Preferred location" options={locations.map(l => l.city)} defaultValue={preferred} /><Field name="targetStartDate" label="Target start date" type="date" required={false} />
           <label className="sm:col-span-2"><span className="mb-2 block text-xs font-bold uppercase">Anything else we should know?</span><textarea name="notes" maxLength={2000} key={plane?.registration ?? ""} defaultValue={plane ? aircraftNote : ""} className="min-h-28 w-full border border-input bg-background p-4 outline-none focus:border-primary" /></label>
@@ -133,15 +145,21 @@ function ContactPage() {
         </form></div>}
       </section>
     </main>
+    <div aria-live="polite" className={`fixed inset-x-0 bottom-0 z-40 border-t border-background/15 bg-ink px-4 pb-[calc(.75rem+env(safe-area-inset-bottom))] pt-3 text-background shadow-2xl transition-transform duration-300 lg:hidden ${inPlanner ? "translate-y-0" : "translate-y-full"}`}>
+      <div className="mx-auto flex max-w-xl items-center justify-between gap-3">
+        <div className="min-w-0"><p className="font-display text-2xl leading-none">{money(totals.buffered)}</p><p className="mt-1 truncate text-[.65rem] font-bold uppercase text-background/60">{totals.days}+ days · est. incl. 20% buffer</p></div>
+        <a href="#breakdown" className="flex min-h-11 shrink-0 items-center border border-background/40 px-4 text-xs font-bold uppercase">See breakdown</a>
+      </div>
+    </div>
   </SiteLayout>;
 }
 
-function PlannerStep({ number, title, children }: { number: string; title: string; children: React.ReactNode }) { return <section className="border-t border-border py-8 first:border-0 first:pt-0"><div className="mb-5 flex items-baseline gap-4"><span className="font-display text-xl text-primary">{number}</span><h2 className="font-display text-3xl">{title}</h2></div>{children}</section>; }
-function Choice({ checked, disabled, onChange, label, detail }: { checked: boolean; disabled?: boolean; onChange: () => void; label: string; detail: string }) { return <label className={`flex min-h-20 cursor-pointer items-center gap-4 border p-4 transition-colors ${checked ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background"} ${disabled ? "cursor-not-allowed opacity-40" : ""}`}><input type="checkbox" className="sr-only" checked={checked} disabled={disabled} onChange={onChange} /><span className={`grid size-5 shrink-0 place-items-center border ${checked ? "border-primary-foreground" : "border-foreground/30"}`}>{checked && <Check className="size-3" />}</span><span><strong className="block text-sm">{label}</strong><span className={`mt-1 block text-xs ${checked ? "text-primary-foreground/75" : "text-muted-foreground"}`}>{detail}</span></span></label>; }
-function ServiceChoice({ checked, onChange, icon, title, detail }: { checked: boolean; onChange: () => void; icon: React.ReactNode; title: string; detail: string }) { return <Button type="button" aria-pressed={checked} variant={checked ? "default" : "outline"} onClick={onChange} className="h-auto min-h-32 flex-col items-start rounded-none p-4 text-left"><span className="block [&_svg]:size-5">{icon}</span><strong className="mt-6 block text-sm">{title}</strong><span className={`block text-xs ${checked ? "text-primary-foreground/75" : "text-muted-foreground"}`}>{detail}</span></Button>; }
+function PlannerStep({ number, title, children }: { number: string; title: string; children: React.ReactNode }) { return <section className="border-t border-border py-8 first:border-0 first:pt-0"><h2 className="mb-5 flex items-baseline gap-3 font-display text-2xl sm:text-3xl"><span className="text-primary">{number}</span><span>{title}</span></h2>{children}</section>; }
+function Choice({ checked, disabled, onChange, label, detail }: { checked: boolean; disabled?: boolean; onChange: () => void; label: string; detail: string }) { return <label className={`flex min-h-14 cursor-pointer items-center gap-2.5 border px-3 py-2.5 transition-colors sm:min-h-20 sm:gap-4 sm:p-4 ${checked ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background"} ${disabled ? "cursor-not-allowed opacity-40" : ""}`}><input type="checkbox" className="sr-only" checked={checked} disabled={disabled} onChange={onChange} /><span className={`grid size-5 shrink-0 place-items-center border ${checked ? "border-primary-foreground" : "border-foreground/30"}`}>{checked && <Check className="size-3" />}</span><span className="min-w-0"><strong className="block text-[13px] leading-tight sm:text-sm">{label}</strong><span className={`mt-0.5 block text-[11px] sm:mt-1 sm:text-xs ${checked ? "text-primary-foreground/75" : "text-muted-foreground"}`}>{detail}</span></span></label>; }
+function ServiceChoice({ checked, onChange, icon, title, detail }: { checked: boolean; onChange: () => void; icon: React.ReactNode; title: string; detail: string }) { return <Button type="button" aria-pressed={checked} variant={checked ? "default" : "outline"} onClick={onChange} className="h-auto min-h-16 flex-col items-start whitespace-normal rounded-none p-3 text-left sm:min-h-32 sm:p-4"><span className="block [&_svg]:size-5">{icon}</span><strong className="mt-2 block text-sm sm:mt-6">{title}</strong><span className={`block text-xs ${checked ? "text-primary-foreground/75" : "text-muted-foreground"}`}>{detail}</span></Button>; }
 function Result({ value, label }: { value: string; label: string }) { return <div className="bg-ink p-4"><p className="font-display text-3xl text-background">{value}</p><p className="mt-1 text-[.65rem] font-bold uppercase text-background/55">{label}</p></div>; }
 function Line({ label, value }: { label: string; value: string }) { return <div className="flex items-center justify-between gap-4"><span className="text-background/70">{label}</span><strong>{value}</strong></div>; }
-function Field({ label, name, type = "text", required = true }: { label: string; name: string; type?: string; required?: boolean }) { return <label><span className="mb-2 block text-xs font-bold uppercase">{label}</span><input name={name} required={required} maxLength={type === "email" ? 255 : 60} type={type} className="h-14 w-full border border-input bg-background px-4 outline-none focus:border-primary" /></label>; }
-function Select({ label, options, defaultValue = "" }: { label: string; options: string[]; defaultValue?: string }) { return <label><span className="mb-2 block text-xs font-bold uppercase">{label}</span><select name="preferredLocation" required defaultValue={defaultValue} className="h-14 w-full border border-input bg-background px-4"><option value="">Select</option>{options.map(x => <option key={x}>{x}</option>)}</select></label>; }
+function Field({ label, name, type = "text", required = true }: { label: string; name: string; type?: string; required?: boolean }) { return <label className="min-w-0"><span className="mb-2 block text-xs font-bold uppercase">{label}</span><input name={name} inputMode={type === "tel" ? "tel" : undefined} autoComplete={type === "tel" ? "tel" : undefined} required={required} maxLength={type === "email" ? 255 : 60} type={type} className={`box-border h-14 w-full min-w-0 max-w-full border border-input bg-background px-4 outline-none focus:border-primary ${type === "date" ? "date-field" : ""}`} /></label>; }
+function Select({ label, options, defaultValue = "" }: { label: string; options: string[]; defaultValue?: string }) { return <label className="min-w-0"><span className="mb-2 block text-xs font-bold uppercase">{label}</span><select name="preferredLocation" required defaultValue={defaultValue} className="h-14 w-full border border-input bg-background px-4"><option value="">Select</option>{options.map(x => <option key={x}>{x}</option>)}</select></label>; }
 function money(value: number) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value); }
 const meta = (title: string, description: string) => [{ title }, { name: "description", content: description }, { property: "og:title", content: title }, { property: "og:description", content: description }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }];
