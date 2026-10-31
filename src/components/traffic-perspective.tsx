@@ -43,14 +43,16 @@ export function TrafficPerspective({ active }: { active: boolean }) {
         const t = secs + lap * [0.08, 0.68, 0.95][i]!;
         const s = sampleAtTime(a, t, points);
         const ahead = sampleAtTime(a, t + 1.5, points);
+        // True 3D projection through the picture's camera: altitude lifts the plane.
         const g = obliqueProject(s.x, s.y);
-        const g2 = obliqueProject(ahead.x, ahead.y);
-        const lift = (s.agl / a.tpaAgl) * KLXL_OBLIQUE.liftPx * g.scale;
-        const lift2 = (ahead.agl / a.tpaAgl) * KLXL_OBLIQUE.liftPx * g2.scale;
-        const dx = g2.x - g.x, dy = (g2.y - lift2) - (g.y - lift);
+        const air = obliqueProject(s.x, s.y, s.agl);
+        const air2 = obliqueProject(ahead.x, ahead.y, ahead.agl);
+        const lift = g.y - air.y;
+        const dx = air2.x - air.x, dy = air2.y - air.y;
         const flip = dx < 0;
         const ang = Math.max(-14, Math.min(14, (Math.atan2(flip ? -dy : dy, Math.abs(dx) || 0.001) * 180) / Math.PI * 0.6));
-        const w = p.sp.span * g.scale * KLXL_OBLIQUE.pxPerFt * VISUAL_SCALE;
+        const w = p.sp.span * air.scale * PX_PER_FT_MID * VISUAL_SCALE;
+        g.x = air.x;
         planeRefs.current[i]?.setAttribute("transform", `translate(${g.x.toFixed(1)} ${(g.y - lift).toFixed(1)}) rotate(${ang.toFixed(1)}) scale(${flip ? -w : w} ${w})`);
         const sh = shadowRefs.current[i];
         if (sh) {
