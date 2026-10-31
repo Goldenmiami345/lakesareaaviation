@@ -28,7 +28,7 @@ export function TrafficPerspective({ active }: { active: boolean }) {
   const navigate = useNavigate();
   const a = KLXL_OBLIQUE_PATTERN;
   const points = useMemo(() => patternWaypoints(a), [a]);
-  const planes = a.aircraft.map((reg) => ({ reg, sp: SIDE[reg]!, f: fleet.find((x) => x.registration === reg) }));
+  const planes = useMemo(() => a.aircraft.map((reg) => ({ reg, sp: SIDE[reg]!, f: fleet.find((x) => x.registration === reg) })), [a]);
 
   useEffect(() => {
     if (!active) { setHovered(null); return; }
