@@ -177,7 +177,7 @@ function ContactPage() {
         </form></div>}
       </section>
     </main>
-    <Toaster position="top-center" offset={84} mobileOffset={{ top: 84 }} icons={{ success: <Check className="size-4 text-primary" /> }} />
+    {mounted && createPortal(<Toaster position="top-center" offset={84} mobileOffset={{ top: 84 }} icons={{ success: <Check className="size-4 text-primary" /> }} />, document.body)}
     {mounted && createPortal(<div aria-live="polite" className={`fixed inset-x-0 bottom-0 z-40 border-t border-background/15 bg-ink px-4 pb-[calc(.75rem+env(safe-area-inset-bottom))] pt-3 text-background shadow-2xl transition-transform duration-300 lg:hidden ${showBar ? "translate-y-0" : "pointer-events-none translate-y-full"}`}>
       <div className="mx-auto flex max-w-xl items-center justify-between gap-3">
         <div className="min-w-0"><p className="font-display text-2xl leading-none">{money(totals.buffered)}</p><p className="mt-1 truncate text-[.65rem] font-bold uppercase text-background/60">{totals.days}+ days · est. incl. 20% buffer</p></div>
