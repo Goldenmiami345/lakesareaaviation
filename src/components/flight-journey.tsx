@@ -8,6 +8,7 @@ import { patternFor, pickRunway, type PatternField } from "../lib/traffic-patter
 import { useMetar } from "../lib/use-metar";
 import { useStageZoom } from "../lib/stage-zoom";
 import { TrafficPattern } from "./traffic-pattern";
+import { AirportScene } from './airport-scene';
 import { TrafficPerspective } from "./traffic-perspective";
 import airlineVideo from "../assets/journey/airline-approach.mp4.asset.json";
 import clouds from "../assets/journey/01-clouds.webp";
@@ -423,7 +424,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         {stages.map((st, i) => (
           <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="journey-layer absolute -inset-[2%] bg-ink will-change-transform backface-hidden" style={{ zIndex: stages.length - i }}>
             <div className="journey-zoom absolute inset-0 origin-top-left">
-            {st.video ? (
+            {st.traffic && st.phoneImg ? <AirportScene airport={ops[i]?.pattern ?? st.traffic} active={i===active} photo={st.phoneImg} wind={ops[i]?.obs ?? null} runwayHeading={ops[i]?.rwy.trueHdg ?? Number(st.traffic.runway)*10} /> : st.video ? (
               <video
                 ref={(el) => { videoRefs.current[i] = el; }}
                 src={st.video}
@@ -442,7 +443,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
                 <img src={st.img} alt={st.alt} width={st.w ?? 1920} height={st.h ?? 1088} loading={i <= active + 2 ? "eager" : "lazy"} decoding="async" className="h-full w-full bg-ink object-cover" style={{ objectPosition: st.position ?? "center" }} />
               </picture>
             )}
-            {SHOW_TRAFFIC && st.traffic && <TrafficPattern airport={ops[i]?.pattern ?? st.traffic} wind={ops[i]?.obs ?? null} runwayHeading={ops[i]?.rwy.trueHdg ?? Number(st.traffic.runway)*10} active={i === active} {...(isPhone && st.phoneView ? { viewBox: st.phoneView } : {})} />}
+            {SHOW_TRAFFIC && st.traffic && !st.phoneImg && <TrafficPattern airport={ops[i]?.pattern ?? st.traffic} wind={ops[i]?.obs ?? null} runwayHeading={ops[i]?.rwy.trueHdg ?? Number(st.traffic.runway)*10} active={i === active} />}
             {st.perspective && <TrafficPerspective wind={metar?.['KLXL'] ?? null} active={i === active} {...(isPhone && st.phoneView ? { viewBox: st.phoneView } : {})} />}
             </div>
           </div>
