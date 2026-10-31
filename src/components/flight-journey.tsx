@@ -105,7 +105,16 @@ function runPath(path: PageSegment[]) {
   let k = 0;
   const nextSeg = () => {
     const seg = path[k++];
-    if (!seg) { paging = false; pagingUntil = performance.now() + 60; return; }
+    if (!seg) {
+      // Late layout shifts (images/fonts on a cold load) can move pages while we glide;
+      // land exactly on the nearest real page so the next swipe starts from a clean state.
+      const pages = journeyPages();
+      if (pages.length && currentPage(pages, window.scrollY) < 0) {
+        const p = pages[nearestPage(pages, window.scrollY)];
+        if (p) window.scrollTo({ top: p.y, behavior: "instant" });
+      }
+      paging = false; pagingUntil = performance.now() + 60; return;
+    }
     if (seg.instant) { window.scrollTo({ top: seg.y, behavior: "instant" }); nextSeg(); return; }
     const from = window.scrollY, start = performance.now();
     const tick = (now: number) => {
@@ -151,22 +160,25 @@ function installController() {
   };
   let g: { x: number; y: number; decided: boolean; claimed: boolean; fired: boolean } | null = null;
   let touching = false;
+  let rejected = false;
   const onTouchStart = (e: TouchEvent) => {
-    touching = true;
+    touching = true; rejected = false;
     const t = e.touches[0];
     g = e.touches.length === 1 && t && !reduce() ? { x: t.clientX, y: t.clientY, decided: false, claimed: false, fired: false } : null;
   };
   const onTouchMove = (e: TouchEvent) => {
     const t = e.touches[0];
-    if (!g || !t || e.touches.length !== 1) { g = null; return; }
+    // A finger that went down before the handler attached (first load) is adopted here.
+    if (!g && !rejected && t && e.touches.length === 1 && !reduce()) { touching = true; g = { x: t.clientX, y: t.clientY, decided: false, claimed: false, fired: false }; return; }
+    if (!g || !t || e.touches.length !== 1) { g = null; rejected = true; return; }
     const dx = g.x - t.clientX, dy = g.y - t.clientY;
     if (!g.decided) {
       if (Math.abs(dx) < 3 && Math.abs(dy) < 3) return; // taps with jitter stay taps
       g.decided = true;
-      if (Math.abs(dx) > Math.abs(dy) || root.classList.contains("journey-free")) { g = null; return; }
+      if (Math.abs(dx) > Math.abs(dy) || root.classList.contains("journey-free")) { g = null; rejected = true; return; }
       const pages = journeyPages();
       g.claimed = inRange(pages) && (busy() || !!pageStep(pages, window.scrollY, dy > 0 ? 1 : -1));
-      if (!g.claimed) { g = null; return; }
+      if (!g.claimed) { g = null; rejected = true; return; }
     }
     if (e.cancelable) e.preventDefault();
     if (!g.fired && !busy() && Math.abs(dy) >= PAGE_SWIPE_PX) { g.fired = true; step(dy > 0 ? 1 : -1); }
