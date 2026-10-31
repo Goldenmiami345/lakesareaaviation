@@ -35,6 +35,72 @@ export type Database = {
         }
         Relationships: []
       }
+      training_plan_leads: {
+        Row: {
+          aircraft_note: string | null
+          airport_pickup: boolean
+          car: boolean
+          created_at: string
+          email: string
+          estimated_total: number
+          first_name: string
+          housing: boolean
+          id: string
+          ip_hash: string | null
+          last_name: string
+          notes: string | null
+          phone: string
+          preferred_location: string
+          ratings_held: string[]
+          ratings_planned: string[]
+          source_url: string | null
+          target_start_date: string | null
+          training_days: number
+        }
+        Insert: {
+          aircraft_note?: string | null
+          airport_pickup?: boolean
+          car?: boolean
+          created_at?: string
+          email: string
+          estimated_total?: number
+          first_name: string
+          housing?: boolean
+          id?: string
+          ip_hash?: string | null
+          last_name: string
+          notes?: string | null
+          phone: string
+          preferred_location: string
+          ratings_held?: string[]
+          ratings_planned?: string[]
+          source_url?: string | null
+          target_start_date?: string | null
+          training_days?: number
+        }
+        Update: {
+          aircraft_note?: string | null
+          airport_pickup?: boolean
+          car?: boolean
+          created_at?: string
+          email?: string
+          estimated_total?: number
+          first_name?: string
+          housing?: boolean
+          id?: string
+          ip_hash?: string | null
+          last_name?: string
+          notes?: string | null
+          phone?: string
+          preferred_location?: string
+          ratings_held?: string[]
+          ratings_planned?: string[]
+          source_url?: string | null
+          target_start_date?: string | null
+          training_days?: number
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -66,6 +132,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      recent_lead_count: { Args: { _ip_hash: string }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

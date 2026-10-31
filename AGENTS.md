@@ -24,3 +24,4 @@
 - Traffic airplanes (aerial and oblique views) share selection, radar tags and the info card from src/components/traffic-ui.tsx so tap/hover behaviour stays identical everywhere.
 - Journey touch paging freezes native scroll during its glide (html.journey-paging), disables scroll anchoring, and pulls leftover native deltas back onto the landed page; a finger with no touch events for 150ms counts as lifted because touchend can be dropped under load.
 - Fleet cards use native <details> accordions so all specs stay in prerendered HTML; the full-screen aircraft viewer is a lazy, body-portaled chunk showing real photos until accurate per-tail 3D models exist.
+- Training-plan leads are saved via the public submitTrainingLead server function (publishable client, insert-only RLS, admin-only reads, hashed-IP rate limit via recent_lead_count) so no lead depends on email delivery.

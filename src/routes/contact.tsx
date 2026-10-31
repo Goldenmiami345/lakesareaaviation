@@ -2,6 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, type FormEvent } from "react";
 import { Car, Check, House, PlaneLanding } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useServerFn } from "@tanstack/react-start";
+import { submitTrainingLead } from "../lib/leads.functions";
+import { leadSchema } from "../lib/lead-schema";
 import { PageIntro, SiteLayout } from "../components/site-shell";
 import { locations, SCHOOL_PHONE, SCHOOL_PHONE_TEL , fleet } from "../lib/site-data";
 
@@ -37,6 +40,10 @@ function ContactPage() {
   const [car, setCar] = useState(false);
   const [pickup, setPickup] = useState(false);
   const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const submitLead = useServerFn(submitTrainingLead);
+  const aircraftNote = plane ? `I’d like to train in ${plane.registration} “${plane.nickname}” (${plane.name}).` : "";
   const selected = ratings.filter(r => planned.includes(r.id) && !earned.includes(r.id));
   const totals = useMemo(() => {
     const days = selected.reduce((sum, r) => sum + r.days, 0);
@@ -52,6 +59,30 @@ function ContactPage() {
   function markEarned(id: string) {
     toggle(earned, setEarned, id);
     if (!earned.includes(id)) setPlanned(planned.filter(value => value !== id));
+  }
+
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const f = new FormData(event.currentTarget);
+    const v = (k: string) => String(f.get(k) ?? "");
+    const nameOf = (id: string) => ratings.find(r => r.id === id)?.name ?? id;
+    const payload = {
+      firstName: v("firstName"), lastName: v("lastName"), email: v("email"), phone: v("phone"),
+      preferredLocation: v("preferredLocation"), targetStartDate: v("targetStartDate"), notes: v("notes"),
+      ratingsHeld: earned.map(nameOf), ratingsPlanned: selected.map(r => r.name),
+      housing, car, airportPickup: pickup, trainingDays: totals.days, estimatedTotal: totals.total,
+      aircraftNote, sourceUrl: window.location.href.slice(0, 500), website: v("website"),
+    };
+    const check = leadSchema.safeParse(payload);
+    if (!check.success) { setError(check.error.issues[0]?.message ?? "Please check the form."); return; }
+    setBusy(true); setError("");
+    try {
+      const res = await submitLead({ data: check.data });
+      if (res.ok) setSent(true);
+      else setError(res.error === "rate_limited" ? `Too many requests in a short time. Please call ${SCHOOL_PHONE} or try again in a few minutes.` : `We couldn't send your request. Please call ${SCHOOL_PHONE} and we'll take care of you.`);
+    } catch {
+      setError(`We couldn't send your request. Please call ${SCHOOL_PHONE} and we'll take care of you.`);
+    } finally { setBusy(false); }
   }
 
   return <SiteLayout>
@@ -92,12 +123,13 @@ function ContactPage() {
       </div>
 
       <section id="request" className="mt-20 scroll-mt-24 border-t border-border pt-14">
-        {sent ? <div className="grid min-h-80 place-items-center bg-secondary p-8 text-center"><div><Check className="mx-auto size-10 text-primary" /><h2 className="mt-5 font-display text-4xl">Your plan is ready to review.</h2><p className="mt-3 text-muted-foreground">Call {SCHOOL_PHONE} to confirm dates, availability, pickup, and your written estimate.</p></div></div> : <div className="grid gap-10 lg:grid-cols-[.7fr_1.3fr]"><div><p className="eyebrow text-primary">Request a review</p><h2 className="mt-4 font-display text-4xl">Put real dates around your plan.</h2><a href={SCHOOL_PHONE_TEL} className="mt-7 inline-block font-display text-2xl text-primary">{SCHOOL_PHONE}</a></div><form onSubmit={(event: FormEvent<HTMLFormElement>) => { event.preventDefault(); setSent(true); }} className="grid gap-5 sm:grid-cols-2">
-          <Field label="First name" /><Field label="Last name" /><Field label="Email" type="email" /><Field label="Phone" type="tel" />
-          <Select key={preferred} label="Preferred location" options={locations.map(l => l.city)} defaultValue={preferred} /><Field label="Target start date" type="date" />
-          <label className="sm:col-span-2"><span className="mb-2 block text-xs font-bold uppercase">Anything else we should know?</span><textarea key={plane?.registration ?? ""} defaultValue={plane ? `I’d like to train in ${plane.registration} “${plane.nickname}” (${plane.name}).` : ""} className="min-h-28 w-full border border-input bg-background p-4 outline-none focus:border-primary" /></label>
-          <Button className="min-h-14 rounded-none sm:col-span-2">Send my training plan request</Button>
-          <p className="text-xs text-muted-foreground sm:col-span-2">This preview confirms your request on screen. Connect the final form destination before publishing to receive submissions.</p>
+        {sent ? <div className="grid min-h-80 place-items-center bg-secondary p-8 text-center"><div><Check className="mx-auto size-10 text-primary" /><h2 className="mt-5 font-display text-4xl">Request received.</h2><p className="mt-3 text-muted-foreground">Our team will reach out soon. To talk now, call {SCHOOL_PHONE}.</p></div></div> : <div className="grid gap-10 lg:grid-cols-[.7fr_1.3fr]"><div><p className="eyebrow text-primary">Request a review</p><h2 className="mt-4 font-display text-4xl">Put real dates around your plan.</h2><a href={SCHOOL_PHONE_TEL} className="mt-7 inline-block font-display text-2xl text-primary">{SCHOOL_PHONE}</a></div><form onSubmit={onSubmit} className="relative grid gap-5 sm:grid-cols-2">
+          <Field name="firstName" label="First name" /><Field name="lastName" label="Last name" /><Field name="email" label="Email" type="email" /><Field name="phone" label="Phone" type="tel" />
+          <Select key={preferred} label="Preferred location" options={locations.map(l => l.city)} defaultValue={preferred} /><Field name="targetStartDate" label="Target start date" type="date" required={false} />
+          <label className="sm:col-span-2"><span className="mb-2 block text-xs font-bold uppercase">Anything else we should know?</span><textarea name="notes" maxLength={2000} key={plane?.registration ?? ""} defaultValue={plane ? aircraftNote : ""} className="min-h-28 w-full border border-input bg-background p-4 outline-none focus:border-primary" /></label>
+          <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden"><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
+          <Button disabled={busy} className="min-h-14 rounded-none sm:col-span-2">{busy ? "Sending…" : "Send my training plan request"}</Button>
+          {error && <p role="alert" className="text-sm text-destructive sm:col-span-2">{error}</p>}
         </form></div>}
       </section>
     </main>
@@ -109,7 +141,7 @@ function Choice({ checked, disabled, onChange, label, detail }: { checked: boole
 function ServiceChoice({ checked, onChange, icon, title, detail }: { checked: boolean; onChange: () => void; icon: React.ReactNode; title: string; detail: string }) { return <Button type="button" aria-pressed={checked} variant={checked ? "default" : "outline"} onClick={onChange} className="h-auto min-h-32 flex-col items-start rounded-none p-4 text-left"><span className="block [&_svg]:size-5">{icon}</span><strong className="mt-6 block text-sm">{title}</strong><span className={`block text-xs ${checked ? "text-primary-foreground/75" : "text-muted-foreground"}`}>{detail}</span></Button>; }
 function Result({ value, label }: { value: string; label: string }) { return <div className="bg-ink p-4"><p className="font-display text-3xl text-background">{value}</p><p className="mt-1 text-[.65rem] font-bold uppercase text-background/55">{label}</p></div>; }
 function Line({ label, value }: { label: string; value: string }) { return <div className="flex items-center justify-between gap-4"><span className="text-background/70">{label}</span><strong>{value}</strong></div>; }
-function Field({ label, type = "text" }: { label: string; type?: string }) { return <label><span className="mb-2 block text-xs font-bold uppercase">{label}</span><input required type={type} className="h-14 w-full border border-input bg-background px-4 outline-none focus:border-primary" /></label>; }
-function Select({ label, options, defaultValue = "" }: { label: string; options: string[]; defaultValue?: string }) { return <label><span className="mb-2 block text-xs font-bold uppercase">{label}</span><select required defaultValue={defaultValue} className="h-14 w-full border border-input bg-background px-4"><option value="">Select</option>{options.map(x => <option key={x}>{x}</option>)}</select></label>; }
+function Field({ label, name, type = "text", required = true }: { label: string; name: string; type?: string; required?: boolean }) { return <label><span className="mb-2 block text-xs font-bold uppercase">{label}</span><input name={name} required={required} maxLength={type === "email" ? 255 : 60} type={type} className="h-14 w-full border border-input bg-background px-4 outline-none focus:border-primary" /></label>; }
+function Select({ label, options, defaultValue = "" }: { label: string; options: string[]; defaultValue?: string }) { return <label><span className="mb-2 block text-xs font-bold uppercase">{label}</span><select name="preferredLocation" required defaultValue={defaultValue} className="h-14 w-full border border-input bg-background px-4"><option value="">Select</option>{options.map(x => <option key={x}>{x}</option>)}</select></label>; }
 function money(value: number) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value); }
 const meta = (title: string, description: string) => [{ title }, { name: "description", content: description }, { property: "og:title", content: title }, { property: "og:description", content: description }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }];
