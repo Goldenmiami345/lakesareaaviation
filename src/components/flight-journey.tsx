@@ -58,11 +58,11 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const total = Math.max(1, el.offsetHeight - viewportHeight);
       const target = Math.max(0, Math.min(1, -rect.top / total));
       // Snap glides are fast; ease the displayed progress toward the scroll position
-      // so slides phase into each other (zoom + crossfade) over ~0.9s instead of flashing.
+      // so slides phase into each other (zoom + crossfade) over roughly a second instead of flashing.
       const dt = prevTime ? Math.min(64, now - prevTime) : 16;
       prevTime = now;
       if (shown === null || reduce || Math.abs(target - shown) > 2 / n) shown = target;
-      else shown += (target - shown) * (1 - Math.exp(-dt / 260));
+      else shown += (target - shown) * (1 - Math.exp(-dt / 550));
       if (Math.abs(target - shown) < 0.0002) shown = target;
       if (shown !== target) frame = requestAnimationFrame(render);
       else prevTime = 0;
