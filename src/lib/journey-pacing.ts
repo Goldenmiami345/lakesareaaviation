@@ -37,3 +37,9 @@ export function journeyNearestLanding(progress: number, count: number) {
   }
   return best;
 }
+
+// Snap-stop position for a stage. The first page rests at the very top of the
+// journey so visitors scroll naturally into it with no forced jump.
+export function journeyStop(index: number, count: number) {
+  return index <= 0 ? 0 : journeyLanding(index, count);
+}

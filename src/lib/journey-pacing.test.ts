@@ -1,6 +1,6 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { journeyFrame, journeyLanding, journeyNearestLanding, JOURNEY_HOLD, JOURNEY_STAGE_SVH } from "./journey-pacing";
+import { journeyFrame, journeyLanding, journeyNearestLanding, JOURNEY_HOLD, JOURNEY_STAGE_SVH , journeyStop } from "./journey-pacing";
 
 describe("homepage journey pacing", () => {
 
@@ -55,3 +55,8 @@ describe("homepage journey pacing", () => {
   });
 });
 
+
+test("first journey page rests at the top of the section; later pages at their landings", () => {
+  assert.equal(journeyStop(0, 6), 0);
+  for (let i = 1; i < 6; i += 1) assert.equal(journeyStop(i, 6), journeyLanding(i, 6));
+});
