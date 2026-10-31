@@ -60,10 +60,16 @@ export function useTrafficSelection(active: boolean) {
 export function placeCard(card: HTMLElement | null, x: number, y: number) {
   if (!card) return;
   const w = card.offsetWidth || 208, h = card.offsetHeight || 110;
-  let px = x + 26, py = y - h / 2;
-  if (px + w > window.innerWidth - 8) px = x - w - 26;
-  px = Math.max(8, px);
-  py = Math.max(72, Math.min(window.innerHeight - h - 8, py));
+  const W = window.innerWidth, H = window.innerHeight;
+  let px: number, py: number;
+  if (x + 26 + w <= W - 8) { px = x + 26; py = y - h / 2; }
+  else if (x - 26 - w >= 8) { px = x - 26 - w; py = y - h / 2; }
+  else {
+    // Narrow screens: stack above (or below) so the card never covers the airplane's tap target.
+    px = Math.max(8, Math.min(W - w - 8, x - w / 2));
+    py = y - 30 - h >= 72 ? y - 30 - h : y + 30;
+  }
+  py = Math.max(72, Math.min(H - h - 8, py));
   card.style.transform = `translate3d(${px.toFixed(0)}px, ${py.toFixed(0)}px, 0)`;
 }
 
