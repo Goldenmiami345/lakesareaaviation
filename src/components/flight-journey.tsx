@@ -56,17 +56,20 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const rect = el.getBoundingClientRect();
       const viewportHeight = viewportRef.current?.offsetHeight ?? window.innerHeight;
       const total = Math.max(1, el.offsetHeight - viewportHeight);
-      const target = Math.max(0, Math.min(1, -rect.top / total));
-      // Snap glides are fast; ease the displayed progress toward the scroll position
-      // so slides phase into each other (zoom + crossfade) over roughly a second instead of flashing.
+      const scrolled = journeyFrame(-rect.top / total, n);
+      // Native snap glides are quick; ease a continuous "slide position" toward the
+      // scroll so slides zoom and crossfade into each other over about a second.
+      const target = scrolled.stage + scrolled.transition;
       const dt = prevTime ? Math.min(64, now - prevTime) : 16;
       prevTime = now;
-      if (shown === null || reduce || Math.abs(target - shown) > 2 / n) shown = target;
-      else shown += (target - shown) * (1 - Math.exp(-dt / 550));
-      if (Math.abs(target - shown) < 0.0002) shown = target;
+      if (shown === null || reduce || Math.abs(target - shown) > 2) shown = target;
+      else shown += (target - shown) * (1 - Math.exp(-dt / 320));
+      if (Math.abs(target - shown) < 0.002) shown = target;
       if (shown !== target) frame = requestAnimationFrame(render);
       else prevTime = 0;
-      const state = journeyFrame(shown, n);
+      const base = Math.min(n - 1, Math.floor(shown));
+      const t = Math.max(0, Math.min(1, shown - base));
+      const state = { stage: base, next: Math.min(n - 1, base + 1), transition: t, active: t < 0.5 ? base : Math.min(n - 1, base + 1), copyOpacity: Math.abs(1 - 2 * t), progress: scrolled.progress };
       layerRefs.current.forEach((layer, i) => {
         if (!layer) return;
         const st = stages[i];
