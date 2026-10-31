@@ -18,7 +18,7 @@ test("downwind is flown at pattern altitude", () => {
 
 test("KLXL runway 13 uses left traffic (downwind on the northeast side)", () => {
   const a = airportTraffic.KLXL;
-  const cross = patternWaypoints(a).find((p) => p.phase === "Crosswind")!;
+  const cross = patternWaypoints(a).find((p) => p.phase === "Downwind")!;
   const rx = a.end.x - a.threshold.x, ry = a.end.y - a.threshold.y;
   // Cross product sign in y-down image space: negative means left of travel.
   assert.ok(rx * (cross.y - a.threshold.y) - ry * (cross.x - a.threshold.x) < 0);
