@@ -330,6 +330,12 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       if (videoIndex === active && !reduce) void video.play().catch(() => undefined);
       else video.pause();
     });
+    // Decode the next/previous stage images before they can become visible.
+    layerRefs.current.forEach((layer, i) => {
+      if (Math.abs(i - active) > 1) return;
+      const img = layer?.querySelector("img");
+      if (img) void img.decode().catch(() => undefined);
+    });
   }, [active]);
 
   const jump = (i: number) => jumpToJourney(id, i);
@@ -343,7 +349,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       ))}
       <div ref={viewportRef} className="sticky top-0 h-svh overflow-hidden">
         {stages.map((st, i) => (
-          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="journey-layer absolute -inset-[2%] will-change-transform backface-hidden" style={{ zIndex: stages.length - i }}>
+          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="journey-layer absolute -inset-[2%] bg-ink will-change-transform backface-hidden" style={{ zIndex: stages.length - i }}>
             {st.video ? (
               <video
                 ref={(el) => { videoRefs.current[i] = el; }}
@@ -354,11 +360,11 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
                 loop
                 playsInline
                 preload="metadata"
-                className="h-full w-full object-cover"
+                className="h-full w-full bg-ink object-cover"
                 style={{ objectPosition: st.position ?? "center" }}
               />
             ) : (
-              <img src={st.img} alt={st.alt} width={st.w ?? 1920} height={st.h ?? 1088} loading={i < 2 ? "eager" : "lazy"} decoding="async" className="h-full w-full object-cover" style={{ objectPosition: st.position ?? "center" }} />
+              <img src={st.img} alt={st.alt} width={st.w ?? 1920} height={st.h ?? 1088} loading={i <= active + 2 ? "eager" : "lazy"} decoding="async" className="h-full w-full bg-ink object-cover" style={{ objectPosition: st.position ?? "center" }} />
             )}
             {SHOW_TRAFFIC && st.traffic && <TrafficPattern airport={st.traffic} active={i === active} />}
             {st.perspective && <TrafficPerspective active={i === active} />}
