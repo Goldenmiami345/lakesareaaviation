@@ -76,6 +76,10 @@ const PAGE_MS = 500;
 const journeys = new Map<HTMLElement, { n: number; vh: () => number }>();
 let paging = false;
 let pagingUntil = 0;
+// After a glide lands, leftover native scroll deltas from the same swipe (queued by
+// the browser while touch moves were cancelled) are pulled back onto the landed page.
+let landedY = -1;
+let landedUntil = 0;
 let tweenFrame = 0;
 let controllerRefs = 0;
 let removeController: (() => void) | null = null;
@@ -118,6 +122,7 @@ function runPath(path: PageSegment[], touch = false) {
         if (p) window.scrollTo({ top: p.y, behavior: "instant" });
       }
       paging = false; pagingUntil = performance.now() + 60;
+      landedY = window.scrollY; landedUntil = performance.now() + 700;
       document.documentElement.classList.remove("journey-paging");
       return;
     }
@@ -168,7 +173,7 @@ function installController() {
   let touching = false;
   let rejected = false;
   const onTouchStart = (e: TouchEvent) => {
-    touching = true; rejected = false;
+    touching = true; rejected = false; landedUntil = 0;
     const t = e.touches[0];
     g = e.touches.length === 1 && t && !reduce() ? { x: t.clientX, y: t.clientY, decided: false, claimed: false, fired: false } : null;
   };
@@ -206,6 +211,7 @@ function installController() {
   };
   const onScroll = () => {
     const y = window.scrollY;
+    if (!paging && !touching && performance.now() < landedUntil && Math.abs(y - landedY) > 1) { window.scrollTo({ top: landedY, behavior: "instant" }); lastY = landedY; return; }
     if (!busy() && !touching && !reduce() && !root.classList.contains("journey-free")) {
       const pages = journeyPages();
       const exit = pages[pages.length - 1]?.y;
