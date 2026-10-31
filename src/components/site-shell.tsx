@@ -55,8 +55,8 @@ export function MobileActions() {
   const [show, setShow] = useState(false);
   useEffect(() => {
     const onScroll = () => {
-      const footer = document.querySelector("footer");
-      const nearEnd = footer ? footer.getBoundingClientRect().top < window.innerHeight : false;
+      // Hide while the inquiry band (its own CTA) or the footer reaches the bottom of the screen.
+      const nearEnd = [...document.querySelectorAll("[data-no-float]")].some((el) => { const r = el.getBoundingClientRect(); return r.top < window.innerHeight - 8 && r.bottom > 0; });
       setShow(window.scrollY > window.innerHeight * 0.9 && !nearEnd);
     };
     onScroll();
