@@ -17,7 +17,7 @@ const SIDE: Record<string, { src: string; aspect: number; span: number }> = {
 const VISUAL_SCALE = 3;
 
 /** KLXL runway 13 left traffic, drawn into the oblique Private Pilot approach photo. */
-export function TrafficPerspective({ active }: { active: boolean }) {
+export function TrafficPerspective({ active, viewBox }: { active: boolean; viewBox?: string }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const planeRefs = useRef<(SVGGElement | null)[]>([]);
   const shadowRefs = useRef<(SVGEllipseElement | null)[]>([]);
@@ -83,7 +83,7 @@ export function TrafficPerspective({ active }: { active: boolean }) {
 
   return (
     <div className="absolute inset-0">
-      <svg ref={svgRef} viewBox={`0 0 ${KLXL_OBLIQUE.width} ${KLXL_OBLIQUE.height}`} preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full" role="group" aria-label="Live left traffic for runway 13 at Little Falls, pattern altitude 2,123 feet MSL">
+      <svg ref={svgRef} viewBox={viewBox ?? `0 0 ${KLXL_OBLIQUE.width} ${KLXL_OBLIQUE.height}`} preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full" role="group" aria-label="Live left traffic for runway 13 at Little Falls, pattern altitude 2,123 feet MSL">
         <defs><filter id="pp-soft"><feGaussianBlur stdDeviation="1.2" /></filter></defs>
         {planes.map((p, i) => <ellipse key={`sh-${p.reg}`} ref={(el) => { shadowRefs.current[i] = el; }} fill="black" filter="url(#pp-soft)" aria-hidden className="pointer-events-none" />)}
         {planes.map((p, i) => (

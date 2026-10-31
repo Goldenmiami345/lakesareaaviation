@@ -19,7 +19,7 @@ const SPRITES: Record<string, { src: string; span: number; aspect: number }> = {
 const VISUAL_SCALE = 3;
 const SEEDS: Record<string, number> = { KLXL: 0, "18V": 1, P52: 2 };
 
-export function TrafficPattern({ airport, active }: { airport: PatternAirport; active: boolean }) {
+export function TrafficPattern({ airport, active, viewBox = "0 0 1500 1500" }: { airport: PatternAirport; active: boolean; viewBox?: string }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const planeRefs = useRef<(SVGGElement | null)[]>([]);
   const shadowRefs = useRef<(SVGGElement | null)[]>([]);
@@ -85,7 +85,7 @@ export function TrafficPattern({ airport, active }: { airport: PatternAirport; a
 
   return (
     <div className="absolute inset-0">
-      <svg ref={svgRef} data-traffic={airport.ident} viewBox="0 0 1500 1500" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full" role="group" aria-label={`Live ${airport.side} traffic pattern for runway ${airport.runway} at ${airport.ident}, pattern altitude ${tpa.toLocaleString("en-US")} feet MSL`}>
+      <svg ref={svgRef} data-traffic={airport.ident} viewBox={viewBox} preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full" role="group" aria-label={`Live ${airport.side} traffic pattern for runway ${airport.runway} at ${airport.ident}, pattern altitude ${tpa.toLocaleString("en-US")} feet MSL`}>
         {planes.map((p, i) => (
           <g key={`s-${p.reg}`} ref={(el) => { shadowRefs.current[i] = el; }} aria-hidden className="pointer-events-none"><image href={p.src} x={-p.w / 2} y={-p.h / 2} width={p.w} height={p.h} style={{ filter: "brightness(0) blur(0.6px)" }} /></g>
         ))}
