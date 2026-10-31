@@ -114,9 +114,6 @@ export function TrafficPattern({ airport, active }: { airport: PatternAirport; a
           </button>
         </div>
       )}
-      <p className="pointer-events-none absolute bottom-[42%] left-5 hidden font-mono text-[10px] uppercase tracking-[0.2em] text-background/70 sm:block lg:left-8">
-        RWY {airport.runway} · {airport.side} traffic · TPA {tpa.toLocaleString("en-US")} MSL · Elev {airport.elevation.toLocaleString("en-US")}
-      </p>
     </div>
   );
 }
