@@ -57,7 +57,7 @@ export function glideTo(top: number, instant = false) {
 export function jumpToPageTop() {
   const root = document.documentElement;
   root.classList.add("journey-free");
-  cancelAnimationFrame(tweenFrame); paging = false;
+  cancelAnimationFrame(tweenFrame); paging = false; root.classList.remove("journey-paging");
   window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
     if (window.scrollY !== 0) window.scrollTo({ top: 0, left: 0, behavior: "instant" });
@@ -76,6 +76,10 @@ const PAGE_MS = 500;
 const journeys = new Map<HTMLElement, { n: number; vh: () => number }>();
 let paging = false;
 let pagingUntil = 0;
+// After a glide lands, leftover native scroll deltas from the same swipe (queued by
+// the browser while touch moves were cancelled) are pulled back onto the landed page.
+let landedY = -1;
+let landedUntil = 0;
 let tweenFrame = 0;
 let controllerRefs = 0;
 let removeController: (() => void) | null = null;
@@ -97,15 +101,31 @@ function journeyPages(): JourneyPage[] {
 
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 
-function runPath(path: PageSegment[]) {
+function runPath(path: PageSegment[], touch = false) {
   cancelAnimationFrame(tweenFrame);
   paging = true;
+  // A touch swipe can leave a native fling running (iOS/Chromium mark later touchmoves
+  // non-cancelable once scrolling starts); freezing native scroll during our glide
+  // stops it from fighting the tween and overshooting several pages.
+  if (touch) document.documentElement.classList.add("journey-paging");
   const moving = path.filter((s) => !s.instant).length || 1;
   const dur = PAGE_MS / moving;
   let k = 0;
   const nextSeg = () => {
     const seg = path[k++];
-    if (!seg) { paging = false; pagingUntil = performance.now() + 60; return; }
+    if (!seg) {
+      // Late layout shifts (images/fonts on a cold load) can move pages while we glide;
+      // land exactly on the nearest real page so the next swipe starts from a clean state.
+      const pages = journeyPages();
+      if (pages.length && currentPage(pages, window.scrollY) < 0) {
+        const p = pages[nearestPage(pages, window.scrollY)];
+        if (p) window.scrollTo({ top: p.y, behavior: "instant" });
+      }
+      paging = false; pagingUntil = performance.now() + 60;
+      landedY = window.scrollY; landedUntil = performance.now() + 700;
+      document.documentElement.classList.remove("journey-paging");
+      return;
+    }
     if (seg.instant) { window.scrollTo({ top: seg.y, behavior: "instant" }); nextSeg(); return; }
     const from = window.scrollY, start = performance.now();
     const tick = (now: number) => {
@@ -119,7 +139,7 @@ function runPath(path: PageSegment[]) {
 }
 
 export function goToJourneyPage(y: number, instant = false) {
-  if (instant) { cancelAnimationFrame(tweenFrame); paging = false; window.scrollTo({ top: y, behavior: "instant" }); return; }
+  if (instant) { cancelAnimationFrame(tweenFrame); paging = false; document.documentElement.classList.remove("journey-paging"); window.scrollTo({ top: y, behavior: "instant" }); return; }
   runPath([{ y, instant: false }]);
 }
 
@@ -131,10 +151,10 @@ function installController() {
   const reduce = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const busy = () => paging || performance.now() < pagingUntil;
   const inRange = (pages: JourneyPage[]) => pages.length > 0 && window.scrollY <= pages[pages.length - 1]!.y + 2;
-  const step = (dir: 1 | -1) => {
+  const step = (dir: 1 | -1, touch = false) => {
     const path = pageStep(journeyPages(), window.scrollY, dir);
     if (!path) return false;
-    runPath(path);
+    runPath(path, touch);
     return true;
   };
   let lastWheel = 0, lastDelta = 0;
@@ -151,25 +171,33 @@ function installController() {
   };
   let g: { x: number; y: number; decided: boolean; claimed: boolean; fired: boolean } | null = null;
   let touching = false;
+  let rejected = false;
+  // touchend can be dropped when the main thread is busy; a finger with no touch
+  // events for 150ms is treated as lifted so the landing guard and settling still run.
+  let lastTouchAt = 0;
+  const fingerDown = () => touching && performance.now() - lastTouchAt < 150;
   const onTouchStart = (e: TouchEvent) => {
-    touching = true;
+    touching = true; rejected = false; landedUntil = 0; lastTouchAt = performance.now();
     const t = e.touches[0];
     g = e.touches.length === 1 && t && !reduce() ? { x: t.clientX, y: t.clientY, decided: false, claimed: false, fired: false } : null;
   };
   const onTouchMove = (e: TouchEvent) => {
+    lastTouchAt = performance.now();
     const t = e.touches[0];
-    if (!g || !t || e.touches.length !== 1) { g = null; return; }
+    // A finger that went down before the handler attached (first load) is adopted here.
+    if (!g && !rejected && t && e.touches.length === 1 && !reduce()) { touching = true; g = { x: t.clientX, y: t.clientY, decided: false, claimed: false, fired: false }; return; }
+    if (!g || !t || e.touches.length !== 1) { g = null; rejected = true; return; }
     const dx = g.x - t.clientX, dy = g.y - t.clientY;
     if (!g.decided) {
       if (Math.abs(dx) < 3 && Math.abs(dy) < 3) return; // taps with jitter stay taps
       g.decided = true;
-      if (Math.abs(dx) > Math.abs(dy) || root.classList.contains("journey-free")) { g = null; return; }
+      if (Math.abs(dx) > Math.abs(dy) || root.classList.contains("journey-free")) { g = null; rejected = true; return; }
       const pages = journeyPages();
       g.claimed = inRange(pages) && (busy() || !!pageStep(pages, window.scrollY, dy > 0 ? 1 : -1));
-      if (!g.claimed) { g = null; return; }
+      if (!g.claimed) { g = null; rejected = true; return; }
     }
     if (e.cancelable) e.preventDefault();
-    if (!g.fired && !busy() && Math.abs(dy) >= PAGE_SWIPE_PX) { g.fired = true; step(dy > 0 ? 1 : -1); }
+    if (!g.fired && !busy() && Math.abs(dy) >= PAGE_SWIPE_PX) { g.fired = true; step(dy > 0 ? 1 : -1, true); }
   };
   let settleTimer = 0;
   const onTouchEnd = (e: TouchEvent) => { if (e.touches.length === 0) { touching = false; g = null; scheduleSettle(); } };
@@ -179,7 +207,7 @@ function installController() {
   const scheduleSettle = () => {
     window.clearTimeout(settleTimer);
     settleTimer = window.setTimeout(() => {
-      if (touching || busy() || reduce() || root.classList.contains("journey-free")) return;
+      if (fingerDown() || busy() || reduce() || root.classList.contains("journey-free")) return;
       const pages = journeyPages();
       if (!inRange(pages) || currentPage(pages, window.scrollY) >= 0) return;
       const p = pages[nearestPage(pages, window.scrollY)];
@@ -188,7 +216,8 @@ function installController() {
   };
   const onScroll = () => {
     const y = window.scrollY;
-    if (!busy() && !touching && !reduce() && !root.classList.contains("journey-free")) {
+    if (!paging && !fingerDown() && performance.now() < landedUntil && Math.abs(y - landedY) > 1) { window.scrollTo({ top: landedY, behavior: "instant" }); lastY = landedY; return; }
+    if (!busy() && !fingerDown() && !reduce() && !root.classList.contains("journey-free")) {
       const pages = journeyPages();
       const exit = pages[pages.length - 1]?.y;
       if (exit !== undefined && lastY >= exit - 1 && y < exit - 1) { window.scrollTo({ top: exit, behavior: "instant" }); lastY = exit; return; }
@@ -212,6 +241,7 @@ function installController() {
     window.clearTimeout(settleTimer);
     cancelAnimationFrame(tweenFrame);
     paging = false;
+    root.classList.remove("journey-paging");
   };
 }
 
