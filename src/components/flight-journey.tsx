@@ -172,12 +172,17 @@ function installController() {
   let g: { x: number; y: number; decided: boolean; claimed: boolean; fired: boolean } | null = null;
   let touching = false;
   let rejected = false;
+  // touchend can be dropped when the main thread is busy; a finger with no touch
+  // events for 300ms is treated as lifted so the landing guard and settling still run.
+  let lastTouchAt = 0;
+  const fingerDown = () => touching && performance.now() - lastTouchAt < 300;
   const onTouchStart = (e: TouchEvent) => {
-    touching = true; rejected = false; landedUntil = 0;
+    touching = true; rejected = false; landedUntil = 0; lastTouchAt = performance.now();
     const t = e.touches[0];
     g = e.touches.length === 1 && t && !reduce() ? { x: t.clientX, y: t.clientY, decided: false, claimed: false, fired: false } : null;
   };
   const onTouchMove = (e: TouchEvent) => {
+    lastTouchAt = performance.now();
     const t = e.touches[0];
     // A finger that went down before the handler attached (first load) is adopted here.
     if (!g && !rejected && t && e.touches.length === 1 && !reduce()) { touching = true; g = { x: t.clientX, y: t.clientY, decided: false, claimed: false, fired: false }; return; }
@@ -202,7 +207,7 @@ function installController() {
   const scheduleSettle = () => {
     window.clearTimeout(settleTimer);
     settleTimer = window.setTimeout(() => {
-      if (touching || busy() || reduce() || root.classList.contains("journey-free")) return;
+      if (fingerDown() || busy() || reduce() || root.classList.contains("journey-free")) return;
       const pages = journeyPages();
       if (!inRange(pages) || currentPage(pages, window.scrollY) >= 0) return;
       const p = pages[nearestPage(pages, window.scrollY)];
@@ -211,9 +216,8 @@ function installController() {
   };
   const onScroll = () => {
     const y = window.scrollY;
-    if (import.meta.env.DEV) (window as unknown as { __jd?: unknown[] }).__jd?.push([Math.round(performance.now()), y, paging, touching, Math.round(landedUntil), landedY]);
-    if (!paging && !touching && performance.now() < landedUntil && Math.abs(y - landedY) > 1) { window.scrollTo({ top: landedY, behavior: "instant" }); lastY = landedY; return; }
-    if (!busy() && !touching && !reduce() && !root.classList.contains("journey-free")) {
+    if (!paging && !fingerDown() && performance.now() < landedUntil && Math.abs(y - landedY) > 1) { window.scrollTo({ top: landedY, behavior: "instant" }); lastY = landedY; return; }
+    if (!busy() && !fingerDown() && !reduce() && !root.classList.contains("journey-free")) {
       const pages = journeyPages();
       const exit = pages[pages.length - 1]?.y;
       if (exit !== undefined && lastY >= exit - 1 && y < exit - 1) { window.scrollTo({ top: exit, behavior: "instant" }); lastY = exit; return; }
