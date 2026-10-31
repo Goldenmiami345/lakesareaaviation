@@ -33,7 +33,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
 }
 
 export function Footer() {
-  return <footer className="bg-ink pb-24 pt-16 text-background md:pb-12">
+  return <footer data-no-float className="bg-ink pb-[calc(6rem+env(safe-area-inset-bottom))] pt-16 text-background md:pb-12">
     <div className="mx-auto grid max-w-7xl gap-12 px-5 md:grid-cols-[1.3fr_2fr] lg:px-8">
       <div><img src={logoAsset.url} alt="Lakes Area Aviation" loading="lazy" className="h-16 w-auto max-w-full brightness-0 invert" /><p className="mt-5 max-w-sm text-sm text-background/65">Flight instruction, accelerated ratings, commercial pilot services, aircraft management, and specialized training.</p></div>
       <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
@@ -55,7 +55,8 @@ export function MobileActions() {
   const [show, setShow] = useState(false);
   useEffect(() => {
     const onScroll = () => {
-      const nearEnd = window.innerHeight + window.scrollY > document.documentElement.scrollHeight - 520;
+      // Hide while the inquiry band (its own CTA) or the footer reaches the bottom of the screen.
+      const nearEnd = [...document.querySelectorAll("[data-no-float]")].some((el) => { const r = el.getBoundingClientRect(); return r.top < window.innerHeight - 8 && r.bottom > 0; });
       setShow(window.scrollY > window.innerHeight * 0.9 && !nearEnd);
     };
     onScroll();
@@ -63,7 +64,7 @@ export function MobileActions() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [pathname]);
   if (pathname === "/contact") return null;
-  return <div aria-hidden={!show} className={`fixed inset-x-3 bottom-3 z-50 grid grid-cols-2 overflow-hidden border border-background/20 bg-ink text-background shadow-2xl transition-all duration-500 ease-out md:hidden ${show ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-[140%] opacity-0"}`}><a tabIndex={show ? 0 : -1} href="tel:3183479004" className="flex min-h-14 items-center justify-center gap-2 text-sm font-bold"><Phone className="size-4" /> Call</a><Link tabIndex={show ? 0 : -1} to="/contact" className="flex min-h-14 items-center justify-center bg-primary text-sm font-bold text-primary-foreground">Apply now</Link></div>;
+  return <div aria-hidden={!show} className={`fixed inset-x-3 bottom-[calc(.75rem+env(safe-area-inset-bottom))] z-50 grid grid-cols-2 overflow-hidden border border-background/20 bg-ink text-background shadow-2xl transition-all duration-500 ease-out md:hidden ${show ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-[140%] opacity-0"}`}><a tabIndex={show ? 0 : -1} href="tel:3183479004" className="flex min-h-14 items-center justify-center gap-2 text-sm font-bold"><Phone className="size-4" /> Call</a><Link tabIndex={show ? 0 : -1} to="/contact" className="flex min-h-14 items-center justify-center bg-primary text-sm font-bold text-primary-foreground">Apply now</Link></div>;
 }
 
 export function SiteLayout({ children, overlayHeader = false }: { children: ReactNode; overlayHeader?: boolean }) {
@@ -76,5 +77,5 @@ export function PageIntro({ eyebrow, title, text, image, imageAlt = "" }: { eyeb
 }
 
 export function InquiryBand() {
-  return <section className="bg-primary py-16 text-primary-foreground"><div className="mx-auto grid max-w-7xl items-center gap-8 px-5 md:grid-cols-[1fr_auto] lg:px-8" data-scroll-reveal><div><p className="eyebrow text-primary-foreground/70">Your next rating</p><h2 className="mt-3 font-display text-4xl">Build a training plan around your timeline.</h2></div><Link to="/contact" className="interactive-arrow inline-flex min-h-14 items-center justify-center bg-ink px-7 text-sm font-bold uppercase tracking-[0.1em] text-background">Start planning <span aria-hidden="true">→</span></Link></div></section>;
+  return <section data-no-float className="bg-primary py-16 text-primary-foreground"><div className="mx-auto grid max-w-7xl items-center gap-8 px-5 md:grid-cols-[1fr_auto] lg:px-8" data-scroll-reveal><div><p className="eyebrow text-primary-foreground/70">Your next rating</p><h2 className="mt-3 font-display text-4xl">Build a training plan around your timeline.</h2></div><Link to="/contact" className="interactive-arrow inline-flex min-h-14 items-center justify-center bg-ink px-7 text-sm font-bold uppercase tracking-[0.1em] text-background">Start planning <span aria-hidden="true">→</span></Link></div></section>;
 }
