@@ -20,6 +20,7 @@ export function useTrafficSelection(active: boolean) {
   const selectedRef = useRef<number | null>(null);
   selectedRef.current = selected;
   const pointerType = useRef<string>("mouse");
+  const lastDown = useRef(0);
   const navigate = useNavigate();
   const open = useCallback((reg: string) => {
     setSelected(null);
@@ -40,7 +41,7 @@ export function useTrafficSelection(active: boolean) {
 
   const hitProps = (i: number, reg: string) => ({
     "data-traffic-hit": "",
-    onPointerDown: (e: React.PointerEvent) => { pointerType.current = e.pointerType; },
+    onPointerDown: (e: React.PointerEvent) => { pointerType.current = e.pointerType; lastDown.current = performance.now(); },
     onPointerEnter: (e: React.PointerEvent) => { if (e.pointerType === "mouse") setSelected(i); },
     onPointerLeave: (e: React.PointerEvent) => { if (e.pointerType === "mouse") setSelected((s) => (s === i ? null : s)); },
     onClick: () => {
@@ -48,7 +49,8 @@ export function useTrafficSelection(active: boolean) {
       else setSelected(i);
     },
     onKeyDown: (e: React.KeyboardEvent) => { if (e.key === "Enter") open(reg); },
-    onFocus: () => setSelected(i),
+    // Keyboard focus shows the card; a tap's own focus must not count as the first tap.
+    onFocus: () => { if (performance.now() - lastDown.current > 600) setSelected(i); },
   });
 
   return { selected, selectedRef, open, hitProps, close: () => setSelected(null) };
