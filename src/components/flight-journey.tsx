@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Phone } from "lucide-react";
 import { Button } from "./ui/button";
-import { journeyFrame, journeyStop, JOURNEY_STAGE_SVH, pageStep, nearestPage, currentPage, type JourneyPage, type PageSegment } from "../lib/journey-pacing";
+import { journeyFrame, journeyStop, JOURNEY_STAGE_SVH, sectionAt, sectionStep, nearestSectionPage, type SectionPage, type PageSegment } from "../lib/journey-pacing";
 import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
 import { patternFor, pickRunway, type PatternField } from "../lib/traffic-pattern";
 import { useMetar } from "../lib/use-metar";
@@ -107,18 +107,16 @@ let tweenFrame = 0;
 let controllerRefs = 0;
 let removeController: (() => void) | null = null;
 
-function journeyPages(): JourneyPage[] {
+function journeyPages(): SectionPage[] {
   const list = [...journeys].sort((a, b) => a[0].offsetTop - b[0].offsetTop);
-  if (!list.length) return [];
-  const pages: JourneyPage[] = [{ y: 0 }];
-  let after = 0;
-  for (const [el, { n, vh }] of list) {
+  const pages: SectionPage[] = [];
+  list.forEach(([el, { n, vh }], group) => {
     const base = window.scrollY + el.getBoundingClientRect().top;
     const total = Math.max(1, el.offsetHeight - vh());
-    for (let i = 0; i < n; i += 1) pages.push(i === n - 1 ? { y: Math.round(base + total * journeyStop(i, n)), hold: Math.round(base + total) } : { y: Math.round(base + total * journeyStop(i, n)) });
-    after = Math.round(base + el.offsetHeight);
-  }
-  pages.push({ y: after });
+    // The last stage rests at the end of its pinned stretch, so leaving the
+    // section scrolls the next content in immediately (no dead pinned length).
+    for (let i = 0; i < n; i += 1) pages.push({ y: Math.round(i === n - 1 ? base + total : base + total * journeyStop(i, n)), group });
+  });
   return pages;
 }
 
@@ -140,10 +138,8 @@ function runPath(path: PageSegment[], touch = false) {
       // Late layout shifts (images/fonts on a cold load) can move pages while we glide;
       // land exactly on the nearest real page so the next swipe starts from a clean state.
       const pages = journeyPages();
-      if (pages.length && currentPage(pages, window.scrollY) < 0) {
-        const p = pages[nearestPage(pages, window.scrollY)];
-        if (p) window.scrollTo({ top: p.y, behavior: "instant" });
-      }
+      const near = nearestSectionPage(pages, window.scrollY);
+      if (near !== null && Math.abs(near - window.scrollY) > 2) window.scrollTo({ top: near, behavior: "instant" });
       paging = false; pagingUntil = performance.now() + 60;
       landedY = window.scrollY; landedUntil = performance.now() + 700;
       document.documentElement.classList.remove("journey-paging");
@@ -168,57 +164,42 @@ export function goToJourneyPage(y: number, instant = false) {
 
 function installController() {
   controllerRefs += 1;
-  if (import.meta.env.DEV) (window as unknown as { __journeyPages?: () => JourneyPage[] }).__journeyPages = journeyPages;
+  if (import.meta.env.DEV) (window as unknown as { __journeyPages?: () => SectionPage[] }).__journeyPages = journeyPages;
   if (removeController) return;
   const root = document.documentElement;
   const reduce = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const busy = () => paging || performance.now() < pagingUntil;
-  const inRange = (pages: JourneyPage[]) => pages.length > 0 && window.scrollY <= pages[pages.length - 1]!.y + 2;
+  const inSection = (pages: SectionPage[]) => sectionAt(pages, window.scrollY) >= 0;
   const step = (dir: 1 | -1, touch = false) => {
-    const path = pageStep(journeyPages(), window.scrollY, dir);
-    if (!path) return false;
-    runPath(path, touch);
+    const y = sectionStep(journeyPages(), window.scrollY, dir);
+    if (y === null) return false;
+    runPath([{ y, instant: false }], touch);
     return true;
   };
   let lastWheel = 0, lastDelta = 0;
   const onWheel = (e: WheelEvent) => {
     if (reduce() || e.ctrlKey || e.metaKey || Math.abs(e.deltaY) < Math.abs(e.deltaX) || root.classList.contains("journey-free")) return;
     const pages = journeyPages();
-    if (!inRange(pages)) return;
+    const dir = e.deltaY > 0 ? 1 : -1;
+    if (busy()) { e.preventDefault(); return; }
+    if (!inSection(pages)) return;
     const now = performance.now(), delta = Math.abs(e.deltaY);
     const fresh = now - lastWheel > 200 || delta > lastDelta * 1.6 + 4;
     lastWheel = now; lastDelta = delta;
-    const dir = e.deltaY > 0 ? 1 : -1;
-    if (busy() || !fresh) { if (pageStep(pages, window.scrollY, dir) || busy()) e.preventDefault(); return; }
+    if (!fresh) { if (sectionStep(pages, window.scrollY, dir) !== null) e.preventDefault(); return; }
     if (step(dir)) e.preventDefault();
   };
   let g: { x: number; y: number; decided: boolean; claimed: boolean; fired: boolean } | null = null;
   let touching = false;
   let rejected = false;
-  // Any second finger makes the whole gesture a pinch: no paging, and a finger-follow springs back.
+  // Any second finger makes the whole gesture a pinch: it never pages.
   let multi = false;
-  const cancelForMulti = () => {
-    multi = true; g = null; rejected = true;
-    if (follow) { follow.dy = 0; follow.max = 0; releaseFollow(); }
-  };
+  const cancelForMulti = () => { multi = true; g = null; rejected = true; };
   const zoomedIn = () => root.classList.contains("journey-zoomed");
   // touchend can be dropped when the main thread is busy; a finger with no touch
   // events for 150ms is treated as lifted so the landing guard and settling still run.
   let lastTouchAt = 0;
   const fingerDown = () => touching && performance.now() - lastTouchAt < 150;
-  // Hero → Discovery and The Right Seat → Little Falls follow the finger 1:1, then
-  // complete (or spring back) on release; every other step fires a glide at 8px.
-  let follow: { base: number; target: number; dy: number; max: number } | null = null;
-  let followTimer = 0;
-  const releaseFollow = () => {
-    window.clearTimeout(followTimer);
-    const f = follow; follow = null;
-    if (!f) return;
-    paging = false;
-    const go = f.dy >= PAGE_SWIPE_PX && f.dy >= f.max - 24;
-    runPath([{ y: go ? f.target : f.base, instant: false }], true);
-  };
-  const followable = (pages: JourneyPage[], j: number) => j === 0 || (pages[j]?.hold !== undefined && j + 2 < pages.length);
   const onTouchStart = (e: TouchEvent) => {
     if (e.touches.length > 1 || multi) { lastTouchAt = performance.now(); touching = true; cancelForMulti(); return; }
     touching = true; rejected = false; landedUntil = 0; lastTouchAt = performance.now();
@@ -239,56 +220,29 @@ function installController() {
       g.decided = true;
       if (Math.abs(dx) > Math.abs(dy) || root.classList.contains("journey-free")) { g = null; rejected = true; return; }
       const pages = journeyPages();
-      g.claimed = inRange(pages) && (busy() || !!pageStep(pages, window.scrollY, dy > 0 ? 1 : -1));
+      // Only claim swipes that move between stages of the same section; section
+      // edges (into/out of a journey) stay native, free scrolling with momentum.
+      g.claimed = busy() || (inSection(pages) && sectionStep(pages, window.scrollY, dy > 0 ? 1 : -1) !== null);
       if (!g.claimed) { g = null; rejected = true; return; }
     }
     if (e.cancelable) e.preventDefault();
-    if (!g.fired && !busy() && dy > 0 && !follow) {
-      const pages = journeyPages();
-      const j = currentPage(pages, window.scrollY);
-      const path = j >= 0 && followable(pages, j) ? pageStep(pages, window.scrollY, 1) : null;
-      const target = path?.[path.length - 1]?.y;
-      if (path && target !== undefined) {
-        g.fired = true;
-        const base = path.length > 1 ? path[0]!.y : window.scrollY;
-        cancelAnimationFrame(tweenFrame);
-        paging = true; root.classList.add("journey-paging");
-        follow = { base, target, dy: 0, max: 0 };
-      }
-    }
-    if (follow) {
-      follow.dy = dy; follow.max = Math.max(follow.max, dy);
-      window.scrollTo({ top: Math.max(follow.base, Math.min(follow.target, follow.base + dy)), behavior: "instant" });
-      window.clearTimeout(followTimer);
-      followTimer = window.setTimeout(releaseFollow, 350);
-      return;
-    }
     if (!g.fired && !busy() && Math.abs(dy) >= PAGE_SWIPE_PX) { g.fired = true; step(dy > 0 ? 1 : -1, true); }
   };
   let settleTimer = 0;
-  const onTouchEnd = (e: TouchEvent) => { if (e.touches.length === 0) { multi = false; touching = false; g = null; releaseFollow(); scheduleSettle(); } };
-  // Native momentum arriving from below stops at the exit page; anything left
-  // resting between pages (keyboard, scrollbar) settles onto the nearest one.
-  let lastY = window.scrollY;
+  const onTouchEnd = (e: TouchEvent) => { if (e.touches.length === 0) { multi = false; touching = false; g = null; scheduleSettle(); } };
+  // Free scrolling that comes to rest inside a section (which then fully fills
+  // the screen) settles onto its nearest stage; outside sections nothing snaps.
   const scheduleSettle = () => {
     window.clearTimeout(settleTimer);
     settleTimer = window.setTimeout(() => {
       if (fingerDown() || busy() || reduce() || zoomedIn() || root.classList.contains("journey-free")) return;
-      const pages = journeyPages();
-      if (!inRange(pages) || currentPage(pages, window.scrollY) >= 0) return;
-      const p = pages[nearestPage(pages, window.scrollY)];
-      if (p) runPath([{ y: p.y, instant: false }]);
+      const near = nearestSectionPage(journeyPages(), window.scrollY);
+      if (near !== null && Math.abs(near - window.scrollY) > 2) runPath([{ y: near, instant: false }]);
     }, 180);
   };
   const onScroll = () => {
     const y = window.scrollY;
-    if (!paging && !fingerDown() && performance.now() < landedUntil && Math.abs(y - landedY) > 1) { window.scrollTo({ top: landedY, behavior: "instant" }); lastY = landedY; return; }
-    if (!busy() && !fingerDown() && !reduce() && !root.classList.contains("journey-free")) {
-      const pages = journeyPages();
-      const exit = pages[pages.length - 1]?.y;
-      if (exit !== undefined && lastY >= exit - 1 && y < exit - 1) { window.scrollTo({ top: exit, behavior: "instant" }); lastY = exit; return; }
-    }
-    lastY = y;
+    if (!paging && !fingerDown() && performance.now() < landedUntil && Math.abs(y - landedY) > 1) { window.scrollTo({ top: landedY, behavior: "instant" }); return; }
     scheduleSettle();
   };
   window.addEventListener("wheel", onWheel, { passive: false });
@@ -305,7 +259,6 @@ function installController() {
     window.removeEventListener("touchcancel", onTouchEnd);
     window.removeEventListener("scroll", onScroll);
     window.clearTimeout(settleTimer);
-    window.clearTimeout(followTimer);
     cancelAnimationFrame(tweenFrame);
     paging = false;
     root.classList.remove("journey-paging");
@@ -348,8 +301,6 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const viewportHeight = viewportRef.current?.offsetHeight ?? window.innerHeight;
       const total = Math.max(1, el.offsetHeight - viewportHeight);
       const scrolled = journeyFrame(-rect.top / total, n);
-      if (fadeTopRef.current) fadeTopRef.current.style.opacity = Math.max(0, Math.min(1, rect.top / (viewportHeight * 0.6))).toFixed(3);
-      if (fadeBottomRef.current) fadeBottomRef.current.style.opacity = Math.max(0, Math.min(1, (viewportHeight - rect.bottom) / (viewportHeight * 0.6))).toFixed(3);
       // Native snap glides are quick; ease a continuous "slide position" toward the
       // scroll so slides zoom and crossfade into each other over about a second.
       const target = scrolled.stage + scrolled.transition;
@@ -401,8 +352,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const onJump = (e: Event) => {
       const d = (e as CustomEvent<{ id: string; index: number; animate?: boolean }>).detail;
       if (d?.id !== id || !el) return;
-      const page = journeyPages().find((p, k, all) => k > 0 && Math.abs(p.y - (window.scrollY + el.getBoundingClientRect().top + Math.max(1, el.offsetHeight - vh()) * journeyStop(d.index, n))) < 3) ;
-      const y = page?.y ?? Math.round(window.scrollY + el.getBoundingClientRect().top + Math.max(1, el.offsetHeight - vh()) * journeyStop(d.index, n));
+      const base = window.scrollY + el.getBoundingClientRect().top, total = Math.max(1, el.offsetHeight - vh());
+      const y = Math.round(d.index >= n - 1 ? base + total : base + total * journeyStop(d.index, n));
       goToJourneyPage(y, !d.animate);
     };
     render();
