@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
 import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
 import { fleet } from "../lib/site-data";
 
