@@ -3,7 +3,7 @@ import { aircraftType } from '../lib/traffic-flight';
 // Original SVG source, not traced logos or invented tail lettering. Wingspan is
 // one local unit; lengths are proportional to published type dimensions. Paint
 // tokens were sampled on the real fleet photo's sunlit base/stripe panels.
-export const AIRCRAFT_SPANS: Record<string, number> = {N6717A:36,N8570B:36,N7108G:36,N6641F:33,N11059:34,N3353P:37};
+export const AIRCRAFT_SPANS: Record<string, number> = {N6717A:36,N8570B:36,N7108G:36,N6641F:33,N11059:34,N4383P:37};
 export function TrafficVector({reg, shadow=false}: {reg:string;shadow?:boolean}) {
   const type=aircraftType(reg), twin=type==='apache', tandem=type==='citabria';
   const length=type==='150'?72:tandem?67:75;

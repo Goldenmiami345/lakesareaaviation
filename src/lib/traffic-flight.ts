@@ -6,7 +6,7 @@ export const CALL_DURATION_MS = 2500;
 export const PING_DURATION_MS = 600;
 export const MAX_CALLS = 2;
 export function aircraftType(reg: string): AircraftType {
-  return reg === 'N3353P' ? 'apache' : reg === 'N11059' ? 'citabria' : reg === 'N6641F' ? '150' : '172';
+  return reg === 'N4383P' ? 'apache' : reg === 'N11059' ? 'citabria' : reg === 'N6641F' ? '150' : '172';
 }
 export function legSpeed(type: AircraftType, phase: string) {
   const trainer: Record<string, number> = { 'Touch-and-go': 55, Takeoff: 72, Upwind: 73, Crosswind: 75, Downwind: type === '172' ? 85 : 78, Base: 70, Final: type === '172' ? 65 : 60 };
