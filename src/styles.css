@@ -186,3 +186,11 @@ html.journey-free, html.journey-free.journey-snap { scroll-snap-type: none !impo
 .traffic-tag circle:focus { outline: none; }
 .traffic-tag circle:focus-visible { outline: none; stroke: var(--radar); stroke-opacity: .6; stroke-width: 1; }
 html.journey-paging { overflow: hidden; overscroll-behavior: none; }
+
+/* In-stage zoom: the stage owns pinch/double-tap (no browser page zoom); while zoomed, one finger pans. */
+.journey-viewport { touch-action: pan-y; }
+.journey-viewport[data-zoomed] { touch-action: none; }
+.journey-zoom { will-change: transform; }
+.journey-copy-wrap, .journey-hud { transition: opacity .3s ease; }
+.journey-viewport[data-zoomed] .journey-copy-wrap { opacity: 0; pointer-events: none !important; }
+.journey-viewport[data-zoomed] .journey-copy-wrap * { pointer-events: none !important; }
