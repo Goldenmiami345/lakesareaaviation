@@ -1,31 +1,61 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { airportTraffic } from './site-data';
-import { TrafficSchedule, RUNWAY_BUFFER_S, finalSpacingPx } from './traffic-sequence';
+import { KLXL_OBLIQUE_PATTERN } from './oblique-view';
+import { patternFor, type PatternAirport } from './traffic-pattern';
+import { TrafficSchedule, RUNWAY_BUFFER_S, legOf, patternSpacingPx, type Leg } from './traffic-sequence';
 
-const HOUR = 3600;
+const MINUTES = 120, TICK = 0.05;
+const EXCLUSIVE: ReadonlySet<Leg> = new Set(['final', 'runway', 'departure']);
+
+type Case = { name: string; a: PatternAirport; hdg: number; offsets?: readonly number[] };
+const cases: Case[] = [];
 for (const id of ['KLXL', '18V', 'P52'] as const) {
-  const a = airportTraffic[id];
-  test(`${id}: 60 simulated minutes with no runway incursions`, () => {
-    const s = new TrafficSchedule(a, a.aircraft, null, Number(a.runway) * 10);
-    s.ensure(HOUR);
-    const windows = s.laps.flatMap((laps, i) => laps.filter((l) => l.occupied[1] > 0 && l.occupied[0] < HOUR).map((l) => ({ i, w: l.occupied })));
-    assert.ok(windows.length > a.aircraft.length * 5, `only ${windows.length} landings`);
+  const f = airportTraffic[id];
+  // Both runway directions, each with a 10 kt wind straight down that runway.
+  for (const end of f.ends) cases.push({ name: `${id} rwy ${end.runway}`, a: patternFor(f, end), hdg: end.trueHdg });
+}
+// The oblique (perspective) view uses the same TrafficSchedule with its own offsets.
+cases.push({ name: 'KLXL oblique rwy 13', a: KLXL_OBLIQUE_PATTERN, hdg: 131, offsets: [.08, .68, .95] });
+
+for (const c of cases) {
+  test(`${c.name}: ${MINUTES} simulated minutes follow pattern rules`, () => {
+    const { a } = c;
+    const s = new TrafficSchedule(a, a.aircraft, { dir: c.hdg, kt: 10 }, c.hdg, c.offsets);
+    const end = MINUTES * 60, min = patternSpacingPx(a);
+    s.ensure(end);
+    // Runway windows (base-to-final turn → past departure end) never overlap.
+    const windows = s.laps.flatMap((laps, i) => laps.filter((l) => l.occupied[1] > 0 && l.occupied[0] < end).map((l) => ({ i, w: l.occupied })));
+    assert.ok(windows.length > a.aircraft.length * 8, `only ${windows.length} landings`);
     for (const x of windows) for (const y of windows) {
       if (x.i >= y.i) continue;
-      const overlap = x.w[0] < y.w[1] + RUNWAY_BUFFER_S && x.w[1] > y.w[0] - RUNWAY_BUFFER_S;
-      assert.ok(!overlap, `${a.aircraft[x.i]} ${x.w} vs ${a.aircraft[y.i]} ${y.w}`);
+      assert.ok(!(x.w[0] < y.w[1] + RUNWAY_BUFFER_S && x.w[1] > y.w[0] - RUNWAY_BUFFER_S), `window ${a.aircraft[x.i]} ${x.w} vs ${a.aircraft[y.i]} ${y.w}`);
     }
-  });
-  test(`${id}: 60 simulated minutes with final spacing kept`, () => {
-    const s = new TrafficSchedule(a, a.aircraft, null, Number(a.runway) * 10);
-    const min = finalSpacingPx(a);
-    for (let t = 0; t < HOUR; t += 0.5) {
-      const p = a.aircraft.map((_, i) => s.sample(i, t));
-      for (let i = 0; i < p.length; i++) for (let j = i + 1; j < p.length; j++) {
-        const u = p[i], v = p[j];
-        if (u && v && u.phase === 'Final' && v.phase === 'Final') assert.ok(Math.hypot(u.x - v.x, u.y - v.y) >= min - 1e-6, `${id} t=${t}`);
+    const n = a.aircraft.length;
+    const finalTurn = (i: number, t: number) => s.laps[i]!.some((l) => { const ft = l.start + l.t.finalStart; return t <= ft && ft - t <= 10; });
+    let prevLeg: Leg[] = [], prevOrder = new Map<string, number>();
+    for (let k = 0; k * TICK < end; k++) {
+      const t = k * TICK;
+      const p = a.aircraft.map((_, i) => s.sample(i, t)!);
+      const legs = p.map((q) => legOf(a, q));
+      const busy = legs.filter((l) => EXCLUSIVE.has(l)).length;
+      assert.ok(busy <= 1, `t=${t.toFixed(2)} ${busy} aircraft on final/runway: ${legs}`);
+      const order = new Map<string, number>();
+      for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+        const u = p[i]!, v = p[j]!;
+        const d = Math.hypot(u.x - v.x, u.y - v.y);
+        assert.ok(d >= min, `t=${t.toFixed(2)} ${a.aircraft[i]}–${a.aircraft[j]} ${d.toFixed(1)}px < ${min.toFixed(1)}px`);
+        if (legs[i] === 'base' && legs[j] === 'base') assert.ok(!(finalTurn(i, t) && finalTurn(j, t)), `t=${t.toFixed(2)} two on base turning final`);
+        if (legs[i] === legs[j]) {
+          // Same leg: order along the track must not flip while both stay on it.
+          const h = (u.heading - 90) * Math.PI / 180;
+          const sign = Math.sign((v.x - u.x) * Math.cos(h) + (v.y - u.y) * Math.sin(h));
+          const key = `${i}-${j}`, was = prevOrder.get(key);
+          if (was !== undefined && prevLeg[i] === legs[i] && prevLeg[j] === legs[j] && sign !== 0) assert.equal(sign, was, `t=${t.toFixed(2)} ${a.aircraft[j]} overtook ${a.aircraft[i]} on ${legs[i]}`);
+          if (sign !== 0) order.set(key, sign);
+        }
       }
+      prevLeg = legs; prevOrder = order;
     }
   });
 }
