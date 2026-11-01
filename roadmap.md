@@ -1,5 +1,9 @@
 # Roadmap
 
+- [ ] Restore native journey boundaries and verify wheel-only reversals and touch paging.
+- [ ] Keep desktop aircraft cards open until the pointer moves away; preserve touch taps.
+- [ ] Re-time traffic and prefer extensions with rare holds; verify safety, all tests and prerender HTML.
+
 - [x] Fix contact slash-dependent hydration; verify four pages using production React replay of the exact repair and updated preview.
 - [x] Restore all three desktop airports to 1.15×; preserve phone 1.1029×/1.25×/1.25×.
 - [x] Draw exact flight paths, collision-checked labels and stronger targets; six screenshots, 30 tests, 4× pinch and one-notch/native-up checks pass.
