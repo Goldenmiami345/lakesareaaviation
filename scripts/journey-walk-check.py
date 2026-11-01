@@ -12,7 +12,7 @@ async def walk(page, gesture, label):
     fails=[]; n=0
     for group in [S[:6],S[6:]]:
         # Boundaries are native. Begin the test at a fully pinned first stage.
-        await page.evaluate('(v)=>scrollTo(0,v)',group[0]); await page.wait_for_timeout(250)
+        await page.evaluate('(v)=>scrollTo({top:v,behavior:'instant'})',group[0]); await page.wait_for_timeout(250)
         for tgt in group[1:]:
             cur=await y(page); await gesture(); await page.wait_for_timeout(750)
             now=await y(page); n+=1; ok=abs(now-tgt)<=3
@@ -22,14 +22,14 @@ async def walk(page, gesture, label):
         assert now>cur and now-cur<400, f'{label}: last stage exit was forced/stuck {cur}->{now}'
         rest=now; await page.wait_for_timeout(900); assert await y(page)==rest,'native exit settled'
     # Native hero entry must not jump to the first stop.
-    await page.evaluate('(v)=>scrollTo(0,v)',S[0]-80); await page.wait_for_timeout(250)
+    await page.evaluate('(v)=>scrollTo({top:v,behavior:'instant'})',S[0]-80); await page.wait_for_timeout(250)
     await gesture(); await page.wait_for_timeout(750); cur=await y(page)
     assert cur<S[1]-3, f'{label}: entry forced a stage glide'
     return fails, n
 async def up_check(page, flick, label):
     # go to the last stage of the airport journey then flick up
     S=await stops(page)
-    await page.evaluate(f"window.scrollTo(0,{S[-1]})"); await page.wait_for_timeout(800)
+    await page.evaluate(f"window.scrollTo({{top:{S[-1]},behavior:'instant'}})"); await page.wait_for_timeout(800)
     start=await y(page); await flick()
     # wait until motion ends
     prev=-1; same=0
@@ -63,7 +63,7 @@ async def main():
         await pg.screenshot(path="/tmp/browser/journey/desktop-up.png")
         # Mouse never moves anywhere in this desktop context.
         for burst in [False,True]:
-            S=await stops(pg); await pg.evaluate('(v)=>scrollTo(0,v)',S[0]); await pg.wait_for_timeout(300)
+            S=await stops(pg); await pg.evaluate('(v)=>scrollTo({top:v,behavior:'instant'})',S[0]); await pg.wait_for_timeout(300)
             async def down():
                 if burst:
                     for _ in range(20): await pg.mouse.wheel(0,5); await asyncio.sleep(.02)
