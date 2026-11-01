@@ -109,10 +109,15 @@ export class TrafficSchedule {
     const delay = period - t0.plan.seconds;
     if (delay <= 1e-3) return { extendPx: 0, holds: [], t: t0 };
     const a = this.airport;
+    // Lap time is linear in a downwind extension and in a common ring-radius scale
+    // (fixed leg speeds), so a secant step lands on `period`; refine twice for safety.
     const bisect = (lo: number, hi: number, f: (x: number) => Timing) => {
-      let best = f(hi);
-      for (let k = 0; k < 28; k++) { const m = (lo + hi) / 2, t = f(m); if (t.plan.seconds < period) lo = m; else { hi = m; best = t; } }
-      return { x: hi, t: best };
+      let x0 = lo, y0 = f(lo).plan.seconds, x1 = hi, t1 = f(hi), y1 = t1.plan.seconds;
+      for (let k = 0; k < 3 && Math.abs(y1 - period) > 1e-6 && Math.abs(y1 - y0) > 1e-9; k++) {
+        const x = x1 + (period - y1) * (x1 - x0) / (y1 - y0);
+        x0 = x1; y0 = y1; x1 = Math.max(0, x); t1 = f(x1); y1 = t1.plan.seconds;
+      }
+      return { x: x1, t: t1 };
     };
     if (!durations) {
       // Small delays only: extend the downwind (final grows slightly; the slot allows for it).
