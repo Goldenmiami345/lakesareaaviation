@@ -2,8 +2,8 @@ import { makeFlightPlan, sampleFlight, type FlightPlan } from './traffic-flight'
 import { feetPerPixel, type PatternAirport, type PatternSample, type Wind } from './traffic-pattern';
 
 // Runway sequencing: one airplane on the runway at a time. A plane occupies the
-// runway from crossing the threshold on final until it is airborne past the
-// departure end. Before each base turn its window is projected; if it would
+// runway from crossing the threshold on final until it lifts off again after the
+// touch-and-go (the Takeoff waypoint, where it leaves the ground). Before each base turn its window is projected; if it would
 // overlap another plane's window (± RUNWAY_BUFFER_S) or bring it within the final
 // spacing minimum of another plane on final, its downwind is extended until clear.
 // All traffic flies continuous touch-and-goes, so nobody departs from hold-short.
@@ -22,16 +22,16 @@ const axis = (a: PatternAirport) => {
 };
 export const alongRunway = (a: PatternAirport, p: { x: number; y: number }) => { const { ux, uy } = axis(a); return (p.x - a.threshold.x) * ux + (p.y - a.threshold.y) * uy; };
 
-type Timing = { plan: FlightPlan; base: number; finalStart: number; threshold: number; liftoffPastEnd: number };
+type Timing = { plan: FlightPlan; base: number; finalStart: number; threshold: number; liftoff: number };
 function bisect(plan: FlightPlan, a: PatternAirport, lo: number, hi: number, target: number) {
   for (let k = 0; k < 40; k++) { const m = (lo + hi) / 2; if (alongRunway(a, sampleFlight(plan, m)) < target) lo = m; else hi = m; }
   return hi;
 }
 function timing(plan: FlightPlan, a: PatternAirport): Timing {
   const first = (phase: string) => plan.segments.find((s) => s.phase === phase)?.start ?? 0;
-  const base = first('Base'), finalStart = first('Final'), takeoff = first('Takeoff'), cross = first('Crosswind');
+  const base = first('Base'), finalStart = first('Final'), takeoff = first('Takeoff');
   const end = plan.seconds - 1e-6;
-  return { plan, base, finalStart, threshold: bisect(plan, a, finalStart, end, 0), liftoffPastEnd: bisect(plan, a, takeoff, cross, axis(a).len) };
+  return { plan, base, finalStart, threshold: bisect(plan, a, finalStart, end, 0), liftoff: takeoff };
 }
 
 export type Lap = { start: number; extendPx: number; t: Timing; occupied: [number, number] };
@@ -54,7 +54,7 @@ export class TrafficSchedule {
   private nextStart(i: number) { const l = this.laps[i]!; const last = l[l.length - 1]; return last ? last.start + last.t.plan.seconds : this.firstStarts[i]!; }
   private lapAt(i: number, time: number) { return this.laps[i]!.find((l) => time >= l.start && time < l.start + l.t.plan.seconds); }
   private clear(i: number, start: number, t: Timing) {
-    const occ: [number, number] = [start + t.threshold, start + t.plan.seconds + this.timing(this.regs[i]!, 0).liftoffPastEnd];
+    const occ: [number, number] = [start + t.threshold, start + t.plan.seconds + this.timing(this.regs[i]!, 0).liftoff];
     for (let j = 0; j < this.regs.length; j++) {
       if (j === i) continue;
       for (const l of this.laps[j]!) if (occ[0] < l.occupied[1] + RUNWAY_BUFFER_S && occ[1] > l.occupied[0] - RUNWAY_BUFFER_S) return null;
@@ -81,7 +81,7 @@ export class TrafficSchedule {
       const reg = this.regs[pick]!, start = this.nextStart(pick);
       let e = 0, occ: [number, number] | null = null, t = this.timing(reg, 0);
       for (; e <= MAX_EXTEND_PX; e += STEP_PX) { t = this.timing(reg, e); occ = this.clear(pick, start, t); if (occ) break; }
-      if (!occ) { e = MAX_EXTEND_PX; t = this.timing(reg, e); occ = [start + t.threshold, start + t.plan.seconds + this.timing(reg, 0).liftoffPastEnd]; }
+      if (!occ) { e = MAX_EXTEND_PX; t = this.timing(reg, e); occ = [start + t.threshold, start + t.plan.seconds + this.timing(reg, 0).liftoff]; }
       this.laps[pick]!.push({ start, extendPx: e, t, occupied: occ });
     }
   }
