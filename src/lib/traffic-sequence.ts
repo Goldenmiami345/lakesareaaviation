@@ -60,7 +60,7 @@ function timing(plan: FlightPlan, a: PatternAirport): Timing {
   return { plan, base: first('Base'), finalStart: first('Final'), departEnd: bisect(plan, a, takeoff, cross, axis(a).len) };
 }
 
-export type Lap = { start: number; extendPx: number; orbits: number; t: Timing; occupied: [number, number] };
+export type Lap = { start: number; extendPx: number; orbits: number; crosswindOrbits: number; t: Timing; occupied: [number, number] };
 
 export class TrafficSchedule {
   readonly laps: Lap[][];
@@ -70,10 +70,10 @@ export class TrafficSchedule {
     this.laps = regs.map(() => []);
     this.firstStarts = regs.map((reg, i) => -this.timing(reg, 0).plan.seconds * (offsets?.[i] ?? (i / regs.length + 0.05)));
   }
-  private timing(reg: string, e: number, orbits = 0) {
-    const key = `${reg}:${e}:${orbits}`;
+  private timing(reg: string, e: number, orbits = 0, crosswind = 0) {
+    const key = `${reg}:${e}:${orbits}:${crosswind}`;
     let t = this.cache.get(key);
-    if (!t) { t = timing(makeFlightPlan(this.airport, reg, this.wind, this.runwayHeading, e, orbits), this.airport); this.cache.set(key, t); }
+    if (!t) { t = timing(makeFlightPlan(this.airport, reg, this.wind, this.runwayHeading, e, orbits, crosswind), this.airport); this.cache.set(key, t); }
     return t;
   }
   private nextStart(i: number) { const l = this.laps[i]!; const last = l[l.length - 1]; return last ? last.start + last.t.plan.seconds : this.firstStarts[i]!; }
@@ -116,15 +116,20 @@ export class TrafficSchedule {
       this.regs.forEach((reg, i) => { const st = this.nextStart(i); if (st <= until) { const d = st + this.timing(reg, 0).base; if (d < best) { best = d; pick = i; } } });
       if (pick < 0) return;
       const reg = this.regs[pick]!, start = this.nextStart(pick);
-      let e = 0, orbits = 0, t = this.timing(reg, 0);
-      search: for (orbits = 0; orbits <= MAX_ORBITS; orbits++) {
-        for (e = 0; e <= maxExtendPx(this.airport); e += STEP_PX) {
-          t = this.timing(reg, e, orbits);
-          if (this.runwayClear(pick, this.window(pick, start, t)) && this.spacingClear(pick, start, t)) break search;
+      let found: { e: number; orbits: number; crosswind: number; t: Timing } | null = null;
+      // Preference: plain downwind extension, then the fewest 360s, held on downwind
+      // first and spread onto crosswind so two holding airplanes never share a ring.
+      search: for (let total = 0; total <= MAX_ORBITS; total++) {
+        for (let orbits = total; orbits >= 0; orbits--) {
+          const crosswind = total - orbits;
+          for (let e = 0; e <= maxExtendPx(this.airport); e += STEP_PX) {
+            const t = this.timing(reg, e, orbits, crosswind);
+            if (this.runwayClear(pick, this.window(pick, start, t)) && this.spacingClear(pick, start, t)) { found = { e, orbits, crosswind, t }; break search; }
+          }
         }
       }
-      if (orbits > MAX_ORBITS) { orbits = MAX_ORBITS; e = 0; t = this.timing(reg, 0, orbits); }
-      this.laps[pick]!.push({ start, extendPx: e, orbits, t, occupied: this.window(pick, start, t) });
+      const lap = found ?? { e: 0, orbits: MAX_ORBITS, crosswind: 0, t: this.timing(reg, 0, MAX_ORBITS) };
+      this.laps[pick]!.push({ start, extendPx: lap.e, orbits: lap.orbits, crosswindOrbits: lap.crosswind, t: lap.t, occupied: this.window(pick, start, lap.t) });
     }
   }
   sample(i: number, time: number): PatternSample | null {
