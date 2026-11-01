@@ -3,7 +3,7 @@ import { fleet } from '../lib/site-data';
 import { feetPerPixel, patternAltitude, type PatternAirport, type PatternSample, type Wind } from '../lib/traffic-pattern';
 import { RadarTag, TrafficCard, useTrafficSelection, usePreloadCardPhotos } from './traffic-ui';
 import { trafficSpanFeet, trafficModelScale, TrafficVector, hasTopRender } from './traffic-vector';
-import { useShowTrafficPattern } from '../lib/use-site-settings';
+import { useTrafficPatternMode } from '../lib/use-site-settings';
 import { useTrafficAnimation } from './use-traffic-animation';
 import { TrafficPath } from './traffic-path';
 
@@ -12,7 +12,7 @@ import { TrafficPath } from './traffic-path';
 export function TrafficPattern({airport,active,viewBox='0 0 1500 1500',wind=null,runwayHeading=Number(airport.runway)*10}:{airport:PatternAirport;active:boolean;viewBox?:string;wind?:Wind|null;runwayHeading?:number}){
   const svgRef=useRef<SVGSVGElement>(null),planeRefs=useRef<(SVGGElement|null)[]>([]),shadowRefs=useRef<(SVGGElement|null)[]>([]),tagRefs=useRef<(SVGGElement|null)[]>([]),textRefs=useRef<(SVGTextElement|null)[]>([]),cardRef=useRef<HTMLDivElement>(null);
   const {selected,selectedRef,open,hitProps}=useTrafficSelection(active);
-  const showPattern=useShowTrafficPattern();
+  const patternMode=useTrafficPatternMode();
   usePreloadCardPhotos(airport.aircraft,active);
   const planes=useMemo(()=>airport.aircraft.map(reg=>{const f=fleet.find(x=>x.registration===reg);return {reg,type:f?.name??'Training aircraft',nickname:f?.nickname??''};}),[airport]);
   const project=useCallback((s:PatternSample,reg:string)=>{
@@ -24,7 +24,7 @@ export function TrafficPattern({airport,active,viewBox='0 0 1500 1500',wind=null
   useTrafficAnimation({active,airport,wind,runwayHeading,regs:airport.aircraft,svgRef,planeRefs,shadowRefs,tagRefs,textRefs,cardRef,selectedRef,project});
   const info=selected!==null?planes[selected]:null;
   return <div className="absolute inset-0"><svg ref={svgRef} data-traffic={airport.ident} viewBox={viewBox} preserveAspectRatio="xMidYMid slice" className="traffic-callouts absolute inset-0 h-full w-full" role="group" aria-label={`Live ${airport.side} traffic pattern for runway ${airport.runway} at ${airport.ident}, pattern altitude ${patternAltitude(airport)} feet MSL`}>
-    {showPattern&&<TrafficPath airport={airport} active={active}/>}
+    {patternMode!=='off'&&<TrafficPath airport={airport} active={active} mode={patternMode} paused={selected!==null}/>}
     {planes.map((p,i)=><g key={`s-${p.reg}`} ref={el=>{shadowRefs.current[i]=el;}} aria-hidden className="pointer-events-none traffic-ground-shadow"><TrafficVector reg={p.reg} shadow topRender/></g>)}
     {planes.map((p,i)=><g key={p.reg} data-aircraft={p.reg} ref={el=>{planeRefs.current[i]=el;}} className="pointer-events-none" aria-hidden><TrafficVector reg={p.reg} topRender/></g>)}
     {active&&planes.map((p,i)=><RadarTag key={`t-${p.reg}`} reg={p.reg} index={i} seed={0} label={`${p.reg}, ${p.type}. Show details`} tabIndex={0} hit={hitProps(i,p.reg)} tagRef={el=>{tagRefs.current[i]=el;}} textRef={el=>{textRefs.current[i]=el;}}/>)}

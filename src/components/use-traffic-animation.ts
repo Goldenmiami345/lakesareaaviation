@@ -1,6 +1,6 @@
 import { useEffect, type RefObject } from 'react';
 import { CALL_DURATION_MS, MAX_CALLS } from '../lib/traffic-flight';
-import { TrafficSchedule } from '../lib/traffic-sequence';
+import { TrafficSchedule, legOf, type Leg } from '../lib/traffic-sequence';
 import { positionReport, type PatternAirport, type PatternSample, type Wind } from '../lib/traffic-pattern';
 import { fitTagSide, tagSideHolds, tagBounds, setTagPosition, placeCard, radarAltitude, writeCard } from './traffic-ui';
 
@@ -21,6 +21,7 @@ export function useTrafficAnimation(o:Options) {
     // Runway-sequenced laps: downwinds extend so only one airplane is ever on the runway.
     const schedule=new TrafficSchedule(airport,regs,wind,runwayHeading,offsets);
     const prev:(string|null)[]=regs.map(()=>null);
+    const prevLeg:(Leg|null)[]=regs.map(()=>null);
     const calls=new Map<number,number>();
     const origin=performance.now();let raf=0;
     const sample=(i:number,t:number)=>schedule.sample(i,t);
@@ -35,6 +36,8 @@ export function useTrafficAnimation(o:Options) {
         const plane=planeRefs.current[i];
         plane?.setAttribute('transform',p.transform);
         plane?.setAttribute('data-ground-speed',String(s.knots));plane?.setAttribute('data-msl',String(s.msl));plane?.setAttribute('data-phase',s.phase);
+        // Verification hook: data-leg changes only when the leg does, not per frame.
+        const leg=legOf(airport,s);if(leg!==prevLeg[i]){prevLeg[i]=leg;plane?.setAttribute('data-leg',leg);}
         shadowRefs.current[i]?.setAttribute('transform',p.shadow);
         shadowRefs.current[i]?.setAttribute('opacity',String(.4-p.lift*.28));
         const tag=tagRefs.current[i];setTagPosition(tag,m,p.x,p.y);
