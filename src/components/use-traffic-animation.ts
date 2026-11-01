@@ -54,11 +54,17 @@ export function useTrafficAnimation(o:Options) {
             // 2.5s screen path is clear of UI and the other admitted block.
             tag.classList.remove('is-pinging');void tag.getBoundingClientRect();tag.classList.add('is-pinging');
             const title=tx?.querySelector('.traffic-call-title');if(title)title.textContent=`${regs[i]} · ${report.toUpperCase()}`;
+            // Project the closest runway point through the same camera as the plane.
+            // This prefers the outside of each turn in both aerial and oblique views.
+            const dx=airport.end.x-airport.threshold.x,dy=airport.end.y-airport.threshold.y;
+            const along=Math.max(0,Math.min(1,((s.x-airport.threshold.x)*dx+(s.y-airport.threshold.y)*dy)/(dx*dx+dy*dy||1)));
+            const runway=screen(project({...s,x:airport.threshold.x+along*dx,y:airport.threshold.y+along*dy},regs[i]??''),m);
+            const outside={x:current.x-runway.x,y:current.y-runway.y};
             const ahead=Array.from({length:11},(_,j)=>{const s=sample(i,secs+j*.25);return s?screen(project(s,regs[i]??''),m):current;});
             const occupied=Array.from(calls.keys()).filter(j=>j!==i).flatMap(j=>Array.from({length:11},(_,n)=>{
               const s=sample(j,secs+n*.25);if(!s)return [];const q=screen(project(s,regs[j]??''),m);const b=tagBounds(tagRefs.current[j],q.x,q.y);return b?[b]:[];
             }).flat());
-            if((calls.has(i)||calls.size<MAX_CALLS)&&fitTagSide(tag,ahead,occupied)){
+            if((calls.has(i)||calls.size<MAX_CALLS)&&fitTagSide(tag,ahead,occupied,outside)){
               calls.set(i,now+CALL_DURATION_MS);tag.classList.add('is-calling');
             }
           }
