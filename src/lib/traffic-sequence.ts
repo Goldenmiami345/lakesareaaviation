@@ -7,11 +7,14 @@ import { feetPerPixel, type PatternAirport, type PatternSample, type Wind } from
 // never overlap (+ RUNWAY_BUFFER_S), arrivals keep first-come order (no cutting
 // inside traffic ahead), and every plane keeps patternSpacingPx from all others
 // for its whole lap. The decision is made before the base turn; a plane that
-// cannot be cleared extends its downwind, as a controller would, so nobody ever
-// has to break off on base. All traffic flies continuous touch-and-goes.
+// cannot be cleared extends its downwind (preferred, up to maxExtendPx) or flies
+// visible 360s on downwind, as a controller would, so nobody ever has to break off
+// on base. All traffic flies continuous touch-and-goes.
 export const RUNWAY_BUFFER_S = 5;
 const STEP_PX = 4;
-const MAX_EXTEND_PX = 1500;
+const MAX_ORBITS = 6;
+/** Longest downwind extension: final may grow to 3× the drawn final before a 360 is used instead. */
+const maxExtendPx = (a: PatternAirport) => 2 * a.extension;
 const SPACING_STEP_S = 0.5;
 const NM_M = 1852;
 
@@ -57,7 +60,7 @@ function timing(plan: FlightPlan, a: PatternAirport): Timing {
   return { plan, base: first('Base'), finalStart: first('Final'), departEnd: bisect(plan, a, takeoff, cross, axis(a).len) };
 }
 
-export type Lap = { start: number; extendPx: number; t: Timing; occupied: [number, number] };
+export type Lap = { start: number; extendPx: number; orbits: number; t: Timing; occupied: [number, number] };
 
 export class TrafficSchedule {
   readonly laps: Lap[][];
@@ -67,10 +70,10 @@ export class TrafficSchedule {
     this.laps = regs.map(() => []);
     this.firstStarts = regs.map((reg, i) => -this.timing(reg, 0).plan.seconds * (offsets?.[i] ?? (i / regs.length + 0.05)));
   }
-  private timing(reg: string, e: number) {
-    const key = `${reg}:${e}`;
+  private timing(reg: string, e: number, orbits = 0) {
+    const key = `${reg}:${e}:${orbits}`;
     let t = this.cache.get(key);
-    if (!t) { t = timing(makeFlightPlan(this.airport, reg, this.wind, this.runwayHeading, e), this.airport); this.cache.set(key, t); }
+    if (!t) { t = timing(makeFlightPlan(this.airport, reg, this.wind, this.runwayHeading, e, orbits), this.airport); this.cache.set(key, t); }
     return t;
   }
   private nextStart(i: number) { const l = this.laps[i]!; const last = l[l.length - 1]; return last ? last.start + last.t.plan.seconds : this.firstStarts[i]!; }
@@ -113,13 +116,15 @@ export class TrafficSchedule {
       this.regs.forEach((reg, i) => { const st = this.nextStart(i); if (st <= until) { const d = st + this.timing(reg, 0).base; if (d < best) { best = d; pick = i; } } });
       if (pick < 0) return;
       const reg = this.regs[pick]!, start = this.nextStart(pick);
-      let e = 0, t = this.timing(reg, 0), ok = false;
-      for (; e <= MAX_EXTEND_PX; e += STEP_PX) {
-        t = this.timing(reg, e);
-        if (this.runwayClear(pick, this.window(pick, start, t)) && this.spacingClear(pick, start, t)) { ok = true; break; }
+      let e = 0, orbits = 0, t = this.timing(reg, 0);
+      search: for (orbits = 0; orbits <= MAX_ORBITS; orbits++) {
+        for (e = 0; e <= maxExtendPx(this.airport); e += STEP_PX) {
+          t = this.timing(reg, e, orbits);
+          if (this.runwayClear(pick, this.window(pick, start, t)) && this.spacingClear(pick, start, t)) break search;
+        }
       }
-      if (!ok) { e = MAX_EXTEND_PX; t = this.timing(reg, e); }
-      this.laps[pick]!.push({ start, extendPx: e, t, occupied: this.window(pick, start, t) });
+      if (orbits > MAX_ORBITS) { orbits = MAX_ORBITS; e = 0; t = this.timing(reg, 0, orbits); }
+      this.laps[pick]!.push({ start, extendPx: e, orbits, t, occupied: this.window(pick, start, t) });
     }
   }
   sample(i: number, time: number): PatternSample | null {
