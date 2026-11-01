@@ -275,6 +275,5 @@ input.date-field::-webkit-date-and-time-value { text-align: left; margin: 0; }
 @keyframes traffic-target-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
 .traffic-callouts.has-call .traffic-tag:not(.is-calling) .traffic-history { opacity: .55; transition: opacity .3s ease; }
 .traffic-callouts .traffic-history { transition: opacity .3s ease; }
-@media (max-width: 639px) { .traffic-label { font-size: max(11px, 1em); } }
 @media (prefers-reduced-motion: reduce) { .traffic-tag.is-calling .traffic-target { animation: none; } }
 .aircraft-top-render { image-rendering: auto; }

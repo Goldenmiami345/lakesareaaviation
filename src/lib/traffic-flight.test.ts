@@ -16,4 +16,4 @@ test('map derivative equals displayed ground speed within rounding',()=>{
 });
 test('speed is continuous at every leg boundary',()=>{const plan=makeFlightPlan(airportTraffic.KLXL,'N4383P',{dir:150,kt:12},131);for(const s of plan.segments){assert.ok(Math.abs(sampleFlight(plan,s.start-.001).knots-sampleFlight(plan,s.start+.001).knots)<=1);}});
 test('flight uses all original corners and altitude endpoints',()=>{const a=airportTraffic.KLXL,plan=makeFlightPlan(a,'N6717A');for(const p of patternWaypoints(a)){assert.ok(plan.segments.some(s=>Math.hypot(s.p.x-p.x,s.p.y-p.y)<.001&&Math.abs(s.p.agl-p.agl)<.001)||plan.segments.some(s=>Math.hypot(s.q.x-p.x,s.q.y-p.y)<.001));}});
-test('calls last 2.5s, ping lasts .6s and max two',()=>{assert.equal(CALL_DURATION_MS,2500);assert.equal(PING_DURATION_MS,600);assert.equal(MAX_CALLS,2);});
+test('calls last 3.5s, ping lasts .6s and max two',()=>{assert.equal(CALL_DURATION_MS,3500);assert.equal(PING_DURATION_MS,600);assert.equal(MAX_CALLS,2);});
