@@ -5,7 +5,7 @@ const hits = (a: CallBox, b: CallBox) => a.l < b.r && a.r > b.l && a.t < b.b && 
 /** All distances are screen pixels, independent of map scale or pinch zoom. */
 export function callSideCandidates(width: number, viewportWidth: number, outside: { x: number; y: number }): CallSide[] {
   const cap = viewportWidth < 640 ? 28 : 40;
-  const directions = [[1,-1],[-1,-1],[1,1],[-1,1],[1,0],[-1,0],[0,-1],[0,1]];
+  const directions: [number,number][] = [[1,-1],[-1,-1],[1,1],[-1,1],[1,0],[-1,0],[0,-1],[0,1]];
   directions.sort((a,b) => (b[0]*outside.x+b[1]*outside.y)/Math.hypot(...b) - (a[0]*outside.x+a[1]*outside.y)/Math.hypot(...a));
   const first = directions[0];
   if (first) {
