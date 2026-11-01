@@ -99,3 +99,39 @@ test("section paging: one page inside a section, free scrolling at every section
   assert.equal(nearestSectionPage(pages, 3200), null);
   assert.equal(nearestSectionPage(pages, 1100), 800);
 });
+
+describe("one gesture = one stop", async () => {
+  const { nextStopDown, stackProgress, stackOffset, stageStopFraction, isModeSwitchPoint, resolveMode } = await import("./journey-pacing");
+  // Two journeys: stages, exit of the first = start of the second, then the second's exit.
+  const stops = [900, 1700, 2500, 3300, 4100, 4900, 5700, 6500, 7300];
+  test("from every stop the next stop down is exactly the following stop", () => {
+    stops.forEach((s, i) => assert.equal(nextStopDown(stops, s), stops[i + 1] ?? null));
+  });
+  test("from mid-points and near-misses it is the next stop strictly below", () => {
+    for (let i = 0; i < stops.length - 1; i += 1) {
+      assert.equal(nextStopDown(stops, (stops[i]! + stops[i + 1]!) / 2), stops[i + 1]);
+      assert.equal(nextStopDown(stops, stops[i]! + 1.5), stops[i + 1]); // within tolerance = on the stop
+      assert.equal(nextStopDown(stops, stops[i + 1]! - 3), stops[i + 1]);
+    }
+    assert.equal(nextStopDown(stops, 100), 900);
+  });
+  test("stack mode puts the active stage at 0% on every stop", () => {
+    for (const n of [3, 6]) for (let k = 0; k < n; k += 1) {
+      const p = stackProgress(stageStopFraction(k, n), n);
+      assert.ok(Math.abs(p - k) < 1e-9);
+      assert.ok(Math.abs(stackOffset(k, p)) < 1e-9);
+      if (k > 0) assert.ok(Math.abs(stackOffset(k - 1, p) + 1) < 1e-9); // previous page stacked a full screen above
+    }
+    const mid = stackProgress((stageStopFraction(1, 6) + stageStopFraction(2, 6)) / 2, 6);
+    assert.ok(Math.abs(mid - 1.5) < 1e-9);
+  });
+  test("mode switches only at stops (or outside the pinned stretch)", () => {
+    const stage = [1000, 1800, 2600];
+    assert.equal(resolveMode("fade", "stack", isModeSwitchPoint(stage, 1800)), "stack");
+    assert.equal(resolveMode("fade", "stack", isModeSwitchPoint(stage, 1801.5)), "stack");
+    assert.equal(resolveMode("stack", "fade", isModeSwitchPoint(stage, 1400)), "stack");
+    assert.equal(resolveMode("fade", "stack", isModeSwitchPoint(stage, 2200)), "fade");
+    assert.equal(resolveMode("stack", "fade", isModeSwitchPoint(stage, 400)), "fade");
+    assert.equal(resolveMode("stack", "fade", isModeSwitchPoint(stage, 3000)), "fade");
+  });
+});

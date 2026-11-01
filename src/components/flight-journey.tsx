@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Phone } from "lucide-react";
 import { Button } from "./ui/button";
-import { journeyFrame, journeyStop, JOURNEY_STAGE_SVH, sectionAt, sectionStep, nearestSectionPage, type SectionPage, type PageSegment } from "../lib/journey-pacing";
+import { journeyFrame, journeyStop, JOURNEY_STAGE_SVH, nextStopDown, stageStopFraction, stackProgress, stackOffset, isModeSwitchPoint, resolveMode, STOP_TOL, type JourneyMode, type PageSegment } from "../lib/journey-pacing";
 import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
 import { patternFor, pickRunway, type PatternField } from "../lib/traffic-pattern";
 import { useMetar } from "../lib/use-metar";
@@ -42,12 +42,12 @@ function useIsPhone() {
 // Overlay viewBox (in the original image's pixel space) covering the whole phone canvas.
 const AERIAL_PHONE_VIEW = "265 -300 970 2100";
 
-type Stage = { code: string; label: string; time: string; title: string; text: string; img: string; alt: string; cta: string; slug?: string; location?: string; to?: "/introductory-flights" | "/contact" | "/locations"; hud?: string; zoom?: number; zoomIn?: number; w?: number; h?: number; video?: string; position?: string; traffic?: PatternField; perspective?: boolean; phoneImg?: string; phoneView?: string };
+type Stage = { code: string; label: string; time: string; title: string; text: string; img: string; alt: string; cta: string; slug?: string; location?: string; to?: "/introductory-flights" | "/contact" | "/locations"; hud?: string; zoom?: number; zoomIn?: number; w?: number; h?: number; video?: string; position?: string; traffic?: PatternField; perspective?: boolean; phoneImg?: string; phoneView?: string; drift?: boolean };
 
 const journeyStages: Stage[] = [
   { code: "01", label: "Discovery flight", time: "$100", title: "Take the controls on day one.", text: "Left seat, instructor beside you.", img: clouds, phoneImg: cloudsPhone, alt: "Sunrise above a sea of clouds", cta: "Book an intro flight", to: "/introductory-flights" },
   { code: "02", label: "Private pilot", time: "~21 days", title: "Your first certificate.", text: "One focused block.", img: runway, phoneImg: runwayPhone, phoneView: "0 -700 1376 1468", alt: "Oblique view of Little Falls (KLXL): runway 13/31 with the full-length runway 18/36 crossing near the runway 13 end", cta: "Private pilot details", slug: "private-pilot", perspective: true, w: 1376, h: 768 },
-  { code: "03", label: "Instrument rating", time: "10–14 days", title: "Train in the real cockpit.", text: "Fly by reference to instruments.", img: instrument, phoneImg: instrumentPhone, alt: "Real Lakes Area Aviation instrument panel flying through instrument conditions", cta: "Instrument details", slug: "instrument-rating", position: "center", zoom: 0.2, zoomIn: 0.03 },
+  { code: "03", label: "Instrument rating", time: "10–14 days", title: "Train in the real cockpit.", text: "Fly by reference to instruments.", img: instrument, phoneImg: instrumentPhone, alt: "Real Lakes Area Aviation instrument panel flying through instrument conditions", cta: "Instrument details", slug: "instrument-rating", position: "center", zoom: 0.2, zoomIn: 0.03, drift: true },
   { code: "04", label: "Commercial pilot", time: "5–7 days", title: "Fly professionally.", text: "Commercial standards in a focused block.", img: commercial, phoneImg: commercialPhone, alt: "Lakes Area Aviation airplanes on the ramp at sunset", cta: "Commercial details", slug: "commercial-single-engine" },
   { code: "05", label: "CFI & CFII", time: "4–6 weeks", title: "Become the instructor.", text: "The exams: 1-hour oral and 1-hour flight.", img: instructor, phoneImg: instructorPhone, alt: "Instructor and student inspecting a training airplane before flight", cta: "CFI & CFII track", slug: "cfi-cfii", position: "center" },
   { code: "06", label: "The right seat", time: "Your goal", title: "Build toward the airline flight deck.", text: "Every instructing hour moves you closer.", img: airline, alt: "Airline flight deck at night on final approach over city lights", cta: "Build my training plan", to: "/contact", video: airlineVideo.url, zoom: 0.2, zoomIn: 0.03 },
@@ -82,6 +82,7 @@ export function jumpToPageTop() {
   const root = document.documentElement;
   root.classList.add("journey-free");
   cancelAnimationFrame(tweenFrame); paging = false; root.classList.remove("journey-paging");
+  wantedMode = "fade"; setMode("fade");
   window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
     if (window.scrollY !== 0) window.scrollTo({ top: 0, left: 0, behavior: "instant" });
@@ -90,16 +91,18 @@ export function jumpToPageTop() {
 }
 
 
-// ---- One swipe = one page ----
-// Inside the home journeys we page ourselves instead of native snap: iOS only
-// advances a mandatory snap past a distance/velocity threshold, so gentle
-// swipes sprang back. Any swipe past PAGE_SWIPE_PX, or any fresh wheel
-// notch, animates to the adjacent page; input is ignored until it lands.
-const PAGE_SWIPE_PX = 8;
+// ---- Downward: one gesture = one stop. Upward: native scrolling through stacked pages ----
+// Stops are every journey stage plus each journey's exit (the next section's top).
+// Inside a journey's zone (from when its top enters the viewport until its exit) any
+// downward gesture — a 10px drag, one wheel notch, a trackpad burst, PageDown/Space/
+// ArrowDown — glides to the first stop strictly below. Upward input is never paged
+// or settled: journeys switch to "stack" mode and slide 1:1 like stacked pages.
+const PAGE_SWIPE_PX = 10;
 const PAGE_MS = 500;
+const WHEEL_QUIET_MS = 180;
 const journeys = new Map<HTMLElement, { n: number; vh: () => number }>();
 let paging = false;
-let pagingUntil = 0;
+let wheelQuietUntil = 0;
 // After a glide lands, leftover native scroll deltas from the same swipe (queued by
 // the browser while touch moves were cancelled) are pulled back onto the landed page.
 let landedY = -1;
@@ -108,17 +111,36 @@ let tweenFrame = 0;
 let controllerRefs = 0;
 let removeController: (() => void) | null = null;
 
-function journeyPages(): SectionPage[] {
+let mode: JourneyMode = "fade";
+let wantedMode: JourneyMode = "fade";
+const modeListeners = new Set<() => void>();
+export const journeyMode = () => mode;
+
+type Layout = { stops: number[]; zones: { from: number; to: number }[]; stages: number[][] };
+function journeyLayout(): Layout {
   const list = [...journeys].sort((a, b) => a[0].offsetTop - b[0].offsetTop);
-  const pages: SectionPage[] = [];
-  list.forEach(([el, { n, vh }], group) => {
+  const maxY = document.documentElement.scrollHeight - window.innerHeight;
+  const stops: number[] = [], zones: Layout["zones"] = [], stages: number[][] = [];
+  list.forEach(([el, { n, vh }]) => {
     const base = window.scrollY + el.getBoundingClientRect().top;
-    const total = Math.max(1, el.offsetHeight - vh());
-    // The last stage rests at the end of its pinned stretch, so leaving the
-    // section scrolls the next content in immediately (no dead pinned length).
-    for (let i = 0; i < n; i += 1) pages.push({ y: Math.round(i === n - 1 ? base + total : base + total * journeyStop(i, n)), group });
+    const h = vh();
+    const total = Math.max(1, el.offsetHeight - h);
+    const own: number[] = [];
+    for (let i = 0; i < n; i += 1) own.push(Math.round(base + total * stageStopFraction(i, n)));
+    const exit = Math.min(maxY, Math.round(base + el.offsetHeight));
+    stops.push(...own, exit);
+    stages.push(own);
+    zones.push({ from: base - h, to: exit });
   });
-  return pages;
+  stops.sort((a, b) => a - b);
+  return { stops: stops.filter((s, i) => i === 0 || s - stops[i - 1]! > STOP_TOL), zones, stages };
+}
+const inZone = (L: Layout, y: number) => L.zones.some((z) => y >= z.from - STOP_TOL && y < z.to - STOP_TOL);
+const atSwitchPoint = (L: Layout, y: number) => L.stages.every((own) => isModeSwitchPoint(own, y));
+function setMode(next: JourneyMode) { if (mode === next) return; mode = next; modeListeners.forEach((f) => f()); }
+function requestMode(next: JourneyMode, L: Layout = journeyLayout()) {
+  wantedMode = next;
+  setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, window.scrollY)));
 }
 
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
@@ -136,14 +158,17 @@ function runPath(path: PageSegment[], touch = false) {
   const nextSeg = () => {
     const seg = path[k++];
     if (!seg) {
-      // Late layout shifts (images/fonts on a cold load) can move pages while we glide;
-      // land exactly on the nearest real page so the next swipe starts from a clean state.
-      const pages = journeyPages();
-      const near = nearestSectionPage(pages, window.scrollY);
-      if (near !== null && Math.abs(near - window.scrollY) > 2) window.scrollTo({ top: near, behavior: "instant" });
-      paging = false; pagingUntil = performance.now() + 60;
+      // Late layout shifts (images/fonts on a cold load) can move stops while we glide;
+      // land exactly on the nearest real stop so the next gesture starts clean.
+      const L = journeyLayout();
+      let near: number | null = null;
+      for (const s of L.stops) if (near === null || Math.abs(s - window.scrollY) < Math.abs(near - window.scrollY)) near = s;
+      if (near !== null && Math.abs(near - window.scrollY) > STOP_TOL && Math.abs(near - window.scrollY) < 240) window.scrollTo({ top: near, behavior: "instant" });
+      paging = false;
+      wheelQuietUntil = Math.max(wheelQuietUntil, performance.now() + WHEEL_QUIET_MS);
       landedY = window.scrollY; landedUntil = performance.now() + 700;
       document.documentElement.classList.remove("journey-paging");
+      setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, window.scrollY)));
       return;
     }
     if (seg.instant) { window.scrollTo({ top: seg.y, behavior: "instant" }); nextSeg(); return; }
@@ -159,106 +184,110 @@ function runPath(path: PageSegment[], touch = false) {
 }
 
 export function goToJourneyPage(y: number, instant = false) {
-  if (instant) { cancelAnimationFrame(tweenFrame); paging = false; document.documentElement.classList.remove("journey-paging"); window.scrollTo({ top: y, behavior: "instant" }); return; }
+  if (instant) { cancelAnimationFrame(tweenFrame); paging = false; document.documentElement.classList.remove("journey-paging"); window.scrollTo({ top: y, behavior: "instant" }); requestMode(wantedMode); return; }
   runPath([{ y, instant: false }]);
 }
 
 function installController() {
   controllerRefs += 1;
-  if (import.meta.env.DEV) (window as unknown as { __journeyPages?: () => SectionPage[] }).__journeyPages = journeyPages;
+  if (import.meta.env.DEV) (window as unknown as { __journeyStops?: () => number[] }).__journeyStops = () => journeyLayout().stops;
   if (removeController) return;
   const root = document.documentElement;
   const reduce = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const busy = () => paging || performance.now() < pagingUntil;
-  const cancelGlide = () => { cancelAnimationFrame(tweenFrame); paging = false; pagingUntil = 0; landedUntil = 0; root.classList.remove("journey-paging"); };
-  const inSection = (pages: SectionPage[]) => sectionAt(pages, window.scrollY) >= 0;
-  const step = (dir: 1 | -1, touch = false) => {
-    const y = sectionStep(journeyPages(), window.scrollY, dir);
-    if (y === null) return false;
-    runPath([{ y, instant: false }], touch);
+  const zoomedIn = () => root.classList.contains("journey-zoomed");
+  const free = () => root.classList.contains("journey-free");
+  const cancelGlide = () => { cancelAnimationFrame(tweenFrame); paging = false; wheelQuietUntil = 0; landedUntil = 0; root.classList.remove("journey-paging"); };
+  // One downward gesture: glide to the first stop strictly below, when inside a journey zone.
+  const goDown = (touch = false) => {
+    const L = journeyLayout(), y = window.scrollY;
+    if (!inZone(L, y)) return false;
+    const target = nextStopDown(L.stops, y);
+    if (target === null) return false;
+    wantedMode = "fade"; // applied on landing (or now, when already on a stop)
+    setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, y)));
+    runPath([{ y: target, instant: false }], touch);
     return true;
   };
-  let lastWheel = 0, lastDelta = 0;
+  const goingUp = () => { if (paging) cancelGlide(); wheelQuietUntil = 0; requestMode("stack"); };
+
   const onWheel = (e: WheelEvent) => {
-    if ((e.target as Element | null)?.closest?.('[data-model-gesture]')) return;
-    if (reduce() || e.ctrlKey || e.metaKey || Math.abs(e.deltaY) < Math.abs(e.deltaX) || root.classList.contains("journey-free")) return;
-    const pages = journeyPages();
-    const dir = e.deltaY > 0 ? 1 : -1;
-    // Upward wheel scrolling is always linear and native.
-    if (dir < 0) { if (busy()) { cancelGlide(); } return; }
-    if (busy()) { e.preventDefault(); return; }
-    if (!inSection(pages)) return;
-    const now = performance.now(), delta = Math.abs(e.deltaY);
-    const fresh = now - lastWheel > 200 || delta > lastDelta * 1.6 + 4;
-    lastWheel = now; lastDelta = delta;
-    if (!fresh) { if (sectionStep(pages, window.scrollY, dir) !== null) e.preventDefault(); return; }
-    if (step(dir)) e.preventDefault();
+    if ((e.target as Element | null)?.closest?.("[data-model-gesture]")) return;
+    if (reduce() || e.ctrlKey || e.metaKey || Math.abs(e.deltaY) < Math.abs(e.deltaX) || free() || zoomedIn()) return;
+    if (e.deltaY < 0) { goingUp(); return; }
+    const now = performance.now();
+    // A wheel/trackpad burst is one gesture: swallow input until it has been quiet after landing.
+    if (paging || now < wheelQuietUntil) { wheelQuietUntil = Math.max(wheelQuietUntil, now + WHEEL_QUIET_MS); e.preventDefault(); return; }
+    if (goDown()) { wheelQuietUntil = now + WHEEL_QUIET_MS; e.preventDefault(); }
   };
-  let g: { x: number; y: number; decided: boolean; claimed: boolean; fired: boolean } | null = null;
+  const onKey = (e: KeyboardEvent) => {
+    if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || reduce() || free() || zoomedIn()) return;
+    const t = e.target as HTMLElement | null;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || (e.key === " " && /^(BUTTON|A)$/.test(t.tagName)))) return;
+    const down = e.key === "PageDown" || e.key === "ArrowDown" || (e.key === " " && !e.shiftKey);
+    const up = e.key === "PageUp" || e.key === "ArrowUp" || e.key === "Home" || (e.key === " " && e.shiftKey);
+    if (up) { goingUp(); return; }
+    if (!down) return;
+    if (paging) { e.preventDefault(); return; }
+    if (goDown()) e.preventDefault();
+  };
+
+  let g: { x: number; y: number; decided: boolean; fired: boolean } | null = null;
   let touching = false;
   let rejected = false;
   // Any second finger makes the whole gesture a pinch: it never pages.
   let multi = false;
   const cancelForMulti = () => { multi = true; g = null; rejected = true; };
-  const zoomedIn = () => root.classList.contains("journey-zoomed");
   // touchend can be dropped when the main thread is busy; a finger with no touch
-  // events for 150ms is treated as lifted so the landing guard and settling still run.
+  // events for 150ms is treated as lifted so the landing guard still runs.
   let lastTouchAt = 0;
   const fingerDown = () => touching && performance.now() - lastTouchAt < 150;
   const onTouchStart = (e: TouchEvent) => {
-    if ((e.target as Element | null)?.closest?.('[data-model-gesture]')) { g = null; rejected = true; return; }
+    if ((e.target as Element | null)?.closest?.("[data-model-gesture]")) { g = null; rejected = true; return; }
     if (e.touches.length > 1 || multi) { lastTouchAt = performance.now(); touching = true; cancelForMulti(); return; }
     touching = true; rejected = false; landedUntil = 0; lastTouchAt = performance.now();
     const t = e.touches[0];
-    g = e.touches.length === 1 && t && !reduce() ? { x: t.clientX, y: t.clientY, decided: false, claimed: false, fired: false } : null;
+    g = e.touches.length === 1 && t && !reduce() ? { x: t.clientX, y: t.clientY, decided: false, fired: false } : null;
   };
   const onTouchMove = (e: TouchEvent) => {
-    if ((e.target as Element | null)?.closest?.('[data-model-gesture]')) { g = null; rejected = true; return; }
+    if ((e.target as Element | null)?.closest?.("[data-model-gesture]")) { g = null; rejected = true; return; }
     lastTouchAt = performance.now();
     if (e.touches.length > 1 || multi) { cancelForMulti(); return; }
     if (zoomedIn()) { g = null; rejected = true; return; }
     const t = e.touches[0];
     // A finger that went down before the handler attached (first load) is adopted here.
-    if (!g && !rejected && t && e.touches.length === 1 && !reduce()) { touching = true; g = { x: t.clientX, y: t.clientY, decided: false, claimed: false, fired: false }; return; }
+    if (!g && !rejected && t && e.touches.length === 1 && !reduce()) { touching = true; g = { x: t.clientX, y: t.clientY, decided: false, fired: false }; return; }
     if (!g || !t || e.touches.length !== 1) { g = null; rejected = true; return; }
     const dx = g.x - t.clientX, dy = g.y - t.clientY;
     if (!g.decided) {
       if (Math.abs(dx) < 3 && Math.abs(dy) < 3) return; // taps with jitter stay taps
       g.decided = true;
-      if (Math.abs(dx) > Math.abs(dy) || root.classList.contains("journey-free")) { g = null; rejected = true; return; }
-      const pages = journeyPages();
-      // Only claim swipes that move between stages of the same section; section
-      // edges (into/out of a journey) stay native, free scrolling with momentum.
-      // Upward drags are always native 1:1 scrolling; a glide in progress yields to them.
-      if (dy < 0) { if (busy()) cancelGlide(); g = null; rejected = true; return; }
-      g.claimed = busy() || (inSection(pages) && sectionStep(pages, window.scrollY, 1) !== null);
-      if (!g.claimed) { g = null; rejected = true; return; }
+      if (Math.abs(dx) > Math.abs(dy) || free()) { g = null; rejected = true; return; }
+      // Upward drags are plain 1:1 native scrolling through stacked pages.
+      if (dy < 0) { goingUp(); g = null; rejected = true; return; }
     }
+    if (g.fired || paging) { if (e.cancelable) e.preventDefault(); return; }
+    // Outside journey zones the drag stays native; it is re-checked on every move,
+    // so a drag that carries into a zone is caught and lands on the next stop.
+    if (!inZone(journeyLayout(), window.scrollY)) return;
     if (e.cancelable) e.preventDefault();
-    if (!g.fired && !busy() && dy >= PAGE_SWIPE_PX) { g.fired = true; step(1, true); }
+    if (dy >= PAGE_SWIPE_PX) { g.fired = true; goDown(true); }
   };
-  let settleTimer = 0;
-  // Direction of the latest scroll movement: upward motion never settles or pages.
   let lastDir = 1, lastScrollY = window.scrollY;
-  const onTouchEnd = (e: TouchEvent) => { if (e.touches.length === 0) { multi = false; touching = false; g = null; scheduleSettle(); } };
-  // Free scrolling that comes to rest inside a section (which then fully fills
-  // the screen) settles onto its nearest stage; outside sections nothing snaps.
-  const scheduleSettle = () => {
-    window.clearTimeout(settleTimer);
-    settleTimer = window.setTimeout(() => {
-      if (fingerDown() || busy() || reduce() || zoomedIn() || root.classList.contains("journey-free") || lastDir < 0) return;
-      const near = nearestSectionPage(journeyPages(), window.scrollY);
-      if (near !== null && Math.abs(near - window.scrollY) > 2) runPath([{ y: near, instant: false }]);
-    }, 180);
-  };
+  const onTouchEnd = (e: TouchEvent) => { if (e.touches.length === 0) { multi = false; touching = false; g = null; } };
   const onScroll = () => {
     const y = window.scrollY;
     if (Math.abs(y - lastScrollY) > 0.5) lastDir = y > lastScrollY ? 1 : -1;
     lastScrollY = y;
-    if (!paging && !fingerDown() && performance.now() < landedUntil && y - landedY > 1) { window.scrollTo({ top: landedY, behavior: "instant" }); return; }
-    scheduleSettle();
+    if (paging) return;
+    if (!fingerDown() && performance.now() < landedUntil && y - landedY > 1) { window.scrollTo({ top: landedY, behavior: "instant" }); return; }
+    const L = journeyLayout();
+    if (lastDir < 0) { wantedMode = "stack"; setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, y))); return; }
+    setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, y)));
+    // Native downward momentum that carried into a journey zone never rests between stops.
+    if (!fingerDown() && !reduce() && !zoomedIn() && !free() && inZone(L, y) && !L.stops.some((s) => Math.abs(s - y) <= STOP_TOL)) goDown(true);
   };
   window.addEventListener("wheel", onWheel, { passive: false });
+  window.addEventListener("keydown", onKey);
   window.addEventListener("touchstart", onTouchStart, { passive: true });
   window.addEventListener("touchmove", onTouchMove, { passive: false });
   window.addEventListener("touchend", onTouchEnd, { passive: true });
@@ -266,12 +295,12 @@ function installController() {
   window.addEventListener("scroll", onScroll, { passive: true });
   removeController = () => {
     window.removeEventListener("wheel", onWheel);
+    window.removeEventListener("keydown", onKey);
     window.removeEventListener("touchstart", onTouchStart);
     window.removeEventListener("touchmove", onTouchMove);
     window.removeEventListener("touchend", onTouchEnd);
     window.removeEventListener("touchcancel", onTouchEnd);
     window.removeEventListener("scroll", onScroll);
-    window.clearTimeout(settleTimer);
     cancelAnimationFrame(tweenFrame);
     paging = false;
     root.classList.remove("journey-paging");
@@ -295,6 +324,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const sectionRef = useRef<HTMLElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const copyRef = useRef<HTMLDivElement>(null);
+  const stackCopyRef = useRef<HTMLDivElement>(null);
+  const stackCopyRefs = useRef<(HTMLDivElement | null)[]>([]);
   const layerRefs = useRef<(HTMLDivElement | null)[]>([]);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const hudRef = useRef<HTMLSpanElement>(null);
@@ -314,6 +345,38 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const viewportHeight = viewportRef.current?.offsetHeight ?? window.innerHeight;
       const total = Math.max(1, el.offsetHeight - viewportHeight);
       const scrolled = journeyFrame(-rect.top / total, n);
+      const showActive = (idx: number) => {
+        if (hudRef.current) hudRef.current.textContent = Math.round(scrolled.progress * 35000).toLocaleString("en-US");
+        if (barRef.current) barRef.current.style.transform = `scaleY(${scrolled.progress})`;
+        if (idx === last) return;
+        last = idx;
+        setActive(idx);
+        videoRefs.current.forEach((video, videoIndex) => {
+          if (!video) return;
+          if (videoIndex === idx && !reduce) void video.play().catch(() => undefined);
+          else video.pause();
+        });
+      };
+      // Stack mode (scrolling up, and always in reduced motion): each stage is its own
+      // full-height page; stage k sits at translateY((k - progress) * 100%), moving 1:1 with scroll.
+      if (reduce || journeyMode() === "stack") {
+        const p = stackProgress(-rect.top / total, n);
+        shown = scrolled.stage + scrolled.transition; prevTime = 0;
+        layerRefs.current.forEach((layer, i) => {
+          if (!layer) return;
+          const off = stackOffset(i, p);
+          layer.style.transform = `translate3d(0, ${(off * viewportHeight).toFixed(1)}px, 0)`;
+          layer.style.opacity = Math.abs(off) < 1 ? "1" : "0";
+          layer.style.pointerEvents = Math.abs(off) < 0.5 ? "auto" : "none";
+          layer.dataset["stack"] = "";
+        });
+        if (copyRef.current) { copyRef.current.style.opacity = "0"; copyRef.current.style.transform = "none"; }
+        if (stackCopyRef.current) stackCopyRef.current.style.visibility = "visible";
+        stackCopyRefs.current.forEach((c, i) => { if (c) c.style.transform = `translate3d(0, ${(stackOffset(i, p) * viewportHeight).toFixed(1)}px, 0)`; });
+        showActive(Math.max(0, Math.min(n - 1, Math.round(p))));
+        return;
+      }
+      if (stackCopyRef.current) stackCopyRef.current.style.visibility = "hidden";
       // Native snap glides are quick; ease a continuous "slide position" toward the
       // scroll so slides zoom and crossfade into each other over about a second.
       const target = scrolled.stage + scrolled.transition;
@@ -339,23 +402,13 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         layer.style.transform = `translate3d(${(mx * -depth).toFixed(2)}px, ${(my * -depth).toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
         layer.style.opacity = opacity.toFixed(3);
         layer.style.pointerEvents = opacity > 0.5 ? "auto" : "none";
+        delete layer.dataset["stack"];
       });
       if (copyRef.current) {
         copyRef.current.style.opacity = reduce ? "1" : state.copyOpacity.toFixed(3);
         copyRef.current.style.transform = reduce ? "none" : `translate3d(0, ${((1 - state.copyOpacity) * 8).toFixed(2)}px, 0)`;
       }
-      if (hudRef.current) hudRef.current.textContent = Math.round(state.progress * 35000).toLocaleString("en-US");
-      if (barRef.current) barRef.current.style.transform = `scaleY(${state.progress})`;
-      const idx = state.active;
-      if (idx !== last) {
-        last = idx;
-        setActive(idx);
-        videoRefs.current.forEach((video, videoIndex) => {
-          if (!video) return;
-          if (videoIndex === idx && !reduce) void video.play().catch(() => undefined);
-          else video.pause();
-        });
-      }
+      showActive(state.active);
     };
     const renderScroll = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(render); };
     const onMove = (e: PointerEvent) => { mx = e.clientX / window.innerWidth - 0.5; my = e.clientY / window.innerHeight - 0.5; renderScroll(); };
@@ -363,6 +416,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const vh = () => viewportRef.current?.offsetHeight ?? window.innerHeight;
     if (el) journeys.set(el, { n, vh });
     installController();
+    modeListeners.add(renderScroll);
     const onJump = (e: Event) => {
       const d = (e as CustomEvent<{ id: string; index: number; animate?: boolean }>).detail;
       if (d?.id !== id || !el) return;
@@ -378,6 +432,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     return () => {
       cancelAnimationFrame(frame);
       if (el) journeys.delete(el);
+      modeListeners.delete(renderScroll);
       uninstallController();
       window.removeEventListener("journey:jump", onJump);
       window.removeEventListener("scroll", renderScroll);
@@ -422,7 +477,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       ))}
       <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className="journey-viewport sticky top-0 h-svh overflow-hidden">
         {stages.map((st, i) => (
-          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="journey-layer absolute -inset-[2%] bg-ink will-change-transform backface-hidden" style={{ zIndex: stages.length - i }}>
+          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="journey-layer absolute -inset-[2%] bg-ink will-change-transform backface-hidden" data-active={i === active ? "" : undefined} style={{ zIndex: stages.length - i }}>
             <div className="journey-zoom absolute inset-0 origin-top-left">
             {st.traffic && st.phoneImg ? <AirportScene airport={ops[i]?.pattern ?? st.traffic} active={i===active} photo={st.phoneImg} original={st.img} wind={ops[i]?.obs ?? null} runwayHeading={ops[i]?.rwy.trueHdg ?? Number(st.traffic.runway)*10} /> : st.video ? (
               <video
@@ -440,7 +495,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
             ) : (
               <picture className="block h-full w-full">
                 {st.phoneImg && <source media={PHONE_MQ} srcSet={st.phoneImg} />}
-                <img src={st.img} alt={st.alt} width={st.w ?? 1920} height={st.h ?? 1088} loading={i <= active + 2 ? "eager" : "lazy"} decoding="async" className="h-full w-full bg-ink object-cover" style={{ objectPosition: st.position ?? "center" }} />
+                <img src={st.img} alt={st.alt} width={st.w ?? 1920} height={st.h ?? 1088} loading={i <= active + 2 ? "eager" : "lazy"} decoding="async" className={`h-full w-full bg-ink object-cover${st.drift ? " journey-drift" : ""}`} style={{ objectPosition: st.position ?? "center" }} />
               </picture>
             )}
             {SHOW_TRAFFIC && st.traffic && !st.phoneImg && <TrafficPattern airport={ops[i]?.pattern ?? st.traffic} wind={ops[i]?.obs ?? null} runwayHeading={ops[i]?.rwy.trueHdg ?? Number(st.traffic.runway)*10} active={i === active} />}
@@ -488,21 +543,39 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         {/* Copy */}
         <div className="journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 z-20 mx-auto max-w-7xl px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pr-14 sm:pb-24 md:pb-12 lg:px-8 lg:pb-16">
           <div ref={copyRef} className="journey-copy max-w-2xl">
-            <p className="stage-label max-sm:tracking-[0.18em]"><span className="max-sm:hidden">{s.code} · </span>{s.label}<span className="sm:hidden"> · {s.time}</span></p>
-            <p className="mt-2 hidden font-display text-5xl leading-none sm:block">{s.time}</p>
-            <h2 className="mt-1.5 font-display text-lg leading-[1.1] min-[380px]:text-xl sm:mt-2 sm:text-2xl">{s.title}</h2>
-            <p className="mt-1 max-w-lg text-pretty text-sm leading-snug text-background/80 sm:mt-2 sm:text-base">{s.text}</p>
-            <div className="flex flex-nowrap items-end gap-2">
-            {s.location
-              ? <Link to="/contact" search={{ location: s.location }} className="interactive-arrow btn-shine pointer-events-auto mt-2.5 inline-flex min-h-11 items-center gap-2 whitespace-nowrap bg-primary px-3 text-[11px] max-sm:tracking-[0.06em] sm:gap-3 sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>
-              : s.slug
-              ? <Link to="/programs/$slug" params={{ slug: s.slug }} className="interactive-arrow btn-shine pointer-events-auto mt-2.5 inline-flex min-h-11 items-center gap-2 whitespace-nowrap bg-primary px-3 text-[11px] max-sm:tracking-[0.06em] sm:gap-3 sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>
-              : <Link to={s.to ?? "/contact"} className="interactive-arrow btn-shine pointer-events-auto mt-2.5 inline-flex min-h-11 items-center gap-2 whitespace-nowrap bg-primary px-3 text-[11px] max-sm:tracking-[0.06em] sm:gap-3 sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>}
-            <a href={SCHOOL_PHONE_TEL} aria-label="Call Lakes Area Aviation" className="pointer-events-auto mt-2.5 inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap border border-background/50 px-3 text-[11px] font-bold uppercase tracking-[0.06em] text-background backdrop-blur-sm sm:hidden"><Phone className="size-4" /> Call</a>
-            </div>
+            <StageCopy s={s} />
           </div>
+        </div>
+        {/* Stack mode (scrolling up): every stage's copy rides on its own page. */}
+        <div ref={stackCopyRef} aria-hidden="true" className="journey-copy-stack pointer-events-none absolute inset-0 z-20 overflow-hidden" style={{ visibility: "hidden" }}>
+          {stages.map((st, i) => (
+            <div key={`copy-${st.code}`} ref={(el) => { stackCopyRefs.current[i] = el; }} inert className="absolute inset-0">
+              <div className="journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 mx-auto max-w-7xl px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pr-14 sm:pb-24 md:pb-12 lg:px-8 lg:pb-16">
+                <div className="journey-copy max-w-2xl"><StageCopy s={st} /></div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
+  );
+}
+
+function StageCopy({ s }: { s: Stage }) {
+  return (
+    <>
+      <p className="stage-label max-sm:tracking-[0.18em]"><span className="max-sm:hidden">{s.code} · </span>{s.label}<span className="sm:hidden"> · {s.time}</span></p>
+      <p className="mt-2 hidden font-display text-5xl leading-none sm:block">{s.time}</p>
+      <h2 className="mt-1.5 font-display text-lg leading-[1.1] min-[380px]:text-xl sm:mt-2 sm:text-2xl">{s.title}</h2>
+      <p className="mt-1 max-w-lg text-pretty text-sm leading-snug text-background/80 sm:mt-2 sm:text-base">{s.text}</p>
+      <div className="flex flex-nowrap items-end gap-2">
+      {s.location
+        ? <Link to="/contact" search={{ location: s.location }} className="interactive-arrow btn-shine pointer-events-auto mt-2.5 inline-flex min-h-11 items-center gap-2 whitespace-nowrap bg-primary px-3 text-[11px] max-sm:tracking-[0.06em] sm:gap-3 sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>
+        : s.slug
+        ? <Link to="/programs/$slug" params={{ slug: s.slug }} className="interactive-arrow btn-shine pointer-events-auto mt-2.5 inline-flex min-h-11 items-center gap-2 whitespace-nowrap bg-primary px-3 text-[11px] max-sm:tracking-[0.06em] sm:gap-3 sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>
+        : <Link to={s.to ?? "/contact"} className="interactive-arrow btn-shine pointer-events-auto mt-2.5 inline-flex min-h-11 items-center gap-2 whitespace-nowrap bg-primary px-3 text-[11px] max-sm:tracking-[0.06em] sm:gap-3 sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>}
+      <a href={SCHOOL_PHONE_TEL} aria-label="Call Lakes Area Aviation" className="pointer-events-auto mt-2.5 inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap border border-background/50 px-3 text-[11px] font-bold uppercase tracking-[0.06em] text-background backdrop-blur-sm sm:hidden"><Phone className="size-4" /> Call</a>
+      </div>
+    </>
   );
 }

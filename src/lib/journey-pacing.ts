@@ -125,3 +125,49 @@ export function nearestSectionPage(pages: SectionPage[], y: number) {
   for (const p of pages) if (p.group === g && (best === null || Math.abs(p.y - y) < Math.abs(best - y))) best = p.y;
   return best;
 }
+
+// ---- One gesture = one stop (downward) / stacked pages (upward) ----
+// Stops are every journey stage plus each journey's exit (the next section's top).
+export const STOP_TOL = 2;
+export type JourneyMode = "fade" | "stack";
+
+// First stop strictly below y (+tolerance), so a part-way position resolves to the next stop down.
+export function nextStopDown(stops: number[], y: number): number | null {
+  const sorted = [...stops].sort((a, b) => a - b);
+  return sorted.find((s) => s > y + STOP_TOL) ?? null;
+}
+
+// Journey scroll fraction (0..1) at each stage stop; the last stage rests at the end of the pinned stretch.
+export function stageStopFraction(index: number, count: number) {
+  const n = Math.max(1, count);
+  if (index <= 0) return 0;
+  if (index >= n - 1) return 1;
+  return journeyLanding(index, n);
+}
+
+// Continuous stage position for stack mode: exactly k on stage k's stop, linear between stops.
+export function stackProgress(fraction: number, count: number) {
+  const n = Math.max(1, count);
+  const f = clamp(fraction);
+  if (n === 1) return 0;
+  for (let k = 0; k < n - 1; k += 1) {
+    const a = stageStopFraction(k, n), b = stageStopFraction(k + 1, n);
+    if (f <= b) return k + (b > a ? (f - a) / (b - a) : 0);
+  }
+  return n - 1;
+}
+
+// Stage k's vertical offset in viewport heights: 0 = on screen, negative = stacked above.
+export const stackOffset = (index: number, progress: number) => index - progress;
+
+// Crossfade and stack render identically only on a stop or outside a journey's pinned stretch.
+export function isModeSwitchPoint(stageStops: number[], y: number) {
+  if (!stageStops.length) return true;
+  const first = stageStops[0]!, last = stageStops[stageStops.length - 1]!;
+  if (y <= first + STOP_TOL || y >= last - STOP_TOL) return true;
+  return stageStops.some((s) => Math.abs(s - y) <= STOP_TOL);
+}
+
+export function resolveMode(current: JourneyMode, wanted: JourneyMode, atSwitchPoint: boolean): JourneyMode {
+  return atSwitchPoint ? wanted : current;
+}

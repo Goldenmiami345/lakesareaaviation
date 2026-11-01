@@ -261,3 +261,9 @@ h2.font-display, h3.font-display { line-height: 1.15; }
 /* iOS native date inputs ignore width unless appearance is reset. */
 input.date-field { -webkit-appearance: none; appearance: none; display: block; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; height: 3.5rem; padding: 0 1rem; line-height: 3.5rem; text-align: left; }
 input.date-field::-webkit-date-and-time-value { text-align: left; margin: 0; }
+
+/* Instrument stage: slow real-photo drift through the clouds, running only while its stage is active. */
+@keyframes journey-drift { from { transform: scale(1.02) translate3d(0, 0, 0); } to { transform: scale(1.09) translate3d(-1.2%, -0.8%, 0); } }
+.journey-drift { transform-origin: 55% 40%; }
+.journey-layer[data-active] .journey-drift { animation: journey-drift 14s ease-in-out infinite alternate; }
+@media (prefers-reduced-motion: reduce) { .journey-layer[data-active] .journey-drift { animation: none; } }
