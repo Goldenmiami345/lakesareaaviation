@@ -171,7 +171,8 @@ export function RadarTag({ reg, index, seed, label, tabIndex, hit, tagRef, textR
 
 type Box = { l: number; t: number; r: number; b: number };
 /** Constant-screen-size leg labels, outside their segment and clear of live UI/cards. */
-export function placePatternLabel(el: SVGTextElement, m: DOMMatrix, p:{x:number;y:number;dx:number;dy:number}, occupied:DOMRect[]) {
+/** Places a leg label on its own leg: rotated along the leg, 6px outside the pattern line. */
+export function placePatternLabel(el: SVGTextElement, m: DOMMatrix, p:{x:number;y:number;dx:number;dy:number;tx:number;ty:number;len:number}, occupied:DOMRect[]) {
   const k=Math.hypot(m.a,m.b)||1,x=m.a*p.x+m.c*p.y+m.e,y=m.b*p.x+m.d*p.y+m.f;
   const section=el.closest('section');const blocked:DOMRect[]=[...occupied];
   document.querySelectorAll('header,[data-traffic-card]').forEach(n=>blocked.push(n.getBoundingClientRect()));
@@ -179,14 +180,19 @@ export function placePatternLabel(el: SVGTextElement, m: DOMMatrix, p:{x:number;
     if(getComputedStyle(n).display==='none'||getComputedStyle(n.closest('.journey-copy-wrap')??n).opacity==='0')return;
     blocked.push(n.getBoundingClientRect());
   });
-  const w=Math.max(30,el.getComputedTextLength());
-  for(const [offset,tangent] of [[18,0],[30,0],[44,0],[18,-32],[18,32],[30,-48],[30,48]]){
-    const sx=x+p.dx*((offset??18)+w*.25)-p.dy*(tangent??0),sy=y+p.dy*(offset??18)+p.dx*(tangent??0);
-    const b={l:sx-w/2,t:sy-6,r:sx+w/2,b:sy+6};
-    if(b.l<12||b.r>innerWidth-12||b.t<12||b.b>innerHeight-12||blocked.some(r=>hits(b,{l:r.left-7,t:r.top-7,r:r.right+7,b:r.bottom+7})))continue;
+  const w=Math.max(20,el.getComputedTextLength()),h=10;
+  let tx=m.a*p.tx+m.c*p.ty,ty=m.b*p.tx+m.d*p.ty;const tl=Math.hypot(tx,ty)||1;tx/=tl;ty/=tl;
+  let nx=m.a*p.dx+m.c*p.dy,ny=m.b*p.dx+m.d*p.dy;const nl=Math.hypot(nx,ny)||1;nx/=nl;ny/=nl;
+  if(tx<0){tx=-tx;ty=-ty;} // keep text upright
+  const angle=Math.atan2(ty,tx)*180/Math.PI,legPx=p.len*k,room=Math.max(0,(legPx-w)/2);
+  const ex=(Math.abs(tx)*w+Math.abs(ty)*h)/2,ey=(Math.abs(ty)*w+Math.abs(tx)*h)/2;
+  for(const shift of [0,.5,-.5,1,-1]){
+    const d=6+h/2,s=shift*room,sx=x+nx*d+tx*s,sy=y+ny*d+ty*s;
+    const b={l:sx-ex,t:sy-ey,r:sx+ex,b:sy+ey};
+    if(b.l<8||b.r>innerWidth-8||b.t<8||b.b>innerHeight-8||blocked.some(r=>hits(b,{l:r.left-4,t:r.top-4,r:r.right+4,b:r.bottom+4})))continue;
     const point=new DOMPoint(sx,sy).matrixTransform(m.inverse());
-    el.setAttribute('transform',`translate(${point.x} ${point.y}) scale(${1/k})`);el.setAttribute('visibility','visible');
-    occupied.push(new DOMRect(b.l,b.t,w,12));return;
+    el.setAttribute('transform',`translate(${point.x} ${point.y}) rotate(${angle.toFixed(1)}) scale(${1/k})`);el.setAttribute('visibility','visible');
+    occupied.push(new DOMRect(b.l,b.t,b.r-b.l,b.b-b.t));return;
   }
   el.setAttribute('visibility','hidden');
 }
@@ -211,7 +217,8 @@ function obstacles(g: SVGGElement) {
 }
 
 type TagSide = { ox: number; oy: number; sy: number; W: number };
-const SIDES = [[1, -1], [-1, -1], [1, 1], [-1, 1], [0, -1], [0, 1], [1, -2], [-1, -2], [1, 2], [-1, 2]] as const;
+// Near sides first (block within ~40px of the airplane); |sy|>=2 only to dodge UI.
+const SIDES = [[1, -1], [-1, -1], [1, 1], [-1, 1], [0, -1], [0, 1], [1, -2], [-1, -2], [1, 2], [-1, 2], [1, -3], [-1, -3], [1, 3], [-1, 3]] as const;
 const sideOf = (g: SVGGElement) => (g as SVGGElement & { __side?: TagSide }).__side;
 const fits = (side: TagSide, pts: { x: number; y: number }[], list: Box[], safe: Box) => pts.every(({ x, y }) => {
   const box = { l: x + side.ox, t: y + side.oy, r: x + side.ox + side.W, b: y + side.oy + 30 };
@@ -236,10 +243,11 @@ export function fitTagSide(g: SVGGElement | null | undefined, pts: { x: number; 
   const { list, safe } = obstacles(g);
   const W = Math.ceil(Math.max(...Array.from(text.querySelectorAll('tspan')).map(t=>t.getComputedTextLength()), 60)) + 14, H = 30;
   for (const [sx, sy] of SIDES) {
-    const ox = sx > 0 ? 14 : sx < 0 ? -14 - W : -Math.round(W / 2);
-    let oy = sy < 0 ? -39 : 9;
-    if (sx === 0) oy = sy < 0 ? -46 : 16;
-    if (Math.abs(sy) === 2) oy = sy < 0 ? -60 : 30;
+    const ox = sx > 0 ? 10 : sx < 0 ? -10 - W : -Math.round(W / 2);
+    let oy = sy < 0 ? -36 : 6;
+    if (sx === 0) oy = sy < 0 ? -42 : 12;
+    if (Math.abs(sy) === 2) oy = sy < 0 ? -52 : 22;
+    if (Math.abs(sy) === 3) oy = sy < 0 ? -80 : 50;
     const side = { ox, oy, sy, W };
     if (!fits(side, pts, [...list,...occupied], safe)) continue;
     (g as SVGGElement & { __side?: TagSide }).__side = side;

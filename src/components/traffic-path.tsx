@@ -16,6 +16,8 @@ export function TrafficPath({airport,active}:{airport:PatternAirport;active:bool
     frame=requestAnimationFrame(update);return()=>cancelAnimationFrame(frame);
   },[active,path]);
   return <g ref={ref} className="traffic-pattern-guide" aria-hidden>
+    <path d={path.d} className="traffic-pattern-halo" vectorEffect="non-scaling-stroke" />
+    <path d={path.finalD} className="traffic-pattern-halo" vectorEffect="non-scaling-stroke" />
     <path data-pattern-line="" d={path.d} className="traffic-pattern-line" vectorEffect="non-scaling-stroke" />
     <path d={path.finalD} className="traffic-final-line" vectorEffect="non-scaling-stroke" />
     {path.labels.map(l=><text key={l.label} className="traffic-leg-label" visibility="hidden">{l.label}</text>)}
