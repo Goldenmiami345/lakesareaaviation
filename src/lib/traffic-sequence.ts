@@ -1,21 +1,24 @@
-import { makeFlightPlan, sampleFlight, type FlightPlan } from './traffic-flight';
+import { makeFlightPlan, sampleFlight, type FlightPlan, type Hold, type HoldPoint } from './traffic-flight';
 import { feetPerPixel, type PatternAirport, type PatternSample, type Wind } from './traffic-pattern';
 
 // US traffic-pattern sequencing shared by the aerial AND oblique views.
 // Each lap has one "runway window": from the base-to-final turn until the plane
-// has lifted off on its touch-and-go and climbed past the departure end. Windows
-// never overlap (+ RUNWAY_BUFFER_S), arrivals keep first-come order (no cutting
-// inside traffic ahead), and every plane keeps patternSpacingPx from all others
-// for its whole lap. The decision is made before the base turn; a plane that
-// cannot be cleared extends its downwind (preferred, up to maxExtendPx) or flies
-// visible 360s on downwind, as a controller would, so nobody ever has to break off
-// on base. All traffic flies continuous touch-and-goes.
+// has lifted off on its touch-and-go and climbed past the departure end. The
+// schedule is a fixed rotation of slots: every airplane flies a lap of exactly the
+// same period P = n × slot, its window starting one slot after the airplane ahead,
+// and each slot is the longest window + RUNWAY_BUFFER_S. So at most one airplane
+// is ever on final, on the runway or departing, arrivals keep their order (nobody
+// overtakes or cuts in) and two airplanes never turn final together. The time an
+// airplane must lose each lap is absorbed before the base turn, as a controller
+// would: a short downwind extension for small delays, otherwise visible 360s
+// (turning away from the runway) split over up to three hold points so that two
+// airplanes never circle in the same place. Nobody ever has to break off on base.
+// All traffic flies continuous touch-and-goes.
 export const RUNWAY_BUFFER_S = 5;
-const STEP_PX = 4;
-const MAX_ORBITS = 6;
-/** Longest downwind extension: final may grow to 3× the drawn final before a 360 is used instead. */
-const maxExtendPx = (a: PatternAirport) => 2 * a.extension;
-const SPACING_STEP_S = 0.5;
+const SLOT_MARGIN_S = 0.5;
+/** A hold part must end this long before the next airplane reaches the same point. */
+const HOLD_CLEAR_S = 10;
+const HOLD_POINTS: readonly HoldPoint[] = ['downwind-late', 'crosswind', 'downwind-early'];
 const NM_M = 1852;
 
 const pxPerNm = (a: PatternAirport) => NM_M / (feetPerPixel(a) * 0.3048);
@@ -49,93 +52,92 @@ export function legOf(a: PatternAirport, s: PatternSample): Leg {
   }
 }
 
-type Timing = { plan: FlightPlan; base: number; finalStart: number; departEnd: number };
-function bisect(plan: FlightPlan, a: PatternAirport, lo: number, hi: number, target: number) {
+type Timing = { plan: FlightPlan; base: number; finalStart: number; departEnd: number; window: number };
+function bisectAlong(plan: FlightPlan, a: PatternAirport, lo: number, hi: number, target: number) {
   for (let k = 0; k < 40; k++) { const m = (lo + hi) / 2; if (alongRunway(a, sampleFlight(plan, m)) < target) lo = m; else hi = m; }
   return hi;
 }
 function timing(plan: FlightPlan, a: PatternAirport): Timing {
   const first = (phase: string) => plan.segments.find((s) => s.phase === phase)?.start ?? 0;
-  const takeoff = first('Takeoff'), cross = first('Crosswind');
-  return { plan, base: first('Base'), finalStart: first('Final'), departEnd: bisect(plan, a, takeoff, cross, axis(a).len) };
+  const takeoff = first('Takeoff'), cross = first('Crosswind'), finalStart = first('Final');
+  const departEnd = bisectAlong(plan, a, takeoff, cross, axis(a).len);
+  return { plan, base: first('Base'), finalStart, departEnd, window: plan.seconds - finalStart + departEnd };
 }
 
-export type Lap = { start: number; extendPx: number; orbits: number; crosswindOrbits: number; t: Timing; occupied: [number, number] };
+export type Lap = { start: number; extendPx: number; holds: readonly Hold[]; t: Timing; occupied: [number, number] };
+type Config = { extendPx: number; holds: Hold[]; t: Timing };
 
 export class TrafficSchedule {
   readonly laps: Lap[][];
-  private cache = new Map<string, Timing>();
-  private firstStarts: number[];
-  constructor(readonly airport: PatternAirport, readonly regs: readonly string[], readonly wind: Wind | null, readonly runwayHeading: number, offsets?: readonly number[]) {
+  /** Lap period shared by every airplane, and the slot between consecutive final turns. */
+  readonly period: number;
+  readonly slot: number;
+  private configs: Config[];
+  private phase: number[];
+  /** `offsets` is accepted for API compatibility; the slot rotation fixes the phasing. */
+  constructor(readonly airport: PatternAirport, readonly regs: readonly string[], readonly wind: Wind | null, readonly runwayHeading: number, _offsets?: readonly number[]) {
     this.laps = regs.map(() => []);
-    this.firstStarts = regs.map((reg, i) => -this.timing(reg, 0).plan.seconds * (offsets?.[i] ?? (i / regs.length + 0.05)));
-  }
-  private timing(reg: string, e: number, orbits = 0, crosswind = 0) {
-    const key = `${reg}:${e}:${orbits}:${crosswind}`;
-    let t = this.cache.get(key);
-    if (!t) { t = timing(makeFlightPlan(this.airport, reg, this.wind, this.runwayHeading, e, orbits, crosswind), this.airport); this.cache.set(key, t); }
-    return t;
-  }
-  private nextStart(i: number) { const l = this.laps[i]!; const last = l[l.length - 1]; return last ? last.start + last.t.plan.seconds : this.firstStarts[i]!; }
-  private lapAt(i: number, time: number) {
-    const laps = this.laps[i]!;
-    for (let k = laps.length - 1; k >= 0; k--) { const l = laps[k]!; if (time >= l.start) return time < l.start + l.t.plan.seconds ? l : undefined; }
-    return undefined;
-  }
-  private window(i: number, start: number, t: Timing): [number, number] {
-    return [start + t.finalStart, start + t.plan.seconds + this.timing(this.regs[i]!, 0).departEnd];
-  }
-  /** Runway window clear of everyone (buffered) and behind every earlier arrival. */
-  private runwayClear(i: number, occ: [number, number]) {
-    for (let j = 0; j < this.regs.length; j++) {
-      if (j === i) continue;
-      for (const l of this.laps[j]!) {
-        if (occ[0] < l.occupied[1] + RUNWAY_BUFFER_S && occ[1] > l.occupied[0] - RUNWAY_BUFFER_S) return false;
-        if (l.occupied[0] > occ[0]) return false; // no cutting in front of traffic already sequenced
-      }
+    const plan = (reg: string, e = 0, holds: Hold[] = []) => timing(makeFlightPlan(airport, reg, wind, runwayHeading, e, holds), airport);
+    const base = regs.map((r) => plan(r));
+    const n = Math.max(1, regs.length);
+    let slot = Math.max(...base.map((t) => t.window)) + RUNWAY_BUFFER_S + SLOT_MARGIN_S;
+    let configs: Config[] = [];
+    for (let iter = 0; iter < 6; iter++) {
+      const period = Math.max(n * slot, ...base.map((t) => t.plan.seconds + 1e-3));
+      configs = regs.map((reg, i) => this.solve(reg, base[i]!, period, slot, plan));
+      const need = Math.max(...configs.map((c) => c.t.window)) + RUNWAY_BUFFER_S + SLOT_MARGIN_S;
+      if (need <= slot + 1e-6) break;
+      slot = need;
     }
-    return true;
+    this.slot = slot;
+    this.period = Math.max(n * slot, ...configs.map((c) => c.t.plan.seconds));
+    this.configs = configs;
+    // Airplane i turns final at i × slot (mod period); stagger so airplane 0 is just
+    // about to turn final at t = 0 and the rest follow in order.
+    this.phase = configs.map((c, i) => i * slot + 4 - c.t.finalStart);
   }
-  private spacingClear(i: number, start: number, t: Timing) {
-    const min = patternSpacingPx(this.airport) * 1.06; // margin for sampling between checks
-    for (let s = Math.max(0, start); s <= start + t.plan.seconds; s += SPACING_STEP_S) {
-      const me = sampleFlight(t.plan, s - start);
-      for (let j = 0; j < this.regs.length; j++) {
-        if (j === i) continue;
-        const l = this.lapAt(j, s); if (!l) continue;
-        const o = sampleFlight(l.t.plan, s - l.start);
-        if (Math.hypot(o.x - me.x, o.y - me.y) < min) return false;
-      }
+  /** Find the extension or holds that make one lap last exactly `period`. */
+  private solve(reg: string, t0: Timing, period: number, slot: number, plan: (reg: string, e?: number, holds?: Hold[]) => Timing): Config {
+    const delay = period - t0.plan.seconds;
+    if (delay <= 1e-3) return { extendPx: 0, holds: [], t: t0 };
+    const a = this.airport, rMax = a.offset * 0.42, rMin = a.offset * 0.12;
+    const bisect = (lo: number, hi: number, f: (x: number) => Timing) => {
+      let best = f(hi);
+      for (let k = 0; k < 50; k++) { const m = (lo + hi) / 2, t = f(m); if (t.plan.seconds < period) lo = m; else { hi = m; best = t; } }
+      return { x: hi, t: best };
+    };
+    // Small delays: extend the downwind (final grows slightly; the slot allows for it).
+    const eMax = 2 * a.extension, extended = plan(reg, eMax);
+    const ringAt = (k: number, r: number) => HOLD_POINTS.slice(0, k).map((at) => ({ at, turns: 0, radius: r }));
+    const oneTurnMin = plan(reg, 0, ringAt(1, rMin).map((h) => ({ ...h, turns: 1 }))).plan.seconds - t0.plan.seconds;
+    if (extended.plan.seconds >= period && delay < oneTurnMin) {
+      const { x, t } = bisect(0, eMax, (e) => plan(reg, e));
+      return { extendPx: x, holds: [], t };
     }
-    return true;
+    // Otherwise split the delay over hold points so each part clears before the next airplane arrives.
+    const parts = Math.min(HOLD_POINTS.length, Math.max(1, Math.ceil(delay / Math.max(1, slot - HOLD_CLEAR_S))));
+    const turnAtMax = (plan(reg, 0, ringAt(1, rMax).map((h) => ({ ...h, turns: 1 }))).plan.seconds - t0.plan.seconds);
+    const turns = Math.max(1, Math.ceil(delay / parts / Math.max(1e-3, turnAtMax)));
+    const holdsFor = (r: number) => ringAt(parts, r).map((h) => ({ ...h, turns, radius: r }));
+    const { x, t } = bisect(0, rMax * 1.5, (r) => plan(reg, 0, holdsFor(r)));
+    return { extendPx: 0, holds: holdsFor(x), t };
   }
-  /** Decide laps (earliest base turn first) until every plane is scheduled past `until`. */
+  private lapIndex(i: number, time: number) { return Math.floor((time - this.phase[i]!) / this.period); }
+  /** Materialize laps up to `until` (for inspection and tests; sampling is closed-form). */
   ensure(until: number) {
-    for (;;) {
-      let pick = -1, best = Infinity;
-      this.regs.forEach((reg, i) => { const st = this.nextStart(i); if (st <= until) { const d = st + this.timing(reg, 0).base; if (d < best) { best = d; pick = i; } } });
-      if (pick < 0) return;
-      const reg = this.regs[pick]!, start = this.nextStart(pick);
-      let found: { e: number; orbits: number; crosswind: number; t: Timing } | null = null;
-      // Preference: plain downwind extension, then the fewest 360s, held on downwind
-      // first and spread onto crosswind so two holding airplanes never share a ring.
-      search: for (let total = 0; total <= MAX_ORBITS; total++) {
-        for (let orbits = total; orbits >= 0; orbits--) {
-          const crosswind = total - orbits;
-          for (let e = 0; e <= maxExtendPx(this.airport); e += STEP_PX) {
-            const t = this.timing(reg, e, orbits, crosswind);
-            if (this.runwayClear(pick, this.window(pick, start, t)) && this.spacingClear(pick, start, t)) { found = { e, orbits, crosswind, t }; break search; }
-          }
-        }
+    this.regs.forEach((_, i) => {
+      const laps = this.laps[i]!, c = this.configs[i]!;
+      let k = laps.length ? this.lapIndex(i, laps[laps.length - 1]!.start) + 1 : this.lapIndex(i, 0) - 1;
+      for (;; k++) {
+        const start = this.phase[i]! + k * this.period;
+        if (start > until) break;
+        laps.push({ start, extendPx: c.extendPx, holds: c.holds, t: c.t, occupied: [start + c.t.finalStart, start + c.t.plan.seconds + c.t.departEnd] });
       }
-      const lap = found ?? { e: 0, orbits: MAX_ORBITS, crosswind: 0, t: this.timing(reg, 0, MAX_ORBITS) };
-      this.laps[pick]!.push({ start, extendPx: lap.e, orbits: lap.orbits, crosswindOrbits: lap.crosswind, t: lap.t, occupied: this.window(pick, start, lap.t) });
-    }
+    });
   }
   sample(i: number, time: number): PatternSample | null {
-    const reg = this.regs[i]; if (!reg) return null;
-    this.ensure(time + 600);
-    const lap = this.lapAt(i, time) ?? this.laps[i]![0];
-    return lap ? sampleFlight(lap.t.plan, time - lap.start) : null;
+    const c = this.configs[i]; if (!c) return null;
+    const into = time - this.phase[i]! - this.lapIndex(i, time) * this.period;
+    return sampleFlight(c.t.plan, Math.min(into, c.t.plan.seconds - 1e-6));
   }
 }
