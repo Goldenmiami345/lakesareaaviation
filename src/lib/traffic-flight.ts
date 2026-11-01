@@ -32,8 +32,15 @@ export type HoldPoint = 'crosswind' | 'downwind-early' | 'downwind-late';
 export type Hold = { at: HoldPoint; turns: number; radius: number };
 /** Fraction along the leg (points[k] → points[k+1] after the upwind report is added) where each hold starts. */
 export const HOLD_ENTRY: Record<HoldPoint, { k: number; f: number }> = { 'downwind-late': { k: 5, f: .3 }, 'downwind-early': { k: 4, f: .55 }, crosswind: { k: 3, f: .5 } };
-export function makeFlightPlan(a: PatternAirport, reg: string, wind: Wind | null = null, runwayHeading = Number(a.runway) * 10, extendPx = 0, holds: readonly Hold[] = []): FlightPlan {
+export function makeFlightPlan(a: PatternAirport, reg: string, wind: Wind | null = null, runwayHeading = Number(a.runway) * 10, extendPx = 0, holds: readonly Hold[] = [], departureExtendPx = 0): FlightPlan {
   const original = patternWaypoints(a);
+  // Keep final short: delay outside the exclusive window by carrying upwind
+  // farther past the departure end before the crosswind turn, then returning on
+  // downwind. This elongates the circuit without circles or final congestion.
+  if (departureExtendPx > 0) {
+    const len = Math.hypot(a.end.x-a.threshold.x,a.end.y-a.threshold.y)||1;
+    for (const k of [2,3]) { const p=original[k]; if(p) original[k]={...p,x:p.x+(a.end.x-a.threshold.x)/len*departureExtendPx,y:p.y+(a.end.y-a.threshold.y)/len*departureExtendPx}; }
+  }
   if (extendPx > 0) {
     const len = Math.hypot(a.end.x - a.threshold.x, a.end.y - a.threshold.y) || 1;
     const ux = (a.end.x - a.threshold.x) / len, uy = (a.end.y - a.threshold.y) / len;
