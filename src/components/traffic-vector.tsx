@@ -13,7 +13,8 @@ const topRenders: Record<string, { url: string; aspect: number }> = { N4383P: { 
 export const hasTopRender = (reg: string) => USE_RENDERED_TOP_SPRITES && !!topRenders[reg];
 const renders: Record<string, { url: string; height: number }> = { N4383P: {url:apache.url,height:766}, N8570B:{url:phoenix.url,height:748}, N46201:{url:cardinal.url,height:769} };
 export function trafficSpanFeet(reg: string, topRender = false) { return (topRender || SHOW_3D_MODELS) && MODEL_WINGSPANS_M[reg] ? MODEL_WINGSPANS_M[reg] / 0.3048 : AIRCRAFT_SPANS[reg] ?? 36; }
-export const trafficModelScale = (reg: string, topRender = false) => topRender && MODEL_WINGSPANS_M[reg] ? 1 : trafficPresentationScale(reg);
+// Photo renders share the legacy ~3x display scale so every airplane on a map uses one span-relative scale.
+export const trafficModelScale = (reg: string, topRender = false) => topRender && MODEL_WINGSPANS_M[reg] ? 3 : trafficPresentationScale(reg);
 
 // Original SVG source, not traced logos or invented tail lettering. Wingspan is
 // one local unit; lengths are proportional to published type dimensions. Paint
