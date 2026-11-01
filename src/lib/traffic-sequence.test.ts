@@ -70,3 +70,20 @@ for (const c of cases) {
     }
   });
 }
+
+// Live METAR can blow from anywhere: sweep crosswinds too (30 simulated minutes each).
+for (const id of ['KLXL', '18V', 'P52'] as const) {
+  test(`${id}: wind sweep keeps one airplane on final/runway and spacing`, () => {
+    const f = airportTraffic[id];
+    for (let dir = 0; dir < 360; dir += 30) for (const kt of [6, 15]) {
+      const wind = { dir, kt }, end = pickRunway(f, wind), a = patternFor(f, end);
+      const s = new TrafficSchedule(a, a.aircraft, wind, end.trueHdg), min = patternSpacingPx(a);
+      for (let t = 0; t < 1800; t += 0.1) {
+        const p = a.aircraft.map((_, i) => s.sample(i, t)!);
+        const busy = p.filter((q) => EXCLUSIVE.has(legOf(a, q))).length;
+        assert.ok(busy <= 1, `${dir}@${kt} t=${t.toFixed(1)} ${busy} on final/runway`);
+        for (let i = 0; i < p.length; i++) for (let j = i + 1; j < p.length; j++) assert.ok(Math.hypot(p[i]!.x - p[j]!.x, p[i]!.y - p[j]!.y) >= min, `${dir}@${kt} t=${t.toFixed(1)} spacing`);
+      }
+    }
+  });
+}
