@@ -30,6 +30,8 @@ for (const c of cases) {
     const s = new TrafficSchedule(a, a.aircraft, c.wind, c.hdg, c.offsets);
     const end = MINUTES * 60, min = patternSpacingPx(a);
     s.ensure(end);
+    // Every lap lasts exactly one shared period, so lap boundaries never jump.
+    for (const laps of s.laps) for (const l of laps) assert.ok(Math.abs(l.t.plan.seconds - s.period) < 1e-3, `lap ${l.t.plan.seconds} vs ${s.period}`);
     // Runway windows (base-to-final turn → past departure end) never overlap.
     const windows = s.laps.flatMap((laps, i) => laps.filter((l) => l.occupied[1] > 0 && l.occupied[0] < end).map((l) => ({ i, w: l.occupied })));
     assert.ok(windows.length > a.aircraft.length * 8, `only ${windows.length} landings`);
