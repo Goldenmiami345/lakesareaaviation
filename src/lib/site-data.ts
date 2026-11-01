@@ -15,6 +15,9 @@ import n8570bPanel from "../assets/fleet/n8570b-panel.png.asset.json";
 
 // Keep visitor models and model-rendered map sprites hidden until photo-textured approval.
 export const SHOW_3D_MODELS: boolean = false;
+// Aerial traffic views draw N4383P/N8570B/N46201 from top-down renders of the real
+// airplanes (true wingspan); independent of SHOW_3D_MODELS, which still hides 3D viewers.
+export const USE_RENDERED_TOP_SPRITES: boolean = true;
 
 export type Program = {
   slug: string;

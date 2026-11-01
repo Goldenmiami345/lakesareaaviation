@@ -3,16 +3,26 @@ import apache from '../assets/models/n4383p_top.png.asset.json';
 import phoenix from '../assets/models/n8570b_top.png.asset.json';
 import cardinal from '../assets/models/n46201_top.png.asset.json';
 import { MODEL_WINGSPANS_M, trafficPresentationScale } from '../lib/model-settings';
-import { SHOW_3D_MODELS } from '../lib/site-data';
+import { SHOW_3D_MODELS, USE_RENDERED_TOP_SPRITES } from '../lib/site-data';
+import apacheTop from '../assets/fleet/top/n4383p-top.webp.asset.json';
+import phoenixTop from '../assets/fleet/top/n8570b-top.webp.asset.json';
+import cardinalTop from '../assets/fleet/top/n46201-top.webp.asset.json';
+// Photo-derived top renders: nose up, image width = wingspan exactly (640px wide).
+const topRenders: Record<string, { url: string; aspect: number }> = { N4383P: { url: apacheTop.url, aspect: 477 / 640 }, N8570B: { url: phoenixTop.url, aspect: 462 / 640 }, N46201: { url: cardinalTop.url, aspect: 474 / 640 } };
+/** True when the aerial view draws this registration from its real top render. */
+export const hasTopRender = (reg: string) => USE_RENDERED_TOP_SPRITES && !!topRenders[reg];
 const renders: Record<string, { url: string; height: number }> = { N4383P: {url:apache.url,height:766}, N8570B:{url:phoenix.url,height:748}, N46201:{url:cardinal.url,height:769} };
-export function trafficSpanFeet(reg: string) { return SHOW_3D_MODELS && MODEL_WINGSPANS_M[reg] ? MODEL_WINGSPANS_M[reg] / 0.3048 : AIRCRAFT_SPANS[reg] ?? 36; }
-export const trafficModelScale = trafficPresentationScale;
+export function trafficSpanFeet(reg: string, topRender = false) { return (topRender || SHOW_3D_MODELS) && MODEL_WINGSPANS_M[reg] ? MODEL_WINGSPANS_M[reg] / 0.3048 : AIRCRAFT_SPANS[reg] ?? 36; }
+export const trafficModelScale = (reg: string, topRender = false) => topRender && MODEL_WINGSPANS_M[reg] ? 1 : trafficPresentationScale(reg);
 
 // Original SVG source, not traced logos or invented tail lettering. Wingspan is
 // one local unit; lengths are proportional to published type dimensions. Paint
 // tokens were sampled on the real fleet photo's sunlit base/stripe panels.
 export const AIRCRAFT_SPANS: Record<string, number> = {N6717A:36,N8570B:36,N46201:36,N7108G:36,N6641F:33,N11059:34,N4383P:37};
-export function TrafficVector({reg, shadow=false}: {reg:string;shadow?:boolean}) {
+export function TrafficVector({reg, shadow=false, topRender=false}: {reg:string;shadow?:boolean;topRender?:boolean}) {
+  const top=topRender&&hasTopRender(reg)?topRenders[reg]:undefined;
+  // Literal wingspan = 1 local unit; the shadow reuses the sprite's alpha silhouette.
+  if(top) return <image className={shadow?'aircraft-render-shadow':'aircraft-top-render'} href={top.url} x={-.5} y={-top.aspect/2} width={1} height={top.aspect} preserveAspectRatio="none" />;
   const render=renders[reg];
   // Transparent wings reach x=19..1005: normalize the actual 986px wingspan,
   // not the padded 1024px canvas. Nose-up is the same local axis as the SVG.
