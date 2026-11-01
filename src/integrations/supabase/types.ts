@@ -18,18 +18,21 @@ export type Database = {
         Row: {
           accent_theme: string
           id: string
+          show_traffic_pattern: boolean
           updated_at: string
           updated_by: string | null
         }
         Insert: {
           accent_theme?: string
           id: string
+          show_traffic_pattern?: boolean
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
           accent_theme?: string
           id?: string
+          show_traffic_pattern?: boolean
           updated_at?: string
           updated_by?: string | null
         }
