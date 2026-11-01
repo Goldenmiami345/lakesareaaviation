@@ -1,4 +1,4 @@
-import { makeFlightPlan, sampleFlight, type FlightPlan, type Hold, type HoldPoint } from './traffic-flight';
+import { makeFlightPlan, sampleFlight, type FlightPlan, type Hold } from './traffic-flight';
 import { feetPerPixel, type PatternAirport, type PatternSample, type Wind } from './traffic-pattern';
 
 // US traffic-pattern sequencing shared by the aerial AND oblique views.
@@ -17,10 +17,10 @@ import { feetPerPixel, type PatternAirport, type PatternSample, type Wind } from
 export const RUNWAY_BUFFER_S = 5;
 const SLOT_MARGIN_S = 0.5;
 /** A hold part must end this long before the next airplane reaches the same point. */
-const HOLD_CLEAR_S = 12;
-const HOLD_POINTS: readonly HoldPoint[] = ['crosswind', 'downwind-early', 'downwind-late'];
+
+
 /** Delays shorter than this use a downwind extension instead of a 360. */
-const MIN_HOLD_S = 12;
+
 const NM_M = 1852;
 
 const pxPerNm = (a: PatternAirport) => NM_M / (feetPerPixel(a) * 0.3048);
@@ -67,7 +67,7 @@ function timing(plan: FlightPlan, a: PatternAirport): Timing {
 }
 
 export type Lap = { start: number; extendPx: number; holds: readonly Hold[]; t: Timing; occupied: [number, number] };
-type Config = { extendPx: number; holds: Hold[]; t: Timing };
+type Config = { departureExtendPx: number; extendPx: number; holds: Hold[]; t: Timing };
 
 export class TrafficSchedule {
   readonly laps: Lap[][];
@@ -82,93 +82,28 @@ export class TrafficSchedule {
     const plan = (reg: string, e = 0, holds: Hold[] = []) => timing(makeFlightPlan(airport, reg, wind, runwayHeading, e, holds), airport);
     const base = regs.map((r) => plan(r));
     const n = Math.max(1, regs.length);
-    let slot = Math.max(...base.map((t) => t.window)) + RUNWAY_BUFFER_S + SLOT_MARGIN_S;
-    let configs: Config[] = [];
-    for (let iter = 0; iter < 6; iter++) {
-      const period = Math.max(n * slot, ...base.map((t) => t.plan.seconds + 1e-3));
-      // Delays under one tight 360 use a downwind extension; the rest hold.
-      const holdPlans = regs.map((r) => plan(r, 0, HOLD_POINTS.map((at) => ({ at, turns: 0, radius: 0 }))));
-      const split = this.splitHolds(holdPlans, period, slot);
-      configs = regs.map((reg, i) => {
-        const d = period - base[i]!.plan.seconds;
-        return this.solve(reg, holdPlans[i]!, period, slot, plan, d < MIN_HOLD_S ? undefined : split[i]);
-      });
-      const need = Math.max(...configs.map((c) => c.t.window)) + RUNWAY_BUFFER_S + SLOT_MARGIN_S;
-      if (need <= slot + 1e-6) break;
-      slot = need;
-    }
-    this.slot = slot;
-    this.period = Math.max(n * slot, ...configs.map((c) => c.t.plan.seconds));
-    this.configs = configs;
-    // Airplane i turns final at i × slot (mod period); stagger so airplane 0 is just
-    // about to turn final at t = 0 and the rest follow in order.
-    this.phase = configs.map((c, i) => i * slot + 4 - c.t.finalStart);
-  }
-  /** Find the extension or holds that make one lap last exactly `period`. */
-  private solve(reg: string, t0: Timing, period: number, _slot: number, plan: (reg: string, e?: number, holds?: Hold[]) => Timing, durations?: Record<HoldPoint, number>): Config {
-    const delay = period - t0.plan.seconds;
-    if (delay <= 1e-3) return { extendPx: 0, holds: [], t: t0 };
-    const a = this.airport;
-    // Lap time is linear in a downwind extension and in a common ring-radius scale
-    // (fixed leg speeds), so a secant step lands on `period`; refine twice for safety.
-    const bisect = (lo: number, hi: number, f: (x: number) => Timing) => {
-      let x0 = lo, y0 = f(lo).plan.seconds, x1 = hi, t1 = f(hi), y1 = t1.plan.seconds;
-      for (let k = 0; k < 3 && Math.abs(y1 - period) > 1e-6 && Math.abs(y1 - y0) > 1e-9; k++) {
-        const x = x1 + (period - y1) * (x1 - x0) / (y1 - y0);
-        x0 = x1; y0 = y1; x1 = Math.max(0, x); t1 = f(x1); y1 = t1.plan.seconds;
+    // Final is deliberately NOT lengthened to absorb the shared-period delay:
+    // that would grow the exclusive window faster than the available slots.
+    // A small arrival-side extension handles initial sequencing; the remaining
+    // delay lengthens the departure-side upwind/downwind circuit without 360s.
+    const slot = Math.max(...base.map((t) => t.window)) + RUNWAY_BUFFER_S + SLOT_MARGIN_S;
+    const period = Math.max(n * slot, ...base.map((t) => t.plan.seconds));
+    const configs: Config[] = regs.map((reg, i) => {
+      const initial = base[i];
+      if (!initial) throw new Error('Missing traffic timing');
+      const fit = (u: number) => timing(makeFlightPlan(airport, reg, wind, runwayHeading, 0, [], u), airport);
+      let lo = 0, hi = airport.offset;
+      while (fit(hi).plan.seconds < period) hi *= 2;
+      for (let k = 0; k < 36; k++) {
+        const mid = (lo + hi) / 2;
+        if (fit(mid).plan.seconds < period) lo = mid; else hi = mid;
       }
-      return { x: x1, t: t1 };
-    };
-    if (!durations) {
-      // Small delays only: extend the downwind (final grows slightly; the slot allows for it).
-      const { x, t } = bisect(0, 2 * a.extension, (e) => plan(reg, e));
-      return { extendPx: x, holds: [], t };
-    }
-    // Turn each hold duration into whole 360s at a radius no wider than rMax, then
-    // scale every radius together so the lap lasts exactly `period`.
-    const rMax = a.offset * 0.42;
-    const shape = HOLD_POINTS.flatMap((at) => {
-      const d = durations[at]; if (!(d > 0)) return [];
-      const entry = t0.plan.holdTimes?.[at]?.entry ?? 0;
-      const v = Math.max(1e-3, t0.plan.segments.find((g) => entry < g.start + g.seconds)?.v0 ?? 1);
-      const turns = Math.max(1, Math.ceil(d * v / (2 * Math.PI * rMax)));
-      return [{ at, turns, radius: d * v / (2 * Math.PI * turns) }];
+      return { extendPx: 0, departureExtendPx: hi, holds: [], t: fit(hi) };
     });
-    const holdsFor = (k: number) => shape.map((h) => ({ ...h, radius: h.radius * k }));
-    const { x, t } = bisect(0, 2, (k) => plan(reg, 0, holdsFor(k)));
-    return { extendPx: 0, holds: holdsFor(x), t };
-  }
-  /** Split each airplane's delay over the hold points so that, at every hold point,
-   * the next airplane arrives HOLD_CLEAR_S after the one ahead has left (maximin). */
-  private splitHolds(base: Timing[], period: number, slot: number) {
-    const n = base.length, C = HOLD_CLEAR_S;
-    const order: HoldPoint[] = ['crosswind', 'downwind-early', 'downwind-late']; // lap order
-    const R = base.map((t) => order.map((at) => t.finalStart - (t.plan.holdTimes?.[at]?.entry ?? 0)));
-    const delay = base.map((t) => Math.max(0, period - t.plan.seconds));
-    const D = delay.map((d) => order.map(() => d / order.length));
-    const gap = (f: number) => f === 0 ? period - (n - 1) * slot : slot;
-    const exit = (i: number, j: number) => -(R[i]![j]! + D[i]!.slice(j + 1).reduce((s, x) => s + x, 0));
-    const slacks = () => {
-      const out: number[] = [];
-      if (n < 2) return out;
-      for (let f = 0; f < n; f++) { const l = (f + n - 1) % n; for (let j = 0; j < order.length; j++) out.push(gap(f) + exit(f, j) - D[f]![j]! - exit(l, j) - C); }
-      return out;
-    };
-    const score = () => { const s = slacks(); return s.length ? Math.min(...s) * 1000 + s.reduce((x, y) => x + Math.min(y, 20), 0) : 0; };
-    for (const step of [4, 2, 1, 0.5, 0.25]) {
-      for (let iter = 0; iter < 400; iter++) {
-        let best = score(), move: [number, number, number] | null = null;
-        for (let i = 0; i < n; i++) for (let j = 0; j < order.length; j++) for (let k = 0; k < order.length; k++) {
-          if (j === k || D[i]![j]! < step) continue;
-          D[i]![j]! -= step; D[i]![k]! += step;
-          const sc = score(); if (sc > best + 1e-9) { best = sc; move = [i, j, k]; }
-          D[i]![j]! += step; D[i]![k]! -= step;
-        }
-        if (!move) break;
-        const [i, j, k] = move; D[i]![j]! -= step; D[i]![k]! += step;
-      }
-    }
-    return D.map((row) => Object.fromEntries(order.map((at, j) => [at, row[j]!])) as Record<HoldPoint, number>);
+    this.slot = slot;
+    this.period = period;
+    this.configs = configs;
+    this.phase = configs.map((c, i) => i * slot + 4 - c.t.finalStart);
   }
   private lapIndex(i: number, time: number) { return Math.floor((time - this.phase[i]!) / this.period); }
   /** Materialize laps up to `until` (for inspection and tests; sampling is closed-form). */
