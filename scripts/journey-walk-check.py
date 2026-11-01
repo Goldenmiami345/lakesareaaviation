@@ -29,7 +29,7 @@ async def walk(page, gesture, label):
 async def up_check(page, flick, label):
     # go to the last stage of the airport journey then flick up
     S=await stops(page)
-    await page.evaluate(f"window.scrollTo({{top:{S[-1]},behavior:"instant"}})"); await page.wait_for_timeout(800)
+    await page.evaluate("(v)=>scrollTo({top:v,behavior:'instant'})",S[-1]); await page.wait_for_timeout(800)
     start=await y(page); await flick()
     # wait until motion ends
     prev=-1; same=0
