@@ -29,6 +29,8 @@ const KT_MPS = 1852 / 3600;
 // crosswind and downwind, for sequencing delays an extension alone cannot absorb.
 export type HoldPoint = 'crosswind' | 'downwind-early' | 'downwind-late';
 export type Hold = { at: HoldPoint; turns: number; radius: number };
+/** Fraction along the leg (points[k] → points[k+1] after the upwind report is added) where each hold starts. */
+export const HOLD_ENTRY: Record<HoldPoint, { k: number; f: number }> = { 'downwind-late': { k: 5, f: .3 }, 'downwind-early': { k: 4, f: .35 }, crosswind: { k: 3, f: .5 } };
 export function makeFlightPlan(a: PatternAirport, reg: string, wind: Wind | null = null, runwayHeading = Number(a.runway) * 10, extendPx = 0, holds: readonly Hold[] = []): FlightPlan {
   const original = patternWaypoints(a);
   if (extendPx > 0) {
@@ -60,9 +62,10 @@ export function makeFlightPlan(a: PatternAirport, reg: string, wind: Wind | null
     points.splice(k + 1, 0, { ...q, knots: from.knots, phase: from.phase }, ...ring);
   };
   const hold = (at: HoldPoint) => holds.find((h) => h.at === at);
-  insertOrbits(5, .3, { x: -u.x, y: -u.y }, n, hold('downwind-late'));
-  insertOrbits(4, .35, { x: -u.x, y: -u.y }, n, hold('downwind-early'));
-  insertOrbits(3, .5, n, u, hold('crosswind'));
+  const at = (h: HoldPoint, d: { x: number; y: number }, side: { x: number; y: number }) => insertOrbits(HOLD_ENTRY[h].k, HOLD_ENTRY[h].f, d, side, hold(h));
+  at('downwind-late', { x: -u.x, y: -u.y }, n);
+  at('downwind-early', { x: -u.x, y: -u.y }, n);
+  at('crosswind', n, u);
   const runwayAngle = Math.atan2(a.end.y - a.threshold.y, a.end.x - a.threshold.x);
   const type = aircraftType(reg);
   const legs = points.slice(0, -1).flatMap((p, i) => {
