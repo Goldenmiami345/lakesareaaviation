@@ -9,7 +9,7 @@ import { aircraftModelUrl } from '../lib/aircraft-models';
 const AircraftModel = lazy(() => import('./aircraft-model'));
 type Plane = (typeof fleet)[number];
 export default function AircraftViewer({ plane, initialIndex = 0, onClose }: { plane: Plane; initialIndex?: number; onClose: () => void }) {
-  const photos = plane.walkaround ?? [{ src: plane.image, small: plane.image, label: 'Exterior' }];
+  const photos = [{ src: plane.image, small: plane.image, label: 'Exterior' }];
   const [index, setIndex] = useState(initialIndex);
   const [mode, setMode] = useState<'photos' | 'panel' | 'model'>('photos');
   const model = aircraftModelUrl(plane.registration);
@@ -41,7 +41,7 @@ export default function AircraftViewer({ plane, initialIndex = 0, onClose }: { p
         {mode !== 'model' && <><Button variant="ghost" size="icon" aria-label="Zoom out" onClick={() => zoom.current?.zoomOut()}><Minus /></Button><Button variant="ghost" size="icon" aria-label="Zoom in" onClick={() => zoom.current?.zoomIn()}><Plus /></Button><Button variant="ghost" size="icon" aria-label="Reset photo zoom" onClick={() => zoom.current?.resetTransform()}><RotateCcw /></Button></>}
       </div>
       <div className="flex gap-1">
-        {(plane.panel || model) && <Button variant="ghost" aria-pressed={mode === 'photos'} onClick={() => setMode('photos')}>{plane.walkaround ? 'Walk around' : 'Exterior'}</Button>}
+        {(plane.panel || model) && <Button variant="ghost" aria-pressed={mode === 'photos'} onClick={() => setMode('photos')}>Exterior</Button>}
         {plane.panel && <Button variant="ghost" aria-pressed={mode === 'panel'} onClick={() => setMode('panel')}>Panel</Button>}
         {model && <Button variant="ghost" aria-pressed={mode === 'model'} onClick={() => setMode('model')}>3D</Button>}
       </div>

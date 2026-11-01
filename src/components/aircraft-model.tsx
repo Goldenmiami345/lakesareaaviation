@@ -8,8 +8,12 @@ export default function AircraftModel({ src, label, poster, autoRotate = true, o
     const el=ref.current;if(!ready||!el)return;
     const loaded=()=>{el.dataset['modelLoaded']='true';onLoad?.();};
     el.addEventListener('load',loaded);
-    return()=>el.removeEventListener('load',loaded);
-  },[ready,onLoad]);
+    // Pause the slow card spin while hovered or touched; resume on leave.
+    const pause=()=>{if(autoRotate)el.removeAttribute('auto-rotate');};
+    const resume=()=>{if(autoRotate)el.setAttribute('auto-rotate','');};
+    el.addEventListener('pointerenter',pause);el.addEventListener('pointerdown',pause);el.addEventListener('pointerleave',resume);
+    return()=>{el.removeEventListener('load',loaded);el.removeEventListener('pointerenter',pause);el.removeEventListener('pointerdown',pause);el.removeEventListener('pointerleave',resume);};
+  },[ready,onLoad,autoRotate]);
   useEffect(() => {
     // The SSR guard removes model-viewer from the server bundle entirely. Without it the
     // production bundler merged model-viewer (top-level `class extends HTMLElement`) into a
