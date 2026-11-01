@@ -30,6 +30,12 @@ for (const c of cases) {
     const s = new TrafficSchedule(a, a.aircraft, c.wind, c.hdg, c.offsets);
     const end = MINUTES * 60, min = patternSpacingPx(a);
     s.ensure(end);
+    for (const laps of s.laps) {
+      const completed = laps.filter(l=>l.start>=0 && l.start+s.period<=end);
+      const turns = completed.reduce((n,l)=>n+l.holds.reduce((v,h)=>v+h.turns,0),0);
+      assert.ok(completed.length>5);
+      assert.ok(turns/completed.length<.2, `hold rate ${turns/completed.length} must be below one per five laps`);
+    }
     // Every lap lasts exactly one shared period, so lap boundaries never jump.
     for (const laps of s.laps) for (const l of laps) assert.ok(Math.abs(l.t.plan.seconds - s.period) < 1e-3, `lap ${l.t.plan.seconds} vs ${s.period}`);
     // Runway windows (base-to-final turn → past departure end) never overlap.
@@ -80,6 +86,8 @@ for (const id of ['KLXL', '18V', 'P52'] as const) {
     for (let dir = 0; dir < 360; dir += 30) for (const kt of [6, 15]) {
       const wind = { dir, kt }, end = pickRunway(f, wind), a = patternFor(f, end);
       const s = new TrafficSchedule(a, a.aircraft, wind, end.trueHdg), min = patternSpacingPx(a);
+      s.ensure(1800);
+      for (const laps of s.laps) assert.ok(laps.reduce((n,l)=>n+l.holds.reduce((v,h)=>v+h.turns,0),0)/laps.length<.2);
       for (let t = 0; t < 1800; t += 0.1) {
         const p = a.aircraft.map((_, i) => s.sample(i, t)!);
         const busy = p.filter((q) => EXCLUSIVE.has(legOf(a, q))).length;

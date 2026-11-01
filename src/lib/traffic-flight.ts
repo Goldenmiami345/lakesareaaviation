@@ -10,7 +10,7 @@ export function aircraftType(reg: string): AircraftType {
 }
 export function legSpeed(type: AircraftType, phase: string) {
   const trainer: Record<string, number> = { 'Touch-and-go': 55, Takeoff: type === '172' ? 100 : 90, Upwind: 73, Crosswind: 75, Downwind: type === '172' ? 85 : 78, Base: 70, Final: type === '172' ? 65 : 60 };
-  const twin: Record<string, number> = { 'Touch-and-go': 75, Takeoff: 110, Upwind: 90, Crosswind: 95, Downwind: 100, Base: 90, Final: 85 };
+  const twin: Record<string, number> = { 'Touch-and-go': 65, Takeoff: 110, Upwind: 90, Crosswind: 95, Downwind: 100, Base: 90, Final: 85 };
   return (type === 'apache' ? twin : trainer)[phase] ?? 75;
 }
 export function groundSpeed(airspeed: number, wind: Wind | null, trueHeading: number) {

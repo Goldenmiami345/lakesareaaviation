@@ -8,19 +8,12 @@ import { feetPerPixel, type PatternAirport, type PatternSample, type Wind } from
 // same period P = n × slot, its window starting one slot after the airplane ahead,
 // and each slot is the longest window + RUNWAY_BUFFER_S. So at most one airplane
 // is ever on final, on the runway or departing, arrivals keep their order (nobody
-// overtakes or cuts in) and two airplanes never turn final together. The time an
-// airplane must lose each lap is absorbed before the base turn, as a controller
-// would: a short downwind extension for small delays, otherwise visible 360s
-// (turning away from the runway) split over up to three hold points so that two
-// airplanes never circle in the same place. Nobody ever has to break off on base.
+// overtakes or cuts in) and two airplanes never turn final together. A small
+// downwind extension and longer departure-side upwind/downwind absorb the delay
+// without recurring circles or growing final until the slot solver diverges.
 // All traffic flies continuous touch-and-goes.
 export const RUNWAY_BUFFER_S = 5;
 const SLOT_MARGIN_S = 0.5;
-/** A hold part must end this long before the next airplane reaches the same point. */
-
-
-/** Delays shorter than this use a downwind extension instead of a 360. */
-
 const NM_M = 1852;
 
 const pxPerNm = (a: PatternAirport) => NM_M / (feetPerPixel(a) * 0.3048);
@@ -66,7 +59,7 @@ function timing(plan: FlightPlan, a: PatternAirport): Timing {
   return { plan, base: first('Base'), finalStart, departEnd, window: plan.seconds - finalStart + departEnd };
 }
 
-export type Lap = { start: number; extendPx: number; holds: readonly Hold[]; t: Timing; occupied: [number, number] };
+export type Lap = { start: number; extendPx: number; departureExtendPx: number; holds: readonly Hold[]; t: Timing; occupied: [number, number] };
 type Config = { departureExtendPx: number; extendPx: number; holds: Hold[]; t: Timing };
 
 export class TrafficSchedule {
@@ -80,7 +73,8 @@ export class TrafficSchedule {
   constructor(readonly airport: PatternAirport, readonly regs: readonly string[], readonly wind: Wind | null, readonly runwayHeading: number, _offsets?: readonly number[]) {
     this.laps = regs.map(() => []);
     const plan = (reg: string, e = 0, holds: Hold[] = []) => timing(makeFlightPlan(airport, reg, wind, runwayHeading, e, holds), airport);
-    const base = regs.map((r) => plan(r));
+    const arrivalExtension = airport.offset * .08;
+    const base = regs.map((r) => plan(r, arrivalExtension));
     const n = Math.max(1, regs.length);
     // Final is deliberately NOT lengthened to absorb the shared-period delay:
     // that would grow the exclusive window faster than the available slots.
@@ -91,36 +85,40 @@ export class TrafficSchedule {
     const configs: Config[] = regs.map((reg, i) => {
       const initial = base[i];
       if (!initial) throw new Error('Missing traffic timing');
-      const fit = (u: number) => timing(makeFlightPlan(airport, reg, wind, runwayHeading, 0, [], u), airport);
+      const fit = (u: number) => timing(makeFlightPlan(airport, reg, wind, runwayHeading, arrivalExtension, [], u), airport);
       let lo = 0, hi = airport.offset;
       while (fit(hi).plan.seconds < period) hi *= 2;
       for (let k = 0; k < 36; k++) {
         const mid = (lo + hi) / 2;
         if (fit(mid).plan.seconds < period) lo = mid; else hi = mid;
       }
-      return { extendPx: 0, departureExtendPx: hi, holds: [], t: fit(hi) };
+      const t = fit(hi);
+      if (Math.abs(t.plan.seconds-period)>1e-3 || t.window+RUNWAY_BUFFER_S>slot) throw new Error('Unsafe traffic schedule');
+      return { extendPx: arrivalExtension, departureExtendPx: hi, holds: [], t };
     });
     this.slot = slot;
     this.period = period;
     this.configs = configs;
     this.phase = configs.map((c, i) => i * slot + 4 - c.t.finalStart);
   }
-  private lapIndex(i: number, time: number) { return Math.floor((time - this.phase[i]!) / this.period); }
+  private lapIndex(i: number, time: number) { return Math.floor((time - (this.phase[i] ?? 0)) / this.period); }
   /** Materialize laps up to `until` (for inspection and tests; sampling is closed-form). */
   ensure(until: number) {
     this.regs.forEach((_, i) => {
-      const laps = this.laps[i]!, c = this.configs[i]!;
-      let k = laps.length ? this.lapIndex(i, laps[laps.length - 1]!.start) + 1 : this.lapIndex(i, 0) - 1;
+      const laps = this.laps[i], c = this.configs[i];
+      if (!laps || !c) return;
+      const last = laps[laps.length-1];
+      let k = last ? this.lapIndex(i, last.start) + 1 : this.lapIndex(i, 0) - 1;
       for (;; k++) {
-        const start = this.phase[i]! + k * this.period;
+        const start = (this.phase[i] ?? 0) + k * this.period;
         if (start > until) break;
-        laps.push({ start, extendPx: c.extendPx, holds: c.holds, t: c.t, occupied: [start + c.t.finalStart, start + c.t.plan.seconds + c.t.departEnd] });
+        laps.push({ start, extendPx: c.extendPx, departureExtendPx: c.departureExtendPx, holds: c.holds, t: c.t, occupied: [start + c.t.finalStart, start + c.t.plan.seconds + c.t.departEnd] });
       }
     });
   }
   sample(i: number, time: number): PatternSample | null {
     const c = this.configs[i]; if (!c) return null;
-    const into = time - this.phase[i]! - this.lapIndex(i, time) * this.period;
+    const into = time - (this.phase[i] ?? 0) - this.lapIndex(i, time) * this.period;
     return sampleFlight(c.t.plan, Math.min(into, c.t.plan.seconds - 1e-6));
   }
 }

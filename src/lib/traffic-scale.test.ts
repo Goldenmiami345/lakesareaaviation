@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { trafficModelScale, trafficSpanFeet } from '../components/traffic-vector';
 describe('photo airplanes share the vector display scale', () => {
   it('uses 3x for photo renders and vectors alike', () => {

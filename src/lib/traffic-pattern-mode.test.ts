@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { PATTERN_PULSE } from '../components/traffic-path';
 describe('drawn traffic pattern pulse', () => {
   it('fades in every 6–8 s, holds ~3 s, 600 ms fades', () => {
