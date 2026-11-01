@@ -150,10 +150,8 @@ export class TrafficSchedule {
       return out;
     };
     const score = () => { const s = slacks(); return s.length ? Math.min(...s) * 1000 + s.reduce((x, y) => x + Math.min(y, 20), 0) : 0; };
-    const minSlack = () => { const s = slacks(); return s.length ? Math.min(...s) : Infinity; };
-    for (const step of [8, 4, 2, 1, 0.5]) {
-      if (minSlack() >= 2) break; // comfortably clear everywhere: stop refining
-      for (let iter = 0; iter < 200; iter++) {
+    for (const step of [4, 2, 1, 0.5, 0.25]) {
+      for (let iter = 0; iter < 400; iter++) {
         let best = score(), move: [number, number, number] | null = null;
         for (let i = 0; i < n; i++) for (let j = 0; j < order.length; j++) for (let k = 0; k < order.length; k++) {
           if (j === k || D[i]![j]! < step) continue;
