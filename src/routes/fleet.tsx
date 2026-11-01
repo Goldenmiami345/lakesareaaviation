@@ -3,7 +3,6 @@ import { lazy, Suspense, useLayoutEffect, useRef, useState } from "react";
 import { ArrowRight, ChevronDown, Maximize } from "lucide-react";
 import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
 import { Button } from "../components/ui/button";
-import { FleetWalkaround } from "../components/fleet-walkaround";
 import { AircraftMedia } from '../components/aircraft-media';
 import { aircraftModelUrl } from '../lib/aircraft-models';
 import { fleet, type FleetRole } from "../lib/site-data";
@@ -126,13 +125,13 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
   return (
     <article id={id} className="scroll-mt-20 overflow-hidden border border-border bg-background target:border-primary">
       <div className="relative aspect-[4/3] overflow-hidden bg-background">
-        <img src={f.image} alt={`${f.name} ${f.registration}${f.nickname ? ` “${f.nickname}”` : ""}`} width={1200} height={900} loading="lazy" decoding="async" className="fleet-cutout h-full w-full object-contain p-5" />
+        {aircraftModelUrl(f.registration)
+          ? <AircraftMedia reg={f.registration} photo={f.image} />
+          : <img src={f.image} alt={`${f.name} ${f.registration}${f.nickname ? ` “${f.nickname}”` : ""}`} width={1200} height={900} loading="lazy" decoding="async" className="fleet-cutout h-full w-full object-contain p-5" />}
         <Button variant="secondary" onClick={(e) => onView(e.currentTarget)} className="absolute bottom-3 right-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-ink/80 px-4 text-[11px] font-bold uppercase tracking-[0.14em] text-background backdrop-blur-md hover:bg-primary">
           <Maximize className="size-4" /> View photo
         </Button>
       </div>
-      {aircraftModelUrl(f.registration) && <div className="aspect-[4/3] border-t border-border"><AircraftMedia reg={f.registration} photo={f.image} hint /></div>}
-      {f.walkaround && <FleetWalkaround photos={f.walkaround} reg={f.registration} onOpen={(i, btn) => onView(btn, i)} />}
       <div className="p-5 sm:p-6">
         <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-primary"><span className="h-px w-5 bg-primary" />{f.registration}</p>
         <h2 className="mt-2 font-display text-2xl leading-tight sm:text-3xl">{f.name}</h2>
