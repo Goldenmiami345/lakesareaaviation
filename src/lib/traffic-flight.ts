@@ -9,8 +9,8 @@ export function aircraftType(reg: string): AircraftType {
   return reg === 'N4383P' ? 'apache' : reg === 'N11059' ? 'citabria' : reg === 'N6641F' ? '150' : '172';
 }
 export function legSpeed(type: AircraftType, phase: string) {
-  const trainer: Record<string, number> = { 'Touch-and-go': 55, Takeoff: 72, Upwind: 73, Crosswind: 75, Downwind: type === '172' ? 85 : 78, Base: 70, Final: type === '172' ? 65 : 60 };
-  const twin: Record<string, number> = { 'Touch-and-go': 75, Takeoff: 85, Upwind: 90, Crosswind: 95, Downwind: 100, Base: 90, Final: 85 };
+  const trainer: Record<string, number> = { 'Touch-and-go': 55, Takeoff: type === '172' ? 100 : 90, Upwind: 73, Crosswind: 75, Downwind: type === '172' ? 85 : 78, Base: 70, Final: type === '172' ? 65 : 60 };
+  const twin: Record<string, number> = { 'Touch-and-go': 75, Takeoff: 110, Upwind: 90, Crosswind: 95, Downwind: 100, Base: 90, Final: 85 };
   return (type === 'apache' ? twin : trainer)[phase] ?? 75;
 }
 export function groundSpeed(airspeed: number, wind: Wind | null, trueHeading: number) {
@@ -51,7 +51,11 @@ export function makeFlightPlan(a: PatternAirport, reg: string, wind: Wind | null
   // any corner, runway point, altitude profile or pattern extent.
   const takeoff = original[1], cross = original[2];
   if (!takeoff || !cross) return { segments: [], seconds: 1, airport: a };
-  const upwind = { x: takeoff.x + (cross.x - takeoff.x) * .22, y: takeoff.y + (cross.y - takeoff.y) * .22, agl: takeoff.agl + (cross.agl - takeoff.agl) * .22, knots: 73, phase: 'Upwind' };
+  // Report upwind only AFTER crossing the departure end. The old fractional
+  // report slowed the climb while still over the runway and inflated occupancy.
+  const runwayLen = Math.hypot(a.end.x-a.threshold.x,a.end.y-a.threshold.y)||1;
+  const f = Math.min(.95, (runwayLen*.55 + a.extension*.2) / Math.hypot(cross.x-takeoff.x,cross.y-takeoff.y));
+  const upwind = { x: takeoff.x + (cross.x - takeoff.x) * f, y: takeoff.y + (cross.y - takeoff.y) * f, agl: takeoff.agl + (cross.agl - takeoff.agl) * f, knots: 73, phase: 'Upwind' };
   const points = [...original.slice(0, 2), upwind, ...original.slice(2)];
   // Downwind 360s turn outward (away from the runway); crosswind 360s turn away from
   // the departure end. Each ring returns exactly to its entry point and heading.
