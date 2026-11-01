@@ -28,14 +28,15 @@ function HomePage() {
       <section className="relative min-h-[100svh] overflow-hidden bg-ink text-background">
         <div className="hero-parallax absolute inset-0"><img src={heroImage} alt="Lakes Area Aviation Cessna N6717A and Piper Apache on the ramp at sunset" width={1600} height={900} fetchPriority="high" className="hero-kenburns h-[112%] w-full object-cover object-[35%_center]" /></div>
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/25 to-ink/5 lg:bg-gradient-to-r lg:from-ink lg:via-ink/60 lg:to-transparent" />
-        <div className="relative mx-auto flex min-h-[100svh] max-w-7xl flex-col justify-end px-5 pb-9 pt-24 sm:pb-20 sm:pt-32 lg:px-8">
-          <div className="max-w-3xl reveal">
-            <p className="stage-label">Accelerated flight training</p>
-            <h1 className="mt-4 font-display text-5xl leading-[.94] sm:mt-5 sm:text-7xl lg:text-[5.8rem]"><span className="line-mask"><span>Zero to Hero.</span></span></h1>
-            <p className="mt-6 max-w-sm text-base leading-relaxed text-background/80 sm:mt-7 sm:max-w-lg sm:text-lg">From your first flight to commercial pilot and instructor.</p>
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('hero-enter')" }} />
+        <div className="relative mx-auto flex min-h-[100svh] max-w-7xl flex-col justify-end px-5 pb-20 pt-24 sm:pb-24 sm:pt-32 lg:px-8">
+          <div className="max-w-3xl">
+            <p className="stage-label hero-step" style={{ ["--d" as string]: "0ms" }}>Accelerated flight training</p>
+            <h1 className="mt-2.5 whitespace-nowrap font-display text-[2.65rem] leading-[.94] sm:mt-3 sm:text-7xl lg:text-[5.4rem]"><span className="line-mask hero-mask"><span style={{ ["--d" as string]: "90ms" }}>Zero to Hero.</span></span></h1>
+            <p className="hero-step mt-3.5 max-w-sm text-base leading-relaxed text-background/80 sm:mt-4 sm:max-w-lg sm:text-lg" style={{ ["--d" as string]: "180ms" }}>From your first flight to commercial pilot and instructor.</p>
           </div>
-          <div className="mt-7 reveal-delay"><Link to="/contact" className="interactive-arrow group inline-flex min-h-12 items-center gap-4 border-b border-background/45 pb-1 text-sm font-bold uppercase text-background transition-colors hover:border-primary">Build my training plan <span className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><ArrowRight className="size-4" /></span></Link></div>
-          <nav aria-label="Training locations" className="reveal-delay mt-6 flex flex-nowrap items-center gap-1 text-[10px] font-bold uppercase tracking-[0.08em] text-background/75 sm:gap-2 sm:text-[11px] sm:tracking-[0.14em]">
+          <HeroCta />
+          <nav aria-label="Training locations" className="hero-step mt-4 flex flex-nowrap items-center gap-1 text-[10px] font-bold uppercase tracking-[0.08em] text-background/75 sm:gap-2 sm:text-[11px] sm:tracking-[0.14em]" style={{ ["--d" as string]: "360ms" }}>
             <MapPin aria-hidden className="mr-0.5 size-3.5 shrink-0 text-background/55" />
             {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} className="shrink-0 whitespace-nowrap rounded-full border border-background/25 px-2 py-1.5 transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground sm:px-3">{a.label}, {a.code}</button>)}
           </nav>
@@ -104,4 +105,28 @@ function BackToTop() {
     return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); };
   }, []);
   return <button ref={ref} type="button" aria-label="Back to top" tabIndex={show ? 0 : -1} onClick={() => glideTo(0)} className={`fixed bottom-[calc(5.75rem+env(safe-area-inset-bottom))] right-4 z-40 grid size-11 place-items-center rounded-full border border-background/25 bg-ink/80 text-background shadow-xl backdrop-blur-md transition-all duration-300 hover:bg-primary md:bottom-6 md:right-6 ${show ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`}><ArrowUp className="size-4" /></button>;
+}
+
+function HeroCta() {
+  const ref = useRef<HTMLAnchorElement>(null);
+  useEffect(() => {
+    // Entrance ran once; drop the class so returning to the page never replays it.
+    const done = window.setTimeout(() => document.documentElement.classList.remove("hero-enter"), 1300);
+    const el = ref.current;
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return () => window.clearTimeout(done);
+    let visible = false, held = false;
+    const hold = () => { held = true; el.classList.remove("cta-nudge"); }, release = () => { held = el.matches(":hover") || el.matches(":focus-visible") || el === document.activeElement; };
+    const io = new IntersectionObserver(([e]) => { visible = !!e?.isIntersecting; if (!visible) el.classList.remove("cta-nudge"); }, { threshold: 0.5 });
+    io.observe(el);
+    const timer = window.setInterval(() => {
+      if (!visible || held || document.hidden) return;
+      el.classList.remove("cta-nudge"); void el.offsetWidth; el.classList.add("cta-nudge");
+    }, 7000);
+    const end = () => el.classList.remove("cta-nudge");
+    el.addEventListener("pointerenter", hold); el.addEventListener("focus", hold);
+    el.addEventListener("pointerleave", () => { held = false; release(); }); el.addEventListener("blur", () => { held = false; });
+    el.addEventListener("animationend", end);
+    return () => { window.clearTimeout(done); window.clearInterval(timer); io.disconnect(); };
+  }, []);
+  return <div className="hero-step mt-5" style={{ ["--d" as string]: "270ms" }}><Link ref={ref} to="/contact" className="interactive-arrow group inline-flex min-h-12 items-center gap-4 border-b border-background/45 pb-1 text-sm font-bold uppercase text-background transition-colors hover:border-primary">Build my training plan <span className="cta-orb grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><ArrowRight className="cta-arrow size-4" /></span></Link></div>;
 }

@@ -277,3 +277,20 @@ input.date-field::-webkit-date-and-time-value { text-align: left; margin: 0; }
 .traffic-callouts .traffic-history { transition: opacity .3s ease; }
 @media (prefers-reduced-motion: reduce) { .traffic-tag.is-calling .traffic-target { animation: none; } }
 .aircraft-top-render { image-rendering: auto; }
+
+/* Homepage hero: staggered first-load entrance (class set by an inline script, so SSR/no-JS text stays visible) */
+@keyframes hero-step-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes hero-mask-in { from { transform: translateY(105%); } to { transform: none; } }
+@keyframes hero-fade-in { from { opacity: 0; } to { opacity: 1; } }
+.hero-mask > span { animation: none; }
+html.hero-enter .hero-step { animation: hero-step-in .55s var(--d, 0ms) cubic-bezier(.2,.7,.3,1) both; }
+html.hero-enter .hero-mask > span { animation: hero-mask-in .55s var(--d, 0ms) cubic-bezier(.2,.7,.3,1) both; }
+/* CTA attention: bounce right + one spin of the arrow */
+@keyframes cta-orb-nudge { 0%,100% { transform: none; } 35% { transform: translateX(7px); } 65% { transform: translateX(-1px); } }
+@keyframes cta-arrow-spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+.cta-nudge .cta-orb { animation: cta-orb-nudge .7s cubic-bezier(.3,.7,.3,1); }
+.cta-nudge .cta-arrow { animation: cta-arrow-spin .7s cubic-bezier(.4,0,.2,1); }
+@media (prefers-reduced-motion: reduce) {
+  html.hero-enter .hero-step, html.hero-enter .hero-mask > span { animation: hero-fade-in .55s var(--d, 0ms) ease-out both; transform: none; }
+  .cta-nudge .cta-orb, .cta-nudge .cta-arrow { animation: none; }
+}
