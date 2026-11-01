@@ -32,6 +32,10 @@ for (const c of cases) {
       assert.ok(!(x.w[0] < y.w[1] + RUNWAY_BUFFER_S && x.w[1] > y.w[0] - RUNWAY_BUFFER_S), `window ${a.aircraft[x.i]} ${x.w} vs ${a.aircraft[y.i]} ${y.w}`);
     }
     const n = a.aircraft.length;
+    const len = Math.hypot(a.end.x - a.threshold.x, a.end.y - a.threshold.y);
+    const ux = (a.end.x - a.threshold.x) / len, uy = (a.end.y - a.threshold.y) / len, side = a.side === 'left' ? 1 : -1;
+    const nx = uy * side, ny = -ux * side;
+    const trackDir = (leg: Leg) => leg === 'downwind' ? { x: -ux, y: -uy } : leg === 'crosswind' ? { x: nx, y: ny } : leg === 'base' ? { x: -nx, y: -ny } : { x: ux, y: uy };
     const finalTurn = (i: number, t: number) => s.laps[i]!.some((l) => { const ft = l.start + l.t.finalStart; return t <= ft && ft - t <= 10; });
     let prevLeg: Leg[] = [], prevOrder = new Map<string, number>();
     for (let k = 0; k * TICK < end; k++) {
@@ -48,8 +52,9 @@ for (const c of cases) {
         if (legs[i] === 'base' && legs[j] === 'base') assert.ok(!(finalTurn(i, t) && finalTurn(j, t)), `t=${t.toFixed(2)} two on base turning final`);
         if (legs[i] === legs[j]) {
           // Same leg: order along the track must not flip while both stay on it.
-          const h = (u.heading - 90) * Math.PI / 180;
-          const sign = Math.sign((v.x - u.x) * Math.cos(h) + (v.y - u.y) * Math.sin(h));
+          // Progress along the leg's nominal track (a 360 in a hold is not a reversal).
+          const dir = trackDir(legs[i]!);
+          const sign = Math.sign((v.x - u.x) * dir.x + (v.y - u.y) * dir.y);
           const key = `${i}-${j}`, was = prevOrder.get(key);
           if (was !== undefined && prevLeg[i] === legs[i] && prevLeg[j] === legs[j] && sign !== 0) assert.equal(sign, was, `t=${t.toFixed(2)} ${a.aircraft[j]} overtook ${a.aircraft[i]} on ${legs[i]}`);
           if (sign !== 0) order.set(key, sign);
