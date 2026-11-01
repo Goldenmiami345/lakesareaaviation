@@ -17,7 +17,7 @@ import { feetPerPixel, type PatternAirport, type PatternSample, type Wind } from
 export const RUNWAY_BUFFER_S = 5;
 const SLOT_MARGIN_S = 0.5;
 /** A hold part must end this long before the next airplane reaches the same point. */
-const HOLD_CLEAR_S = 10;
+const HOLD_CLEAR_S = 12;
 const HOLD_POINTS: readonly HoldPoint[] = ['crosswind', 'downwind-early', 'downwind-late'];
 /** Delays shorter than this use a downwind extension instead of a 360. */
 const MIN_HOLD_S = 12;
