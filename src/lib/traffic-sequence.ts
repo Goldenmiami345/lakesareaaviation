@@ -111,7 +111,7 @@ export class TrafficSchedule {
     const a = this.airport;
     const bisect = (lo: number, hi: number, f: (x: number) => Timing) => {
       let best = f(hi);
-      for (let k = 0; k < 50; k++) { const m = (lo + hi) / 2, t = f(m); if (t.plan.seconds < period) lo = m; else { hi = m; best = t; } }
+      for (let k = 0; k < 28; k++) { const m = (lo + hi) / 2, t = f(m); if (t.plan.seconds < period) lo = m; else { hi = m; best = t; } }
       return { x: hi, t: best };
     };
     if (!durations) {
