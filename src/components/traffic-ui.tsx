@@ -5,6 +5,7 @@ import { Button } from './ui/button';
 import { AircraftMedia } from './aircraft-media';
 
 import { fleet } from '../lib/site-data';
+import { callSideCandidates, callSideFits, type CallSide } from '../lib/traffic-call-placement';
 
 export type TrafficPlaneInfo = { reg: string; type: string; nickname?: string };
 /** Fleet and traffic always share the exact same alpha cutout. */
@@ -212,19 +213,14 @@ function obstacles(g: SVGGElement) {
   section?.querySelectorAll('.journey-copy, .journey-hud, nav[aria-label$="stages"], [aria-label="Reset zoom"], [data-traffic-card]').forEach(el => { if(getComputedStyle(el.closest('.journey-copy-wrap') ?? el).opacity !== '0') add(el); });
   add(document.querySelector('[data-traffic-card]'));
   const rail = w < 768 ? 76 : 16;
-  obstacleCache = { at: now, key: section, list, safe: { l: 16, t: 16, r: w - rail, b: h - 16 } };
+  const panel = section?.querySelector('.journey-viewport')?.getBoundingClientRect() ?? g.ownerSVGElement?.getBoundingClientRect();
+  obstacleCache = { at: now, key: section, list, safe: { l: Math.max(16, (panel?.left ?? 0) + 8), t: Math.max(16, (panel?.top ?? 0) + 8), r: Math.min(w - rail, (panel?.right ?? w) - 8), b: Math.min(h - 16, (panel?.bottom ?? h) - 8) } };
   return obstacleCache;
 }
 
-type TagSide = { ox: number; oy: number; sy: number; W: number };
-// Near sides first (block within ~40px of the airplane); |sy|>=2 only to dodge UI.
-const SIDES = [[1, -1], [-1, -1], [1, 1], [-1, 1], [0, -1], [0, 1], [1, -2], [-1, -2], [1, 2], [-1, 2], [1, -3], [-1, -3], [1, 3], [-1, 3]] as const;
+type TagSide = CallSide;
 const sideOf = (g: SVGGElement) => (g as SVGGElement & { __side?: TagSide }).__side;
-const fits = (side: TagSide, pts: { x: number; y: number }[], list: Box[], safe: Box) => pts.every(({ x, y }) => {
-  const box = { l: x + side.ox, t: y + side.oy, r: x + side.ox + side.W, b: y + side.oy + 30 };
-  if (box.l < safe.l || box.r > safe.r || box.t < safe.t || box.b > safe.b) return false;
-  return !list.some((o) => hits(box, o));
-});
+const fits = callSideFits;
 
 /**
  * Picks a radar tag's side ONCE for a whole display window: `pts` are the airplane's
@@ -233,7 +229,7 @@ const fits = (side: TagSide, pts: { x: number; y: number }[], list: Box[], safe:
  * then fixed: same offset, same leader length every frame. Returns false when no side
  * fits the whole window, so the caller can skip that callout.
  */
-export function fitTagSide(g: SVGGElement | null | undefined, pts: { x: number; y: number }[], occupied: Box[] = []) {
+export function fitTagSide(g: SVGGElement | null | undefined, pts: { x: number; y: number }[], occupied: Box[] = [], outside = { x: 1, y: -1 }) {
   if (!g) return false;
   const text = g.querySelector<SVGTextElement>(".traffic-label");
   const pill = g.querySelector<SVGRectElement>(".traffic-pill");
@@ -241,21 +237,14 @@ export function fitTagSide(g: SVGGElement | null | undefined, pts: { x: number; 
   if (!text || !pill || !line) return false;
   obstacleCache = null;
   const { list, safe } = obstacles(g);
-  const W = Math.ceil(Math.max(...Array.from(text.querySelectorAll('tspan')).map(t=>t.getComputedTextLength()), 60)) + 14, H = 30;
-  for (const [sx, sy] of SIDES) {
-    const ox = sx > 0 ? 10 : sx < 0 ? -10 - W : -Math.round(W / 2);
-    let oy = sy < 0 ? -36 : 6;
-    if (sx === 0) oy = sy < 0 ? -42 : 12;
-    if (Math.abs(sy) === 2) oy = sy < 0 ? -52 : 22;
-    if (Math.abs(sy) === 3) oy = sy < 0 ? -80 : 50;
-    const side = { ox, oy, sy, W };
+  const W = Math.ceil(Math.max(...Array.from(text.querySelectorAll('tspan')).map(t=>t.getComputedTextLength()), 60)) + 14;
+  for (const side of callSideCandidates(W, window.innerWidth, outside)) {
+    const { ox, oy, tx, ty } = side;
     if (!fits(side, pts, [...list,...occupied], safe)) continue;
     (g as SVGGElement & { __side?: TagSide }).__side = side;
     pill.setAttribute("x", String(ox)); pill.setAttribute("y", String(oy)); pill.setAttribute("width", String(W));
     text.setAttribute("x", String(ox + 7)); text.setAttribute("y", String(oy + 12.5));
     text.querySelectorAll('tspan').forEach(t=>t.setAttribute('x',String(ox+7)));
-    const tx = Math.min(Math.max(0, ox), ox + W);
-    const ty = Math.min(Math.max(0, oy), oy + H) || (sy < 0 ? oy + H : oy);
     const len = Math.hypot(tx, ty) || 1;
     line.setAttribute("x1", (tx / len * 6).toFixed(1)); line.setAttribute("y1", (ty / len * 6).toFixed(1));
     line.setAttribute("x2", String(tx)); line.setAttribute("y2", String(ty));
