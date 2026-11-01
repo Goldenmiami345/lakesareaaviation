@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Phone } from "lucide-react";
 import { Button } from "./ui/button";
-import { journeyFrame, journeyStop, JOURNEY_STAGE_SVH, nextStopDown, stageStopFraction, stackProgress, stackOffset, isModeSwitchPoint, resolveMode, STOP_TOL, type JourneyMode, type PageSegment } from "../lib/journey-pacing";
+import { journeyFrame, journeyStop, JOURNEY_STAGE_SVH, pinnedStepDown, stageStopFraction, stackProgress, stackOffset, isModeSwitchPoint, resolveMode, STOP_TOL, type JourneyMode, type PageSegment } from "../lib/journey-pacing";
 import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
 import { patternFor, pickRunway, type PatternField } from "../lib/traffic-pattern";
 import { useMetar } from "../lib/use-metar";
@@ -213,7 +213,7 @@ function installController() {
     const L = journeyLayout(), y = window.scrollY;
     const own = pinnedStages(L, y);
     if (!own) return false;
-    const target = nextStopDown(own, y);
+    const target = pinnedStepDown(own, y, own[0] ?? y, own[own.length-1] ?? y);
     if (target === null) return false;
     wantedMode = "fade"; // applied on landing (or now, when already on a stop)
     setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, y)));
