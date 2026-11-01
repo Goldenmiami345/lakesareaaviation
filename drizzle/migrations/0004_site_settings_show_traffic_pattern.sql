@@ -1,0 +1,2 @@
+ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS show_traffic_pattern boolean NOT NULL DEFAULT false;
+COMMENT ON COLUMN public.site_settings.show_traffic_pattern IS 'Owner toggle: draw the dashed traffic pattern and leg labels on the homepage airport maps.';

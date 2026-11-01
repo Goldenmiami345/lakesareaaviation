@@ -29,6 +29,13 @@
       "when": 1793476509885,
       "tag": "0003_lead_contingency",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793559386988,
+      "tag": "0004_site_settings_show_traffic_pattern",
+      "breakpoints": true
     }
   ]
 }

@@ -2,7 +2,7 @@ import { feetPerPixel, patternWaypoints, type PatternAirport, type PatternSample
 
 export type AircraftType = '172' | '150' | 'citabria' | 'apache';
 export const REAL_TIME_RATE = 1;
-export const CALL_DURATION_MS = 2500;
+export const CALL_DURATION_MS = 3500;
 export const PING_DURATION_MS = 600;
 export const MAX_CALLS = 2;
 export function aircraftType(reg: string): AircraftType {
@@ -23,8 +23,16 @@ export function groundSpeed(airspeed: number, wind: Wind | null, trueHeading: nu
 type Segment = { p: {x:number;y:number;agl:number}; q: {x:number;y:number;agl:number}; phase: string; heading: number; length: number; v0: number; v1: number; seconds: number; start: number };
 export type FlightPlan = { segments: Segment[]; seconds: number; airport: PatternAirport };
 const KT_MPS = 1852 / 3600;
-export function makeFlightPlan(a: PatternAirport, reg: string, wind: Wind | null = null, runwayHeading = Number(a.runway) * 10): FlightPlan {
+// extendPx lengthens the downwind leg (base turn and final start move out along the
+// runway axis), the way a controller sequences traffic; 0 keeps the published corners.
+export function makeFlightPlan(a: PatternAirport, reg: string, wind: Wind | null = null, runwayHeading = Number(a.runway) * 10, extendPx = 0): FlightPlan {
   const original = patternWaypoints(a);
+  if (extendPx > 0) {
+    const len = Math.hypot(a.end.x - a.threshold.x, a.end.y - a.threshold.y) || 1;
+    const ux = (a.end.x - a.threshold.x) / len, uy = (a.end.y - a.threshold.y) / len;
+    // Base corner (index 5) and final start (index 6) of patternWaypoints.
+    for (const k of [5, 6]) { const w = original[k]; if (w) original[k] = { ...w, x: w.x - ux * extendPx, y: w.y - uy * extendPx }; }
+  }
   // Add the upwind report on the EXISTING straight departure leg, without moving
   // any corner, runway point, altitude profile or pattern extent.
   const takeoff = original[1], cross = original[2];
