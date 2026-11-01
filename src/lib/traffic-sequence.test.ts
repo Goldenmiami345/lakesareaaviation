@@ -2,26 +2,32 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { airportTraffic } from './site-data';
 import { KLXL_OBLIQUE_PATTERN } from './oblique-view';
-import { patternFor, type PatternAirport } from './traffic-pattern';
+import { patternFor, pickRunway, type PatternAirport, type Wind } from './traffic-pattern';
 import { TrafficSchedule, RUNWAY_BUFFER_S, legOf, patternSpacingPx, type Leg } from './traffic-sequence';
 
 const MINUTES = 120, TICK = 0.05;
 const EXCLUSIVE: ReadonlySet<Leg> = new Set(['final', 'runway', 'departure']);
 
-type Case = { name: string; a: PatternAirport; hdg: number; offsets?: readonly number[] };
+type Case = { name: string; a: PatternAirport; hdg: number; wind: Wind | null; offsets?: readonly number[] };
 const cases: Case[] = [];
 for (const id of ['KLXL', '18V', 'P52'] as const) {
   const f = airportTraffic[id];
   // Both runway directions, each with a 10 kt wind straight down that runway.
-  for (const end of f.ends) cases.push({ name: `${id} rwy ${end.runway}`, a: patternFor(f, end), hdg: end.trueHdg });
+  for (const end of f.ends) {
+    const wind = { dir: end.trueHdg, kt: 10 };
+    assert.equal(pickRunway(f, wind).runway, end.runway); // the wind really selects this runway
+    cases.push({ name: `${id} rwy ${end.runway}`, a: patternFor(f, end), hdg: end.trueHdg, wind });
+  }
+  const calm = pickRunway(f, null);
+  cases.push({ name: `${id} calm rwy ${calm.runway}`, a: patternFor(f, calm), hdg: calm.trueHdg, wind: null });
 }
 // The oblique (perspective) view uses the same TrafficSchedule with its own offsets.
-cases.push({ name: 'KLXL oblique rwy 13', a: KLXL_OBLIQUE_PATTERN, hdg: 131, offsets: [.08, .68, .95] });
+cases.push({ name: 'KLXL oblique rwy 13', a: KLXL_OBLIQUE_PATTERN, hdg: 131, wind: { dir: 131, kt: 10 }, offsets: [.08, .68, .95] });
 
 for (const c of cases) {
   test(`${c.name}: ${MINUTES} simulated minutes follow pattern rules`, () => {
     const { a } = c;
-    const s = new TrafficSchedule(a, a.aircraft, { dir: c.hdg, kt: 10 }, c.hdg, c.offsets);
+    const s = new TrafficSchedule(a, a.aircraft, c.wind, c.hdg, c.offsets);
     const end = MINUTES * 60, min = patternSpacingPx(a);
     s.ensure(end);
     // Runway windows (base-to-final turn → past departure end) never overlap.
