@@ -25,7 +25,10 @@ export type FlightPlan = { segments: Segment[]; seconds: number; airport: Patter
 const KT_MPS = 1852 / 3600;
 // extendPx lengthens the downwind leg (base turn and final start move out along the
 // runway axis), the way a controller sequences traffic; 0 keeps the published corners.
-export function makeFlightPlan(a: PatternAirport, reg: string, wind: Wind | null = null, runwayHeading = Number(a.runway) * 10, extendPx = 0): FlightPlan {
+// orbits adds that many visible 360s on downwind, turning away from the runway, for
+// delays an extension alone would make too long.
+export const ORBIT_RADIUS_OF_OFFSET = 0.35;
+export function makeFlightPlan(a: PatternAirport, reg: string, wind: Wind | null = null, runwayHeading = Number(a.runway) * 10, extendPx = 0, orbits = 0): FlightPlan {
   const original = patternWaypoints(a);
   if (extendPx > 0) {
     const len = Math.hypot(a.end.x - a.threshold.x, a.end.y - a.threshold.y) || 1;
@@ -39,6 +42,20 @@ export function makeFlightPlan(a: PatternAirport, reg: string, wind: Wind | null
   if (!takeoff || !cross) return { segments: [], seconds: 1, airport: a };
   const upwind = { x: takeoff.x + (cross.x - takeoff.x) * .22, y: takeoff.y + (cross.y - takeoff.y) * .22, agl: takeoff.agl + (cross.agl - takeoff.agl) * .22, knots: 73, phase: 'Upwind' };
   const points = [...original.slice(0, 2), upwind, ...original.slice(2)];
+  const mid = points[5], baseCorner = points[6];
+  if (orbits > 0 && mid && baseCorner) {
+    const len = Math.hypot(a.end.x - a.threshold.x, a.end.y - a.threshold.y) || 1;
+    const u = { x: (a.end.x - a.threshold.x) / len, y: (a.end.y - a.threshold.y) / len };
+    const sign = a.side === 'left' ? 1 : -1, n = { x: u.y * sign, y: -u.x * sign }, d = { x: -u.x, y: -u.y };
+    // Start the 360 a quarter of the way from midfield toward the base corner.
+    const q = { x: mid.x + (baseCorner.x - mid.x) * .25, y: mid.y + (baseCorner.y - mid.y) * .25 };
+    const r = a.offset * ORBIT_RADIUS_OF_OFFSET, c = { x: q.x + n.x * r, y: q.y + n.y * r };
+    const ring = Array.from({ length: 16 * orbits }, (_, k) => {
+      const th = (k + 1) / 16 * 2 * Math.PI;
+      return { x: c.x + r * (-n.x * Math.cos(th) + d.x * Math.sin(th)), y: c.y + r * (-n.y * Math.cos(th) + d.y * Math.sin(th)), agl: mid.agl, knots: mid.knots, phase: 'Downwind' };
+    });
+    points.splice(6, 0, { ...q, agl: mid.agl, knots: mid.knots, phase: 'Downwind' }, ...ring);
+  }
   const runwayAngle = Math.atan2(a.end.y - a.threshold.y, a.end.x - a.threshold.x);
   const type = aircraftType(reg);
   const legs = points.slice(0, -1).flatMap((p, i) => {
