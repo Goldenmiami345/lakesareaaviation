@@ -205,11 +205,14 @@ html.journey-free, html.journey-free.journey-snap { scroll-snap-type: none !impo
 .traffic-tag.is-pinging .traffic-ping { animation: traffic-ping .6s ease-out; }
 @keyframes traffic-ping { 0% { transform: scale(1); opacity: .35; } 100% { transform: scale(3); opacity: 0; } }
 .traffic-target { fill:none; stroke:currentColor; stroke-width:.8; opacity:.4; pointer-events:none; }
-.traffic-pattern-guide { color:var(--radar); pointer-events:none; }
-.traffic-pattern-halo { fill:none; stroke:var(--ink); stroke-width:3.5; stroke-opacity:.55; stroke-dasharray:6 4; stroke-linecap:butt; }
-.traffic-pattern-line,.traffic-final-line { fill:none; stroke:currentColor; stroke-width:1.5; stroke-dasharray:6 4; stroke-opacity:.48; }
-.traffic-final-line { stroke-opacity:.8; }
-.traffic-leg-label { fill:currentColor; fill-opacity:.85; font:9px ui-monospace,monospace; paint-order:stroke; stroke:var(--ink); stroke-width:2px; stroke-opacity:.6; text-anchor:middle; dominant-baseline:middle; letter-spacing:0; }
+/* Subtle drawn pattern: 1px dashes at ~half the former opacity, labels ~60%; it
+   fades (600ms) in/out via data-shown, pulsed or permanent per traffic_pattern_mode. */
+.traffic-pattern-guide { color:var(--radar); pointer-events:none; opacity:0; transition:opacity .6s ease; }
+.traffic-pattern-guide[data-shown] { opacity:1; }
+.traffic-pattern-halo { fill:none; stroke:var(--ink); stroke-width:2.5; stroke-opacity:.28; stroke-dasharray:6 4; stroke-linecap:butt; }
+.traffic-pattern-line,.traffic-final-line { fill:none; stroke:currentColor; stroke-width:1; stroke-dasharray:6 4; stroke-opacity:.24; }
+.traffic-final-line { stroke-opacity:.4; }
+.traffic-leg-label { fill:currentColor; fill-opacity:.6; font:9px ui-monospace,monospace; paint-order:stroke; stroke:var(--ink); stroke-width:2px; stroke-opacity:.6; text-anchor:middle; dominant-baseline:middle; letter-spacing:0; }
 .traffic-history { fill:currentColor; pointer-events:none; }
 .traffic-ground-shadow { filter:blur(.6px); }
 .aircraft-vector { --plane-stripe:var(--aircraft-red); }

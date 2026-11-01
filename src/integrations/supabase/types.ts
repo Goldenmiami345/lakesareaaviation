@@ -19,6 +19,7 @@ export type Database = {
           accent_theme: string
           id: string
           show_traffic_pattern: boolean
+          traffic_pattern_mode: string
           updated_at: string
           updated_by: string | null
         }
@@ -26,6 +27,7 @@ export type Database = {
           accent_theme?: string
           id: string
           show_traffic_pattern?: boolean
+          traffic_pattern_mode?: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -33,6 +35,7 @@ export type Database = {
           accent_theme?: string
           id?: string
           show_traffic_pattern?: boolean
+          traffic_pattern_mode?: string
           updated_at?: string
           updated_by?: string | null
         }
