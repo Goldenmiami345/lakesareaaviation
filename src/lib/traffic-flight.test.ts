@@ -17,3 +17,16 @@ test('map derivative equals displayed ground speed within rounding',()=>{
 test('speed is continuous at every leg boundary',()=>{const plan=makeFlightPlan(airportTraffic.KLXL,'N4383P',{dir:150,kt:12},131);for(const s of plan.segments){assert.ok(Math.abs(sampleFlight(plan,s.start-.001).knots-sampleFlight(plan,s.start+.001).knots)<=1);}});
 test('flight uses all original corners and altitude endpoints',()=>{const a=airportTraffic.KLXL,plan=makeFlightPlan(a,'N6717A');for(const p of patternWaypoints(a)){assert.ok(plan.segments.some(s=>Math.hypot(s.p.x-p.x,s.p.y-p.y)<.001&&Math.abs(s.p.agl-p.agl)<.001)||plan.segments.some(s=>Math.hypot(s.q.x-p.x,s.q.y-p.y)<.001));}});
 test('calls last 3.5s, ping lasts .6s and max two',()=>{assert.equal(CALL_DURATION_MS,3500);assert.equal(PING_DURATION_MS,600);assert.equal(MAX_CALLS,2);});
+
+test('172 threshold-to-liftoff takes 15–20s and departure clears in about 10s at Little Falls',()=>{
+ const a=airportTraffic.KLXL,p=makeFlightPlan(a,'N8570B');
+ const len=Math.hypot(a.end.x-a.threshold.x,a.end.y-a.threshold.y);
+ const along=(t:number)=>{const q=sampleFlight(p,t);return ((q.x-a.threshold.x)*(a.end.x-a.threshold.x)+(q.y-a.threshold.y)*(a.end.y-a.threshold.y))/len;};
+ const lift=p.segments.find(s=>s.phase==='Takeoff')?.start;
+ assert.ok(lift!==undefined); if(lift===undefined)return;
+ let threshold=p.seconds,depart=lift;
+ for(let t=p.segments.find(s=>s.phase==='Final')?.start??0;t<p.seconds;t+=.01)if(along(t)>=0){threshold=t;break;}
+ for(let t=lift;t<p.seconds;t+=.01)if(along(t)>=len){depart=t;break;}
+ assert.ok(p.seconds-threshold+lift>=15&&p.seconds-threshold+lift<=20);
+ assert.ok(depart-lift>=9&&depart-lift<=15,`departure ${depart-lift}`);
+});
