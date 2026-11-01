@@ -31,7 +31,7 @@ const KT_MPS = 1852 / 3600;
 export type HoldPoint = 'crosswind' | 'downwind-early' | 'downwind-late';
 export type Hold = { at: HoldPoint; turns: number; radius: number };
 /** Fraction along the leg (points[k] → points[k+1] after the upwind report is added) where each hold starts. */
-export const HOLD_ENTRY: Record<HoldPoint, { k: number; f: number }> = { 'downwind-late': { k: 5, f: .3 }, 'downwind-early': { k: 4, f: .35 }, crosswind: { k: 3, f: .5 } };
+export const HOLD_ENTRY: Record<HoldPoint, { k: number; f: number }> = { 'downwind-late': { k: 5, f: .3 }, 'downwind-early': { k: 4, f: .55 }, crosswind: { k: 3, f: .5 } };
 export function makeFlightPlan(a: PatternAirport, reg: string, wind: Wind | null = null, runwayHeading = Number(a.runway) * 10, extendPx = 0, holds: readonly Hold[] = []): FlightPlan {
   const original = patternWaypoints(a);
   if (extendPx > 0) {
