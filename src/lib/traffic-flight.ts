@@ -25,10 +25,11 @@ export type FlightPlan = { segments: Segment[]; seconds: number; airport: Patter
 const KT_MPS = 1852 / 3600;
 // extendPx lengthens the downwind leg (base turn and final start move out along the
 // runway axis), the way a controller sequences traffic; 0 keeps the published corners.
-// orbits / crosswindOrbits add visible 360s on downwind / crosswind (turning away
-// from the runway) for delays an extension alone would make too long.
-export const ORBIT_RADIUS_OF_OFFSET = 0.35;
-export function makeFlightPlan(a: PatternAirport, reg: string, wind: Wind | null = null, runwayHeading = Number(a.runway) * 10, extendPx = 0, orbits = 0, crosswindOrbits = 0): FlightPlan {
+// holds add visible 360s (turning away from the runway) at fixed hold points on
+// crosswind and downwind, for sequencing delays an extension alone cannot absorb.
+export type HoldPoint = 'crosswind' | 'downwind-early' | 'downwind-late';
+export type Hold = { at: HoldPoint; turns: number; radius: number };
+export function makeFlightPlan(a: PatternAirport, reg: string, wind: Wind | null = null, runwayHeading = Number(a.runway) * 10, extendPx = 0, holds: readonly Hold[] = []): FlightPlan {
   const original = patternWaypoints(a);
   if (extendPx > 0) {
     const len = Math.hypot(a.end.x - a.threshold.x, a.end.y - a.threshold.y) || 1;
@@ -42,25 +43,26 @@ export function makeFlightPlan(a: PatternAirport, reg: string, wind: Wind | null
   if (!takeoff || !cross) return { segments: [], seconds: 1, airport: a };
   const upwind = { x: takeoff.x + (cross.x - takeoff.x) * .22, y: takeoff.y + (cross.y - takeoff.y) * .22, agl: takeoff.agl + (cross.agl - takeoff.agl) * .22, knots: 73, phase: 'Upwind' };
   const points = [...original.slice(0, 2), upwind, ...original.slice(2)];
-  // Downwind 360s start a quarter of the way from midfield toward the base corner
-  // and turn outward (away from the runway); crosswind 360s start midway and turn
-  // away from the departure end. Each ring returns exactly to its entry point and
-  // heading. Downwind is inserted first so the crosswind indices stay valid.
+  // Downwind 360s turn outward (away from the runway); crosswind 360s turn away from
+  // the departure end. Each ring returns exactly to its entry point and heading.
+  // Later hold points are inserted first so earlier indices stay valid.
   const len = Math.hypot(a.end.x - a.threshold.x, a.end.y - a.threshold.y) || 1;
   const u = { x: (a.end.x - a.threshold.x) / len, y: (a.end.y - a.threshold.y) / len };
   const sign = a.side === 'left' ? 1 : -1, n = { x: u.y * sign, y: -u.x * sign };
-  const insertOrbits = (k: number, f: number, d: { x: number; y: number }, side: { x: number; y: number }, count: number) => {
-    const from = points[k], to = points[k + 1]; if (!from || !to || count <= 0) return;
+  const insertOrbits = (k: number, f: number, d: { x: number; y: number }, side: { x: number; y: number }, hold: Hold | undefined) => {
+    const from = points[k], to = points[k + 1], count = Math.round(hold?.turns ?? 0); if (!from || !to || !hold || count <= 0 || hold.radius <= 0) return;
     const q = { x: from.x + (to.x - from.x) * f, y: from.y + (to.y - from.y) * f, agl: from.agl + (to.agl - from.agl) * f };
-    const r = a.offset * ORBIT_RADIUS_OF_OFFSET, c = { x: q.x + side.x * r, y: q.y + side.y * r };
+    const r = hold.radius, c = { x: q.x + side.x * r, y: q.y + side.y * r };
     const ring = Array.from({ length: 16 * count }, (_, j) => {
       const th = (j + 1) / 16 * 2 * Math.PI;
       return { x: c.x + r * (-side.x * Math.cos(th) + d.x * Math.sin(th)), y: c.y + r * (-side.y * Math.cos(th) + d.y * Math.sin(th)), agl: q.agl, knots: from.knots, phase: from.phase };
     });
     points.splice(k + 1, 0, { ...q, knots: from.knots, phase: from.phase }, ...ring);
   };
-  insertOrbits(5, .25, { x: -u.x, y: -u.y }, n, orbits);
-  insertOrbits(3, .5, n, u, crosswindOrbits);
+  const hold = (at: HoldPoint) => holds.find((h) => h.at === at);
+  insertOrbits(5, .3, { x: -u.x, y: -u.y }, n, hold('downwind-late'));
+  insertOrbits(4, .35, { x: -u.x, y: -u.y }, n, hold('downwind-early'));
+  insertOrbits(3, .5, n, u, hold('crosswind'));
   const runwayAngle = Math.atan2(a.end.y - a.threshold.y, a.end.x - a.threshold.x);
   const type = aircraftType(reg);
   const legs = points.slice(0, -1).flatMap((p, i) => {
