@@ -81,7 +81,7 @@ export function glideTo(top: number, instant = false) {
 export function jumpToPageTop() {
   const root = document.documentElement;
   root.classList.add("journey-free");
-  cancelAnimationFrame(tweenFrame); paging = false; root.classList.remove("journey-paging");
+  releasePaging();
   wantedMode = "fade"; setMode("fade");
   window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   window.requestAnimationFrame(() => window.requestAnimationFrame(() => {

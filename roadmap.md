@@ -1,8 +1,9 @@
 # Roadmap
 
-- [ ] Restore native journey boundaries and verify wheel-only reversals and touch paging.
-- [ ] Keep desktop aircraft cards open until the pointer moves away; preserve touch taps.
-- [ ] Re-time traffic and prefer extensions with rare holds; verify safety, all tests and prerender HTML.
+- [x] Restore native journey boundaries; real-touch paging and stationary-mouse wheel/burst reversals pass.
+- [x] Keep desktop aircraft cards open until pointer moves away; both views pass live checks.
+- [x] Re-time traffic with circle-free elongated circuits; 104 tests and fresh 27-page server HTML guard pass.
+- [ ] Verify production-output prerender gate for this round: dist/client is absent; automatic checks do not generate it.
 
 - [x] Fix contact slash-dependent hydration; verify four pages using production React replay of the exact repair and updated preview.
 - [x] Restore all three desktop airports to 1.15×; preserve phone 1.1029×/1.25×/1.25×.
