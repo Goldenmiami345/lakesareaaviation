@@ -23,8 +23,11 @@ export function SmoothWheel() {
         prevent: (node: HTMLElement) => inJourney() || !!node.closest?.("[data-model-gesture]"),
       });
       // Reaching a pinned journey ends the smooth glide there, so stage paging starts clean.
+      // Inside a pinned journey Lenis steps aside entirely (smoothWheel off = untouched native wheel).
+      const sync = () => { lenis.options.smoothWheel = !inJourney(); };
       lenis.on("scroll", () => { if (inJourney() && lenis.isScrolling === "smooth") { lenis.stop(); lenis.start(); } });
-      destroy = () => lenis.destroy();
+      window.addEventListener("wheel", sync, { capture: true, passive: true });
+      destroy = () => { window.removeEventListener("wheel", sync, { capture: true }); lenis.destroy(); };
     });
     return () => { cancelled = true; destroy?.(); };
   }, []);
