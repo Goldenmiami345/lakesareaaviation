@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Swap three owner cut-outs and remove temporary originals page; verify shared photos and HTML guard.
+
 - [ ] Replace/enable three fleet and traffic-card models; preserve posters and isolated gestures.
 - [ ] Replace Cardinal cut-out and add hidden full-resolution fleet originals page.
 - [ ] Verify phone/desktop model motion, photo viewer, tests and page HTML; preserve walk-around assets.
