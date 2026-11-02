@@ -135,3 +135,13 @@ describe("one gesture = one stop", async () => {
     assert.equal(resolveMode("stack", "fade", isModeSwitchPoint(stage, 3000)), "fade");
   });
 });
+
+test('native boundaries never page or settle; fully pinned partial entry pages only on input', async () => {
+  const {pinnedStepDown}=await import('./journey-pacing');
+  const stages=[800,1600,2400];
+  assert.equal(pinnedStepDown(stages,799,800,2400),null);
+  assert.equal(pinnedStepDown(stages,800,800,2400),1600);
+  assert.equal(pinnedStepDown(stages,1100,800,2400),1600);
+  assert.equal(pinnedStepDown(stages,2400,800,2400),null);
+  assert.equal(pinnedStepDown(stages,2401,800,2400),null);
+});

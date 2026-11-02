@@ -6,6 +6,7 @@ import { AircraftMedia } from './aircraft-media';
 
 import { fleet } from '../lib/site-data';
 import { callSideCandidates, callSideFits, type CallSide } from '../lib/traffic-call-placement';
+import { shouldCloseTrafficHover } from '../lib/traffic-hover';
 
 export type TrafficPlaneInfo = { reg: string; type: string; nickname?: string };
 /** Fleet and traffic always share the exact same alpha cutout. */
@@ -37,6 +38,7 @@ export function useTrafficSelection(active: boolean) {
   selectedRef.current = selected;
   const pointerType = useRef<string>("mouse");
   const lastDown = useRef(0);
+  const hover = useRef<{ x: number; y: number; panel: Element } | null>(null);
   const navigate = useNavigate();
   const open = useCallback((reg: string) => {
     setSelected(null);
@@ -51,15 +53,31 @@ export function useTrafficSelection(active: boolean) {
       if (t?.closest?.("[data-traffic-hit],[data-traffic-card]")) return;
       setSelected(null);
     };
+    const move = (e: PointerEvent) => {
+      const h = hover.current;
+      if (!h || e.pointerType !== 'mouse') return;
+      const r = h.panel.getBoundingClientRect();
+      const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+      const over = !!(e.target as Element | null)?.closest?.('[data-traffic-hit],[data-traffic-card]');
+      if (shouldCloseTrafficHover(h, {x:e.clientX,y:e.clientY}, inside, over)) { hover.current = null; setSelected(null); }
+    };
+    const leave = () => { hover.current = null; setSelected(null); };
+    const panel = hover.current?.panel;
     document.addEventListener("pointerdown", close, true);
-    return () => document.removeEventListener("pointerdown", close, true);
+    document.addEventListener('pointermove', move, true);
+    panel?.addEventListener('pointerleave', leave);
+    return () => { document.removeEventListener("pointerdown", close, true); document.removeEventListener('pointermove', move, true); panel?.removeEventListener('pointerleave', leave); };
   }, [selected]);
 
   const hitProps = (i: number, reg: string) => ({
     "data-traffic-hit": "",
-    onPointerDown: (e: React.PointerEvent) => { pointerType.current = e.pointerType; lastDown.current = performance.now(); },
-    onPointerEnter: (e: React.PointerEvent) => { if (e.pointerType === "mouse") setSelected(i); },
-    onPointerLeave: (e: React.PointerEvent) => { if (e.pointerType === "mouse") setSelected((s) => (s === i ? null : s)); },
+    onPointerDown: (e: React.PointerEvent) => { pointerType.current = e.pointerType; if(e.pointerType !== 'mouse') hover.current = null; lastDown.current = performance.now(); },
+    onPointerEnter: (e: React.PointerEvent) => {
+      if (e.pointerType !== 'mouse' || selectedRef.current !== null) return;
+      const panel = e.currentTarget.closest('.journey-viewport') ?? e.currentTarget.closest('svg');
+      if (panel) hover.current = {x:e.clientX,y:e.clientY,panel};
+      setSelected(i);
+    },
     onClick: () => {
       if (pointerType.current === "mouse" || selectedRef.current === i) open(reg);
       else setSelected(i);

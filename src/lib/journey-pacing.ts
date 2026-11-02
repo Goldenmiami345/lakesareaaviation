@@ -137,6 +137,12 @@ export function nextStopDown(stops: number[], y: number): number | null {
   return sorted.find((s) => s > y + STOP_TOL) ?? null;
 }
 
+// Only fully pinned journeys may page, and only to another stage of that journey.
+export function pinnedStepDown(stageStops: number[], y: number, pinnedStart: number, pinnedEnd: number) {
+  if (y < pinnedStart || y > pinnedEnd) return null;
+  return nextStopDown(stageStops, y);
+}
+
 // Journey scroll fraction (0..1) at each stage stop; the last stage rests at the end of the pinned stretch.
 export function stageStopFraction(index: number, count: number) {
   const n = Math.max(1, count);
