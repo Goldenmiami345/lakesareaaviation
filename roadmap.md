@@ -1,5 +1,9 @@
 # Roadmap
 
+- [ ] Replace/enable three fleet and traffic-card models; preserve posters and isolated gestures.
+- [ ] Replace Cardinal cut-out and add hidden full-resolution fleet originals page.
+- [ ] Verify phone/desktop model motion, photo viewer, tests and page HTML; preserve walk-around assets.
+
 - [x] Restore native journey boundaries; real-touch paging and stationary-mouse wheel/burst reversals pass.
 - [x] Keep desktop aircraft cards open until pointer moves away; both views pass live checks.
 - [x] Re-time traffic with circle-free elongated circuits; 104 tests and fresh 27-page server HTML guard pass.
