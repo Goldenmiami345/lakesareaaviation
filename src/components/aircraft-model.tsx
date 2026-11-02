@@ -1,26 +1,55 @@
 import { createElement, useEffect, useRef, useState } from 'react';
-import { MODEL_SETTINGS, MODEL_RESUME_MS } from '../lib/model-settings';
+import { MODEL_SETTINGS, MODEL_RESUME_MS, modelOrbitRadius } from '../lib/model-settings';
+
+type Viewer = HTMLElement & {
+  loaded: boolean;
+  getDimensions: () => { x: number; y: number; z: number };
+  getCameraOrbit: () => { radius: number };
+  getFieldOfView: () => number;
+  jumpCameraToGoal: () => void;
+  resetTurntableRotation?: () => void;
+};
 
 export default function AircraftModel({ src, label, poster, autoRotate = true, onLoad }: { src: string; label: string; poster?: string; autoRotate?: boolean; onLoad?: () => void }) {
   const [ready, setReady] = useState(false);
   const ref = useRef<HTMLElement | null>(null);
   useEffect(() => {
-    const el=ref.current;if(!ready||!el)return;
+    const node=ref.current;if(!ready||!node)return;
+    const el=node as Viewer;
     let resumeTimer=0, down=false, lastTap=0;
+    let sphere=0, homeOrbit=MODEL_SETTINGS['camera-orbit'] as string;
     const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const loaded=()=>{el.dataset['modelLoaded']='true';onLoad?.();};
+    const fit=()=>{
+      if(!sphere)return;
+      const {width,height}=el.getBoundingClientRect();if(!width||!height)return;
+      const radius=modelOrbitRadius(sphere,el.getDimensions().y,width/height,el.getFieldOfView());
+      homeOrbit=`35deg 73deg ${radius}m`;
+      el.setAttribute('camera-orbit',homeOrbit);
+      el.jumpCameraToGoal();
+    };
+    const loaded=()=>{
+      if(!sphere){
+        // The initial auto orbit is 105% of R/sin(half framed FOV).
+        // Recover the tight mesh-derived sphere using public viewer APIs only.
+        sphere=el.getCameraOrbit().radius/1.05*Math.sin(30*Math.PI/360);
+        fit();
+      }
+      el.dataset['modelLoaded']='true';onLoad?.();
+    };
     el.addEventListener('load',loaded);
+    if(el.loaded)loaded();
+    const resize=new ResizeObserver(()=>fit());resize.observe(el);
     const pause=()=>{window.clearTimeout(resumeTimer);el.removeAttribute('auto-rotate');};
     const resume=()=>{window.clearTimeout(resumeTimer);if(autoRotate&&!reduce&&!down)resumeTimer=window.setTimeout(()=>el.setAttribute('auto-rotate',''),MODEL_RESUME_MS);};
     const start=()=>{down=true;pause();};
     const end=()=>{down=false;resume();};
     const change=(e:Event)=>{if((e as CustomEvent<{source:string}>).detail?.source==='user-interaction'){pause();resume();}};
-    const reset=()=>{el.setAttribute('camera-orbit',MODEL_SETTINGS['camera-orbit']);el.setAttribute('field-of-view',MODEL_SETTINGS['field-of-view']);(el as HTMLElement & {resetTurntableRotation?:()=>void}).resetTurntableRotation?.();pause();resume();};
+    const reset=()=>{el.setAttribute('camera-orbit',homeOrbit);el.setAttribute('field-of-view',MODEL_SETTINGS['field-of-view']);el.resetTurntableRotation?.();pause();resume();};
     const tap=(e:PointerEvent)=>{if(e.pointerType==='mouse')return;const now=performance.now();if(now-lastTap<300)reset();lastTap=now;};
     if(reduce)pause();
     el.addEventListener('pointerdown',start);el.addEventListener('pointerup',tap);window.addEventListener('pointerup',end);window.addEventListener('pointercancel',end);
     el.addEventListener('camera-change',change);el.addEventListener('dblclick',reset);
-    return()=>{window.clearTimeout(resumeTimer);el.removeEventListener('load',loaded);el.removeEventListener('pointerdown',start);el.removeEventListener('pointerup',tap);window.removeEventListener('pointerup',end);window.removeEventListener('pointercancel',end);el.removeEventListener('camera-change',change);el.removeEventListener('dblclick',reset);};
+    return()=>{resize.disconnect();window.clearTimeout(resumeTimer);el.removeEventListener('load',loaded);el.removeEventListener('pointerdown',start);el.removeEventListener('pointerup',tap);window.removeEventListener('pointerup',end);window.removeEventListener('pointercancel',end);el.removeEventListener('camera-change',change);el.removeEventListener('dblclick',reset);};
   },[ready,onLoad,autoRotate]);
   useEffect(() => {
     // The SSR guard removes model-viewer from the server bundle entirely. Without it the
