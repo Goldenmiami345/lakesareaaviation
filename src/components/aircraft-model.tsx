@@ -13,6 +13,8 @@ type Viewer = HTMLElement & {
 export default function AircraftModel({ src, label, poster, autoRotate = true, onLoad }: { src: string; label: string; poster?: string; autoRotate?: boolean; onLoad?: () => void }) {
   const [ready, setReady] = useState(false);
   const ref = useRef<HTMLElement | null>(null);
+  const loadCallback=useRef(onLoad);
+  useEffect(()=>{loadCallback.current=onLoad;},[onLoad]);
   useEffect(() => {
     const node=ref.current;if(!ready||!node)return;
     const el=node as Viewer;
@@ -34,7 +36,7 @@ export default function AircraftModel({ src, label, poster, autoRotate = true, o
         sphere=el.getCameraOrbit().radius/1.05*Math.sin(30*Math.PI/360);
         fit();
       }
-      el.dataset['modelLoaded']='true';onLoad?.();
+      el.dataset['modelLoaded']='true';loadCallback.current?.();
     };
     el.addEventListener('load',loaded);
     if(el.loaded)loaded();
@@ -50,7 +52,7 @@ export default function AircraftModel({ src, label, poster, autoRotate = true, o
     el.addEventListener('pointerdown',start);el.addEventListener('pointerup',tap);window.addEventListener('pointerup',end);window.addEventListener('pointercancel',end);
     el.addEventListener('camera-change',change);el.addEventListener('dblclick',reset);
     return()=>{resize.disconnect();window.clearTimeout(resumeTimer);el.removeEventListener('load',loaded);el.removeEventListener('pointerdown',start);el.removeEventListener('pointerup',tap);window.removeEventListener('pointerup',end);window.removeEventListener('pointercancel',end);el.removeEventListener('camera-change',change);el.removeEventListener('dblclick',reset);};
-  },[ready,onLoad,autoRotate]);
+  },[ready,autoRotate]);
   useEffect(() => {
     // The SSR guard removes model-viewer from the server bundle entirely. Without it the
     // production bundler merged model-viewer (top-level `class extends HTMLElement`) into a
