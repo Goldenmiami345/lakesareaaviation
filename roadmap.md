@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Tighten shared model camera framing; fleet widths 86.9–87.6% at 390×844/1280×800, 14 tests pass. Traffic slots reach 57–60%: their unchanged 80px height limits safe framing at 73° polar; 85% requires taller slots or a lower view.
+
 - [x] Swap three owner cut-outs and remove originals page (404); fleet tests and 27-page fresh server HTML guard pass. Production-output gate still requires dist/client.
 
 - [ ] Replace/enable three fleet and traffic-card models; preserve posters and isolated gestures.
