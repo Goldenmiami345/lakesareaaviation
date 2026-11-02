@@ -33,8 +33,7 @@ function HomePage() {
         <div className="relative mx-auto flex min-h-[100svh] max-w-7xl flex-col justify-end px-5 pb-7 pt-24 sm:pb-[4.5rem] sm:pt-32 lg:px-8">
           <div className="max-w-3xl">
             <p className="stage-label hero-step" style={{ ["--d" as string]: "0ms" }}>Accelerated flight training</p>
-            <h1 className="mt-2.5 whitespace-nowrap font-display text-[2.65rem] leading-[.94] sm:mt-3 sm:text-7xl lg:text-[5.4rem]"><span className="line-mask hero-mask"><span style={{ ["--d" as string]: "90ms" }}>Zero to Hero.</span></span></h1>
-            <p className="hero-step mt-3.5 max-w-sm text-base leading-relaxed text-background/80 sm:mt-4 sm:max-w-lg sm:text-lg" style={{ ["--d" as string]: "180ms" }}>From your first flight to commercial pilot and instructor.</p>
+            <h1 className="mt-2.5 text-balance font-display text-[2rem] leading-[1] sm:mt-3 sm:text-6xl lg:text-[4.8rem]"><span className="line-mask hero-mask"><span style={{ ["--d" as string]: "90ms" }}>BECOME A PROFESSIONAL PILOT</span></span></h1>
           </div>
           <HeroCta />
           <nav aria-label="Training locations" className="hero-step mt-4 flex flex-nowrap items-center gap-1 text-[10px] font-bold uppercase tracking-[0.08em] text-background/75 sm:gap-2 sm:text-[11px] sm:tracking-[0.14em]" style={{ ["--d" as string]: "360ms" }}>
