@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Tighten shared model camera framing; verify fleet and traffic-card widths at 390×844 and 1280×800 without changing interaction or rotation.
+
 - [x] Swap three owner cut-outs and remove originals page (404); fleet tests and 27-page fresh server HTML guard pass. Production-output gate still requires dist/client.
 
 - [ ] Replace/enable three fleet and traffic-card models; preserve posters and isolated gestures.
