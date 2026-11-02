@@ -19,11 +19,13 @@ export function modelOrbitRadius(sphereRadius: number, height: number, aspect: n
   // projected silhouette, including perspective depth, to protect the whole turn.
   for (let i = 0; i < 360; i++) {
     const angle = i * Math.PI / 180;
-    const x = sphereRadius * Math.cos(angle), z = sphereRadius * Math.sin(angle);
-    for (const y of [-height / 2, height / 2]) {
+    for (let j = -90; j <= 90; j += 5) {
+      const latitude=j*Math.PI/180;
+      const x = sphereRadius * Math.cos(angle)*Math.cos(latitude), z = sphereRadius * Math.sin(angle)*Math.cos(latitude);
+      const y=height/2*Math.sin(latitude);
       const depth = z * Math.sin(polar) + y * Math.cos(polar);
       const vertical = y * Math.sin(polar) - z * Math.cos(polar);
-      distance = Math.max(distance, depth + Math.abs(x) / (tan * aspect * .96), depth + Math.abs(vertical) / (tan * .90));
+      distance = Math.max(distance, depth + Math.abs(x) / (tan * aspect * .98), depth + Math.abs(vertical) / (tan * .90));
     }
   }
   return distance;

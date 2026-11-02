@@ -23,10 +23,11 @@ test('camera radius contains the whole rotational envelope at fleet and traffic 
   for (const aspect of [4/3, 2.5, 2.7]) {
     const r=5.75,h=2.8,d=modelOrbitRadius(r,h,aspect,30),tan=Math.tan(Math.PI/12),phi=73*Math.PI/180;
     for(let i=0;i<720;i++) {
-      const a=i*Math.PI/360,x=r*Math.cos(a),z=r*Math.sin(a);
-      for(const y of [-h/2,h/2]) {
+      const a=i*Math.PI/360;
+      for(let j=-90;j<=90;j+=5) {
+        const lat=j*Math.PI/180,x=r*Math.cos(a)*Math.cos(lat),z=r*Math.sin(a)*Math.cos(lat),y=h/2*Math.sin(lat);
         const depth=z*Math.sin(phi)+y*Math.cos(phi);
-        assert.ok(Math.abs(x)/(d-depth)/tan/aspect <= .96001);
+        assert.ok(Math.abs(x)/(d-depth)/tan/aspect <= .9801);
         assert.ok(Math.abs(y*Math.sin(phi)-z*Math.cos(phi))/(d-depth)/tan <= .90001);
       }
     }
