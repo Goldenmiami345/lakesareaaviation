@@ -15,6 +15,7 @@ import { Route as AcceleratedTrainingRouteImport } from './routes/accelerated-tr
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as FleetRouteImport } from './routes/fleet'
+import { Route as FleetOriginalsRouteImport } from './routes/fleet-originals'
 import { Route as HeroOptionsRouteImport } from './routes/hero-options'
 import { Route as IntroductoryFlightsRouteImport } from './routes/introductory-flights'
 import { Route as LocalTrainingRouteImport } from './routes/local-training'
@@ -62,6 +63,11 @@ const ContactRoute = ContactRouteImport.update({
 const FleetRoute = FleetRouteImport.update({
   id: '/fleet',
   path: '/fleet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FleetOriginalsRoute = FleetOriginalsRouteImport.update({
+  id: '/fleet-originals',
+  path: '/fleet-originals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HeroOptionsRoute = HeroOptionsRouteImport.update({
@@ -162,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/contact': typeof ContactRoute
   '/fleet': typeof FleetRoute
+  '/fleet-originals': typeof FleetOriginalsRoute
   '/hero-options': typeof HeroOptionsRoute
   '/introductory-flights': typeof IntroductoryFlightsRoute
   '/local-training': typeof LocalTrainingRoute
@@ -188,6 +195,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/contact': typeof ContactRoute
   '/fleet': typeof FleetRoute
+  '/fleet-originals': typeof FleetOriginalsRoute
   '/hero-options': typeof HeroOptionsRoute
   '/introductory-flights': typeof IntroductoryFlightsRoute
   '/local-training': typeof LocalTrainingRoute
@@ -214,6 +222,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/contact': typeof ContactRoute
   '/fleet': typeof FleetRoute
+  '/fleet-originals': typeof FleetOriginalsRoute
   '/hero-options': typeof HeroOptionsRoute
   '/introductory-flights': typeof IntroductoryFlightsRoute
   '/local-training': typeof LocalTrainingRoute
@@ -242,6 +251,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/contact'
     | '/fleet'
+    | '/fleet-originals'
     | '/hero-options'
     | '/introductory-flights'
     | '/local-training'
@@ -268,6 +278,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/contact'
     | '/fleet'
+    | '/fleet-originals'
     | '/hero-options'
     | '/introductory-flights'
     | '/local-training'
@@ -293,6 +304,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/contact'
     | '/fleet'
+    | '/fleet-originals'
     | '/hero-options'
     | '/introductory-flights'
     | '/local-training'
@@ -320,6 +332,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   ContactRoute: typeof ContactRoute
   FleetRoute: typeof FleetRoute
+  FleetOriginalsRoute: typeof FleetOriginalsRoute
   HeroOptionsRoute: typeof HeroOptionsRoute
   IntroductoryFlightsRoute: typeof IntroductoryFlightsRoute
   LocalTrainingRoute: typeof LocalTrainingRoute
@@ -380,6 +393,13 @@ declare module '@tanstack/react-router' {
       path: '/fleet'
       fullPath: '/fleet'
       preLoaderRoute: typeof FleetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fleet-originals': {
+      id: '/fleet-originals'
+      path: '/fleet-originals'
+      fullPath: '/fleet-originals'
+      preLoaderRoute: typeof FleetOriginalsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/hero-options': {
@@ -532,6 +552,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   ContactRoute: ContactRoute,
   FleetRoute: FleetRoute,
+  FleetOriginalsRoute: FleetOriginalsRoute,
   HeroOptionsRoute: HeroOptionsRoute,
   IntroductoryFlightsRoute: IntroductoryFlightsRoute,
   LocalTrainingRoute: LocalTrainingRoute,
