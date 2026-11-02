@@ -97,6 +97,9 @@ export function jumpToPageTop() {
 const PAGE_SWIPE_PX = 10;
 const PAGE_MS = 500;
 const WHEEL_QUIET_MS = 180;
+const ENTRY_TOL = 24;
+const BLEND_MS = 180;
+let blendTimer = 0;
 const journeys = new Map<HTMLElement, { n: number; vh: () => number }>();
 let paging = false;
 let wheelQuietUntil = 0;
@@ -133,7 +136,8 @@ function journeyLayout(): Layout {
   return { stops: stops.filter((s, i) => i === 0 || s - (stops[i - 1] ?? s) > STOP_TOL), zones, stages };
 }
 const pinnedStages = (L: Layout, y: number) => {
-  const i = L.zones.findIndex((z) => y >= z.from && y <= z.to);
+  // A few px short of fully pinned (native momentum landing) still counts as the first stage.
+  const i = L.zones.findIndex((z) => y >= z.from - ENTRY_TOL && y <= z.to);
   return i < 0 ? null : L.stages[i] ?? null;
 };
 const atSwitchPoint = (L: Layout, y: number) => L.stages.every((own) => isModeSwitchPoint(own, y));
@@ -213,10 +217,17 @@ function installController() {
     const L = journeyLayout(), y = window.scrollY;
     const own = pinnedStages(L, y);
     if (!own) return false;
-    const target = pinnedStepDown(own, y, own[0] ?? y, own[own.length-1] ?? y);
+    const from = Math.max(y, own[0] ?? y);
+    const target = pinnedStepDown(own, from, own[0] ?? y, own[own.length-1] ?? y);
     if (target === null) return false;
-    wantedMode = "fade"; // applied on landing (or now, when already on a stop)
-    setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, y)));
+    wantedMode = "fade";
+    // Downward always phases: blend briefly from the stacked look, then crossfade-glide.
+    if (mode !== "fade") {
+      root.classList.add("journey-blend");
+      window.clearTimeout(blendTimer);
+      blendTimer = window.setTimeout(() => root.classList.remove("journey-blend"), BLEND_MS);
+      setMode("fade");
+    }
     runPath([{ y: target, instant: false }], touch);
     return true;
   };
@@ -280,6 +291,7 @@ function installController() {
       if (dy < 0) { goingUp(); g = null; rejected = true; return; }
     }
     if (g.fired || paging) { if (e.cancelable) e.preventDefault(); return; }
+    if (!g.eligible) g.eligible = pinnedStages(journeyLayout(), window.scrollY) !== null;
     if (!g.eligible) return;
     if (dy >= PAGE_SWIPE_PX && goDown(true)) { g.fired = true; if (e.cancelable) e.preventDefault(); }
   };
