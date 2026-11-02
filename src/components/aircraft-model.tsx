@@ -24,7 +24,10 @@ export default function AircraftModel({ src, label, poster, autoRotate = true, o
     const fit=()=>{
       if(!sphere)return;
       const {width,height}=el.getBoundingClientRect();if(!width||!height)return;
-      const radius=modelOrbitRadius(sphere,el.getDimensions().y,width/height,el.getFieldOfView());
+      const dimensions=el.getDimensions();
+      // These nose +Z aircraft are widest across X. Tighten the horizontal
+      // rotational envelope to their span, retaining the mesh sphere as its cap.
+      const radius=modelOrbitRadius(Math.min(sphere,dimensions.x/2),dimensions.y,width/height,el.getFieldOfView());
       homeOrbit=`35deg 73deg ${radius}m`;
       el.setAttribute('camera-orbit',homeOrbit);
       el.jumpCameraToGoal();
