@@ -3,7 +3,7 @@ import { aircraftModelUrl } from '../lib/aircraft-models';
 
 const AircraftModel = lazy(() => import('./aircraft-model'));
 /** A stable photo slot. Available models hydrate only once this slot is opened/visible. */
-export function AircraftMedia({ reg, photo, hint = false, preview = false }: { reg: string; photo: string; hint?: boolean; preview?: boolean }) {
+export function AircraftMedia({ reg, photo, preview = false }: { reg: string; photo: string; preview?: boolean }) {
   const model = aircraftModelUrl(reg, preview);
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
