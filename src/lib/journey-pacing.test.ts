@@ -1,6 +1,6 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { journeyFrame, journeyLanding, journeyNearestLanding, JOURNEY_HOLD, JOURNEY_STAGE_SVH, journeyStop, stageStopFraction, pageStep, nearestPage } from "./journey-pacing";
+import { journeyAltitude, journeyFrame, journeyLanding, journeyNearestLanding, JOURNEY_HOLD, JOURNEY_STAGE_SVH, journeyStop, stageStopFraction, pageStep, nearestPage } from "./journey-pacing";
 
 describe("homepage journey pacing", () => {
 
@@ -163,14 +163,13 @@ describe("desktop stops land fully faded in", () => {
   }
 });
 
-import { journeyAltitude as _alt, journeyFrame as _jf, journeyLanding as _land } from "./journey-pacing";
 describe("altitude readout", () => {
-  it("rests on each stage's round target altitude", () => {
+  test("rests on each stage's round target altitude", () => {
     const n = 6;
-    expect([0, 1, 2, 3, 4, 5].map((i) => _alt(_jf(_land(i, n), n), n))).toEqual([0, 7000, 14000, 21000, 28000, 35000]);
+    assert.deepEqual([0, 1, 2, 3, 4, 5].map((i) => journeyAltitude(journeyFrame(journeyLanding(i, n), n), n)), [0, 7000, 14000, 21000, 28000, 35000]);
   });
-  it("counts only mid-transition", () => {
-    const v = _alt(_jf((1 + 0.85) / 6, 6), 6);
-    expect(v).toBeGreaterThan(7000); expect(v).toBeLessThan(14000);
+  test("counts only mid-transition", () => {
+    const v = journeyAltitude(journeyFrame((1 + 0.85) / 6, 6), 6);
+    assert.ok(v > 7000 && v < 14000);
   });
 });
