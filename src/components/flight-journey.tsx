@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Phone } from "lucide-react";
 import { Button } from "./ui/button";
-import { journeyFrame, journeyStop, JOURNEY_STAGE_SVH, pinnedStepDown, stageStopFraction, stackProgress, stackOffset, isModeSwitchPoint, resolveMode, STOP_TOL, type JourneyMode, type PageSegment } from "../lib/journey-pacing";
+import { journeyFrame, journeyAltitude, journeyStop, JOURNEY_STAGE_SVH, pinnedStepDown, stageStopFraction, stackProgress, stackOffset, isModeSwitchPoint, resolveMode, STOP_TOL, type JourneyMode, type PageSegment } from "../lib/journey-pacing";
 import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
 import { patternFor, pickRunway, type PatternField } from "../lib/traffic-pattern";
 import { useMetar } from "../lib/use-metar";
@@ -372,7 +372,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const total = Math.max(1, el.offsetHeight - viewportHeight);
       const scrolled = journeyFrame(-rect.top / total, n);
       const showActive = (idx: number) => {
-        if (hudRef.current) hudRef.current.textContent = Math.round(scrolled.progress * 35000).toLocaleString("en-US");
+        if (hudRef.current) hudRef.current.textContent = journeyAltitude(scrolled, n).toLocaleString("en-US");
         if (barRef.current) barRef.current.style.transform = `scaleY(${scrolled.progress})`;
         if (idx === last) return;
         last = idx;
