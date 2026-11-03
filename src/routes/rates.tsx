@@ -30,11 +30,11 @@ function Page() {
       <div className="mx-auto max-w-7xl px-5 py-16 sm:py-20 lg:px-8">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.4fr]">
           <section data-scroll-reveal>
-            <h2 className="eyebrow text-primary">Instruction</h2>
+            <h2 className="eyebrow text-primary-text">Instruction</h2>
             <div className="mt-4 border-y border-border">{instruction.map(([a, b]) => <Row key={a} a={a} b={b} />)}</div>
           </section>
           <section data-scroll-reveal>
-            <h2 className="eyebrow text-primary">Plane rental rates</h2>
+            <h2 className="eyebrow text-primary-text">Plane rental rates</h2>
             <div className="mt-4 grid gap-px bg-border sm:grid-cols-2">
               {aircraft.map((x) => (
                 <article key={x.name + x.nick} className="min-w-0 bg-background p-5">
@@ -42,7 +42,7 @@ function Page() {
                   <p className="text-sm text-muted-foreground">{x.nick}</p>
                   <div className="mt-4 flex items-end justify-between gap-3">
                     <div><p className="text-xs uppercase text-muted-foreground">Regular</p><p className="font-display text-2xl">{x.reg}<span className="text-sm">/hr</span></p></div>
-                    <div className="text-right"><p className="text-xs uppercase text-primary">Prepay</p><p className="font-display text-2xl text-primary">{x.pre}<span className="text-sm">/hr</span></p></div>
+                    <div className="text-right"><p className="text-xs uppercase text-primary-text">Prepay</p><p className="font-display text-2xl text-primary-text">{x.pre}<span className="text-sm">/hr</span></p></div>
                   </div>
                 </article>
               ))}

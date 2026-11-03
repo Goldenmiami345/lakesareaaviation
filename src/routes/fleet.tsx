@@ -133,7 +133,7 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
         </Button>
       </div>
       <div className="p-5 sm:p-6">
-        <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-primary"><span className="h-px w-5 bg-primary" />{f.registration}</p>
+        <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-primary-text"><span className="h-px w-5 bg-primary" />{f.registration}</p>
         <h2 className="mt-2 font-display text-2xl leading-tight sm:text-3xl">{f.name}</h2>
         {f.nickname && <p className="font-display text-base text-muted-foreground">“{f.nickname}”</p>}
         <dl className="mt-4 flex flex-wrap gap-2">
@@ -163,7 +163,7 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
           <Section title="Used in training">
             <p className="text-sm text-muted-foreground">{f.use}. {f.note}</p>
             <ul className="mt-2 flex flex-wrap gap-x-4">
-              {TRAINING[f.role].map((t) => <li key={t.to}><a href={t.to} className="inline-flex min-h-11 items-center text-sm font-semibold text-primary">{t.label} →</a></li>)}
+              {TRAINING[f.role].map((t) => <li key={t.to}><a href={t.to} className="inline-flex min-h-11 items-center text-sm font-semibold text-primary-text">{t.label} →</a></li>)}
             </ul>
           </Section>
           {endorsements.length > 0 && (

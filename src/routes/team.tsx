@@ -42,7 +42,7 @@ function Page() {
                 <img src={t.img} alt={`${t.name}, ${t.ratings}`} loading="lazy" width={640} height={640} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
               </div>
               <div className="p-4 sm:p-5">
-                {t.role && <p className="eyebrow text-primary">{t.role}</p>}
+                {t.role && <p className="eyebrow text-primary-text">{t.role}</p>}
                 <h2 className="mt-1 font-display text-lg leading-tight sm:text-xl">{t.name}</h2>
                 <p className="mt-2 text-xs font-semibold tracking-wide text-muted-foreground sm:text-sm">{t.ratings}</p>
               </div>

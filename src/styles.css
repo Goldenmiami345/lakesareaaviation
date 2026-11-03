@@ -9,6 +9,7 @@
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-text: var(--primary-text);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -59,12 +60,15 @@
   --border: oklch(0.82 0.025 66);
   --input: oklch(0.82 0.025 66);
   --ring: oklch(0.56 0.22 258);
+  /* Accent TEXT on light surfaces (>=4.7:1 on beige and secondary); fills/buttons keep --primary. */
+  --primary-text: #0059cc;
 }
 
 :root[data-accent="orange"] {
   --primary: oklch(0.625 0.175 40);
   --primary-foreground: oklch(0.985 0.008 75);
   --ring: oklch(0.625 0.175 40);
+  --primary-text: #9e4119;
 }
 
 @layer base {
@@ -309,3 +313,6 @@ html.hero-enter .hero-mask > span { animation: hero-mask-in .55s var(--d, 0ms) c
 
 .skip-link { position: fixed; left: 1rem; top: 1rem; z-index: 100; padding: .75rem 1.25rem; background: var(--primary); color: var(--primary-foreground); font-weight: 700; font-size: .875rem; transform: translateY(-200%); transition: transform .15s ease; }
 .skip-link:focus { transform: none; outline: 2px solid var(--ring); outline-offset: 2px; }
+
+/* Dark sections keep the bright accent for text (darker accent would lose contrast on ink). */
+:where(.bg-ink, .bg-primary, .text-background) .text-primary-text { color: var(--primary); }
