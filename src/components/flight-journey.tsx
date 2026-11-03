@@ -388,6 +388,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let mx = 0, my = 0, frame = 0, last = -1;
+    const fine = window.matchMedia("(pointer: fine)").matches;
     const n = stages.length;
     // Geometry is cached (document offset of the section, pinned length, viewport height) and
     // recomputed only on resize, so a frame never reads layout.
@@ -459,7 +460,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         const leaving = i === state.stage ? state.transition : 0;
         const coming = i === state.next && i !== state.stage ? 1 - state.transition : 0;
         // Layers are viewport-sized; pointer parallax is covered by a GPU scale, not a larger raster.
-        const cover = reduce || (!mx && !my) ? 0 : 0.05;
+        const cover = reduce || !fine ? 0 : 0.04;
         const scale = reduce ? 1 : 1 + cover + leaving * (st?.zoom ?? 0.55) + coming * (st?.zoomIn ?? 0.06);
         const opacity = i === state.stage ? 1 - state.transition : i === state.next ? 1 : 0;
         const depth = reduce ? 0 : 10 + i * 3;
