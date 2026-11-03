@@ -362,6 +362,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     let mx = 0, my = 0, frame = 0, last = -1;
     let shown: number | null = null;
     let prevTime = 0;
+    let lastTarget = -1, settleBy = 0;
     const n = stages.length;
     const render = (now: number = performance.now()) => {
       const el = sectionRef.current;
@@ -411,7 +412,9 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       // Scrolling back up is tied directly to the scroll position: a continuous crossfade, no easing lag.
       if (shown === null || reduce || Math.abs(target - shown) > 2 || target < shown) shown = target;
       else shown += (target - shown) * (1 - Math.exp(-dt / 320));
-      if (Math.abs(target - shown) < 0.01) shown = target;
+      // Hard deadline: however slow the frames, the stage is fully faded in 1.2s after scrolling stops.
+      if (target !== lastTarget) { lastTarget = target; settleBy = now + 1200; }
+      if (Math.abs(target - shown) < 0.01 || now >= settleBy) shown = target;
       if (shown !== target) frame = requestAnimationFrame(render);
       else prevTime = 0;
       const base = Math.min(n - 1, Math.floor(shown));
