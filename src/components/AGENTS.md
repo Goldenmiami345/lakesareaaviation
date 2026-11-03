@@ -1,0 +1,8 @@
+# Traffic component rules
+
+- Traffic tag sides are chosen once per display window with a look-ahead along the airplane path (fitTagSide in traffic-ui.tsx); no per-frame re-layout, positions snap to whole pixels, and a callout with no clear side is skipped, because per-frame flipping made tags jitter.
+- Call placement uses the pure traffic-call-placement helper with screen-pixel leader caps and projected runway-relative side preference; panel collisions flip sides rather than extending leaders, keeping zoom independent of placement.
+- Card placement is WeakMap-locked until out of bounds; stable contain-fit media prevents jumps. Shared desktop selection ignores aircraft pointerleave: close on actual pointer travel >24px away from opening point when over neither hit nor card, or panel exit; touch taps unchanged.
+- TrafficPath derives lines and final extension from patternWaypoints used by the flight engine; labels are placed only after mount in constant screen pixels with live UI/card collision checks, so maps, aircraft and labels share geometry without hydration-dependent rendering.
+- Radio calls hold CALL_DURATION_MS (traffic-flight.ts); the calling plane is marked with .is-calling (pulsing target, full leader) and the SVG gets .has-call to dim other history trails, all in CSS so timing and placement code stay untouched.
+- Sequencing is shared by both views: equal-period slots reserve final/runway/departure plus 5s. Real-speed rollout/climb, small arrival extension and departure-side upwind/downwind elongation absorb delay without recurring circles; validate spacing/order and <0.2 circles/lap. KLXL aerial has Apache/Phoenix/Cardinal. Groups carry legOf data-leg.
