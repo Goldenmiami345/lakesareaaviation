@@ -13,6 +13,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ThemeSync } from "../components/theme-sync";
+import { canonicalUrl } from "../lib/site-url";
 
 function NotFoundComponent() {
   return (
@@ -76,7 +77,10 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   staticData: { sitemap: false },
-  head: () => ({
+  head: ({ matches }) => {
+    // Canonical/og:url live here only (single source; leaf routes never add one), for sitemap pages only.
+    const canonical = canonicalUrl(matches[matches.length - 1] as Parameters<typeof canonicalUrl>[0]);
+    return {
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
@@ -87,6 +91,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "author", content: "Lakes Area Aviation" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      ...(canonical ? [{ property: "og:url", content: canonical }] : []),
     ],
     links: [
       {
@@ -97,8 +102,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Andada+Pro:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap" },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
+      ...(canonical ? [{ rel: "canonical", href: canonical }] : []),
     ],
-  }),
+    };
+  },
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
