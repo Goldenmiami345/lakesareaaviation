@@ -34,7 +34,7 @@ export type Hold = { at: HoldPoint; turns: number; radius: number };
 /** Fraction along the leg (points[k] → points[k+1] after the upwind report is added) where each hold starts. */
 export const HOLD_ENTRY: Record<HoldPoint, { k: number; f: number }> = { 'downwind-late': { k: 5, f: .3 }, 'downwind-early': { k: 4, f: .55 }, crosswind: { k: 3, f: .5 } };
 /** Weather inputs: climb = climb-rate multiplier (density altitude); gust = gust spread kt; approach = straight-in only (IFR). */
-export type FlightOptions = { climb?: number; gust?: number; approach?: boolean };
+export type FlightOptions = { climb?: number; gust?: number; approach?: boolean; approachPx?: number; departPx?: number };
 /** Liftoff point as a fraction of runway length: headwind shortens the roll, tailwind lengthens it. */
 export function liftoffFraction(headwindKt: number, liftoffKt = 55) {
   const r = Math.max(0, liftoffKt - headwindKt) / liftoffKt;
@@ -45,7 +45,7 @@ export function climbOutShiftPx(a: PatternAirport, climb = 1) {
   return Math.max(-0.3, Math.min(1, 1 / climb - 1)) * a.extension;
 }
 /** Straight-in practice approach: ~3 NM final on a 3° path, low approach/touch-and-go, runway-heading climb-out. */
-export function approachWaypoints(a: PatternAirport, finalPx: number, roll: number) {
+export function approachWaypoints(a: PatternAirport, finalPx: number, roll: number, departPx = finalPx) {
   const len = Math.hypot(a.end.x - a.threshold.x, a.end.y - a.threshold.y) || 1;
   const u = { x: (a.end.x - a.threshold.x) / len, y: (a.end.y - a.threshold.y) / len };
   const at = (along: number) => ({ x: a.threshold.x + u.x * along, y: a.threshold.y + u.y * along });
@@ -54,7 +54,7 @@ export function approachWaypoints(a: PatternAirport, finalPx: number, roll: numb
     { ...at(-finalPx), agl: glide, knots: 90, phase: 'Final' },
     { ...at(len * 0.08), agl: 0, knots: 65, phase: 'Touch-and-go' },
     { ...at(len * roll), agl: 0, knots: 60, phase: 'Takeoff' },
-    { ...at(len + finalPx), agl: a.tpaAgl, knots: 80, phase: 'Takeoff' },
+    { ...at(len + departPx), agl: Math.min(a.tpaAgl, departPx * feetPerPixel(a) * 0.1), knots: 80, phase: 'Takeoff' },
   ];
 }
 export function makeFlightPlan(a: PatternAirport, reg: string, wind: Wind | null = null, runwayHeading = Number(a.runway) * 10, extendPx = 0, holds: readonly Hold[] = [], departureExtendPx = 0, opts: FlightOptions = {}): FlightPlan {
@@ -90,7 +90,7 @@ export function makeFlightPlan(a: PatternAirport, reg: string, wind: Wind | null
   const f = Math.min(.95, (runwayLen*.55 + a.extension*.2) / Math.hypot(cross.x-takeoff.x,cross.y-takeoff.y));
   const upwind = { x: takeoff.x + (cross.x - takeoff.x) * f, y: takeoff.y + (cross.y - takeoff.y) * f, agl: takeoff.agl + (cross.agl - takeoff.agl) * f, knots: 73, phase: 'Upwind' };
   const finalPx = Math.min(3 * 1852 / (feetPerPixel(a) * .3048), a.extension * 6);
-  const points = opts.approach ? approachWaypoints(a, finalPx, roll) : [...original.slice(0, 2), upwind, ...original.slice(2)];
+  const points = opts.approach ? approachWaypoints(a, Math.min(finalPx, opts.approachPx ?? finalPx), roll, Math.min(finalPx, opts.departPx ?? finalPx)) : [...original.slice(0, 2), upwind, ...original.slice(2)];
   // Downwind 360s turn outward (away from the runway); crosswind 360s turn away from
   // the departure end. Each ring returns exactly to its entry point and heading.
   // Later hold points are inserted first so earlier indices stay valid.

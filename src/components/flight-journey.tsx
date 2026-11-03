@@ -541,12 +541,12 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const obs = metar?.[st.traffic.ident] ?? metar?.[st.traffic.wxStation] ?? null;
     const rwy = pickRunway(st.traffic, obs ? { dir: obs.dir, kt: obs.kt } : null);
     const f = WX_FIELDS[st.traffic.ident as keyof typeof WX_FIELDS];
-    const conditions = trafficConditions(obs, { elevation: st.traffic.elevation, ...(f ? { lat: f.lat, lon: f.lon } : {}) }, rwy.runway);
+    const conditions = trafficConditions(obs, { elevation: st.traffic.elevation, ident: st.traffic.ident, ...(f ? { lat: f.lat, lon: f.lon } : {}) }, rwy.runway);
     return { obs, rwy, conditions, pattern: profileAirport(patternFor(st.traffic, rwy), conditions.mode) };
   }), [stages, metar]);
   // Private Pilot oblique view and Instrument stage: Little Falls conditions.
   const klxl = metar?.["KLXL"] ?? null;
-  const klxlConditions = useMemo(() => trafficConditions(klxl, { elevation: 1123, lat: WX_FIELDS.KLXL.lat, lon: WX_FIELDS.KLXL.lon }, "13"), [klxl]);
+  const klxlConditions = useMemo(() => trafficConditions(klxl, { elevation: 1123, ident: "KLXL", lat: WX_FIELDS.KLXL.lat, lon: WX_FIELDS.KLXL.lon }, "13"), [klxl]);
   const [wxOpen, setWxOpen] = useState(false);
   const s = stages[active] ?? stages[0];
   if (!s) return null;

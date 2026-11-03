@@ -73,15 +73,21 @@ export function sunElevation(lat: number, lon: number, date: Date) {
   return Math.asin(Math.sin(lat * D2R) * Math.sin(dec) + Math.cos(lat * D2R) * Math.cos(dec) * Math.cos(ha)) / D2R;
 }
 
-export type TrafficConditions = { mode: PatternMode; climb: number; gust: number; night: boolean; approach: string | null };
+export type TrafficConditions = { mode: PatternMode; climb: number; gust: number; night: boolean; approach: string | null; approachPx?: number; departPx?: number };
+/** Published instrument approaches per FAA d-TPP (Nov 2026): KLXL RNAV (GPS) RWY 31, P52 RNAV (GPS) RWY 32; 18V none. */
+export const PUBLISHED_APPROACHES: Record<string, Record<string, string>> = { KLXL: { '31': 'RNAV (GPS)' }, P52: { '32': 'RNAV (GPS)' } };
+export function approachName(ident: string | undefined, runway: string) {
+  const name = ident ? PUBLISHED_APPROACHES[ident]?.[runway] : undefined;
+  return name ? `${name} ${runway}` : `PRACTICE APPROACH ${runway}`;
+}
 export const NO_CONDITIONS: TrafficConditions = { mode: 'vfr', climb: 1, gust: 0, night: false, approach: null };
 
-export function trafficConditions(obs: Metar | null, field: { elevation: number; lat?: number; lon?: number }, runway: string, now = new Date()): TrafficConditions {
+export function trafficConditions(obs: Metar | null, field: { elevation: number; lat?: number; lon?: number; ident?: string }, runway: string, now = new Date()): TrafficConditions {
   if (!obs) return NO_CONDITIONS;
   const mode = patternMode(obs.cat);
   const da = obs.temp != null && obs.altim != null ? densityAltitude(field.elevation, obs.temp, obs.altim) : field.elevation;
   const night = field.lat != null && field.lon != null && sunElevation(field.lat, field.lon, now) < -0.833;
-  return { mode, climb: climbScale(da, field.elevation), gust: obs.gust ? Math.max(0, obs.gust - obs.kt) : 0, night, approach: mode === 'ifr' ? `RNAV ${runway}` : null };
+  return { mode, climb: climbScale(da, field.elevation), gust: obs.gust ? Math.max(0, obs.gust - obs.kt) : 0, night, approach: mode === 'ifr' ? approachName(field.ident, runway) : null };
 }
 
 const pad3 = (n: number) => String(Math.round(n)).padStart(3, '0');
@@ -118,4 +124,20 @@ export function parseMetarRow(r: { icaoId: string; wdir: number | string; wspd: 
   const known = ['VFR', 'MVFR', 'IFR', 'LIFR'] as const;
   const cat = (known as readonly string[]).includes(r.fltCat ?? '') ? (r.fltCat as FlightCategory) : flightCategory(ceiling, visib);
   return { station: r.icaoId, dir: typeof r.wdir === 'number' ? r.wdir : null, kt: r.wspd, gust: r.wgst ?? null, obsTime: r.obsTime, raw: r.rawOb, temp: r.temp ?? null, dewp: r.dewp ?? null, altim, visib, ceiling, sky, cat };
+}
+
+/** Distance (px) from `from` along unit `dir` to the inset edge of a viewBox "x y w h". */
+export function distanceToEdge(viewBox: string, from: { x: number; y: number }, dir: { x: number; y: number }, inset = 0.06) {
+  const [x = 0, y = 0, w = 0, h = 0] = viewBox.split(/[\s,]+/).map(Number);
+  const l = x + w * inset, r = x + w * (1 - inset), t = y + h * inset, b = y + h * (1 - inset);
+  let best = Infinity;
+  if (dir.x > 1e-9) best = Math.min(best, (r - from.x) / dir.x); else if (dir.x < -1e-9) best = Math.min(best, (l - from.x) / dir.x);
+  if (dir.y > 1e-9) best = Math.min(best, (b - from.y) / dir.y); else if (dir.y < -1e-9) best = Math.min(best, (t - from.y) / dir.y);
+  return Math.max(0, best);
+}
+/** Straight-in legs that start/end at the visible map edge on the extended centreline. */
+export function visibleApproach(a: Pick<PatternAirport, 'threshold' | 'end'>, viewBox: string) {
+  const len = Math.hypot(a.end.x - a.threshold.x, a.end.y - a.threshold.y) || 1;
+  const u = { x: (a.end.x - a.threshold.x) / len, y: (a.end.y - a.threshold.y) / len };
+  return { approachPx: Math.max(40, distanceToEdge(viewBox, a.threshold, { x: -u.x, y: -u.y })), departPx: Math.max(40, distanceToEdge(viewBox, a.end, u)) };
 }
