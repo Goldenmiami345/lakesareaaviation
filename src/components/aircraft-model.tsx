@@ -74,8 +74,10 @@ export default function AircraftModel({ src, label, poster, autoRotate = true, o
         // public/models/*.glb are meshopt-compressed (gltfpack -cc) and model-viewer ships no
         // decoder, so every load failed with "THREE.GLTFLoader: setMeshoptDecoder must be
         // called before loading compressed files". The decoder is self-hosted (no CDN).
+        // model-viewer pulls it in with a classic <script> tag, and Vite refuses to let a
+        // module import a JS file out of public/, so the warm-up is a plain fetch.
         try {
-          await import(/* @vite-ignore */ '/models/meshopt_decoder.js');
+          await fetch('/models/meshopt_decoder.js');
           ModelViewerElement.meshoptDecoderLocation = '/models/meshopt_decoder.js';
         } catch {
           // Decoder unavailable: still mount so the photo poster shows instead of a blank.
