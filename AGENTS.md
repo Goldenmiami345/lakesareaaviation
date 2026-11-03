@@ -46,4 +46,4 @@
 - Every link to the contact/training-plan form is labelled "Build my training plan" (sticky bar: "Build my plan"); distinct actions keep their own labels, so one name always means one destination.
 - Seams between navy, blue and beige are clean edges (edge-fade no-ops): navy/beige blends go grey.
 - Layout width uses site-container/site-wrap and --gutter (styles.css), never max-w-7xl, so header, sections and journey HUD/rail share one edge.
-- Journey ALT readout uses journeyAltitude (round stage targets); wind uses nearest current METAR (wx-stations.ts), wxStation as fallback.
+- ALT readout: journeyAltitude; wind: nearest METAR (wx-stations.ts), wxStation fallback.
