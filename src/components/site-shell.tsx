@@ -24,7 +24,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
   const onHome = (e: MouseEvent) => { if (pathname !== "/") return; e.preventDefault(); setOpen(false); jumpToPageTop(); };
   return <header className={`fixed inset-x-0 top-0 z-50 border-b transition-colors ${overlay ? "border-white/15 bg-ink/25 text-white backdrop-blur-md" : "border-border bg-background/95 text-foreground backdrop-blur-md"}`}>
     <div className="site-container grid h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:h-20 lg:flex lg:justify-between">
-      <Link to="/" onClick={onHome} className="flex min-w-0 items-center gap-3" aria-label="Lakes Area Aviation home">
+      <Link to="/" onClick={onHome} className="flex min-h-11 min-w-0 items-center gap-3" aria-label="Lakes Area Aviation home">
         <img src={logoAsset.url} alt="Lakes Area Aviation" className={`h-10 w-auto max-w-[190px] object-contain sm:h-12 sm:max-w-[220px] ${overlay ? "brightness-0 invert" : ""}`} />
       </Link>
       <nav className="hidden items-center gap-7 lg:flex" aria-label="Main navigation">
