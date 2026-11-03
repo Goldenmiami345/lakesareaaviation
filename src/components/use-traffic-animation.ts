@@ -2,6 +2,7 @@ import { useEffect, type RefObject } from 'react';
 import { CALL_DURATION_MS, MAX_CALLS } from '../lib/traffic-flight';
 import { TrafficSchedule, legOf, type Leg } from '../lib/traffic-sequence';
 import { positionReport, type PatternAirport, type PatternSample, type Wind } from '../lib/traffic-pattern';
+import type { TrafficConditions } from '../lib/wx-conditions';
 import { fitTagSide, tagSideHolds, tagBounds, setTagPosition, placeCard, radarAltitude, writeCard } from './traffic-ui';
 
 type Projection = {x:number;y:number;transform:string;shadow:string;lift:number};
@@ -12,14 +13,18 @@ type Options = {
   tagRefs:RefObject<(SVGGElement|null)[]>; textRefs:RefObject<(SVGTextElement|null)[]>;
   cardRef:RefObject<HTMLDivElement|null>; selectedRef:RefObject<number|null>;
   project:(s:PatternSample,reg:string)=>Projection; offsets?:readonly number[];
+  conditions?:TrafficConditions;
 };
 export function useTrafficAnimation(o:Options) {
-  const {active,airport,wind,runwayHeading,regs,svgRef,planeRefs,shadowRefs,tagRefs,textRefs,cardRef,selectedRef,project,offsets}=o;
+  const {active,airport,wind,runwayHeading,regs,svgRef,planeRefs,shadowRefs,tagRefs,textRefs,cardRef,selectedRef,project,offsets,conditions}=o;
   useEffect(()=>{
     if(!active)return;
     const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     // Runway-sequenced laps: downwinds extend so only one airplane is ever on the runway.
-    const schedule=new TrafficSchedule(airport,regs,wind,runwayHeading,offsets);
+    const schedule=new TrafficSchedule(airport,regs,wind,runwayHeading,offsets,conditions);
+    svgRef.current?.classList.toggle('is-night',!!conditions?.night);
+    // Straight-in distance for the IFR data block, from the plan's own first waypoint.
+    const finalNm=(()=>{const p=schedule.sample(0,0);if(!p)return 3;const ft=Math.hypot(p.x-airport.threshold.x,p.y-airport.threshold.y)*(airport.runwayFt/Math.hypot(airport.end.x-airport.threshold.x,airport.end.y-airport.threshold.y));return Math.round(ft/6076*10)/10;})();
     const prev:(string|null)[]=regs.map(()=>null);
     const prevLeg:(Leg|null)[]=regs.map(()=>null);
     const calls=new Map<number,number>();
@@ -29,17 +34,18 @@ export function useTrafficAnimation(o:Options) {
     const draw=(now:number)=>{
       const secs=reduce?0:(now-origin)/1000;
       const m=svgRef.current?.getScreenCTM();
-      const states=regs.map((reg,i)=>{const s=sample(i,secs);return s?{s,p:project(s,reg)}:null;});
+      const states=schedule.regs.map((reg,i)=>{const s=sample(i,secs);return s?{s,p:project(s,reg)}:null;});
       for(const [i,end] of calls){if(now>=end){calls.delete(i);tagRefs.current[i]?.classList.remove('is-calling','is-pinging');}}
       states.forEach((state,i)=>{
         if(!state)return;const {s,p}=state;
         const plane=planeRefs.current[i];
         plane?.setAttribute('transform',p.transform);
+        if(schedule.approach){const v=String(schedule.visibility(i,secs));plane?.setAttribute('opacity',v);tagRefs.current[i]?.setAttribute('opacity',v);}
         plane?.setAttribute('data-ground-speed',String(s.knots));plane?.setAttribute('data-msl',String(s.msl));plane?.setAttribute('data-phase',s.phase);
         // Verification hook: data-leg changes only when the leg does, not per frame.
         const leg=legOf(airport,s);if(leg!==prevLeg[i]){prevLeg[i]=leg;plane?.setAttribute('data-leg',leg);}
         shadowRefs.current[i]?.setAttribute('transform',p.shadow);
-        shadowRefs.current[i]?.setAttribute('opacity',String(.4-p.lift*.28));
+        shadowRefs.current[i]?.setAttribute('opacity',String((.4-p.lift*.28)*schedule.visibility(i,secs)));
         const tag=tagRefs.current[i];setTagPosition(tag,m,p.x,p.y);
         if(m&&tag){
           const current=screen(p,m),k=Math.hypot(m.a,m.b)||1;
@@ -57,7 +63,7 @@ export function useTrafficAnimation(o:Options) {
             // Ping on EVERY leg entry; data is admitted only when its complete
             // 3.5s screen path is clear of UI and the other admitted block.
             tag.classList.remove('is-pinging');void tag.getBoundingClientRect();tag.classList.add('is-pinging');
-            const title=tx?.querySelector('.traffic-call-title');if(title)title.textContent=`${regs[i]} · ${report.toUpperCase()}`;
+            const title=tx?.querySelector('.traffic-call-title');if(title)title.textContent=schedule.approach&&conditions?.approach&&s.phase==='Final'?`${regs[i]} · ${conditions.approach} · ${finalNm} MI FINAL`:`${regs[i]} · ${report.toUpperCase()}`;
             // Project the closest runway point through the same camera as the plane.
             // This prefers the outside of each turn in both aerial and oblique views.
             const dx=airport.end.x-airport.threshold.x,dy=airport.end.y-airport.threshold.y;
@@ -93,6 +99,6 @@ export function useTrafficAnimation(o:Options) {
     };
     raf=requestAnimationFrame(draw);
     const resize=()=>{if(reduce)draw(performance.now());};window.addEventListener('resize',resize);
-    return()=>{cancelAnimationFrame(raf);window.removeEventListener('resize',resize);tagRefs.current.forEach(g=>g?.classList.remove('is-calling','is-pinging','call-obscured'));};
-  },[active,airport,wind,runwayHeading,regs,svgRef,planeRefs,shadowRefs,tagRefs,textRefs,cardRef,selectedRef,project,offsets]);
+    return()=>{cancelAnimationFrame(raf);window.removeEventListener('resize',resize);tagRefs.current.forEach(g=>{g?.classList.remove('is-calling','is-pinging','call-obscured');g?.removeAttribute('opacity');});planeRefs.current.forEach(g=>g?.removeAttribute('opacity'));};
+  },[active,airport,wind,runwayHeading,regs,svgRef,planeRefs,shadowRefs,tagRefs,textRefs,cardRef,selectedRef,project,offsets,conditions]);
 }
