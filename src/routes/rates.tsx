@@ -27,7 +27,7 @@ function Page() {
   return (
     <SiteLayout>
       <PageIntro eyebrow="Our rates" title="Every published rate, in one place." text="We strive to keep our aircraft costs low to make aviation accessible for everyone. All aircraft rates are wet and include fuel and insurance." />
-      <div className="mx-auto max-w-7xl px-5 py-16 sm:py-20 lg:px-8">
+      <div className="site-container py-16 sm:py-20">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.4fr]">
           <section data-scroll-reveal>
             <h2 className="eyebrow text-primary-text">Instruction</h2>

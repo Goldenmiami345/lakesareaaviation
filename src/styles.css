@@ -327,3 +327,7 @@ html.hero-enter .hero-mask > span { animation: hero-mask-in .55s var(--d, 0ms) c
 /* Accent text on dark ink sections uses a lighter accent (>=4.5:1); light cards inside them switch back. */
 :where(.bg-ink, .text-background) .text-primary-text { color: var(--primary-text-dark); }
 :where(.bg-ink, .text-background) :where(.bg-background, .bg-secondary, .bg-card) .text-primary-text { color: var(--primary-text); }
+
+/* One fluid site column: phones keep 20px gutters; wider screens grow to ~4.5vw (max 96px) inside 1720px. */
+@utility site-wrap { margin-inline: auto; width: 100%; max-width: 1720px; }
+@utility site-container { margin-inline: auto; width: 100%; max-width: 1720px; padding-inline: 20px; @media (min-width: 641px) { padding-inline: clamp(20px, 4.5vw, 96px); } }

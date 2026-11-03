@@ -570,7 +570,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
           <button type="button" onClick={reset} aria-label="Reset zoom" className="absolute right-4 top-24 z-30 inline-flex min-h-11 min-w-11 items-center gap-1.5 border border-background/40 bg-ink/70 px-3 font-mono text-xs font-bold uppercase tracking-[0.14em] text-background backdrop-blur-sm">✕ Reset</button>
         )}
         {/* Copy */}
-        <div className="journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 z-20 mx-auto max-w-7xl px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pr-14 sm:pb-24 md:pb-12 lg:px-8 lg:pb-16">
+        <div className="site-container journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 z-20 pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-lg:!pr-14 sm:pb-24 md:pb-12 lg:pb-16">
           <div ref={copyRef} className="journey-copy max-w-2xl">
             <StageCopy s={s} />
           </div>
@@ -579,7 +579,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         <div ref={stackCopyRef} aria-hidden="true" className="journey-copy-stack pointer-events-none absolute inset-0 z-20 overflow-hidden" style={{ visibility: "hidden" }}>
           {stages.map((st, i) => (
             <div key={`copy-${st.code}`} ref={(el) => { stackCopyRefs.current[i] = el; }} inert className="absolute inset-0">
-              <div className="journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 mx-auto max-w-7xl px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pr-14 sm:pb-24 md:pb-12 lg:px-8 lg:pb-16">
+              <div className="site-container journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-lg:!pr-14 sm:pb-24 md:pb-12 lg:pb-16">
                 <div className="journey-copy max-w-2xl"><StageCopy s={st} /></div>
               </div>
             </div>

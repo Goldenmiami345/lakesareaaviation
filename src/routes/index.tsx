@@ -34,7 +34,7 @@ function HomePage() {
         <div className="hero-parallax absolute inset-0"><picture><source media="(max-aspect-ratio: 3/2)" srcSet={heroTallImage.url} width={1280} height={1189} /><img src={heroImage.url} alt="Lakes Area Aviation Cessna N6717A and Piper Apache on the ramp at sunset" width={1584} height={672} fetchPriority="high" className="hero-kenburns h-[112%] w-full object-cover object-[35%_center]" /></picture></div>
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/25 to-ink/5 lg:bg-gradient-to-r lg:from-ink lg:via-ink/60 lg:to-transparent" />
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('hero-enter','first-view')" }} />
-        <div className="relative mx-auto flex min-h-[100svh] max-w-7xl flex-col justify-end px-5 pb-7 pt-24 sm:pb-[4.5rem] sm:pt-32 lg:px-8">
+        <div className="site-container relative flex min-h-[100svh] flex-col justify-end pb-7 pt-24 sm:pb-[4.5rem] sm:pt-32">
           <div className="max-w-3xl">
             <p className="stage-label hero-step" style={{ ["--d" as string]: "0ms" }}>Accelerated flight training</p>
             <h1 className="mt-2.5 font-display text-[clamp(1.05rem,5.1vw,1.4rem)] leading-[1] sm:mt-3 sm:text-[2.2rem] lg:text-[2.8rem]"><span className="line-mask hero-mask"><span style={{ ["--d" as string]: "90ms" }}>BECOME A PROFESSIONAL PILOT</span></span></h1>
@@ -52,7 +52,7 @@ function HomePage() {
       <FlightJourney stages={airportStages} id="airports" label="Three airports to train from" mode="code" fadeBottom="background" />
 
       <section className="bg-background py-20 sm:py-28" data-scroll-reveal>
-        <div className="mx-auto max-w-7xl px-5 lg:px-8">
+        <div className="site-container">
           <div className="grid gap-10 border-b border-border pb-10 lg:grid-cols-[.75fr_1.25fr] lg:items-end">
             <div><p className="eyebrow text-primary-text">More ways to train</p><h2 className="mt-4 max-w-[12ch] font-display text-4xl sm:text-6xl">Add the privilege. Sharpen the skill.</h2></div>
             <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">Build beyond the core ratings with focused multi-engine training, instructor privileges, endorsements, and recurrent proficiency work.</p>
@@ -69,7 +69,7 @@ function HomePage() {
         </div>
       </section>
 
-      <section className="edge-fade-b bg-ink pb-32 pt-20 text-background sm:pb-40 sm:pt-28"><div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-2 lg:px-8" data-scroll-reveal><div className="photo-reveal zoom-reveal relative min-h-[380px] overflow-hidden sm:min-h-[520px]" data-scroll-reveal><img src={trainingImage} alt="Lakes Area Aviation Piper Apache N4383P on the ramp" width={1600} height={1200} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 hover:scale-[1.04]" /></div><div className="flex flex-col justify-center"><p className="stage-label">Stay on site</p><h2 className="mt-4 font-display text-5xl sm:text-6xl">Arrive ready.<br />Train every day.</h2><div className="mt-10 grid grid-cols-2 gap-px bg-background/15"><Stat value="$30" label="Housing / night" /><Stat value="$20" label="Car / day" /></div></div></div></section>
+      <section className="edge-fade-b bg-ink pb-32 pt-20 text-background sm:pb-40 sm:pt-28"><div className="site-container grid gap-10 lg:grid-cols-2" data-scroll-reveal><div className="photo-reveal zoom-reveal relative min-h-[380px] overflow-hidden sm:min-h-[520px]" data-scroll-reveal><img src={trainingImage} alt="Lakes Area Aviation Piper Apache N4383P on the ramp" width={1600} height={1200} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 hover:scale-[1.04]" /></div><div className="flex flex-col justify-center"><p className="stage-label">Stay on site</p><h2 className="mt-4 font-display text-5xl sm:text-6xl">Arrive ready.<br />Train every day.</h2><div className="mt-10 grid grid-cols-2 gap-px bg-background/15"><Stat value="$30" label="Housing / night" /><Stat value="$20" label="Car / day" /></div></div></div></section>
 
       <section className="bg-secondary py-20 sm:py-28"><div className="mx-auto max-w-5xl px-5 lg:px-8" data-scroll-reveal="blur"><p className="eyebrow text-primary-text">Student experience</p><blockquote className="mt-6 font-display text-3xl leading-snug sm:text-5xl">“{featuredStory.quote}”<footer className="mt-8 font-sans text-sm font-bold uppercase text-foreground">{featuredStory.name}</footer></blockquote><Link to="/student-success" className="interactive-arrow mt-8 inline-flex items-center gap-2 text-sm font-bold uppercase text-primary-text">More stories <ArrowRight className="size-4" /></Link><p className="mt-6 text-xs text-muted-foreground">Individual results vary.</p></div></section>
       <InquiryBand />

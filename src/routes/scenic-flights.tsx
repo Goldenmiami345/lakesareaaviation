@@ -24,7 +24,7 @@ function Page() {
         title="See your world from the sky."
         text="Have you ever wondered what the Minnesota fall leaves look like from above, wanted to see the Rocky Mountains from the sky, or fly over your childhood landmarks?"
       />
-      <div className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
+      <div className="site-container py-20">
         <div className="grid gap-12 lg:grid-cols-2">
           <div className="flex flex-col justify-center" data-scroll-reveal>
             <p className="eyebrow text-primary-text">The experience</p>
