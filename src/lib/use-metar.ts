@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
-export type MetarObs = { station: string; dir: number | null; kt: number; gust: number | null; obsTime: number; raw: string };
+import type { Metar } from "./wx-conditions";
+export type MetarObs = Metar;
 
 // Fetched after hydration only, so prerendered pages never wait on weather.
 export function useMetar() {
