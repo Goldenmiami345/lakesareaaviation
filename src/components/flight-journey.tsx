@@ -170,16 +170,19 @@ function runPath(path: PageSegment[], touch = false) {
   const moving = path.filter((s) => !s.instant).length || 1;
   const dur = PAGE_MS / moving;
   let finished = false;
-  const finish = () => {
+  const finish = (late = false) => {
     if (finished) return;
     finished = true;
     releasePaging();
+    // A busy main thread can delay frames past the hard timeout; never leave the page short of its stop.
+    const end = path[path.length - 1];
+    if (late && end && Math.abs(window.scrollY - end.y) > 0.5) window.scrollTo({ top: end.y, behavior: "instant" });
     // Only touch needs a short guard against queued native fling deltas.
     if (touch) { landedY = window.scrollY; landedUntil = performance.now() + 150; }
     const L = journeyLayout();
     setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, window.scrollY)));
   };
-  glideTimeout = window.setTimeout(finish, PAGE_MS + 150);
+  glideTimeout = window.setTimeout(() => finish(true), PAGE_MS + 150);
   let k = 0;
   const nextSeg = () => {
     const seg = path[k++];
@@ -402,12 +405,13 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       // Native snap glides are quick; ease a continuous "slide position" toward the
       // scroll so slides zoom and crossfade into each other over about a second.
       const target = scrolled.stage + scrolled.transition;
-      const dt = prevTime ? Math.min(64, now - prevTime) : 16;
+      // Real elapsed time (slow frames must not stretch the fade), so a stop is fully faded in ~1s.
+      const dt = prevTime ? Math.min(400, now - prevTime) : 16;
       prevTime = now;
       // Scrolling back up is tied directly to the scroll position: a continuous crossfade, no easing lag.
       if (shown === null || reduce || Math.abs(target - shown) > 2 || target < shown) shown = target;
       else shown += (target - shown) * (1 - Math.exp(-dt / 320));
-      if (Math.abs(target - shown) < 0.002) shown = target;
+      if (Math.abs(target - shown) < 0.01) shown = target;
       if (shown !== target) frame = requestAnimationFrame(render);
       else prevTime = 0;
       const base = Math.min(n - 1, Math.floor(shown));
