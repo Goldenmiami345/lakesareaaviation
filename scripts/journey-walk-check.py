@@ -40,6 +40,25 @@ async def up_check(page, flick, label):
     translated=all(x['stack'] and 'translate3d(0' in x['t'] for x in info) and len(info)>0
     print(f"[{label}] up flick: {start} -> motion ended {ended} -> after rest {rest}; visible layers {info}")
     return start>ended and ended==rest and translated
+
+OPACITY_JS = """(i)=>{const sec=[...document.querySelectorAll('[data-journey-section]')].find(s=>{const r=s.getBoundingClientRect();return r.top<=1&&r.bottom>=innerHeight-1});
+if(!sec)return null;const op=e=>{let o=1;for(;e;e=e.parentElement)o*=+getComputedStyle(e).opacity;return o};
+const L=[...sec.querySelectorAll('.journey-layer')];const h=[...sec.querySelectorAll('h2,h3')].find(x=>x.checkVisibility({visibilityProperty:true})&&op(x)>0);
+return {active:op(L[i]),prev:i>0?op(L[i-1]):0,heading:h?op(h):0,title:h?h.textContent.slice(0,22):''}}"""
+async def fade_walk(b, w, h):
+    # Single wheel notches, 2.5s rest, on a 4x slowed CPU (busy live page): each stop must be fully faded in.
+    ctx=await b.new_context(viewport={"width":w,"height":h}); pg=await ctx.new_page()
+    cdp=await ctx.new_cdp_session(pg); await cdp.send("Emulation.setCPUThrottlingRate",{"rate":4})
+    await pg.goto(URL, wait_until="networkidle"); await pg.wait_for_function("!!window.__journeyStops", timeout=60000); await pg.wait_for_timeout(800)
+    S=await stops(pg); rows=[]
+    for group in [S[:6],S[6:]]:
+        await pg.evaluate('(v)=>scrollTo({top:v,behavior:"instant"})',group[0]); await pg.wait_for_timeout(600)
+        for k,tgt in enumerate(group[1:],1):
+            await pg.mouse.wheel(0,100); await pg.wait_for_timeout(2500)
+            now=await y(pg); o=await pg.evaluate(OPACITY_JS,k)
+            ok=abs(now-tgt)<=2 and o and o['active']>=0.99 and o['prev']<=0.01 and o['heading']>=0.99
+            rows.append((w,h,o and o['title'],now,tgt,o,ok))
+    await ctx.close(); return rows
 async def main():
     Path('/tmp/browser/journey').mkdir(parents=True,exist_ok=True)
     async with async_playwright() as p:
@@ -82,6 +101,11 @@ async def main():
                 await pg.wait_for_timeout(750)
             print(f'wheel-only reversal burst={burst}: 4/4 moved within 280ms')
         await pg.screenshot(path='/tmp/browser/journey/reversal.png')
+        fade=[]
+        for w,h in [(1280,800),(1366,768),(1440,900),(1536,864),(1920,1080)]:
+            rows=await fade_walk(b,w,h); fade+=rows
+            for r in rows: print(f"[fade {r[0]}x{r[1]}] {r[2]!r} y={r[3]} stop={r[4]} active={r[5]['active']:.3f} prev={r[5]['prev']:.3f} heading={r[5]['heading']:.3f} ok={r[6]}")
+        assert all(r[6] for r in fade), "a desktop stop landed mid-fade"
         print("RESULT down-fails:", allfails, "up-ok:", ups)
         assert not allfails and all(ups)
         await b.close()
