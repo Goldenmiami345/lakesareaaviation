@@ -144,13 +144,13 @@ export const TrafficCard = forwardRef<HTMLDivElement, { plane: TrafficPlaneInfo;
         <span className="block min-w-0">
           <span className="block font-mono text-sm font-bold tracking-wider">{plane.reg}</span>
           {plane.nickname && <span className="block truncate text-xs leading-tight text-background">“{plane.nickname}”</span>}
-          <span className="block truncate text-[11px] leading-tight text-background/65">{plane.type}</span>
+          <span className="block truncate text-xs leading-tight text-background/65">{plane.type}</span>
         </span>
-      <span className="mt-1.5 flex items-center justify-between gap-2 font-mono text-[11px] tabular-nums">
+      <span className="mt-1.5 flex items-center justify-between gap-2 font-mono text-xs tabular-nums">
         <span data-k="alt" /><span data-k="kt" /><span data-k="phase" className="truncate font-bold uppercase tracking-[0.08em] text-[color:var(--radar)]" />
       </span>
       <span className="sr-only">Runway {runway}</span>
-      <Button variant="ghost" onClick={onOpen} className="mt-1 flex min-h-11 w-full justify-start px-0 text-left text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--radar)]">View in fleet →</Button>
+      <Button variant="ghost" onClick={onOpen} className="mt-1 flex min-h-11 w-full justify-start px-0 text-left text-xs font-bold uppercase tracking-[0.16em] text-[color:var(--radar)]">View in fleet →</Button>
     </div>,
     document.body,
   );

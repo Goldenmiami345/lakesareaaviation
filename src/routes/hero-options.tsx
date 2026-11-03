@@ -62,7 +62,7 @@ function Hero({ option, mode }: { option: typeof options[number]; mode: "phone" 
       <div className="mt-7"><Button asChild variant="ghost" className="h-12 rounded-none border-b border-background/45 px-0 text-sm font-bold uppercase text-background hover:bg-transparent"><Link to="/contact">Build my training plan <span className="ml-2 grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><ArrowRight /></span></Link></Button></div>
       <nav aria-label={`Option ${option.id} ${mode} training locations`} className="mt-6 flex items-center gap-1">
         <MapPin aria-hidden className="size-3.5 shrink-0 text-background/55" />
-        {locations.map(([city, state, code]) => <Button key={code} asChild variant="ghost" className="h-11 shrink-0 rounded-full border border-background/25 px-2 text-[10px] font-bold uppercase text-background/75 hover:bg-primary hover:text-primary-foreground"><Link to="/contact" search={{ location: code }}>{city}, {state}</Link></Button>)}
+        {locations.map(([city, state, code]) => <Button key={code} asChild variant="ghost" className="h-11 shrink-0 rounded-full border border-background/25 px-2 text-xs font-bold uppercase text-background/75 hover:bg-primary hover:text-primary-foreground"><Link to="/contact" search={{ location: code }}>{city}, {state}</Link></Button>)}
       </nav>
     </div>
   </div>;

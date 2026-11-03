@@ -40,7 +40,7 @@ function HomePage() {
             <h1 className="mt-2.5 font-display text-[clamp(1.05rem,5.1vw,1.4rem)] leading-[1] sm:mt-3 sm:text-[2.2rem] lg:text-[2.8rem]"><span className="line-mask hero-mask"><span style={{ ["--d" as string]: "90ms" }}>BECOME A PROFESSIONAL PILOT</span></span></h1>
           </div>
           <HeroCta />
-          <nav aria-label="Training locations" className="hero-step mt-4 flex flex-nowrap items-center gap-1 text-[10px] font-bold uppercase tracking-[0.08em] text-background/75 sm:gap-2 sm:text-[11px] sm:tracking-[0.14em]" style={{ ["--d" as string]: "360ms" }}>
+          <nav aria-label="Training locations" className="hero-step mt-4 flex flex-wrap items-center gap-1 text-xs font-bold uppercase tracking-[0.06em] text-background/75 sm:gap-2 sm:tracking-[0.14em]" style={{ ["--d" as string]: "360ms" }}>
             <MapPin aria-hidden className="mr-0.5 size-3.5 shrink-0 text-background/55" />
             {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} className="shrink-0 whitespace-nowrap rounded-full border border-background/25 px-2 py-1.5 transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground sm:px-3">{a.label}, {a.code}</button>)}
           </nav>

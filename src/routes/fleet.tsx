@@ -128,12 +128,12 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
         {aircraftModelUrl(f.registration)
           ? <AircraftMedia reg={f.registration} photo={f.image} />
           : <img src={f.image} alt={`${f.name} ${f.registration}${f.nickname ? ` “${f.nickname}”` : ""}`} width={1200} height={900} loading="lazy" decoding="async" className="fleet-cutout h-full w-full object-contain p-5" />}
-        <Button variant="secondary" onClick={(e) => onView(e.currentTarget)} className="absolute bottom-3 right-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-ink/80 px-4 text-[11px] font-bold uppercase tracking-[0.14em] text-background backdrop-blur-md hover:bg-primary">
+        <Button variant="secondary" onClick={(e) => onView(e.currentTarget)} className="absolute bottom-3 right-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-ink/80 px-4 text-xs font-bold uppercase tracking-[0.14em] text-background backdrop-blur-md hover:bg-primary">
           <Maximize className="size-4" /> View photo
         </Button>
       </div>
       <div className="p-5 sm:p-6">
-        <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-primary-text"><span className="h-px w-5 bg-primary" />{f.registration}</p>
+        <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-primary-text"><span className="h-px w-5 bg-primary" />{f.registration}</p>
         <h2 className="mt-2 font-display text-2xl leading-tight sm:text-3xl">{f.name}</h2>
         {f.nickname && <p className="font-display text-base text-muted-foreground">“{f.nickname}”</p>}
         <dl className="mt-4 flex flex-wrap gap-2">
@@ -149,8 +149,8 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
           {specs.length > 0 && (
             <Section title="Full specs" open={open}>
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                {specs.map(([k, v]) => <div key={k}><dt className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{k}</dt><dd className="font-semibold">{v}</dd></div>)}
-                {f.prepay && <div><dt className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Prepay rate</dt><dd className="font-semibold">{f.prepay}</dd></div>}
+                {specs.map(([k, v]) => <div key={k}><dt className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{k}</dt><dd className="font-semibold">{v}</dd></div>)}
+                {f.prepay && <div><dt className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Prepay rate</dt><dd className="font-semibold">{f.prepay}</dd></div>}
               </dl>
             </Section>
           )}
