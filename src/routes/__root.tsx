@@ -79,13 +79,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: ({ matches }) => {
     // Canonical/og:url live here only (single source; leaf routes never add one), for sitemap pages only.
     const canonical = canonicalUrl(matches[matches.length - 1] as Parameters<typeof canonicalUrl>[0]);
+    const notFound = matches.some((m) => m.status === "notFound" || (m as { globalNotFound?: boolean }).globalNotFound);
     return {
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#151722" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-      { title: "Lakes Area Aviation" },
+      { title: notFound ? "Page not found | Lakes Area Aviation" : "Lakes Area Aviation" },
       { name: "description", content: "Accelerated flight training and pilot ratings." },
       { name: "author", content: "Lakes Area Aviation" },
       { property: "og:type", content: "website" },
