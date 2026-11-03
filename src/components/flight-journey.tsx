@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Phone } from "lucide-react";
 import { Button } from "./ui/button";
-import { journeyFrame, journeyStop, JOURNEY_STAGE_SVH, pinnedStepDown, stageStopFraction, stackProgress, stackOffset, isModeSwitchPoint, resolveMode, STOP_TOL, type JourneyMode, type PageSegment } from "../lib/journey-pacing";
+import { journeyFrame, journeyAltitude, journeyStop, JOURNEY_STAGE_SVH, pinnedStepDown, stageStopFraction, stackProgress, stackOffset, isModeSwitchPoint, resolveMode, STOP_TOL, type JourneyMode, type PageSegment } from "../lib/journey-pacing";
 import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
 import { patternFor, pickRunway, type PatternField } from "../lib/traffic-pattern";
 import { useMetar } from "../lib/use-metar";
@@ -372,7 +372,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const total = Math.max(1, el.offsetHeight - viewportHeight);
       const scrolled = journeyFrame(-rect.top / total, n);
       const showActive = (idx: number) => {
-        if (hudRef.current) hudRef.current.textContent = Math.round(scrolled.progress * 35000).toLocaleString("en-US");
+        if (hudRef.current) hudRef.current.textContent = journeyAltitude(scrolled, n).toLocaleString("en-US");
         if (barRef.current) barRef.current.style.transform = `scaleY(${scrolled.progress})`;
         if (idx === last) return;
         last = idx;
@@ -493,7 +493,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   // Active runway per airport stage from live wind; calm-wind runway (and no readout) without weather.
   const ops = useMemo(() => stages.map((st) => {
     if (!st.traffic) return null;
-    const obs = metar?.[st.traffic.wxStation] ?? null;
+    const obs = metar?.[st.traffic.ident] ?? metar?.[st.traffic.wxStation] ?? null;
     const rwy = pickRunway(st.traffic, obs ? { dir: obs.dir, kt: obs.kt } : null);
     return { obs, rwy, pattern: patternFor(st.traffic, rwy) };
   }), [stages, metar]);
@@ -532,7 +532,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
             </div>
           </div>
         ))}
-        <div className="journey-shade pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-ink via-ink/40 to-ink/50 transition-opacity duration-300" />
+        <div className="journey-shade pointer-events-none absolute inset-0 z-10 transition-opacity duration-300" />
         <div className="journey-grain pointer-events-none absolute inset-0 z-10" />
         <div ref={fadeTopRef} aria-hidden className="pointer-events-none absolute inset-0 z-40 bg-ink" style={{ opacity: 0 }} />
         <div ref={fadeBottomRef} aria-hidden className={`pointer-events-none absolute inset-0 z-40 ${fadeBottom === "background" ? "bg-background" : "bg-ink"}`} style={{ opacity: 0 }} />

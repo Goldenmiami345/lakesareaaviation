@@ -177,3 +177,14 @@ export function isModeSwitchPoint(stageStops: number[], y: number) {
 export function resolveMode(current: JourneyMode, wanted: JourneyMode, atSwitchPoint: boolean): JourneyMode {
   return atSwitchPoint ? wanted : current;
 }
+
+// Altitude readout: each stage rests on a round target (evenly spaced to `max`, whole
+// thousands); the value only counts between targets while a stage transition is moving.
+export function journeyStageAltitude(index: number, count: number, max = 35000) {
+  const length = Math.max(1, count);
+  return length < 2 ? 0 : Math.round((clamp(index, 0, length - 1) / (length - 1)) * max / 1000) * 1000;
+}
+export function journeyAltitude(frame: { stage: number; next: number; transition: number }, count: number, max = 35000) {
+  const a = journeyStageAltitude(frame.stage, count, max), b = journeyStageAltitude(frame.next, count, max);
+  return Math.round(a + (b - a) * frame.transition);
+}

@@ -270,6 +270,9 @@ html.journey-blend .journey-layer, html.journey-blend .journey-layer * { transit
 .journey-copy-wrap, .journey-hud { transition: opacity .3s ease; }
 .journey-viewport[data-zoomed] .journey-copy-wrap { opacity: 0; pointer-events: none !important; }
 .journey-viewport[data-zoomed] .journey-copy-wrap * { pointer-events: none !important; }
+/* Phones: darken only the lower ~40% behind the copy plus a light band under the header, so photos stay clear. */
+.journey-shade { background: linear-gradient(to top, var(--ink) 0%, color-mix(in oklab, var(--ink) 94%, transparent) 26%, color-mix(in oklab, var(--ink) 60%, transparent) 36%, transparent 46%, transparent 80%, color-mix(in oklab, var(--ink) 45%, transparent) 100%); }
+@media (min-width: 1024px) { .journey-shade { background: linear-gradient(to top, var(--ink) 0%, color-mix(in oklab, var(--ink) 40%, transparent) 50%, color-mix(in oklab, var(--ink) 50%, transparent) 100%); } }
 .journey-viewport[data-zoomed] .journey-shade { opacity: .3; }
 
 /* Display headings: safe leading for Andada Pro so multi-line descenders/ascenders never touch. */
@@ -277,8 +280,9 @@ h1.font-display { line-height: 1.12; }
 h2.font-display, h3.font-display { line-height: 1.15; }
 
 /* Soft eased blend from ink bands into light sections; reads --surface-light so the color trial reverts cleanly. */
-@utility edge-fade-b { position: relative; &::after { content: ""; position: absolute; inset: auto 0 0 0; height: 96px; pointer-events: none; z-index: 0; background: linear-gradient(to bottom, transparent 0%, color-mix(in oklab, var(--surface-light) 8%, transparent) 25%, color-mix(in oklab, var(--surface-light) 35%, transparent) 55%, color-mix(in oklab, var(--surface-light) 75%, transparent) 80%, var(--surface-light) 100%); } }
-@utility edge-fade-t { position: relative; &::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 96px; pointer-events: none; z-index: 0; background: linear-gradient(to top, transparent 0%, color-mix(in oklab, var(--surface-light) 8%, transparent) 25%, color-mix(in oklab, var(--surface-light) 35%, transparent) 55%, color-mix(in oklab, var(--surface-light) 75%, transparent) 80%, var(--surface-light) 100%); } }
+/* Navy/blue sections meet beige/navy with a clean edge: any navy<->beige blend passes through grey. */
+@utility edge-fade-b { position: relative; }
+@utility edge-fade-t { position: relative; }
 
 /* iOS native date inputs ignore width unless appearance is reset. */
 input.date-field { -webkit-appearance: none; appearance: none; display: block; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; height: 3.5rem; padding: 0 1rem; line-height: 3.5rem; text-align: left; }

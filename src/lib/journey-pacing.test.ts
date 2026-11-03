@@ -1,6 +1,6 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { journeyFrame, journeyLanding, journeyNearestLanding, JOURNEY_HOLD, JOURNEY_STAGE_SVH, journeyStop, stageStopFraction, pageStep, nearestPage } from "./journey-pacing";
+import { journeyAltitude, journeyFrame, journeyLanding, journeyNearestLanding, JOURNEY_HOLD, JOURNEY_STAGE_SVH, journeyStop, stageStopFraction, pageStep, nearestPage } from "./journey-pacing";
 
 describe("homepage journey pacing", () => {
 
@@ -161,4 +161,15 @@ describe("desktop stops land fully faded in", () => {
       });
     }
   }
+});
+
+describe("altitude readout", () => {
+  test("rests on each stage's round target altitude", () => {
+    const n = 6;
+    assert.deepEqual([0, 1, 2, 3, 4, 5].map((i) => journeyAltitude(journeyFrame(journeyLanding(i, n), n), n)), [0, 7000, 14000, 21000, 28000, 35000]);
+  });
+  test("counts only mid-transition", () => {
+    const v = journeyAltitude(journeyFrame((1 + 0.85) / 6, 6), 6);
+    assert.ok(v > 7000 && v < 14000);
+  });
 });

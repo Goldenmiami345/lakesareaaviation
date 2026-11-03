@@ -31,15 +31,15 @@ function Page() {
         <div className="grid gap-6 md:grid-cols-2" data-scroll-reveal>
           <div className="card-lift border border-border bg-card p-8">
             <p className="eyebrow text-primary-text">New students</p>
-            <p className="mt-4 text-lg text-muted-foreground">To talk with a member of our team, call us or fill out our "Contact Us" form by clicking the button below.</p>
-            <Link to="/contact" className="btn-shine mt-6 inline-flex min-h-12 items-center bg-primary px-6 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">Contact us</Link>
+            <p className="mt-4 text-lg text-muted-foreground">To talk with a member of our team, call us or build your training plan with the button below.</p>
+            <Link to="/contact" className="btn-shine mt-6 inline-flex min-h-12 items-center bg-primary px-6 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">Build my training plan</Link>
             <p className="mt-8 text-lg text-muted-foreground">Once you have talked with us, click the following button to get our scheduling system and start your journey!</p>
             <Link to="/new-students" className="mt-6 inline-flex min-h-12 items-center border border-ink px-6 text-xs font-bold uppercase tracking-[0.12em]">Sign up</Link>
           </div>
           <div className="card-lift border border-border bg-ink p-8 text-background">
             <p className="eyebrow text-primary-text">Current students</p>
             <p className="mt-4 text-lg text-background/75">Use the link below to request access to our various training resources.</p>
-            <Link to="/contact" className="btn-shine mt-6 inline-flex min-h-12 items-center bg-primary px-6 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">Current students</Link>
+            <Link to="/contact" className="btn-shine mt-6 inline-flex min-h-12 items-center bg-primary px-6 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">Build my training plan</Link>
           </div>
         </div>
         <div className="stagger-grid mt-16 grid gap-6 md:grid-cols-3" data-scroll-reveal>
