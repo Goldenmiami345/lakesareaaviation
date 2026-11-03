@@ -7,6 +7,7 @@ import {
   HeadContent,
   Scripts,
   type ErrorComponentProps,
+  isNotFound,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
@@ -79,8 +80,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: ({ matches }) => {
     // Canonical/og:url live here only (single source; leaf routes never add one), for sitemap pages only.
     const canonical = canonicalUrl(matches[matches.length - 1] as Parameters<typeof canonicalUrl>[0]);
-    console.log("NFDBG", matches.map((m) => [m.routeId, m.status, (m as any).globalNotFound, !!(m as any).error]));
-    const notFound = matches.some((m) => m.status === "notFound" || (m as { globalNotFound?: boolean }).globalNotFound);
+    // Unmatched URLs resolve to the root alone; a thrown notFound() lands on a match as its error.
+    const notFound = matches.length === 1 || matches.some((m) => isNotFound((m as { error?: unknown }).error));
     return {
     meta: [
       { charSet: "utf-8" },
