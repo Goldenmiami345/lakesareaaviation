@@ -79,6 +79,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   staticData: { sitemap: false },
   head: ({ matches }) => {
     // Canonical/og:url live here only (single source; leaf routes never add one), for sitemap pages only.
+    console.log("HEADDBG", matches.map((m) => [m.fullPath, (m as {staticData?: unknown}).staticData]));
     const canonical = canonicalUrl(matches[matches.length - 1] as Parameters<typeof canonicalUrl>[0]);
     return {
     meta: [
