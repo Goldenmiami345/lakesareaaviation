@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 
-export type MetarObs = { station: string; dir: number | null; kt: number; gust: number | null; obsTime: number; raw: string };
+import type { Metar } from "./wx-conditions";
+export type MetarObs = Metar;
 
-// Fetched after hydration only, so prerendered pages never wait on weather.
+// undefined = still loading, null = unavailable. Fetched after hydration only, so prerendered pages never wait on weather.
 export function useMetar() {
-  const [stations, setStations] = useState<Record<string, MetarObs> | null>(null);
+  const [stations, setStations] = useState<Record<string, MetarObs> | null | undefined>(undefined);
   useEffect(() => {
     let alive = true;
     const load = () => fetch("/api/public/metar")

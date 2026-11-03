@@ -6,6 +6,9 @@ import { journeyFrame, journeyAltitude, journeyStop, glideAt, glideDuration, new
 import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
 import { patternFor, pickRunway, type PatternField } from "../lib/traffic-pattern";
 import { useMetar } from "../lib/use-metar";
+import { profileAirport, trafficConditions, NO_CONDITIONS, type Metar } from "../lib/wx-conditions";
+import { WX_FIELDS } from "../lib/wx-stations";
+import { MetarLine, InstrumentConditions } from "./live-wx";
 import { useStageZoom } from "../lib/stage-zoom";
 import { TrafficPattern } from "./traffic-pattern";
 import { AirportScene } from './airport-scene';
@@ -42,12 +45,12 @@ function useIsPhone() {
 // Overlay viewBox (in the original image's pixel space) covering the whole phone canvas.
 const AERIAL_PHONE_VIEW = "265 -300 970 2100";
 
-type Stage = { code: string; label: string; time: string; title: string; text: string; img: string; alt: string; cta: string; slug?: string; location?: string; to?: "/introductory-flights" | "/contact" | "/locations"; hud?: string; zoom?: number; zoomIn?: number; w?: number; h?: number; video?: string; position?: string; traffic?: PatternField; perspective?: boolean; phoneImg?: string; phoneView?: string; drift?: boolean };
+type Stage = { code: string; label: string; time: string; title: string; text: string; img: string; alt: string; cta: string; slug?: string; location?: string; to?: "/introductory-flights" | "/contact" | "/locations"; hud?: string; zoom?: number; zoomIn?: number; w?: number; h?: number; video?: string; position?: string; traffic?: PatternField; perspective?: boolean; liveWx?: boolean; phoneImg?: string; phoneView?: string; drift?: boolean };
 
 const journeyStages: Stage[] = [
   { code: "01", label: "Discovery flight", time: "$100", title: "Take the controls on day one.", text: "Left seat, instructor beside you.", img: clouds, phoneImg: cloudsPhone, alt: "Sunrise above a sea of clouds", cta: "Book an intro flight", to: "/introductory-flights" },
   { code: "02", label: "Private pilot", time: "~21 days", title: "Your first certificate.", text: "One focused block.", img: runway, phoneImg: runwayPhone, phoneView: "0 -700 1376 1468", alt: "Oblique view of Little Falls (KLXL): runway 13/31 with the full-length runway 18/36 crossing near the runway 13 end", cta: "Private pilot details", slug: "private-pilot", perspective: true, w: 1376, h: 768 },
-  { code: "03", label: "Instrument rating", time: "10–14 days", title: "Train in the real cockpit.", text: "Fly by reference to instruments.", img: instrument, phoneImg: instrumentPhone, alt: "Real Lakes Area Aviation instrument panel flying through instrument conditions", cta: "Instrument details", slug: "instrument-rating", position: "center", zoom: 0.2, zoomIn: 0.03, drift: true },
+  { code: "03", label: "Instrument rating", time: "10–14 days", title: "Train in the real cockpit.", text: "Fly by reference to instruments.", img: instrument, phoneImg: instrumentPhone, alt: "Real Lakes Area Aviation instrument panel flying through instrument conditions", cta: "Instrument details", slug: "instrument-rating", liveWx: true, position: "center", zoom: 0.2, zoomIn: 0.03, drift: true },
   { code: "04", label: "Commercial pilot", time: "5–7 days", title: "Fly professionally.", text: "Commercial standards in a focused block.", img: commercial, phoneImg: commercialPhone, alt: "Lakes Area Aviation airplanes on the ramp at sunset", cta: "Commercial details", slug: "commercial-single-engine" },
   { code: "05", label: "CFI & CFII", time: "4–6 weeks", title: "Become the instructor.", text: "The exams: 1-hour oral and 1-hour flight.", img: instructor, phoneImg: instructorPhone, alt: "Instructor and student inspecting a training airplane before flight", cta: "CFI & CFII track", slug: "cfi-cfii", position: "center" },
   { code: "06", label: "The right seat", time: "Your goal", title: "Build toward the airline flight deck.", text: "Every instructing hour moves you closer.", img: airline, alt: "Airline flight deck at night on final approach over city lights", cta: "Build my training plan", to: "/contact", video: airlineVideo.url, zoom: 0.2, zoomIn: 0.03 },
@@ -512,8 +515,14 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     if (!st.traffic) return null;
     const obs = metar?.[st.traffic.ident] ?? metar?.[st.traffic.wxStation] ?? null;
     const rwy = pickRunway(st.traffic, obs ? { dir: obs.dir, kt: obs.kt } : null);
-    return { obs, rwy, pattern: patternFor(st.traffic, rwy) };
+    const f = WX_FIELDS[st.traffic.ident as keyof typeof WX_FIELDS];
+    const conditions = trafficConditions(obs, { elevation: st.traffic.elevation, ...(f ? { lat: f.lat, lon: f.lon } : {}) }, rwy.runway);
+    return { obs, rwy, conditions, pattern: profileAirport(patternFor(st.traffic, rwy), conditions.mode) };
   }), [stages, metar]);
+  // Private Pilot oblique view and Instrument stage: Little Falls conditions.
+  const klxl = metar?.["KLXL"] ?? null;
+  const klxlConditions = useMemo(() => trafficConditions(klxl, { elevation: 1123, lat: WX_FIELDS.KLXL.lat, lon: WX_FIELDS.KLXL.lon }, "13"), [klxl]);
+  const [wxOpen, setWxOpen] = useState(false);
   const s = stages[active] ?? stages[0];
   if (!s) return null;
   return (
@@ -525,7 +534,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         {stages.map((st, i) => (
           <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="journey-layer absolute -inset-[2%] bg-ink backface-hidden" data-active={i === active ? "" : undefined} style={{ zIndex: stages.length - i }}>
             <div className="journey-zoom absolute inset-0 origin-top-left">
-            {st.traffic && st.phoneImg ? <AirportScene airport={ops[i]?.pattern ?? st.traffic} active={i===active} photo={st.phoneImg} original={st.img} wind={ops[i]?.obs ?? null} runwayHeading={ops[i]?.rwy.trueHdg ?? Number(st.traffic.runway)*10} /> : st.video ? (
+            {st.traffic && st.phoneImg ? <AirportScene airport={ops[i]?.pattern ?? st.traffic} active={i===active} photo={st.phoneImg} original={st.img} wind={ops[i]?.obs ?? null} runwayHeading={ops[i]?.rwy.trueHdg ?? Number(st.traffic.runway)*10} conditions={ops[i]?.conditions ?? NO_CONDITIONS} /> : st.video ? (
               <video
                 ref={(el) => { videoRefs.current[i] = el; }}
                 src={st.video}
@@ -544,8 +553,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
                 <img src={st.img} alt={st.alt} width={st.w ?? 1920} height={st.h ?? 1088} loading="lazy" decoding="async" className={`h-full w-full bg-ink object-cover${st.drift ? " journey-drift" : ""}`} style={{ objectPosition: st.position ?? "center" }} />
               </picture>
             )}
-            {SHOW_TRAFFIC && st.traffic && !st.phoneImg && <TrafficPattern airport={ops[i]?.pattern ?? st.traffic} wind={ops[i]?.obs ?? null} runwayHeading={ops[i]?.rwy.trueHdg ?? Number(st.traffic.runway)*10} active={i === active} />}
-            {st.perspective && <TrafficPerspective wind={metar?.['KLXL'] ?? null} active={i === active} {...(isPhone && st.phoneView ? { viewBox: st.phoneView } : {})} />}
+            {SHOW_TRAFFIC && st.traffic && !st.phoneImg && <TrafficPattern airport={ops[i]?.pattern ?? st.traffic} wind={ops[i]?.obs ?? null} runwayHeading={ops[i]?.rwy.trueHdg ?? Number(st.traffic.runway)*10} conditions={ops[i]?.conditions ?? NO_CONDITIONS} active={i === active} />}
+            {st.perspective && <TrafficPerspective wind={klxl} conditions={klxlConditions} active={i === active} {...(isPhone && st.phoneView ? { viewBox: st.phoneView } : {})} />}
             </div>
           </div>
         ))}
@@ -556,12 +565,16 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
 
         {/* HUD */}
         <div className="journey-hud absolute left-5 sm:left-[max(var(--gutter),calc((100%-1720px)/2))] top-24 z-20 font-mono text-xs uppercase tracking-[0.2em] text-background/70 lg:text-[13px]">
-          {mode === "alt" ? <p>Alt <span ref={hudRef} className="tabular-nums text-background">0</span> ft</p> : <><p className="text-background">{s.hud}</p>{(() => { const o = ops[active]; if (!o?.obs) return null; const w = o.obs; return (
-            <p className="mt-1.5 flex items-center gap-1.5 text-background" data-wind aria-label={`Wind at ${w.station}: ${w.dir === null ? (w.kt ? "variable" : "calm") : `${w.dir} degrees`} ${w.kt} knots${w.gust ? ` gusting ${w.gust}` : ""}. Active runway ${o.rwy.runway}`}>
+          {mode === "alt" ? <p>Alt <span ref={hudRef} className="tabular-nums text-background">0</span> ft</p> : <><p className="text-background">{s.hud}</p>{s.traffic && <div className="wx-hud-slot">{(() => { const o = ops[active]; if (!o?.obs) return null; const w = o.obs; return (<>
+            <button type="button" onClick={() => setWxOpen((v) => !v)} aria-expanded={wxOpen} className="pointer-events-auto mt-1.5 flex min-h-6 items-center gap-1.5 text-left uppercase tracking-[inherit] text-background sm:pointer-events-none sm:cursor-default" data-wind aria-label={`Wind at ${w.station}: ${w.dir === null ? (w.kt ? "variable" : "calm") : `${w.dir} degrees`} ${w.kt} knots${w.gust ? ` gusting ${w.gust}` : ""}. Active runway ${o.rwy.runway}. ${wxOpen ? "Hide" : "Show"} full METAR`}>
               {w.dir !== null && w.kt > 0 && <svg viewBox="0 0 12 12" className="size-3 text-[color:var(--radar)]" style={{ transform: `rotate(${w.dir + 180}deg)` }} aria-hidden><path d="M6 1v10M2.5 4.5 6 1l3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>}
               <span>Wind {w.kt === 0 ? "calm" : `${w.dir === null ? "VRB" : String(w.dir).padStart(3, "0") + "°"} ${w.kt}${w.gust ? `G${w.gust}` : ""}KT`}</span>
               <span className="text-background/60">{w.station} · RWY {o.rwy.runway}</span>
-            </p>); })()}{s.traffic && <p className="mt-1 hidden sm:block">RWY {ops[active]?.rwy.runway ?? s.traffic.runway} · {ops[active]?.rwy.side ?? s.traffic.side} traffic · TPA {(s.traffic.elevation + s.traffic.tpaAgl).toLocaleString("en-US")} MSL</p>}</>}
+              <span aria-hidden className="text-background/60 sm:hidden">{wxOpen ? "▴" : "▾"}</span>
+            </button>
+            <p className={`mt-1 max-w-[min(34rem,calc(100vw-6rem))] ${wxOpen ? "" : "max-sm:hidden"}`}><MetarLine obs={w} /></p>
+            {o.conditions.mode === "ifr" && <p className="mt-1 font-bold text-background" data-pattern-closed>{o.obs.cat ?? "IFR"} — pattern closed</p>}
+          </>); })()}</div>}{s.traffic && <p className="mt-1 hidden sm:block">RWY {ops[active]?.rwy.runway ?? s.traffic.runway} · {ops[active]?.rwy.side ?? s.traffic.side} traffic · TPA {(s.traffic.elevation + (ops[active]?.pattern.tpaAgl ?? s.traffic.tpaAgl)).toLocaleString("en-US")} MSL</p>}</>}
           <p className="mt-1 hidden sm:block">Stage {s.code} / 0{stages.length}</p>
         </div>
 
@@ -589,7 +602,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         {/* Copy */}
         <div className="site-container journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 z-20 pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-lg:!pr-14 sm:pb-24 md:pb-12 lg:pb-16">
           <div ref={copyRef} className="journey-copy max-w-2xl">
-            <StageCopy s={s} />
+            <StageCopy s={s} wx={klxl} wxLoading={metar === undefined} />
           </div>
         </div>
         {/* Stack mode (scrolling up): every stage's copy rides on its own page. */}
@@ -597,7 +610,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
           {stages.map((st, i) => (
             <div key={`copy-${st.code}`} ref={(el) => { stackCopyRefs.current[i] = el; }} inert className="absolute inset-0">
               <div className="site-container journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-lg:!pr-14 sm:pb-24 md:pb-12 lg:pb-16">
-                <div className="journey-copy max-w-2xl"><StageCopy s={st} /></div>
+                <div className="journey-copy max-w-2xl"><StageCopy s={st} wx={klxl} wxLoading={metar === undefined} /></div>
               </div>
             </div>
           ))}
@@ -607,13 +620,14 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   );
 }
 
-function StageCopy({ s }: { s: Stage }) {
+function StageCopy({ s, wx, wxLoading }: { s: Stage; wx: Metar | null; wxLoading: boolean }) {
   return (
     <>
       <p className="stage-label max-sm:tracking-[0.18em]"><span className="max-sm:hidden">{s.code} · </span>{s.label}<span className="sm:hidden"> · {s.time}</span></p>
       <p className="mt-2 hidden font-display text-5xl leading-none sm:block">{s.time}</p>
       <h2 className="mt-1.5 font-display text-lg leading-[1.1] min-[380px]:text-xl sm:mt-2 sm:text-2xl">{s.title}</h2>
       <p className="mt-1 max-w-lg text-pretty text-sm leading-snug text-background/80 sm:mt-2 sm:text-base">{s.text}</p>
+      {s.liveWx && <InstrumentConditions obs={wx} loading={wxLoading} />}
       <div className="flex flex-nowrap items-end gap-2">
       {s.location
         ? <Link to="/contact" search={{ location: s.location }} className="interactive-arrow btn-shine pointer-events-auto mt-2.5 inline-flex min-h-11 items-center gap-2 whitespace-nowrap bg-primary px-3 text-xs max-sm:tracking-[0.06em] sm:gap-3 sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>

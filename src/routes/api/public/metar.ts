@@ -1,17 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { parseMetarRow, type Metar } from "@/lib/wx-conditions";
 import { WX_FIELDS, WX_SEARCH_DEG, nearestStation } from "@/lib/wx-stations";
 
-// Public, read-only: returns the latest METAR wind for a fixed list of stations.
+// Public, read-only: returns the latest parsed METAR (wind, temp, altimeter, sky, category) for a fixed list of stations.
 // No caller input reaches the upstream request, so there is nothing private to protect.
 const STATIONS = ["KLXL", "KDEN", "KSEZ"] as const;
 const TTL = 10 * 60 * 1000;
 const MAX_AGE_S = 2 * 60 * 60; // ignore observations older than 2 hours
 
-type Obs = { station: string; dir: number | null; kt: number; gust: number | null; obsTime: number; raw: string };
+type Obs = Metar;
 let cache: { at: number; body: string } | null = null;
 
-type Row = { icaoId: string; lat: number; lon: number; wdir: number | string; wspd: number; wgst?: number | null; obsTime: number; rawOb: string };
-const toObs = (r: Row): Obs => ({ station: r.icaoId, dir: typeof r.wdir === "number" ? r.wdir : null, kt: r.wspd, gust: r.wgst ?? null, obsTime: r.obsTime, raw: r.rawOb });
+type Row = Parameters<typeof parseMetarRow>[0] & { lat: number; lon: number };
+const toObs = (r: Row): Obs => parseMetarRow(r);
 
 // Per field: the nearest station (by distance) with a current METAR; keyed by the field ident.
 async function nearestByField(now: number): Promise<Record<string, Obs>> {
@@ -31,13 +32,13 @@ async function load(): Promise<string> {
   const url = `https://aviationweather.gov/api/data/metar?ids=${STATIONS.join(",")}&format=json`;
   const res = await fetch(url, { headers: { "User-Agent": "LakesAreaAviation-site/1.0" } });
   if (!res.ok) throw new Error(`aviationweather ${res.status}`);
-  const rows = (await res.json()) as Array<{ icaoId: string; wdir: number | string; wspd: number; wgst?: number | null; obsTime: number; rawOb: string }>;
+  const rows = (await res.json()) as Row[];
   const now = Date.now() / 1000;
   const stations: Record<string, Obs> = {};
   for (const r of rows) {
     if (!STATIONS.includes(r.icaoId as (typeof STATIONS)[number]) || typeof r.wspd !== "number" || now - r.obsTime > MAX_AGE_S) continue;
     if (stations[r.icaoId] && stations[r.icaoId]!.obsTime >= r.obsTime) continue;
-    stations[r.icaoId] = { station: r.icaoId, dir: typeof r.wdir === "number" ? r.wdir : null, kt: r.wspd, gust: r.wgst ?? null, obsTime: r.obsTime, raw: r.rawOb };
+    stations[r.icaoId] = toObs(r);
   }
   // Field idents map to their nearest current station; fixed fallbacks stay under their own IDs.
   Object.assign(stations, await nearestByField(now));
@@ -50,7 +51,10 @@ export const Route = createFileRoute("/api/public/metar")({
     handlers: {
       GET: async () => {
         try {
-          if (!cache || Date.now() - cache.at > TTL) cache = { at: Date.now(), body: await load() };
+          if (!cache || Date.now() - cache.at > TTL) {
+            // Serve the last good body (stale) if aviationweather.gov fails.
+            try { cache = { at: Date.now(), body: await load() }; } catch (e) { if (!cache) throw e; cache = { ...cache, at: Date.now() - TTL + 60_000 }; }
+          }
           return new Response(cache.body, { headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=300, s-maxage=600" } });
         } catch {
           return Response.json({ error: "weather unavailable" }, { status: 502, headers: { "Cache-Control": "no-store" } });

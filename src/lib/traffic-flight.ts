@@ -1,3 +1,4 @@
+import { crabAngle, gustJitter } from './wx-conditions';
 import { feetPerPixel, patternWaypoints, type PatternAirport, type PatternSample, type Wind, headwind } from './traffic-pattern';
 
 export type AircraftType = '172' | '150' | 'citabria' | 'apache';
@@ -22,7 +23,7 @@ export function groundSpeed(airspeed: number, wind: Wind | null, trueHeading: nu
 }
 type Segment = { p: {x:number;y:number;agl:number}; q: {x:number;y:number;agl:number}; phase: string; heading: number; length: number; v0: number; v1: number; seconds: number; start: number };
 /** holdTimes: seconds into the lap when each hold point is entered and left. */
-export type FlightPlan = { segments: Segment[]; seconds: number; airport: PatternAirport; holdTimes?: Partial<Record<'crosswind' | 'downwind-early' | 'downwind-late', { entry: number; exit: number }>> };
+export type FlightPlan = { segments: Segment[]; seconds: number; airport: PatternAirport; gust?: number; holdTimes?: Partial<Record<'crosswind' | 'downwind-early' | 'downwind-late', { entry: number; exit: number }>> };
 const KT_MPS = 1852 / 3600;
 // extendPx lengthens the downwind leg (base turn and final start move out along the
 // runway axis), the way a controller sequences traffic; 0 keeps the published corners.
@@ -32,8 +33,40 @@ export type HoldPoint = 'crosswind' | 'downwind-early' | 'downwind-late';
 export type Hold = { at: HoldPoint; turns: number; radius: number };
 /** Fraction along the leg (points[k] → points[k+1] after the upwind report is added) where each hold starts. */
 export const HOLD_ENTRY: Record<HoldPoint, { k: number; f: number }> = { 'downwind-late': { k: 5, f: .3 }, 'downwind-early': { k: 4, f: .55 }, crosswind: { k: 3, f: .5 } };
-export function makeFlightPlan(a: PatternAirport, reg: string, wind: Wind | null = null, runwayHeading = Number(a.runway) * 10, extendPx = 0, holds: readonly Hold[] = [], departureExtendPx = 0): FlightPlan {
+/** Weather inputs: climb = climb-rate multiplier (density altitude); gust = gust spread kt; approach = straight-in only (IFR). */
+export type FlightOptions = { climb?: number; gust?: number; approach?: boolean };
+/** Liftoff point as a fraction of runway length: headwind shortens the roll, tailwind lengthens it. */
+export function liftoffFraction(headwindKt: number, liftoffKt = 55) {
+  const r = Math.max(0, liftoffKt - headwindKt) / liftoffKt;
+  return Math.max(0.25, Math.min(0.7, 0.08 + 0.37 * r * r));
+}
+/** Crosswind-turn shift along the runway (px): weaker climb → later turn; cold → tighter. */
+export function climbOutShiftPx(a: PatternAirport, climb = 1) {
+  return Math.max(-0.3, Math.min(1, 1 / climb - 1)) * a.extension;
+}
+/** Straight-in practice approach: ~3 NM final on a 3° path, low approach/touch-and-go, runway-heading climb-out. */
+export function approachWaypoints(a: PatternAirport, finalPx: number, roll: number) {
+  const len = Math.hypot(a.end.x - a.threshold.x, a.end.y - a.threshold.y) || 1;
+  const u = { x: (a.end.x - a.threshold.x) / len, y: (a.end.y - a.threshold.y) / len };
+  const at = (along: number) => ({ x: a.threshold.x + u.x * along, y: a.threshold.y + u.y * along });
+  const glide = finalPx * feetPerPixel(a) * Math.tan(3 * Math.PI / 180);
+  return [
+    { ...at(-finalPx), agl: glide, knots: 90, phase: 'Final' },
+    { ...at(len * 0.08), agl: 0, knots: 65, phase: 'Touch-and-go' },
+    { ...at(len * roll), agl: 0, knots: 60, phase: 'Takeoff' },
+    { ...at(len + finalPx), agl: a.tpaAgl, knots: 80, phase: 'Takeoff' },
+  ];
+}
+export function makeFlightPlan(a: PatternAirport, reg: string, wind: Wind | null = null, runwayHeading = Number(a.runway) * 10, extendPx = 0, holds: readonly Hold[] = [], departureExtendPx = 0, opts: FlightOptions = {}): FlightPlan {
   const original = patternWaypoints(a);
+  const hw = wind ? headwind(wind, runwayHeading) : 0, roll = liftoffFraction(hw);
+  const rollPt = original[1];
+  if (rollPt) { const len0 = Math.hypot(a.end.x-a.threshold.x,a.end.y-a.threshold.y)||1; original[1] = { ...rollPt, x: a.threshold.x+(a.end.x-a.threshold.x)*roll, y: a.threshold.y+(a.end.y-a.threshold.y)*roll }; void len0; }
+  const climbShift = climbOutShiftPx(a, opts.climb);
+  if (climbShift) {
+    const len = Math.hypot(a.end.x-a.threshold.x,a.end.y-a.threshold.y)||1;
+    for (const k of [2,3]) { const p=original[k]; if(p) original[k]={...p,x:p.x+(a.end.x-a.threshold.x)/len*climbShift,y:p.y+(a.end.y-a.threshold.y)/len*climbShift}; }
+  }
   // Keep final short: delay outside the exclusive window by carrying upwind
   // farther past the departure end before the crosswind turn, then returning on
   // downwind. This elongates the circuit without circles or final congestion.
@@ -56,7 +89,8 @@ export function makeFlightPlan(a: PatternAirport, reg: string, wind: Wind | null
   const runwayLen = Math.hypot(a.end.x-a.threshold.x,a.end.y-a.threshold.y)||1;
   const f = Math.min(.95, (runwayLen*.55 + a.extension*.2) / Math.hypot(cross.x-takeoff.x,cross.y-takeoff.y));
   const upwind = { x: takeoff.x + (cross.x - takeoff.x) * f, y: takeoff.y + (cross.y - takeoff.y) * f, agl: takeoff.agl + (cross.agl - takeoff.agl) * f, knots: 73, phase: 'Upwind' };
-  const points = [...original.slice(0, 2), upwind, ...original.slice(2)];
+  const finalPx = Math.min(3 * 1852 / (feetPerPixel(a) * .3048), a.extension * 6);
+  const points = opts.approach ? approachWaypoints(a, finalPx, roll) : [...original.slice(0, 2), upwind, ...original.slice(2)];
   // Downwind 360s turn outward (away from the runway); crosswind 360s turn away from
   // the departure end. Each ring returns exactly to its entry point and heading.
   // Later hold points are inserted first so earlier indices stay valid.
@@ -79,15 +113,20 @@ export function makeFlightPlan(a: PatternAirport, reg: string, wind: Wind | null
     points.splice(k + 1, 0, q, ...ring);
     marks.push({ at: h, entry: q, exit: ring[ring.length - 1] ?? q });
   };
-  insertHold('downwind-late', { x: -u.x, y: -u.y }, n);
-  insertHold('downwind-early', { x: -u.x, y: -u.y }, n);
-  insertHold('crosswind', n, u);
+  if (!opts.approach) {
+    insertHold('downwind-late', { x: -u.x, y: -u.y }, n);
+    insertHold('downwind-early', { x: -u.x, y: -u.y }, n);
+    insertHold('crosswind', n, u);
+  }
   const runwayAngle = Math.atan2(a.end.y - a.threshold.y, a.end.x - a.threshold.x);
   const type = aircraftType(reg);
   const legs = points.slice(0, -1).flatMap((p, i) => {
     const q = points[i + 1]; if (!q) return [];
     const angle = Math.atan2(q.y - p.y, q.x - p.x);
-    return [{ p, q, heading: angle * 180 / Math.PI + 90, phase: p.phase, speed: groundSpeed(legSpeed(type, p.phase), wind, runwayHeading + (angle - runwayAngle) * 180 / Math.PI), length: Math.hypot(q.x - p.x, q.y - p.y) }];
+    const track = runwayHeading + (angle - runwayAngle) * 180 / Math.PI, tas = legSpeed(type, p.phase);
+    // Crab: heading points into the wind while the ground track stays on the leg (none on the ground roll).
+    const crab = p.phase === 'Touch-and-go' || (p.phase === 'Takeoff' && p.agl === 0 && q.agl === 0) ? 0 : crabAngle(tas, wind, track);
+    return [{ p, q, heading: angle * 180 / Math.PI + 90 + crab, phase: p.phase, speed: groundSpeed(tas, wind, track), length: Math.hypot(q.x - p.x, q.y - p.y) }];
   });
   const segments: Segment[] = [];
   let start = 0;
@@ -112,7 +151,7 @@ export function makeFlightPlan(a: PatternAirport, reg: string, wind: Wind | null
   });
   const holdTimes: NonNullable<FlightPlan['holdTimes']> = {};
   for (const m of marks) { const ti = (o: object) => segments[3 * points.indexOf(o as typeof points[number])]?.start ?? 0; holdTimes[m.at] = { entry: ti(m.entry), exit: ti(m.exit) }; }
-  return {segments,seconds:start,airport:a,holdTimes};
+  return {segments,seconds:start,airport:a,holdTimes,gust:opts.gust??0};
 }
 export function sampleFlight(plan: FlightPlan, seconds: number): PatternSample {
   const t = ((seconds % plan.seconds) + plan.seconds) % plan.seconds;
@@ -121,5 +160,5 @@ export function sampleFlight(plan: FlightPlan, seconds: number): PatternSample {
   const dt = t - s.start, dv = s.v1-s.v0;
   const f = Math.min(1, Math.max(0, Math.abs(dv)<1e-8 ? dt*s.v0/s.length : s.v0*Math.expm1(dt*dv/s.length)/dv));
   const agl = s.p.agl + (s.q.agl-s.p.agl)*f;
-  return {x:s.p.x+(s.q.x-s.p.x)*f,y:s.p.y+(s.q.y-s.p.y)*f,heading:s.heading,agl,msl:Math.round(plan.airport.elevation+agl),knots:Math.round((s.v0+dv*f)*feetPerPixel(plan.airport)*.3048/KT_MPS),phase:s.phase};
+  return {x:s.p.x+(s.q.x-s.p.x)*f,y:s.p.y+(s.q.y-s.p.y)*f,heading:s.heading+gustJitter(plan.gust??0,s.phase,agl,t),agl,msl:Math.round(plan.airport.elevation+agl),knots:Math.round((s.v0+dv*f)*feetPerPixel(plan.airport)*.3048/KT_MPS),phase:s.phase};
 }
