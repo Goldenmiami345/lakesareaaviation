@@ -23,7 +23,7 @@ function Page() {
         title="Train at your own pace, close to home."
         text="While we specialize in accelerated, full-time training, we value our local students — one of our main goals is to grow a community of aviators."
       />
-      <main className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
+      <div className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
         <div className="grid gap-12 lg:grid-cols-[1.1fr_.9fr]" data-scroll-reveal>
           <div>
             <p className="eyebrow text-primary">Your goals, your schedule</p>
@@ -61,7 +61,7 @@ function Page() {
             <a href={SCHOOL_PHONE_TEL} className="mt-8 inline-flex items-center gap-3 font-display text-3xl text-primary"><Phone className="size-6" />{SCHOOL_PHONE}</a>
           </div>
         </div>
-      </main>
+      </div>
       <InquiryBand />
     </SiteLayout>
   );

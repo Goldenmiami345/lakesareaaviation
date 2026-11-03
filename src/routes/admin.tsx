@@ -70,7 +70,7 @@ function AdminPage() {
     setBusy(false);
   }
 
-  return <main className="min-h-screen bg-ink px-5 py-20 text-background">
+  return <main id="main" className="min-h-screen bg-ink px-5 py-20 text-background">
     <div className="mx-auto max-w-xl">
       <a href="/" className="text-xs font-bold uppercase text-background/70">← Back to site</a>
       <div className="mt-10 border border-background/20 bg-background p-6 text-foreground sm:p-10">

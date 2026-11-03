@@ -121,7 +121,7 @@ function ContactPage() {
 
   return <SiteLayout>
     <PageIntro eyebrow="Training plan estimator" title="Build your training plan." text="Check what you already hold, choose what comes next, and see the published commitment before you call. All prices are estimates." />
-    <main className="mx-auto max-w-7xl px-5 py-14 lg:px-8 lg:py-20">
+    <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8 lg:py-20">
       <div className="grid gap-10 lg:grid-cols-[1.25fr_.75fr]">
         <div ref={plannerRef}>
           <PlannerStep number="01" title="Ratings you already have">
@@ -139,7 +139,7 @@ function ContactPage() {
           </PlannerStep>
         </div>
 
-        <aside id="breakdown" className="h-fit scroll-mt-24 bg-ink p-6 text-background lg:sticky lg:top-24 sm:p-8">
+        <div id="breakdown" className="h-fit scroll-mt-24 bg-ink p-6 text-background lg:sticky lg:top-24 sm:p-8">
           <p className="stage-label">Your estimate</p>
           <div className="mt-6 grid grid-cols-2 gap-px bg-background/20">
             <Result value={`${totals.days}+`} label="Training days" />
@@ -155,7 +155,7 @@ function ContactPage() {
           </div>
           <p className="mt-5 text-xs leading-relaxed text-background/60">All prices are estimates, based on published minimum course days and prices, plus a 20% buffer. Weather, proficiency, examiner fees, tax, aircraft availability, prerequisites, and time-building can change the final schedule and cost.</p>
           <a href="#request" className="mt-6 flex min-h-13 items-center justify-center bg-primary px-5 text-center text-sm font-bold uppercase text-primary-foreground">Send this plan</a>
-        </aside>
+        </div>
       </div>
 
       <section id="request" className="mt-20 scroll-mt-24 border-t border-border pt-14">
@@ -176,7 +176,7 @@ function ContactPage() {
           {error && <p ref={errorRef} tabIndex={-1} role="alert" className="outline-none text-sm text-destructive sm:col-span-2">{error}</p>}
         </form></div>}
       </section>
-    </main>
+    </div>
     {mounted && createPortal(<Toaster position="top-center" offset={84} mobileOffset={{ top: 84 }} icons={{ success: <Check className="size-4 text-primary" /> }} />, document.body)}
     {mounted && createPortal(<div aria-live="polite" className={`fixed inset-x-0 bottom-0 z-40 border-t border-background/15 bg-ink px-4 pb-[calc(.75rem+env(safe-area-inset-bottom))] pt-3 text-background shadow-2xl transition-transform duration-300 lg:hidden ${showBar ? "translate-y-0" : "pointer-events-none translate-y-full"}`}>
       <div className="mx-auto flex max-w-xl items-center justify-between gap-3">

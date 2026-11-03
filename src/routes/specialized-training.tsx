@@ -19,7 +19,7 @@ function Page() {
   return (
     <SiteLayout>
       <PageIntro eyebrow="Specialized training" title="Endorsements and courses beyond the ratings." text="Along with our commitment to providing you the best training to fit your needs and schedule, we also offer specialized training in a variety of endorsements and ratings." />
-      <main className="mx-auto max-w-7xl space-y-16 px-5 py-16 sm:py-20 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-16 px-5 py-16 sm:py-20 lg:px-8">
         <section className="grid gap-8 bg-ink p-8 text-background md:grid-cols-[1fr_auto] md:items-end md:p-12" data-scroll-reveal>
           <div>
             <p className="eyebrow text-primary">Kodiak 100 training</p>
@@ -42,7 +42,7 @@ function Page() {
           </section>
         </div>
         <p className="text-sm text-muted-foreground">Contact us for more details on pricing and timeline estimates. <Link to="/contact" className="font-bold text-primary">Ask about specialized training →</Link></p>
-      </main>
+      </div>
       <InquiryBand />
     </SiteLayout>
   );

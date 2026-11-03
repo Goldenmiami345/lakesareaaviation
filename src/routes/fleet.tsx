@@ -86,7 +86,7 @@ function Page() {
         title="The airplanes you’ll actually fly."
         text="Real photos, real tail numbers and the published rates for every airplane in the Lakes Area Aviation fleet."
       />
-      <main className="mx-auto max-w-7xl px-4 pb-20 pt-8 sm:px-5 lg:px-8 lg:pt-12">
+      <div className="mx-auto max-w-7xl px-4 pb-20 pt-8 sm:px-5 lg:px-8 lg:pt-12">
         <div role="group" aria-label="Filter by role" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
           {ROLES.map((r) => {
             const count = r.id === "all" ? fleet.length : fleet.filter((f) => f.role === r.id).length;
@@ -106,7 +106,7 @@ function Page() {
               onView={(btn, index = 0) => { opener.current = btn; setViewIndex(index); setViewer(f); }} />
           ))}
         </div>
-      </main>
+      </div>
       <InquiryBand />
       {viewer && (
         <Suspense fallback={<div className="fixed inset-0 z-[80] bg-ink" />}>
