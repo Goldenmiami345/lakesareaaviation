@@ -9,6 +9,7 @@
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-text: var(--primary-text);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -59,12 +60,17 @@
   --border: oklch(0.82 0.025 66);
   --input: oklch(0.82 0.025 66);
   --ring: oklch(0.56 0.22 258);
+  /* Accent TEXT on light surfaces (>=4.7:1 on beige and secondary); fills/buttons keep --primary. */
+  --primary-text: #0059cc;
+  --primary-text-dark: #5a9cff;
 }
 
 :root[data-accent="orange"] {
   --primary: oklch(0.625 0.175 40);
   --primary-foreground: oklch(0.985 0.008 75);
   --ring: oklch(0.625 0.175 40);
+  --primary-text: #9e4119;
+  --primary-text-dark: #f0895a;
 }
 
 @layer base {
@@ -79,9 +85,9 @@
 }
 
 @utility font-display { font-family: var(--font-display); }
-@utility eyebrow { font-size: .72rem; line-height: 1rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+@utility eyebrow { font-size: .75rem; line-height: 1rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
 @utility photo-label { display: inline-block; width: fit-content; color: var(--primary-foreground); background: var(--primary); padding: .42rem .7rem .38rem; font-size: .76rem; font-weight: 800; letter-spacing: .2em; border-radius: 999px; box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary-foreground) 35%, transparent), 0 6px 18px color-mix(in oklab, var(--ink) 45%, transparent); }
-@utility stage-label { display: inline-flex; align-items: center; gap: .55rem; color: var(--primary-foreground); font-size: .6875rem; line-height: 1rem; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; text-shadow: 0 1px 2px color-mix(in oklab, var(--ink) 85%, transparent), 0 0 14px color-mix(in oklab, var(--ink) 65%, transparent); &::before { content: ""; width: 1.25rem; height: 2px; flex: none; background: var(--primary); box-shadow: 0 0 6px color-mix(in oklab, var(--ink) 60%, transparent); } }
+@utility stage-label { display: inline-flex; align-items: center; gap: .55rem; color: var(--primary-foreground); font-size: .75rem; line-height: 1rem; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; text-shadow: 0 1px 2px color-mix(in oklab, var(--ink) 85%, transparent), 0 0 14px color-mix(in oklab, var(--ink) 65%, transparent); &::before { content: ""; width: 1.25rem; height: 2px; flex: none; background: var(--primary); box-shadow: 0 0 6px color-mix(in oklab, var(--ink) 60%, transparent); } }
 @utility outlined-accent-label { color: var(--primary-foreground); font-weight: 800; letter-spacing: .18em; text-shadow: 0 1px 2px color-mix(in oklab, var(--ink) 90%, transparent), 0 0 12px color-mix(in oklab, var(--ink) 70%, transparent); }
 
 .theme-swatch-blue { background: oklch(0.56 0.22 258); }
@@ -203,14 +209,18 @@ html.journey-free, html.journey-free.journey-snap { scroll-snap-type: none !impo
 .traffic-tag { color: var(--radar); transition: opacity .3s ease; }
 .traffic-callouts .traffic-tag :is(.traffic-pill, .traffic-label, .traffic-leader) { opacity: 0; transition: opacity .45s ease; }
 .traffic-callouts .traffic-tag.is-calling:not(.call-obscured) :is(.traffic-pill, .traffic-label, .traffic-leader) { opacity: 1; }
-.traffic-label { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: 11px; font-weight: 600; letter-spacing: .05em; fill: currentColor; fill-opacity: .88; pointer-events: none; }
+.traffic-label { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: 12px; font-weight: 600; letter-spacing: .05em; fill: currentColor; fill-opacity: .88; pointer-events: none; }
 .traffic-pill { fill: color-mix(in oklab, var(--ink) 60%, transparent); stroke: currentColor; stroke-opacity: .25; stroke-width: .75; pointer-events: none; }
 @media (min-width: 768px) { .traffic-label { fill-opacity: .8; } .traffic-pill { fill: color-mix(in oklab, var(--ink) 45%, transparent); } }
 .traffic-leader { stroke: currentColor; stroke-opacity: .55; stroke-width: 1; pointer-events: none; }
 .traffic-ping { fill: none; stroke: currentColor; stroke-width: 1; opacity: 0; transform-box: fill-box; transform-origin: center; pointer-events: none; }
 .traffic-tag.is-pinging .traffic-ping { animation: traffic-ping .6s ease-out; }
 @keyframes traffic-ping { 0% { transform: scale(1); opacity: .35; } 100% { transform: scale(3); opacity: 0; } }
-.traffic-target { fill:none; stroke:currentColor; stroke-width:.8; opacity:.4; pointer-events:none; }
+/* Always-visible 15px screen ring (tags are drawn at 1/k) with a dark under-stroke so it reads over bright fields. */
+.traffic-target { fill:none; stroke:currentColor; stroke-width:1.1; opacity:.42; pointer-events:none; }
+.traffic-target-halo { fill:none; stroke:var(--ink); stroke-width:2.6; opacity:.28; pointer-events:none; }
+/* Subtle dark outline in the airplane's own units, so white airplanes separate from bright ground. */
+[data-aircraft] { filter: drop-shadow(0 0 .045px rgb(8 12 22 / .95)) drop-shadow(0 0 .12px rgb(8 12 22 / .45)); }
 /* Subtle drawn pattern: 1px dashes at ~half the former opacity, labels ~60%; it
    fades (600ms) in/out via data-shown, pulsed or permanent per traffic_pattern_mode. */
 .traffic-pattern-guide { color:var(--radar); pointer-events:none; opacity:0; transition:opacity .6s ease; }
@@ -309,3 +319,7 @@ html.hero-enter .hero-mask > span { animation: hero-mask-in .55s var(--d, 0ms) c
 
 .skip-link { position: fixed; left: 1rem; top: 1rem; z-index: 100; padding: .75rem 1.25rem; background: var(--primary); color: var(--primary-foreground); font-weight: 700; font-size: .875rem; transform: translateY(-200%); transition: transform .15s ease; }
 .skip-link:focus { transform: none; outline: 2px solid var(--ring); outline-offset: 2px; }
+
+/* Accent text on dark ink sections uses a lighter accent (>=4.5:1); light cards inside them switch back. */
+:where(.bg-ink, .text-background) .text-primary-text { color: var(--primary-text-dark); }
+:where(.bg-ink, .text-background) :where(.bg-background, .bg-secondary, .bg-card) .text-primary-text { color: var(--primary-text); }

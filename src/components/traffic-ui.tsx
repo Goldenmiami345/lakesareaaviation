@@ -144,13 +144,13 @@ export const TrafficCard = forwardRef<HTMLDivElement, { plane: TrafficPlaneInfo;
         <span className="block min-w-0">
           <span className="block font-mono text-sm font-bold tracking-wider">{plane.reg}</span>
           {plane.nickname && <span className="block truncate text-xs leading-tight text-background">“{plane.nickname}”</span>}
-          <span className="block truncate text-[11px] leading-tight text-background/65">{plane.type}</span>
+          <span className="block truncate text-xs leading-tight text-background/65">{plane.type}</span>
         </span>
-      <span className="mt-1.5 flex items-center justify-between gap-2 font-mono text-[11px] tabular-nums">
+      <span className="mt-1.5 flex items-center justify-between gap-2 font-mono text-xs tabular-nums">
         <span data-k="alt" /><span data-k="kt" /><span data-k="phase" className="truncate font-bold uppercase tracking-[0.08em] text-[color:var(--radar)]" />
       </span>
       <span className="sr-only">Runway {runway}</span>
-      <Button variant="ghost" onClick={onOpen} className="mt-1 flex min-h-11 w-full justify-start px-0 text-left text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--radar)]">View in fleet →</Button>
+      <Button variant="ghost" onClick={onOpen} className="mt-1 flex min-h-11 w-full justify-start px-0 text-left text-xs font-bold uppercase tracking-[0.16em] text-[color:var(--radar)]">View in fleet →</Button>
     </div>,
     document.body,
   );
@@ -178,8 +178,9 @@ export function RadarTag({ reg, index, seed, label, tabIndex, hit, tagRef, textR
   return (
     <g ref={tagRef} className="traffic-tag">
       <g className="traffic-history">{[0,1,2,3].map(i=><circle key={i} r={1.75} opacity={.28-i*.055}/>)}</g>
-      <circle r={7} className="traffic-target" />
-      <circle r={7} className="traffic-ping" />
+      <circle r={7.5} className="traffic-target-halo" />
+      <circle r={7.5} className="traffic-target" />
+      <circle r={7.5} className="traffic-ping" />
       <line x1={5} y1={-5} x2={15} y2={-15} className="traffic-leader" />
       <rect x={14} y={-39} width={60} height={30} rx={2} className="traffic-pill" />
       <text ref={textRef} x={20} y={-27} className="traffic-label"><tspan className="traffic-call-title">{reg}</tspan><tspan className="traffic-call-data" x={20} dy={12}/></text>

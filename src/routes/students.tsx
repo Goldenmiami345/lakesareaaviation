@@ -30,14 +30,14 @@ function Page() {
       <div className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
         <div className="grid gap-6 md:grid-cols-2" data-scroll-reveal>
           <div className="card-lift border border-border bg-card p-8">
-            <p className="eyebrow text-primary">New students</p>
+            <p className="eyebrow text-primary-text">New students</p>
             <p className="mt-4 text-lg text-muted-foreground">To talk with a member of our team, call us or fill out our "Contact Us" form by clicking the button below.</p>
             <Link to="/contact" className="btn-shine mt-6 inline-flex min-h-12 items-center bg-primary px-6 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">Contact us</Link>
             <p className="mt-8 text-lg text-muted-foreground">Once you have talked with us, click the following button to get our scheduling system and start your journey!</p>
             <Link to="/new-students" className="mt-6 inline-flex min-h-12 items-center border border-ink px-6 text-xs font-bold uppercase tracking-[0.12em]">Sign up</Link>
           </div>
           <div className="card-lift border border-border bg-ink p-8 text-background">
-            <p className="eyebrow text-primary">Current students</p>
+            <p className="eyebrow text-primary-text">Current students</p>
             <p className="mt-4 text-lg text-background/75">Use the link below to request access to our various training resources.</p>
             <Link to="/contact" className="btn-shine mt-6 inline-flex min-h-12 items-center bg-primary px-6 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">Current students</Link>
           </div>
@@ -46,11 +46,11 @@ function Page() {
           {locations.map((l) => (
             <div key={l.city} className="border-t-2 border-primary pt-6">
               <h2 className="font-display text-2xl">{l.airport}</h2>
-              <p className="mt-3 flex gap-2 text-muted-foreground"><MapPin className="mt-1 size-4 shrink-0 text-primary" />{l.address}</p>
+              <p className="mt-3 flex gap-2 text-muted-foreground"><MapPin className="mt-1 size-4 shrink-0 text-primary-text" />{l.address}</p>
             </div>
           ))}
         </div>
-        <a href={SCHOOL_PHONE_TEL} className="mt-10 inline-flex items-center gap-3 font-display text-3xl text-primary"><Phone className="size-6" />{SCHOOL_PHONE}</a>
+        <a href={SCHOOL_PHONE_TEL} className="mt-10 inline-flex items-center gap-3 font-display text-3xl text-primary-text"><Phone className="size-6" />{SCHOOL_PHONE}</a>
       </div>
       <InquiryBand />
     </SiteLayout>

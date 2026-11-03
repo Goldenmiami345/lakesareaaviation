@@ -41,11 +41,11 @@ function Page() {
             <Link key={to} to={to === "zero" ? "/programs/$slug" : to} params={{ slug: "zero-to-hero" }} className="program-card interactive-arrow group bg-background p-8">
               <h2 className="font-display text-3xl">{name}</h2>
               <p className="mt-4 text-muted-foreground">{text}</p>
-              <span className="mt-8 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-primary">Explore <ArrowRight className="size-4" /></span>
+              <span className="mt-8 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-primary-text">Explore <ArrowRight className="size-4" /></span>
             </Link>
           ))}
         </div>
-        <p className="mt-10 text-sm text-muted-foreground">Helicopter training: call or <Link to="/contact" className="text-primary underline">contact us</Link> for current availability.</p>
+        <p className="mt-10 text-sm text-muted-foreground">Helicopter training: call or <Link to="/contact" className="text-primary-text underline">contact us</Link> for current availability.</p>
       </div>
       <InquiryBand />
     </SiteLayout>

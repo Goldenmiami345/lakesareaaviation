@@ -5,6 +5,8 @@ import logoAsset from "../assets/lakes-logo-transparent.png.asset.json";
 import { MotionExperience } from "./motion-experience";
 import { jumpToPageTop } from "./flight-journey";
 import { sitePath } from '../lib/site-path';
+import * as Dialog from "@radix-ui/react-dialog";
+import { SCHOOL_PHONE, SCHOOL_PHONE_TEL } from "../lib/site-data";
 
 const nav = [
   ["Services", "/services"],
@@ -25,14 +27,30 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
         <img src={logoAsset.url} alt="Lakes Area Aviation" className={`h-10 w-auto max-w-[190px] object-contain sm:h-12 sm:max-w-[220px] ${overlay ? "brightness-0 invert" : ""}`} />
       </Link>
       <nav className="hidden items-center gap-7 lg:flex" aria-label="Main navigation">
-        {nav.map(([label, to]) => <Link key={to} to={to} className="link-underline text-xs font-semibold uppercase tracking-[0.12em] transition-colors hover:text-primary">{label}</Link>)}
+        {nav.map(([label, to]) => <Link key={to} to={to} className="link-underline text-xs font-semibold uppercase tracking-[0.12em] transition-colors hover:text-primary-text">{label}</Link>)}
         <Link to="/contact" className={`group inline-flex items-center gap-2 rounded-full border py-1.5 pl-4 pr-1.5 text-xs font-semibold tracking-[0.04em] backdrop-blur transition-all duration-300 hover:border-primary ${overlay ? "border-white/30 bg-white/10" : "border-border bg-background"}`}>Build my training plan<span className="grid size-7 place-items-center rounded-full bg-primary text-primary-foreground transition-transform duration-300 group-hover:rotate-45"><ArrowUpRight className="size-3.5" /></span></Link>
       </nav>
-      <button aria-label={open ? "Close menu" : "Open menu"} className="grid size-10 place-items-center lg:hidden" onClick={() => setOpen(!open)}>{open ? <X className="size-5" /> : <Menu className="size-5" />}</button>
+      <Dialog.Root open={open} onOpenChange={setOpen}>
+        <Dialog.Trigger aria-label="Open menu" className="grid size-11 place-items-center lg:hidden"><Menu className="size-5" /></Dialog.Trigger>
+        <Dialog.Portal>
+          {/* Full-height sheet: Radix traps focus, locks body scroll, closes on Esc and returns focus to the trigger. */}
+          <Dialog.Content aria-modal="true" aria-describedby={undefined} className="fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-background text-foreground lg:hidden">
+            <Dialog.Title className="sr-only">Site menu</Dialog.Title>
+            <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-5 sm:h-20">
+              <img src={logoAsset.url} alt="" className="h-10 w-auto max-w-[190px] object-contain sm:h-12" />
+              <Dialog.Close aria-label="Close menu" className="grid size-11 place-items-center"><X className="size-5" /></Dialog.Close>
+            </div>
+            <nav className="px-5 py-5" aria-label="Mobile navigation">
+              <div className="grid gap-1">{nav.map(([label, to]) => <Link key={to} to={to} onClick={() => setOpen(false)} className="border-b border-border py-4 font-display text-xl">{label}</Link>)}</div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <Link to="/contact" onClick={() => setOpen(false)} className="bg-primary px-5 py-4 text-center text-sm font-bold uppercase text-primary-foreground">Build my training plan</Link>
+                <a href={SCHOOL_PHONE_TEL} className="inline-flex items-center justify-center gap-2 border border-border px-5 py-4 text-center text-sm font-bold uppercase"><Phone className="size-4" />Call {SCHOOL_PHONE}</a>
+              </div>
+            </nav>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
-    {open && <nav className="border-t border-current/10 bg-background px-5 py-5 text-foreground lg:hidden" aria-label="Mobile navigation">
-      <div className="grid gap-1">{nav.map(([label, to]) => <Link key={to} to={to} onClick={() => setOpen(false)} className="border-b border-border py-4 font-display text-xl">{label}</Link>)}<Link to="/contact" onClick={() => setOpen(false)} className="mt-4 bg-primary px-5 py-4 text-center text-sm font-bold uppercase text-primary-foreground">Build my training plan</Link></div>
-    </nav>}
   </header>;
 }
 
@@ -51,7 +69,7 @@ export function Footer() {
 }
 
 function FooterGroup({ title, links }: { title: string; links: [string, string][] }) {
-  return <div><p className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-primary">{title}</p><div className="grid gap-3">{links.map(([label, to]) => <Link key={to} to={to} className="text-sm text-background/70 hover:text-background">{label}</Link>)}</div></div>;
+  return <div><p className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-primary-text">{title}</p><div className="grid md:gap-1">{links.map(([label, to]) => <Link key={to} to={to} className="flex min-h-11 items-center text-sm text-background/70 hover:text-background md:min-h-6">{label}</Link>)}</div></div>;
 }
 
 export function MobileActions() {
@@ -86,5 +104,5 @@ export function PageIntro({ eyebrow, title, text, image, imageAlt = "" }: { eyeb
 }
 
 export function InquiryBand() {
-  return <section data-no-float className="bg-primary py-16 text-primary-foreground"><div className="mx-auto grid max-w-7xl items-center gap-8 px-5 md:grid-cols-[1fr_auto] lg:px-8" data-scroll-reveal><div><p className="eyebrow text-primary-foreground/70">Your next rating</p><h2 className="mt-3 font-display text-4xl">Build a training plan around your timeline.</h2></div><Link to="/contact" className="interactive-arrow inline-flex min-h-14 items-center justify-center bg-ink px-7 text-sm font-bold uppercase tracking-[0.1em] text-background">Start planning <span aria-hidden="true">→</span></Link></div></section>;
+  return <section data-no-float className="bg-primary py-16 text-primary-foreground"><div className="mx-auto grid max-w-7xl items-center gap-8 px-5 md:grid-cols-[1fr_auto] lg:px-8" data-scroll-reveal><div><p className="eyebrow text-primary-foreground">Your next rating</p><h2 className="mt-3 font-display text-4xl">Build a training plan around your timeline.</h2></div><Link to="/contact" className="interactive-arrow inline-flex min-h-14 items-center justify-center bg-ink px-7 text-sm font-bold uppercase tracking-[0.1em] text-background">Start planning <span aria-hidden="true">→</span></Link></div></section>;
 }

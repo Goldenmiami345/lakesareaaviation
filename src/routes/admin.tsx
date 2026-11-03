@@ -74,7 +74,7 @@ function AdminPage() {
     <div className="mx-auto max-w-xl">
       <a href="/" className="text-xs font-bold uppercase text-background/70">← Back to site</a>
       <div className="mt-10 border border-background/20 bg-background p-6 text-foreground sm:p-10">
-        <Palette className="size-8 text-primary" />
+        <Palette className="size-8 text-primary-text" />
         <h1 className="mt-5 font-display text-4xl">Site appearance</h1>
         {!user ? <>
           <p className="mt-3 text-sm text-muted-foreground">Sign in to change the accent color for every visitor.</p>

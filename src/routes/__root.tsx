@@ -22,7 +22,7 @@ function NotFoundComponent() {
   return (
     <SiteLayout>
       <section className="mx-auto max-w-3xl px-5 pb-24 pt-36 lg:px-8">
-        <p className="eyebrow text-primary">404</p>
+        <p className="eyebrow text-primary-text">404</p>
         <h1 className="mt-4 font-display text-5xl">Page not found</h1>
         <p className="mt-5 text-lg text-muted-foreground">That page doesn't exist or has moved. Try one of these instead:</p>
         <div className="mt-8 flex flex-wrap gap-3">
@@ -31,7 +31,7 @@ function NotFoundComponent() {
           <Link to="/rates" className="border border-border px-5 py-3 text-sm font-bold uppercase hover:border-primary">Rates</Link>
           <Link to="/contact" className="bg-primary px-5 py-3 text-sm font-bold uppercase text-primary-foreground">Build my training plan</Link>
         </div>
-        <a href={SCHOOL_PHONE_TEL} className="mt-10 inline-flex font-display text-3xl text-primary">{SCHOOL_PHONE}</a>
+        <a href={SCHOOL_PHONE_TEL} className="mt-10 inline-flex font-display text-3xl text-primary-text">{SCHOOL_PHONE}</a>
       </section>
     </SiteLayout>
   );
