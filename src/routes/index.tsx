@@ -7,7 +7,6 @@ import apachePhoto from "../assets/fleet/walkaround/n4383p-03-1600.webp.asset.js
 const trainingImage = apachePhoto.url;
 import { InquiryBand, SiteLayout } from "../components/site-shell";
 import { testimonials } from "../lib/site-data";
-import { SmoothWheel } from "../components/smooth-wheel";
 import { ScrollCue } from "../components/motion-experience";
 import { FlightJourney, airportStages, glideTo, jumpToJourney } from "../components/flight-journey";
 
@@ -28,7 +27,7 @@ export const Route = createFileRoute("/")({
 function HomePage() {
   const featuredStory = testimonials[0];
   if (!featuredStory) return null;
-  return <SiteLayout overlayHeader><SmoothWheel />
+  return <SiteLayout overlayHeader>
     <div>
       <section className="relative min-h-[100svh] overflow-hidden bg-ink text-background">
         <div className="hero-parallax absolute inset-0"><picture><source media="(max-aspect-ratio: 3/2)" srcSet={heroTallImage.url} width={1280} height={1189} /><img src={heroImage.url} alt="Lakes Area Aviation Cessna N6717A and Piper Apache on the ramp at sunset" width={1584} height={672} fetchPriority="high" className="hero-kenburns h-[112%] w-full object-cover object-[35%_center]" /></picture></div>

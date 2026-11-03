@@ -518,7 +518,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       ))}
       <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className="journey-viewport sticky top-0 h-svh overflow-hidden">
         {stages.map((st, i) => (
-          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="journey-layer absolute -inset-[2%] bg-ink will-change-transform backface-hidden" data-active={i === active ? "" : undefined} style={{ zIndex: stages.length - i }}>
+          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="journey-layer absolute -inset-[2%] bg-ink backface-hidden" data-active={i === active ? "" : undefined} style={{ zIndex: stages.length - i }}>
             <div className="journey-zoom absolute inset-0 origin-top-left">
             {st.traffic && st.phoneImg ? <AirportScene airport={ops[i]?.pattern ?? st.traffic} active={i===active} photo={st.phoneImg} original={st.img} wind={ops[i]?.obs ?? null} runwayHeading={ops[i]?.rwy.trueHdg ?? Number(st.traffic.runway)*10} /> : st.video ? (
               <video
