@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Phone } from "lucide-react";
 import { Button } from "./ui/button";
-import { journeyFrame, journeyAltitude, journeyStop, JOURNEY_STAGE_SVH, pinnedStepDown, stageStopFraction, stackProgress, stackOffset, isModeSwitchPoint, resolveMode, STOP_TOL, type JourneyMode, type PageSegment } from "../lib/journey-pacing";
+import { journeyFrame, journeyAltitude, journeyStop, glideAt, glideDuration, newWheelState, wheelDecision, snapTarget, type SnapZone, JOURNEY_STAGE_SVH, pinnedStepDown, stageStopFraction, stackProgress, stackOffset, isModeSwitchPoint, resolveMode, STOP_TOL, type JourneyMode, type PageSegment } from "../lib/journey-pacing";
 import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
 import { patternFor, pickRunway, type PatternField } from "../lib/traffic-pattern";
 import { useMetar } from "../lib/use-metar";
@@ -94,20 +94,15 @@ export function jumpToPageTop() {
 
 // ---- Downward: one gesture = one stop. Upward: native scrolling through stacked pages ----
 // Only gestures STARTED in a fully pinned viewport page between that journey's
-// own stages. Entry, last-stage exit and all upward movement stay native.
+// own stages. Entry, last-stage exit and all upward movement stay native, except a
+// short proximity snap after native momentum ends at a section edge.
 const PAGE_SWIPE_PX = 10;
-const PAGE_MS = 500;
-const WHEEL_QUIET_MS = 180;
 const ENTRY_TOL = 24;
-const BLEND_MS = 180;
-let blendTimer = 0;
-const journeys = new Map<HTMLElement, { n: number; vh: () => number }>();
+const SCROLL_IDLE_MS = 120;
+type JourneyEntry = { n: number; vh: () => number; render: () => void };
+const journeys = new Map<HTMLElement, JourneyEntry>();
 let paging = false;
-let wheelQuietUntil = 0;
-// After a glide lands, leftover native scroll deltas from the same swipe (queued by
-// the browser while touch moves were cancelled) are pulled back onto the landed page.
-let landedY = -1;
-let landedUntil = 0;
+const wheel = newWheelState();
 let tweenFrame = 0;
 let glideTimeout = 0;
 let controllerRefs = 0;
@@ -118,11 +113,15 @@ let wantedMode: JourneyMode = "fade";
 const modeListeners = new Set<() => void>();
 export const journeyMode = () => mode;
 
-type Layout = { stops: number[]; zones: { from: number; to: number }[]; stages: number[][] };
+// Stop positions are document offsets (independent of scroll), cached and recomputed only on resize.
+type Layout = { stops: number[]; zones: { from: number; to: number }[]; stages: number[][]; snap: SnapZone[] };
+let layoutCache: Layout | null = null;
+export function invalidateJourneyLayout() { layoutCache = null; }
 function journeyLayout(): Layout {
+  if (layoutCache) return layoutCache;
   const list = [...journeys].sort((a, b) => a[0].offsetTop - b[0].offsetTop);
   const maxY = document.documentElement.scrollHeight - window.innerHeight;
-  const stops: number[] = [], zones: Layout["zones"] = [], stages: number[][] = [];
+  const stops: number[] = [], zones: Layout["zones"] = [], stages: number[][] = [], snap: SnapZone[] = [];
   list.forEach(([el, { n, vh }]) => {
     const base = window.scrollY + el.getBoundingClientRect().top;
     const h = vh();
@@ -132,14 +131,21 @@ function journeyLayout(): Layout {
     stops.push(...own);
     stages.push(own);
     zones.push({ from: base, to: Math.min(maxY, base + total) });
+    snap.push({ first: own[0] ?? base, last: own[own.length - 1] ?? base, end: Math.min(maxY, Math.round(base + el.offsetHeight)) });
   });
   stops.sort((a, b) => a - b);
-  return { stops: stops.filter((s, i) => i === 0 || s - (stops[i - 1] ?? s) > STOP_TOL), zones, stages };
+  layoutCache = { stops: stops.filter((s, i) => i === 0 || s - (stops[i - 1] ?? s) > STOP_TOL), zones, stages, snap };
+  return layoutCache;
 }
 const pinnedStages = (L: Layout, y: number) => {
   // A few px short of fully pinned (native momentum landing) still counts as the first stage.
   const i = L.zones.findIndex((z) => y >= z.from - ENTRY_TOL && y <= z.to);
   return i < 0 ? null : L.stages[i] ?? null;
+};
+const downTarget = (y: number) => {
+  const own = pinnedStages(journeyLayout(), y);
+  if (!own) return null;
+  return pinnedStepDown(own, Math.max(y, own[0] ?? y), own[0] ?? y, own[own.length - 1] ?? y);
 };
 const atSwitchPoint = (L: Layout, y: number) => L.stages.every((own) => isModeSwitchPoint(own, y));
 function setMode(next: JourneyMode) { if (mode === next) return; mode = next; modeListeners.forEach((f) => f()); }
@@ -147,59 +153,44 @@ function requestMode(next: JourneyMode, L: Layout = journeyLayout()) {
   wantedMode = next;
   setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, window.scrollY)));
 }
-
-const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
+// Every journey re-renders synchronously from the glide's scroll position in the same frame.
+const renderAll = () => journeys.forEach((j) => j.render());
 
 function releasePaging() {
   cancelAnimationFrame(tweenFrame);
   window.clearTimeout(glideTimeout);
+  if (paging) wheel.landedAt = performance.now();
   paging = false;
-  wheelQuietUntil = 0;
-  landedUntil = 0;
-  document.documentElement.classList.remove("journey-paging");
+  wheel.gliding = false;
 }
 
+// One eased glide from the REAL current scrollY: strictly monotonic, lands exactly on target.
 function runPath(path: PageSegment[], touch = false) {
   releasePaging();
-  if (!path.some((s) => Math.abs(s.y - window.scrollY) > STOP_TOL)) return;
-  paging = true;
-  // A touch swipe can leave a native fling running (iOS/Chromium mark later touchmoves
-  // non-cancelable once scrolling starts); freezing native scroll during our glide
-  // stops it from fighting the tween and overshooting several pages.
-  if (touch) document.documentElement.classList.add("journey-paging");
-  const moving = path.filter((s) => !s.instant).length || 1;
-  const dur = PAGE_MS / moving;
+  const end = path[path.length - 1];
+  if (!end || Math.abs(end.y - window.scrollY) <= STOP_TOL) return;
+  paging = true; wheel.gliding = true;
+  const from = window.scrollY, to = end.y;
+  const dur = glideDuration(to - from, window.innerHeight, touch);
   let finished = false;
-  const finish = (late = false) => {
+  const finish = () => {
     if (finished) return;
     finished = true;
-    releasePaging();
     // A busy main thread can delay frames past the hard timeout; never leave the page short of its stop.
-    const end = path[path.length - 1];
-    if (late && end && Math.abs(window.scrollY - end.y) > 0.5) window.scrollTo({ top: end.y, behavior: "instant" });
-    // Only touch needs a short guard against queued native fling deltas.
-    if (touch) { landedY = window.scrollY; landedUntil = performance.now() + 150; }
-    const L = journeyLayout();
-    setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, window.scrollY)));
+    if (Math.abs(window.scrollY - to) > 0.5) window.scrollTo({ top: to, behavior: "instant" });
+    renderAll();
+    releasePaging();
+    setMode(resolveMode(mode, wantedMode, atSwitchPoint(journeyLayout(), window.scrollY)));
   };
-  glideTimeout = window.setTimeout(() => finish(true), PAGE_MS + 150);
-  let k = 0;
-  const nextSeg = () => {
-    const seg = path[k++];
-    if (!seg) {
-      finish();
-      return;
-    }
-    if (seg.instant) { window.scrollTo({ top: seg.y, behavior: "instant" }); nextSeg(); return; }
-    const from = window.scrollY, start = performance.now();
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / dur);
-      window.scrollTo({ top: from + (seg.y - from) * easeOut(t), behavior: "instant" });
-      if (t < 1) tweenFrame = requestAnimationFrame(tick); else nextSeg();
-    };
-    tweenFrame = requestAnimationFrame(tick);
+  glideTimeout = window.setTimeout(finish, dur + 150);
+  const start = performance.now();
+  const tick = (now: number) => {
+    const elapsed = now - start;
+    window.scrollTo({ top: glideAt(from, to, elapsed, dur), behavior: "instant" });
+    renderAll();
+    if (elapsed < dur) tweenFrame = requestAnimationFrame(tick); else finish();
   };
-  nextSeg();
+  tweenFrame = requestAnimationFrame(tick);
 }
 
 export function goToJourneyPage(y: number, instant = false) {
@@ -210,44 +201,30 @@ export function goToJourneyPage(y: number, instant = false) {
 
 function installController() {
   controllerRefs += 1;
-  if (import.meta.env.DEV) (window as unknown as { __journeyStops?: () => number[] }).__journeyStops = () => journeyLayout().stops;
+  if (import.meta.env.DEV) (window as unknown as { __journeyStops?: () => number[] }).__journeyStops = () => { invalidateJourneyLayout(); return journeyLayout().stops; };
   if (removeController) return;
   const root = document.documentElement;
   const reduce = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const zoomedIn = () => root.classList.contains("journey-zoomed");
   const free = () => root.classList.contains("journey-free");
-  const cancelGlide = releasePaging;
   // A target must be a later stage in the SAME fully pinned journey.
   const goDown = (touch = false) => {
-    const L = journeyLayout(), y = window.scrollY;
-    const own = pinnedStages(L, y);
-    if (!own) return false;
-    const from = Math.max(y, own[0] ?? y);
-    const target = pinnedStepDown(own, from, own[0] ?? y, own[own.length-1] ?? y);
+    const target = downTarget(window.scrollY);
     if (target === null) return false;
     wantedMode = "fade";
-    // Downward always phases: blend briefly from the stacked look, then crossfade-glide.
-    if (mode !== "fade") {
-      root.classList.add("journey-blend");
-      window.clearTimeout(blendTimer);
-      blendTimer = window.setTimeout(() => root.classList.remove("journey-blend"), BLEND_MS);
-      setMode("fade");
-    }
+    setMode("fade");
     runPath([{ y: target, instant: false }], touch);
     return true;
   };
-  const goingUp = () => { cancelGlide(); requestMode("stack"); };
+  const goingUp = () => { if (!paging) requestMode("stack"); };
 
   const onWheel = (e: WheelEvent) => {
     if ((e.target as Element | null)?.closest?.("[data-model-gesture]")) return;
     if (reduce() || e.ctrlKey || e.metaKey || Math.abs(e.deltaY) < Math.abs(e.deltaX) || free() || zoomedIn()) return;
-    if (e.deltaY < 0) { goingUp(); return; }
-    if (e.deltaY === 0) return;
-    const now = performance.now();
-    // A wheel/trackpad burst is one gesture: swallow input until it has been quiet after landing.
-    if (paging) { e.preventDefault(); return; }
-    if (now < wheelQuietUntil) { e.preventDefault(); return; }
-    if (goDown()) { wheelQuietUntil = now + WHEEL_QUIET_MS; e.preventDefault(); }
+    const d = wheelDecision(wheel, performance.now(), e.deltaY, e.deltaY > 0 && downTarget(window.scrollY) !== null);
+    if (d === "drop") { e.preventDefault(); return; }
+    if (d === "page") { if (goDown()) e.preventDefault(); return; }
+    if (e.deltaY < 0) goingUp();
   };
   const onKey = (e: KeyboardEvent) => {
     if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || reduce() || free() || zoomedIn()) return;
@@ -266,17 +243,18 @@ function installController() {
   let rejected = false;
   // Any second finger makes the whole gesture a pinch: it never pages.
   let multi = false;
-  const cancelForMulti = () => { cancelGlide(); multi = true; g = null; rejected = true; };
+  const cancelForMulti = () => { releasePaging(); multi = true; g = null; rejected = true; };
   // touchend can be dropped when the main thread is busy; a finger with no touch
-  // events for 150ms is treated as lifted so the landing guard still runs.
+  // events for 150ms is treated as lifted.
   let lastTouchAt = 0;
   const fingerDown = () => touching && performance.now() - lastTouchAt < 150;
   const onTouchStart = (e: TouchEvent) => {
     if ((e.target as Element | null)?.closest?.("[data-model-gesture]")) { g = null; rejected = true; return; }
     if (e.touches.length > 1 || multi) { lastTouchAt = performance.now(); touching = true; cancelForMulti(); return; }
-    touching = true; rejected = false; landedUntil = 0; lastTouchAt = performance.now();
+    touching = true; rejected = false; lastTouchAt = performance.now();
+    seqStart = window.scrollY;
     const t = e.touches[0];
-    g = e.touches.length === 1 && t && !reduce() ? { x: t.clientX, y: t.clientY, decided: false, fired: false, eligible: pinnedStages(journeyLayout(), window.scrollY) !== null } : null;
+    g = e.touches.length === 1 && t && !reduce() ? { x: t.clientX, y: t.clientY, decided: false, fired: false, eligible: downTarget(window.scrollY) !== null } : null;
   };
   const onTouchMove = (e: TouchEvent) => {
     if ((e.target as Element | null)?.closest?.("[data-model-gesture]")) { g = null; rejected = true; return; }
@@ -288,6 +266,8 @@ function installController() {
     if (!g && !rejected && t && e.touches.length === 1 && !reduce()) { touching = true; g = { x: t.clientX, y: t.clientY, decided: false, fired: false, eligible: false }; return; }
     if (!g || !t || e.touches.length !== 1) { g = null; rejected = true; return; }
     const dx = g.x - t.clientX, dy = g.y - t.clientY;
+    // Everything during a glide is swallowed, so native scroll never fights it.
+    if (g.fired || paging) { if (e.cancelable) e.preventDefault(); return; }
     if (!g.decided) {
       if (Math.abs(dx) < 3 && Math.abs(dy) < 3) return; // taps with jitter stay taps
       g.decided = true;
@@ -295,24 +275,49 @@ function installController() {
       // Upward drags are plain 1:1 native scrolling through stacked pages.
       if (dy < 0) { goingUp(); g = null; rejected = true; return; }
     }
-    if (g.fired || paging) { if (e.cancelable) e.preventDefault(); return; }
-    if (!g.eligible) g.eligible = pinnedStages(journeyLayout(), window.scrollY) !== null;
+    // A pinned downward drag never starts native scrolling: the glide owns the whole move.
+    if (!g.eligible && e.cancelable) g.eligible = downTarget(window.scrollY) !== null;
     if (!g.eligible) return;
-    if (dy >= PAGE_SWIPE_PX && goDown(true)) { g.fired = true; if (e.cancelable) e.preventDefault(); }
+    if (e.cancelable) e.preventDefault();
+    if (dy >= PAGE_SWIPE_PX && e.cancelable && goDown(true)) g.fired = true;
   };
-  let lastDir = 1, lastScrollY = window.scrollY;
-  const onTouchEnd = (e: TouchEvent) => { if (e.touches.length === 0) { multi = false; touching = false; g = null; } };
+  const onTouchEnd = (e: TouchEvent) => {
+    if (e.touches.length === 0) { multi = false; touching = false; g = null; scheduleSettle(); }
+  };
+
+  // Proximity snap once native scrolling has come to rest (scrollend or 120ms without scroll).
+  let lastDir = 1, lastScrollY = window.scrollY, seqStart = window.scrollY, idleTimer = 0, moving = false;
+  const settle = () => {
+    window.clearTimeout(idleTimer);
+    if (!moving) return;
+    if (paging || fingerDown()) return;
+    moving = false;
+    const y = window.scrollY, startY = seqStart;
+    seqStart = y;
+    if (reduce() || free() || zoomedIn() || lastDir < 0) return;
+    const target = snapTarget(journeyLayout().snap, y, startY, window.innerHeight);
+    if (target === null) return;
+    // The rest of the wheel gesture that produced this momentum must not page again.
+    wheel.used = true;
+    runPath([{ y: target, instant: false }]);
+  };
+  const scheduleSettle = () => { window.clearTimeout(idleTimer); idleTimer = window.setTimeout(settle, SCROLL_IDLE_MS); };
   const onScroll = () => {
     const y = window.scrollY;
     if (Math.abs(y - lastScrollY) > 0.5) lastDir = y > lastScrollY ? 1 : -1;
     lastScrollY = y;
-    if (paging) return;
+    if (paging) { seqStart = y; moving = false; return; }
+    if (!moving) { moving = true; if (!touching) seqStart = y - (lastDir > 0 ? 1 : -1); }
+    scheduleSettle();
     const L = journeyLayout();
-    if (!fingerDown() && performance.now() < landedUntil && pinnedStages(L, landedY) && y - landedY > 1) { window.scrollTo({ top: landedY, behavior: "instant" }); return; }
     if (lastDir < 0) { wantedMode = "stack"; setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, y))); return; }
     setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, y)));
-    // Never turn native scroll/momentum into a glide or a settle.
   };
+  const onScrollEnd = () => settle();
+  const onResize = () => invalidateJourneyLayout();
+  const ro = new ResizeObserver(onResize);
+  ro.observe(document.body);
+  journeys.forEach((_, el) => ro.observe(el));
   window.addEventListener("wheel", onWheel, { passive: false });
   window.addEventListener("keydown", onKey);
   window.addEventListener("touchstart", onTouchStart, { passive: true });
@@ -320,7 +325,11 @@ function installController() {
   window.addEventListener("touchend", onTouchEnd, { passive: true });
   window.addEventListener("touchcancel", onTouchEnd, { passive: true });
   window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("scrollend", onScrollEnd);
+  window.addEventListener("resize", onResize);
   removeController = () => {
+    ro.disconnect();
+    window.clearTimeout(idleTimer);
     window.removeEventListener("wheel", onWheel);
     window.removeEventListener("keydown", onKey);
     window.removeEventListener("touchstart", onTouchStart);
@@ -328,6 +337,8 @@ function installController() {
     window.removeEventListener("touchend", onTouchEnd);
     window.removeEventListener("touchcancel", onTouchEnd);
     window.removeEventListener("scroll", onScroll);
+    window.removeEventListener("scrollend", onScrollEnd);
+    window.removeEventListener("resize", onResize);
     releasePaging();
   };
 }
