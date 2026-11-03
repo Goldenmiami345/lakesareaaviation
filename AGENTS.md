@@ -44,5 +44,6 @@
 - Accent TEXT uses text-primary-text (--primary-text on light, --primary-text-dark inside bg-ink/text-background, per accent theme); fills/buttons keep --primary, because the brand blue fails AA as text on beige and ink.
 
 - Every link to the contact/training-plan form is labelled "Build my training plan" (sticky bar: "Build my plan"); distinct actions keep their own labels, so one name always means one destination.
-- Section seams between navy, blue and beige are clean edges (edge-fade utilities are no-ops) because any navy/beige blend passes through grey.
+- Seams between navy, blue and beige are clean edges (edge-fade no-ops): navy/beige blends go grey.
+- Layout width uses site-container/site-wrap and --gutter (styles.css), never max-w-7xl, so header, sections and journey HUD/rail share one edge.
 - Journey ALT readout uses journeyAltitude (round stage targets); wind uses nearest current METAR (wx-stations.ts), wxStation as fallback.
