@@ -345,5 +345,4 @@ html.hero-enter .hero-mask > span { animation: hero-mask-in .55s var(--d, 0ms) c
   main :is(p, li, dd, blockquote, figcaption, td) a,
   main a.interactive-arrow:not([class*="min-h-"]),
   main a.font-bold:not([class*="min-h-"]):not([class*="py-"]):not([class*="p-"]):not([class*="bg-"]):not([class*="h-"]) { display: inline-flex; align-items: center; min-height: 44px; margin-block: calc((1lh - 44px) / 2); vertical-align: middle; }
-  nav[aria-label="Training locations"] a { display: inline-flex; align-items: center; min-height: 44px; }
 }

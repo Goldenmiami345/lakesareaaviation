@@ -42,7 +42,7 @@ function HomePage() {
           <HeroCta />
           <nav aria-label="Training locations" className="hero-step mt-4 flex flex-wrap items-center gap-1 text-xs sm:text-[clamp(0.75rem,0.42rem+0.5vw,1.05rem)] lg:mt-6 font-bold uppercase tracking-[0.06em] text-background/75 sm:gap-2 sm:tracking-[0.14em]" style={{ ["--d" as string]: "360ms" }}>
             <MapPin aria-hidden className="mr-0.5 size-3.5 sm:size-[1.2em] shrink-0 text-background/55" />
-            {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} className="shrink-0 whitespace-nowrap rounded-full border border-background/25 px-2 py-1.5 transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground sm:px-[1em] sm:py-[0.6em]">{a.label}, {a.code}</button>)}
+            {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} className="group/chip inline-flex min-h-11 shrink-0 items-center whitespace-nowrap sm:min-h-0"><span className="rounded-full border border-background/25 px-2 py-1.5 transition-colors group-hover/chip:border-primary group-hover/chip:bg-primary group-hover/chip:text-primary-foreground sm:px-[1em] sm:py-[0.6em]">{a.label}, {a.code}</span></button>)}
           </nav>
           <ScrollCue targetId="flight-path" />
         </div>
