@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { srcSetFor } from "@/lib/responsive-image";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Phone } from "lucide-react";
 import { Button } from "./ui/button";
@@ -549,8 +550,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
               />
             ) : (
               <picture className="block h-full w-full">
-                {st.phoneImg && <source media={PHONE_MQ} srcSet={st.phoneImg} />}
-                <img src={st.img} alt={st.alt} width={st.w ?? 1920} height={st.h ?? 1088} loading="lazy" decoding="async" className={`h-full w-full bg-ink object-cover${st.drift ? " journey-drift" : ""}`} style={{ objectPosition: st.position ?? "center" }} />
+                {st.phoneImg && <source media={PHONE_MQ} srcSet={srcSetFor(st.phoneImg) ?? st.phoneImg} sizes="100vw" />}
+                <img src={st.img} srcSet={srcSetFor(st.img)} sizes="100vw" alt={st.alt} width={st.w ?? 1920} height={st.h ?? 1088} loading="lazy" decoding="async" className={`h-full w-full bg-ink object-cover${st.drift ? " journey-drift" : ""}`} style={{ objectPosition: st.position ?? "center" }} />
               </picture>
             )}
             {SHOW_TRAFFIC && st.traffic && !st.phoneImg && <TrafficPattern airport={ops[i]?.pattern ?? st.traffic} wind={ops[i]?.obs ?? null} runwayHeading={ops[i]?.rwy.trueHdg ?? Number(st.traffic.runway)*10} conditions={ops[i]?.conditions ?? NO_CONDITIONS} active={i === active} />}

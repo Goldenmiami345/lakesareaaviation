@@ -1,4 +1,5 @@
 import { Link, useLocation, useMatch } from "@tanstack/react-router";
+import { srcSetFor } from "@/lib/responsive-image";
 import { ArrowUpRight, Menu, Phone, X } from "lucide-react";
 import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
 import logoAsset from "../assets/lakes-logo-transparent.png.asset.json";
@@ -100,7 +101,7 @@ export function SiteLayout({ children, overlayHeader = false }: { children: Reac
 }
 
 export function PageIntro({ eyebrow, title, text, image, imageAlt = "" }: { eyebrow: string; title: string; text: string; image?: string; imageAlt?: string }) {
-  return <section className="relative isolate overflow-hidden edge-fade-b bg-ink pb-32 pt-36 text-background">{image && <><img src={image} alt={imageAlt} width={1920} height={1080} loading="eager" fetchPriority="high" decoding="async" className="hero-kenburns absolute inset-0 -z-20 h-full w-full object-cover" /><div className="absolute inset-0 -z-10 bg-gradient-to-r from-ink/90 via-ink/65 to-ink/25" /></>}<div className="site-container relative z-10" data-scroll-reveal><p className="stage-label">{eyebrow}</p><h1 className="mt-4 max-w-4xl font-display text-5xl sm:text-7xl">{title}</h1><p className="mt-6 max-w-2xl text-lg leading-relaxed text-background/80">{text}</p></div></section>;
+  return <section className="relative isolate overflow-hidden edge-fade-b bg-ink pb-32 pt-36 text-background">{image && <><img src={image} srcSet={srcSetFor(image)} sizes="100vw" alt={imageAlt} width={1920} height={1080} loading="eager" fetchPriority="high" decoding="async" className="hero-kenburns absolute inset-0 -z-20 h-full w-full object-cover" /><div className="absolute inset-0 -z-10 bg-gradient-to-r from-ink/90 via-ink/65 to-ink/25" /></>}<div className="site-container relative z-10" data-scroll-reveal><p className="stage-label">{eyebrow}</p><h1 className="mt-4 max-w-4xl font-display text-5xl sm:text-7xl">{title}</h1><p className="mt-6 max-w-2xl text-lg leading-relaxed text-background/80">{text}</p></div></section>;
 }
 
 export function InquiryBand() {
