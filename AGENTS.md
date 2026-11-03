@@ -45,4 +45,4 @@
 
 - Every link to the contact/training-plan form is labelled "Build my training plan" (sticky bar: "Build my plan"); distinct actions keep their own labels, so one name always means one destination.
 - Section seams between navy, blue and beige are clean edges (edge-fade utilities are no-ops) because any navy/beige blend passes through grey.
-- Journey ALT readout uses journeyAltitude (round per-stage targets, counting only mid-transition); airport wind uses the nearest current METAR by distance (src/lib/wx-stations.ts) with each field's wxStation as fallback.
+- Journey ALT readout uses journeyAltitude (round stage targets); wind uses nearest current METAR (wx-stations.ts), wxStation as fallback.
