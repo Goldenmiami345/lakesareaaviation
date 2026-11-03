@@ -145,3 +145,20 @@ test('native boundaries never page or settle; fully pinned partial entry pages o
   assert.equal(pinnedStepDown(stages,2400,800,2400),null);
   assert.equal(pinnedStepDown(stages,2401,800,2400),null);
 });
+
+describe("desktop stops land fully faded in", () => {
+  for (const vh of [640, 720, 800, 844, 900, 1024, 1080, 1200]) {
+    for (const n of [6, 3]) {
+      it(`every stop is a stage boundary at ${vh}px (${n} stages)`, () => {
+        const total = (n * JOURNEY_STAGE_SVH * vh) / 100;
+        for (let i = 0; i < n; i += 1) {
+          const stop = Math.round(total * stageStopFraction(i, n));
+          const f = journeyFrame(stop / total, n);
+          expect(f.stage).toBe(i);
+          expect(f.transition).toBe(0);
+          expect(f.copyOpacity).toBe(1);
+        }
+      });
+    }
+  }
+});
