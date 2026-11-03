@@ -1,6 +1,6 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { journeyFrame, journeyLanding, journeyNearestLanding, JOURNEY_HOLD, JOURNEY_STAGE_SVH, journeyStop, pageStep, nearestPage } from "./journey-pacing";
+import { journeyFrame, journeyLanding, journeyNearestLanding, JOURNEY_HOLD, JOURNEY_STAGE_SVH, journeyStop, stageStopFraction, pageStep, nearestPage } from "./journey-pacing";
 
 describe("homepage journey pacing", () => {
 
@@ -149,14 +149,14 @@ test('native boundaries never page or settle; fully pinned partial entry pages o
 describe("desktop stops land fully faded in", () => {
   for (const vh of [640, 720, 800, 844, 900, 1024, 1080, 1200]) {
     for (const n of [6, 3]) {
-      it(`every stop is a stage boundary at ${vh}px (${n} stages)`, () => {
+      test(`every stop is a stage boundary at ${vh}px (${n} stages)`, () => {
         const total = (n * JOURNEY_STAGE_SVH * vh) / 100;
         for (let i = 0; i < n; i += 1) {
           const stop = Math.round(total * stageStopFraction(i, n));
           const f = journeyFrame(stop / total, n);
-          expect(f.stage).toBe(i);
-          expect(f.transition).toBe(0);
-          expect(f.copyOpacity).toBe(1);
+          assert.equal(f.stage, i);
+          assert.equal(f.transition, 0);
+          assert.equal(f.copyOpacity, 1);
         }
       });
     }
