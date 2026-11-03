@@ -174,7 +174,7 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
         </div>
 
         <Link to="/contact" search={{ aircraft: f.registration }} className="mt-5 inline-flex min-h-11 w-full items-center justify-between gap-3 bg-primary px-5 text-xs font-bold uppercase tracking-[0.14em] text-primary-foreground">
-          Train in this airplane <ArrowRight className="size-4" />
+          Build my training plan <ArrowRight className="size-4" />
         </Link>
       </div>
     </article>

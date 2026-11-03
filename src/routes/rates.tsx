@@ -59,7 +59,7 @@ function Page() {
         <div className="mt-16 bg-secondary p-8 md:p-12">
           <h2 className="font-display text-3xl sm:text-4xl">Get a plan, not a vague total.</h2>
           <p className="mt-4 max-w-2xl text-muted-foreground">Aircraft time varies with the rating, your current experience, and proficiency. Share your logbook totals and goals for a useful training estimate.</p>
-          <Link to="/contact" className="mt-8 inline-flex bg-primary px-6 py-4 text-sm font-bold uppercase text-primary-foreground">Request a training estimate</Link>
+          <Link to="/contact" className="mt-8 inline-flex bg-primary px-6 py-4 text-sm font-bold uppercase text-primary-foreground">Build my training plan</Link>
         </div>
       </div>
     </SiteLayout>

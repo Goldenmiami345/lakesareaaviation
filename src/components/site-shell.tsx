@@ -88,7 +88,7 @@ export function MobileActions() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [pathname]);
   if (pathname === "/contact") return null;
-  return <div aria-hidden={!show} className={`fixed inset-x-3 bottom-[calc(.75rem+env(safe-area-inset-bottom))] z-50 grid grid-cols-2 overflow-hidden border border-background/20 bg-ink text-background shadow-2xl transition-all duration-500 ease-out md:hidden ${show ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-[140%] opacity-0"}`}><a tabIndex={show ? 0 : -1} href="tel:3183479004" className="flex min-h-14 items-center justify-center gap-2 text-sm font-bold"><Phone className="size-4" /> Call</a><Link tabIndex={show ? 0 : -1} to="/contact" className="flex min-h-14 items-center justify-center bg-primary text-sm font-bold text-primary-foreground">Apply now</Link></div>;
+  return <div aria-hidden={!show} className={`fixed inset-x-3 bottom-[calc(.75rem+env(safe-area-inset-bottom))] z-50 grid grid-cols-2 overflow-hidden border border-background/20 bg-ink text-background shadow-2xl transition-all duration-500 ease-out md:hidden ${show ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-[140%] opacity-0"}`}><a tabIndex={show ? 0 : -1} href="tel:3183479004" className="flex min-h-14 items-center justify-center gap-2 text-sm font-bold"><Phone className="size-4" /> Call</a><Link tabIndex={show ? 0 : -1} to="/contact" className="flex min-h-14 items-center justify-center bg-primary text-sm font-bold text-primary-foreground">Build my plan</Link></div>;
 }
 
 export function SiteLayout({ children, overlayHeader = false }: { children: ReactNode; overlayHeader?: boolean }) {
@@ -104,5 +104,5 @@ export function PageIntro({ eyebrow, title, text, image, imageAlt = "" }: { eyeb
 }
 
 export function InquiryBand() {
-  return <section data-no-float className="bg-primary py-16 text-primary-foreground"><div className="mx-auto grid max-w-7xl items-center gap-8 px-5 md:grid-cols-[1fr_auto] lg:px-8" data-scroll-reveal><div><p className="eyebrow text-primary-foreground">Your next rating</p><h2 className="mt-3 font-display text-4xl">Build a training plan around your timeline.</h2></div><Link to="/contact" className="interactive-arrow inline-flex min-h-14 items-center justify-center bg-ink px-7 text-sm font-bold uppercase tracking-[0.1em] text-background">Start planning <span aria-hidden="true">→</span></Link></div></section>;
+  return <section data-no-float className="bg-primary py-16 text-primary-foreground"><div className="mx-auto grid max-w-7xl items-center gap-8 px-5 md:grid-cols-[1fr_auto] lg:px-8" data-scroll-reveal><div><p className="eyebrow text-primary-foreground">Your next rating</p><h2 className="mt-3 font-display text-4xl">Build a training plan around your timeline.</h2></div><Link to="/contact" className="interactive-arrow inline-flex min-h-14 items-center justify-center bg-ink px-7 text-sm font-bold uppercase tracking-[0.1em] text-background">Build my training plan <span aria-hidden="true">→</span></Link></div></section>;
 }

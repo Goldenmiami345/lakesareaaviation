@@ -44,7 +44,7 @@ function Page() {
               ))}
             </div>
             <Link to="/contact" className="btn-shine mt-10 inline-flex min-h-14 items-center gap-3 bg-primary px-6 text-sm font-bold uppercase text-primary-foreground">
-              Talk to an instructor <ArrowRight className="size-4" />
+              Build my training plan <ArrowRight className="size-4" />
             </Link>
           </div>
           <div>

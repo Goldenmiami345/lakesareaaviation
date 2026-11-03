@@ -41,7 +41,7 @@ function Page() {
             <div className="mt-4 border-y border-border">{courses.map(([c, l]) => <div key={c} className="flex items-center justify-between gap-4 border-b border-border py-4 last:border-0"><span className="min-w-0 font-display text-lg">{c}</span><span className="shrink-0 text-xs uppercase text-muted-foreground">{l}</span></div>)}</div>
           </section>
         </div>
-        <p className="text-sm text-muted-foreground">Contact us for more details on pricing and timeline estimates. <Link to="/contact" className="font-bold text-primary-text">Ask about specialized training →</Link></p>
+        <p className="text-sm text-muted-foreground">Contact us for more details on pricing and timeline estimates. <Link to="/contact" className="font-bold text-primary-text">Build my training plan →</Link></p>
       </div>
       <InquiryBand />
     </SiteLayout>

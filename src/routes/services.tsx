@@ -45,7 +45,7 @@ function Page() {
             </Link>
           ))}
         </div>
-        <p className="mt-10 text-sm text-muted-foreground">Helicopter training: call or <Link to="/contact" className="text-primary-text underline">contact us</Link> for current availability.</p>
+        <p className="mt-10 text-sm text-muted-foreground">Helicopter training: call us, or <Link to="/contact" className="text-primary-text underline">build my training plan</Link> to ask about current availability.</p>
       </div>
       <InquiryBand />
     </SiteLayout>
