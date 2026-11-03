@@ -109,8 +109,8 @@ let paging = false;
 /** Active paged glide: from/to scrollY and eased progress p (0→1). Journeys crossfade from p, not from scroll bands. */
 let glide: { from: number; to: number; p: number } | null = null;
 // Sine ease of glide TIME: ≥ 500 ms of visible blend, with 0.9→0.1 taking ~60% of the glide.
-// Half-linear/half-sine ease over the first 90% of the glide: completes before the last pixels of scroll.
-const blendEase = (t: number) => { const x = Math.max(0, Math.min(1, t / 0.9)); return 0.5 * x + 0.25 * (1 - Math.cos(Math.PI * x)); };
+// Half-linear/half-sine ease over the first 85% of the glide: completes before the last pixels of scroll.
+const blendEase = (t: number) => { const x = Math.max(0, Math.min(1, t / 0.85)); return 0.5 * x + 0.25 * (1 - Math.cos(Math.PI * x)); };
 const wheel = newWheelState();
 let tweenFrame = 0;
 let glideTimeout = 0;
