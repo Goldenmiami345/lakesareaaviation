@@ -14,16 +14,16 @@ async def walk(page, gesture, label):
         # Boundaries are native. Begin the test at a fully pinned first stage.
         await page.evaluate('(v)=>scrollTo({top:v,behavior:"instant"})',group[0]); await page.wait_for_timeout(250)
         for tgt in group[1:]:
-            cur=await y(page); await gesture(); await page.wait_for_timeout(750)
+            cur=await y(page); await gesture(); await page.wait_for_timeout(1100)
             now=await y(page); n+=1; ok=abs(now-tgt)<=3
             print(f'[{label}] pinned {cur} -> {now}, expected {tgt}: {ok}')
             if not ok: fails.append((cur,now,tgt))
-        cur=await y(page); await gesture(); await page.wait_for_timeout(750); now=await y(page)
+        cur=await y(page); await gesture(); await page.wait_for_timeout(1100); now=await y(page)
         assert now>cur and now-cur<400, f'{label}: last stage exit was forced/stuck {cur}->{now}'
         rest=now; await page.wait_for_timeout(900); assert await y(page)==rest,'native exit settled'
     # Native hero entry must not jump to the first stop.
     await page.evaluate('(v)=>scrollTo({top:v,behavior:"instant"})',S[0]-80); await page.wait_for_timeout(250)
-    await gesture(); await page.wait_for_timeout(750); cur=await y(page)
+    await gesture(); await page.wait_for_timeout(1100); cur=await y(page)
     assert cur<S[1]-3, f'{label}: entry forced a stage glide'
     return fails, n
 async def up_check(page, flick, label):
@@ -87,7 +87,7 @@ async def main():
                 if burst:
                     for _ in range(20): await pg.mouse.wheel(0,5); await asyncio.sleep(.02)
                 else: await pg.mouse.wheel(0,100)
-            for _ in range(3): await down(); await pg.wait_for_timeout(750)
+            for _ in range(3): await down(); await pg.wait_for_timeout(1100)
             for _ in range(8): await pg.mouse.wheel(0,-50); await asyncio.sleep(.06)
             await pg.wait_for_timeout(300)
             for i in range(4):
@@ -98,7 +98,7 @@ async def main():
                 else:
                     await down(); await pg.wait_for_timeout(280); after=await y(pg)
                 assert after>before, f'wheel reversal stuck burst={burst} notch={i}: {before}->{after}'
-                await pg.wait_for_timeout(750)
+                await pg.wait_for_timeout(1100)
             print(f'wheel-only reversal burst={burst}: 4/4 moved within 280ms')
         await pg.screenshot(path='/tmp/browser/journey/reversal.png')
         fade=[]
