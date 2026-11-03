@@ -97,6 +97,9 @@
 /* Hidden states apply only after hydration (MotionExperience adds html.reveal-ready), so prerendered/no-JS content is always visible. */
 html.reveal-ready [data-scroll-reveal] { opacity: 0; transform: translateY(42px); transition: opacity .8s cubic-bezier(.2,.65,.3,1), transform .8s cubic-bezier(.2,.65,.3,1); }
 html.reveal-ready [data-scroll-reveal].is-visible { opacity: 1; transform: translateY(0); }
+/* Targets already on screen at hydration show instantly (no flash, no replay). */
+html.reveal-ready .reveal-instant, html.reveal-ready .reveal-instant .zoom-reveal img, html.reveal-ready .reveal-instant.zoom-reveal img { transition: none !important; }
+html.reveal-ready .reveal-instant.stagger-grid > *, html.reveal-ready .reveal-instant .stagger-grid > * { animation: none !important; opacity: 1; transform: none; }
 html.reveal-ready .stagger-grid > * { opacity: 0; transform: translateY(24px); }
 .is-visible .stagger-grid > * { animation: reveal .65s cubic-bezier(.2,.65,.3,1) both; }
 .stagger-grid.is-visible > * { animation: reveal .65s cubic-bezier(.2,.65,.3,1) both; }

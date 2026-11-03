@@ -20,7 +20,7 @@ export function MotionExperience({ pageKey }: { pageKey: string }) {
     // Anything already on screen is marked visible BEFORE hidden states are enabled, so it never flashes.
     revealTargets.forEach((target) => {
       const r = target.getBoundingClientRect();
-      if (r.top < window.innerHeight && r.bottom > 0) target.classList.add("is-visible");
+      if (r.top < window.innerHeight && r.bottom > 0) target.classList.add("is-visible", "reveal-instant");
       else observer.observe(target);
     });
     document.documentElement.classList.add("reveal-ready");
