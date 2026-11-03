@@ -13,7 +13,7 @@
 - Aircraft imagery must originate from Lakes Area Aviation's official site and preserve each real airplane's registration, paint, and physical details.
 
 - All 24 public pages are prerendered via the explicit `pages` list in vite.config.ts; add new static routes there (router uses trailingSlash "preserve" so prerender requests do not redirect-loop).
-- Bundled photos are WebP (max 2560px, never above the held source; srcset variants via srcSetFor in src/lib/responsive-image.ts) to keep pages light.
+- Bundled photos: WebP, max 2560px, never above source; srcset via responsive-image.ts.
 - The global accent theme is read from the public site_settings row; only a database-verified admin role may change it.
 - Scroll-journey stages may use optimized CDN video with a real-photo poster; video plays only while its stage is active to protect mobile performance.
 - Both homepage journeys use the shared pure journey-pacing mapping for reading windows, transitions, active steps, and click destinations; measure scrolling against the sticky viewport so imagery and copy stay synchronized on mobile.
