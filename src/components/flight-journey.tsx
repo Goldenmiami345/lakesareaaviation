@@ -199,7 +199,7 @@ function runPath(path: PageSegment[], touch = false) {
     const y = glideAt(from, to, elapsed, dur);
     window.scrollTo({ top: y, behavior: "instant" });
     // Within a pixel of the stop the blend is complete, so nothing moves after the landing frame.
-    glide = { from, to, p: Math.abs(to - y) <= 1 ? 1 : blendEase(elapsed / dur) };
+    glide = { from, to, p: Math.abs(to - y) <= 3 ? 1 : blendEase(elapsed / dur) };
     renderAll();
     if (elapsed < dur) tweenFrame = requestAnimationFrame(tick); else finish();
   };
