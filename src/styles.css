@@ -311,9 +311,9 @@ input.date-field::-webkit-date-and-time-value { text-align: left; margin: 0; }
 .aircraft-top-render { image-rendering: auto; }
 
 /* Homepage hero: staggered first-load entrance (class set by an inline script, so SSR/no-JS text stays visible) */
-@keyframes hero-step-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-@keyframes hero-mask-in { from { transform: translateY(105%); } to { transform: none; } }
-@keyframes hero-fade-in { from { opacity: 0; } to { opacity: 1; } }
+/* Transform-only: hero text is painted (opacity 1, unclipped) from first paint, so it never delays LCP. */
+@keyframes hero-step-in { from { transform: translateY(14px); } to { transform: none; } }
+@keyframes hero-mask-in { from { transform: translateY(.18em); } to { transform: none; } }
 .hero-mask > span { animation: none; }
 html.hero-enter .hero-step { animation: hero-step-in .55s var(--d, 0ms) cubic-bezier(.2,.7,.3,1) both; }
 html.hero-enter .hero-mask > span { animation: hero-mask-in .55s var(--d, 0ms) cubic-bezier(.2,.7,.3,1) both; }
@@ -323,7 +323,7 @@ html.hero-enter .hero-mask > span { animation: hero-mask-in .55s var(--d, 0ms) c
 .cta-nudge .cta-orb { animation: cta-orb-nudge .7s cubic-bezier(.3,.7,.3,1); }
 .cta-nudge .cta-arrow { animation: cta-arrow-spin .7s cubic-bezier(.4,0,.2,1); }
 @media (prefers-reduced-motion: reduce) {
-  html.hero-enter .hero-step, html.hero-enter .hero-mask > span { animation: hero-fade-in .55s var(--d, 0ms) ease-out both; transform: none; }
+  html.hero-enter .hero-step, html.hero-enter .hero-mask > span { animation: none; transform: none; }
   .cta-nudge .cta-orb, .cta-nudge .cta-arrow { animation: none; }
 }
 

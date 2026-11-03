@@ -31,7 +31,7 @@ function HomePage() {
   return <SiteLayout overlayHeader>
     <div>
       <section className="relative min-h-[100svh] overflow-hidden bg-ink text-background">
-        <div className="hero-parallax absolute inset-0"><picture><source media="(max-aspect-ratio: 3/2)" srcSet={srcSetFor(heroTallImage.url)} sizes="100vw" width={1280} height={1189} /><img src={heroImage.url} srcSet={srcSetFor(heroImage.url)} sizes="100vw" decoding="async" alt="Lakes Area Aviation Cessna N6717A and Piper Apache on the ramp at sunset" width={1584} height={672} fetchPriority="high" className="hero-kenburns h-[112%] w-full object-cover object-[35%_center]" /></picture></div>
+        <div className="hero-parallax absolute inset-0"><picture><source media="(max-aspect-ratio: 3/2)" srcSet={srcSetFor(heroTallImage.url)} sizes="100vw" width={1280} height={1189} /><img src={heroImage.url} srcSet={srcSetFor(heroImage.url)} sizes="100vw" decoding="sync" alt="Lakes Area Aviation Cessna N6717A and Piper Apache on the ramp at sunset" width={1584} height={672} fetchPriority="high" className="hero-kenburns h-[112%] w-full object-cover object-[35%_center]" /></picture></div>
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/25 to-ink/5 lg:bg-gradient-to-r lg:from-ink lg:via-ink/60 lg:to-transparent" />
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('hero-enter','first-view')" }} />
         <div className="site-container relative flex min-h-[100svh] flex-col justify-end pb-7 pt-24 sm:pb-[4.5rem] sm:pt-32">
