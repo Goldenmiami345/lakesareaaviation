@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { airportFraming } from '../lib/airport-framing';
 import type { PatternAirport, Wind } from '../lib/traffic-pattern';
 import { TrafficPattern } from './traffic-pattern';
@@ -6,6 +6,19 @@ import { airportBackdrops } from '../lib/airport-backdrops';
 export function AirportScene({ airport, active, photo, original, wind, runwayHeading }: { airport: PatternAirport; active: boolean; photo: string; original: string; wind: Wind|null; runwayHeading: number }) {
   const ref=useRef<HTMLDivElement>(null);
   const [frame,setFrame]=useState<ReturnType<typeof airportFraming>|null>(null);
+  // Airport imagery is ~15,000px down the page: request nothing until the journey is
+  // within ~1.5 viewports, or a programmatic jump/glide targets it (journey-target event).
+  const [near,setNear]=useState(false);
+  const [phone,setPhone]=useState(false);
+  useEffect(()=>{
+    const section=ref.current?.closest('section');if(!section)return;
+    const mq=window.matchMedia('(max-width: 639px)');const onMq=()=>setPhone(mq.matches);onMq();mq.addEventListener('change',onMq);
+    const io=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting)){setNear(true);io.disconnect();}},{rootMargin:'150% 0px 150% 0px'});
+    io.observe(section);
+    const onTarget=(e:Event)=>{const y=(e as CustomEvent<number>).detail,r=section.getBoundingClientRect(),top=r.top+window.scrollY;if(y>=top-1.5*innerHeight&&y<=top+r.height)setNear(true);};
+    window.addEventListener('journey-target',onTarget);
+    return()=>{io.disconnect();mq.removeEventListener('change',onMq);window.removeEventListener('journey-target',onTarget);};
+  },[]);
   useLayoutEffect(()=>{
     const el=ref.current;if(!el)return;
     const update=()=>{
@@ -31,6 +44,6 @@ export function AirportScene({ airport, active, photo, original, wind, runwayHea
   },[airport,active]);
   const backdrop=airportBackdrops[airport.ident];
   return <div ref={ref} data-airport-framing={airport.ident} data-default-zoom={frame?.multiplier.toFixed(4)} className="absolute inset-0">
-    {frame&&<><svg viewBox={frame.viewBox} preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden>{backdrop&&<image href={backdrop.url} width="1920" height="1920" transform={backdrop.transform} preserveAspectRatio="none" />}<image href={photo} x="265" y="-300" width="970" height="2100" preserveAspectRatio="none" /><image href={original} x="0" y="0" width="1500" height="1500" preserveAspectRatio="none" /></svg><TrafficPattern airport={airport} active={active} viewBox={frame.viewBox} wind={wind} runwayHeading={runwayHeading}/></>}
+    {frame&&near&&<><svg viewBox={frame.viewBox} preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden>{backdrop&&<image href={backdrop.url} width="1920" height="1920" transform={backdrop.transform} preserveAspectRatio="none" />}{phone?<image href={photo} x="265" y="-300" width="970" height="2100" preserveAspectRatio="none" />:<image href={original} x="0" y="0" width="1500" height="1500" preserveAspectRatio="none" />}</svg><TrafficPattern airport={airport} active={active} viewBox={frame.viewBox} wind={wind} runwayHeading={runwayHeading}/></>}
   </div>;
 }

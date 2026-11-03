@@ -67,6 +67,7 @@ const SHOW_TRAFFIC = true;
 export function glideTo(top: number, instant = false) {
   const root = document.documentElement;
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  window.dispatchEvent(new CustomEvent("journey-target", { detail: top }));
   root.classList.add("journey-free");
   let done = false;
   const finish = () => { if (done) return; done = true; root.classList.remove("journey-free"); window.removeEventListener("scrollend", finish); };
@@ -199,6 +200,7 @@ function runPath(path: PageSegment[], touch = false) {
 }
 
 export function goToJourneyPage(y: number, instant = false) {
+  window.dispatchEvent(new CustomEvent("journey-target", { detail: y }));
   if (instant) { releasePaging(); window.scrollTo({ top: y, behavior: "instant" }); requestMode(wantedMode); return; }
   runPath([{ y, instant: false }]);
 }
@@ -515,7 +517,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
             ) : (
               <picture className="block h-full w-full">
                 {st.phoneImg && <source media={PHONE_MQ} srcSet={st.phoneImg} />}
-                <img src={st.img} alt={st.alt} width={st.w ?? 1920} height={st.h ?? 1088} loading={i <= active + 2 ? "eager" : "lazy"} decoding="async" className={`h-full w-full bg-ink object-cover${st.drift ? " journey-drift" : ""}`} style={{ objectPosition: st.position ?? "center" }} />
+                <img src={st.img} alt={st.alt} width={st.w ?? 1920} height={st.h ?? 1088} loading="lazy" decoding="async" className={`h-full w-full bg-ink object-cover${st.drift ? " journey-drift" : ""}`} style={{ objectPosition: st.position ?? "center" }} />
               </picture>
             )}
             {SHOW_TRAFFIC && st.traffic && !st.phoneImg && <TrafficPattern airport={ops[i]?.pattern ?? st.traffic} wind={ops[i]?.obs ?? null} runwayHeading={ops[i]?.rwy.trueHdg ?? Number(st.traffic.runway)*10} active={i === active} />}
