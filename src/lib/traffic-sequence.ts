@@ -1,4 +1,5 @@
 import { makeFlightPlan, sampleFlight, type FlightPlan, type Hold } from './traffic-flight';
+import type { TrafficConditions } from './wx-conditions';
 import { feetPerPixel, type PatternAirport, type PatternSample, type Wind } from './traffic-pattern';
 
 // US traffic-pattern sequencing shared by the aerial AND oblique views.
@@ -64,15 +65,32 @@ type Config = { departureExtendPx: number; extendPx: number; holds: Hold[]; t: T
 
 export class TrafficSchedule {
   readonly laps: Lap[][];
+  readonly regs: readonly string[];
   /** Lap period shared by every airplane, and the slot between consecutive final turns. */
   readonly period: number;
   readonly slot: number;
   private configs: Config[];
   private phase: number[];
   /** `offsets` is accepted for API compatibility; the slot rotation fixes the phasing. */
-  constructor(readonly airport: PatternAirport, readonly regs: readonly string[], readonly wind: Wind | null, readonly runwayHeading: number, _offsets?: readonly number[]) {
+  /** True when IFR: one aircraft flies a straight-in practice approach, no VFR pattern. */
+  readonly approach: boolean;
+  constructor(readonly airport: PatternAirport, readonly regs: readonly string[], readonly wind: Wind | null, readonly runwayHeading: number, _offsets?: readonly number[], conditions?: Partial<TrafficConditions>) {
+    const opts = { climb: conditions?.climb ?? 1, gust: conditions?.gust ?? 0 };
+    this.approach = conditions?.mode === 'ifr';
+    if (this.approach) regs = regs.slice(0, 1);
+    this.regs = regs;
     this.laps = regs.map(() => []);
-    const plan = (reg: string, e = 0, holds: Hold[] = []) => timing(makeFlightPlan(airport, reg, wind, runwayHeading, e, holds), airport);
+    if (this.approach) {
+      // Single straight-in: the lap is the approach itself; nothing else can occupy the runway.
+      const p = makeFlightPlan(airport, regs[0] ?? '', wind, runwayHeading, 0, [], 0, { ...opts, approach: true });
+      const finalStart = 0, takeoff = p.segments.find((x) => x.phase === 'Takeoff')?.start ?? p.seconds;
+      const t: Timing = { plan: p, base: 0, finalStart, departEnd: bisectAlong(p, airport, takeoff, p.seconds - 1e-6, axis(airport).len), window: p.seconds };
+      this.slot = this.period = p.seconds;
+      this.configs = [{ extendPx: 0, departureExtendPx: 0, holds: [], t }];
+      this.phase = [0];
+      return;
+    }
+    const plan = (reg: string, e = 0, holds: Hold[] = []) => timing(makeFlightPlan(airport, reg, wind, runwayHeading, e, holds, 0, opts), airport);
     const arrivalExtension = airport.offset * .08;
     const base = regs.map((r) => plan(r, arrivalExtension));
     const n = Math.max(1, regs.length);
@@ -85,7 +103,7 @@ export class TrafficSchedule {
     const configs: Config[] = regs.map((reg, i) => {
       const initial = base[i];
       if (!initial) throw new Error('Missing traffic timing');
-      const fit = (u: number) => timing(makeFlightPlan(airport, reg, wind, runwayHeading, arrivalExtension, [], u), airport);
+      const fit = (u: number) => timing(makeFlightPlan(airport, reg, wind, runwayHeading, arrivalExtension, [], u, opts), airport);
       let lo = 0, hi = airport.offset;
       while (fit(hi).plan.seconds < period) hi *= 2;
       for (let k = 0; k < 36; k++) {
@@ -115,6 +133,12 @@ export class TrafficSchedule {
         laps.push({ start, extendPx: c.extendPx, departureExtendPx: c.departureExtendPx, holds: c.holds, t: c.t, occupied: [start + c.t.finalStart, start + c.t.plan.seconds + c.t.departEnd] });
       }
     });
+  }
+  /** Approach mode fades the airplane in/out over 3 s at the lap ends (the loop restarts out on final). */
+  visibility(i: number, time: number) {
+    if (!this.approach) return 1;
+    const into = time - (this.phase[i] ?? 0) - this.lapIndex(i, time) * this.period;
+    return Math.max(0, Math.min(1, into / 3, (this.period - into) / 3));
   }
   sample(i: number, time: number): PatternSample | null {
     const c = this.configs[i]; if (!c) return null;
