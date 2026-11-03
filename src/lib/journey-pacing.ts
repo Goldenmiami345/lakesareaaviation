@@ -220,7 +220,7 @@ export function wheelDecision(s: WheelState, now: number, deltaY: number, canPag
   if (fresh) s.used = false;
   if (sign < 0) return s.gliding ? "drop" : "native";
   if (s.gliding || now - s.landedAt < WHEEL_AFTER_LAND_MS) { s.used = true; return "drop"; }
-  if (s.used) return canPage ? "drop" : "native";
+  if (s.used) return "drop";
   if (!canPage) return "native";
   s.used = true;
   return "page";
