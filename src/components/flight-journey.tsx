@@ -371,16 +371,22 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let mx = 0, my = 0, frame = 0, last = -1;
-    let shown: number | null = null;
-    let prevTime = 0;
-    let lastTarget = -1, settleBy = 0;
     const n = stages.length;
-    const render = (now: number = performance.now()) => {
+    // Geometry is cached (document offset of the section, pinned length, viewport height) and
+    // recomputed only on resize, so a frame never reads layout.
+    let geo: { base: number; total: number; vh: number } | null = null;
+    const measure = () => {
       const el = sectionRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const viewportHeight = viewportRef.current?.offsetHeight ?? window.innerHeight;
-      const total = Math.max(1, el.offsetHeight - viewportHeight);
+      if (!el) return null;
+      const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
+      geo = { base: window.scrollY + el.getBoundingClientRect().top, total: Math.max(1, el.offsetHeight - vh), vh };
+      return geo;
+    };
+    const render = () => {
+      const g0 = geo ?? measure();
+      if (!g0) return;
+      const viewportHeight = g0.vh, total = g0.total;
+      const rect = { top: g0.base - window.scrollY };
       const scrolled = journeyFrame(-rect.top / total, n);
       const showActive = (idx: number) => {
         if (hudRef.current) hudRef.current.textContent = journeyAltitude(scrolled, n).toLocaleString("en-US");
@@ -398,7 +404,6 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       // full-height page; stage k sits at translateY((k - progress) * 100%), moving 1:1 with scroll.
       if (reduce || journeyMode() === "stack") {
         const p = stackProgress(-rect.top / total, n);
-        shown = scrolled.stage + scrolled.transition; prevTime = 0;
         layerRefs.current.forEach((layer, i) => {
           if (!layer) return;
           const off = stackOffset(i, p);
@@ -414,20 +419,9 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         return;
       }
       if (stackCopyRef.current) stackCopyRef.current.style.visibility = "hidden";
-      // Native snap glides are quick; ease a continuous "slide position" toward the
-      // scroll so slides zoom and crossfade into each other over about a second.
-      const target = scrolled.stage + scrolled.transition;
-      // Real elapsed time (slow frames must not stretch the fade), so a stop is fully faded in ~1s.
-      const dt = prevTime ? Math.min(400, now - prevTime) : 16;
-      prevTime = now;
-      // Scrolling back up is tied directly to the scroll position: a continuous crossfade, no easing lag.
-      if (shown === null || reduce || Math.abs(target - shown) > 2 || target < shown) shown = target;
-      else shown += (target - shown) * (1 - Math.exp(-dt / 320));
-      // Hard deadline: however slow the frames, the stage is fully faded in 1.2s after scrolling stops.
-      if (target !== lastTarget) { lastTarget = target; settleBy = now + 1200; }
-      if (Math.abs(target - shown) < 0.01 || now >= settleBy) shown = target;
-      if (shown !== target) frame = requestAnimationFrame(render);
-      else prevTime = 0;
+      // Opacity/transform derive directly from the scroll position (no smoothing), so a glide's
+      // crossfade is complete on the frame it lands.
+      const shown = scrolled.stage + scrolled.transition;
       const base = Math.min(n - 1, Math.floor(shown));
       const t = Math.max(0, Math.min(1, shown - base));
       const state = { stage: base, next: Math.min(n - 1, base + 1), transition: t, active: t < 0.5 ? base : Math.min(n - 1, base + 1), copyOpacity: Math.abs(1 - 2 * t), progress: scrolled.progress };
@@ -454,8 +448,13 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const onMove = (e: PointerEvent) => { mx = e.clientX / window.innerWidth - 0.5; my = e.clientY / window.innerHeight - 0.5; renderScroll(); };
     const el = sectionRef.current;
     const vh = () => viewportRef.current?.offsetHeight ?? window.innerHeight;
-    if (el) journeys.set(el, { n, vh });
+    if (el) journeys.set(el, { n, vh, render });
+    invalidateJourneyLayout();
     installController();
+    const remeasure = () => { measure(); invalidateJourneyLayout(); renderScroll(); };
+    const ro = new ResizeObserver(remeasure);
+    if (el) ro.observe(el);
+    ro.observe(document.body);
     modeListeners.add(renderScroll);
     const onJump = (e: Event) => {
       const d = (e as CustomEvent<{ id: string; index: number; animate?: boolean }>).detail;
@@ -466,17 +465,19 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     };
     render();
     window.addEventListener("scroll", renderScroll, { passive: true });
-    window.addEventListener("resize", renderScroll);
+    window.addEventListener("resize", remeasure);
     window.addEventListener("journey:jump", onJump);
     if (!reduce) window.addEventListener("pointermove", onMove, { passive: true });
     return () => {
       cancelAnimationFrame(frame);
+      ro.disconnect();
       if (el) journeys.delete(el);
+      invalidateJourneyLayout();
       modeListeners.delete(renderScroll);
       uninstallController();
       window.removeEventListener("journey:jump", onJump);
       window.removeEventListener("scroll", renderScroll);
-      window.removeEventListener("resize", renderScroll);
+      window.removeEventListener("resize", remeasure);
       window.removeEventListener("pointermove", onMove);
     };
   }, [stages, id]);
