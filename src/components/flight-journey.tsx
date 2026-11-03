@@ -108,6 +108,8 @@ const journeys = new Map<HTMLElement, JourneyEntry>();
 let paging = false;
 /** Active paged glide: from/to scrollY and eased progress p (0→1). Journeys crossfade from p, not from scroll bands. */
 let glide: { from: number; to: number; p: number } | null = null;
+// Sine ease of glide TIME: ≥ 500 ms of visible blend, with 0.9→0.1 taking ~60% of the glide.
+const blendEase = (t: number) => (1 - Math.cos(Math.PI * Math.max(0, Math.min(1, t)))) / 2;
 const wheel = newWheelState();
 let tweenFrame = 0;
 let glideTimeout = 0;
@@ -196,7 +198,7 @@ function runPath(path: PageSegment[], touch = false) {
     const elapsed = now - start;
     const y = glideAt(from, to, elapsed, dur);
     window.scrollTo({ top: y, behavior: "instant" });
-    glide = { from, to, p: Math.max(0, Math.min(1, (y - from) / (to - from || 1))) };
+    glide = { from, to, p: blendEase(elapsed / dur) };
     renderAll();
     if (elapsed < dur) tweenFrame = requestAnimationFrame(tick); else finish();
   };
@@ -456,7 +458,9 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         const st = stages[i];
         const leaving = i === state.stage ? state.transition : 0;
         const coming = i === state.next && i !== state.stage ? 1 - state.transition : 0;
-        const scale = reduce ? 1 : 1 + leaving * (st?.zoom ?? 0.55) + coming * (st?.zoomIn ?? 0.06);
+        // Layers are viewport-sized; pointer parallax is covered by a GPU scale, not a larger raster.
+        const cover = reduce || (!mx && !my) ? 0 : 0.05;
+        const scale = reduce ? 1 : 1 + cover + leaving * (st?.zoom ?? 0.55) + coming * (st?.zoomIn ?? 0.06);
         const opacity = i === state.stage ? 1 - state.transition : i === state.next ? 1 : 0;
         const depth = reduce ? 0 : 10 + i * 3;
         layer.style.transform = `translate3d(${(mx * -depth).toFixed(2)}px, ${(my * -depth).toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
@@ -552,7 +556,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       ))}
       <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className="journey-viewport sticky top-0 h-svh overflow-hidden">
         {stages.map((st, i) => (
-          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="journey-layer absolute -inset-[2%] bg-ink backface-hidden" data-active={i === active ? "" : undefined} style={{ zIndex: stages.length - i }}>
+          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="journey-layer absolute inset-0 bg-ink backface-hidden" data-active={i === active ? "" : undefined} style={{ zIndex: stages.length - i }}>
             <div className="journey-zoom absolute inset-0 origin-top-left">
             {st.traffic && st.phoneImg ? <AirportScene airport={ops[i]?.pattern ?? st.traffic} active={i===active} photo={st.phoneImg} original={st.img} wind={ops[i]?.obs ?? null} runwayHeading={ops[i]?.rwy.trueHdg ?? Number(st.traffic.runway)*10} conditions={ops[i]?.conditions ?? NO_CONDITIONS} /> : st.video ? (
               <video
