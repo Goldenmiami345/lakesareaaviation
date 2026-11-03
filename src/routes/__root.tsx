@@ -79,6 +79,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: ({ matches }) => {
     // Canonical/og:url live here only (single source; leaf routes never add one), for sitemap pages only.
     const canonical = canonicalUrl(matches[matches.length - 1] as Parameters<typeof canonicalUrl>[0]);
+    console.log("NFDBG", matches.map((m) => [m.routeId, m.status, (m as any).globalNotFound, !!(m as any).error]));
     const notFound = matches.some((m) => m.status === "notFound" || (m as { globalNotFound?: boolean }).globalNotFound);
     return {
     meta: [
