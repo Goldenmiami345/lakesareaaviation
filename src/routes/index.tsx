@@ -35,14 +35,14 @@ function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/25 to-ink/5 lg:bg-gradient-to-r lg:from-ink lg:via-ink/60 lg:to-transparent" />
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('hero-enter','first-view')" }} />
         <div className="site-container relative flex min-h-[100svh] flex-col justify-end pb-7 pt-24 sm:pb-[4.5rem] sm:pt-32">
-          <div className="max-w-3xl">
-            <p className="stage-label hero-step" style={{ ["--d" as string]: "0ms" }}>Accelerated flight training</p>
-            <h1 className="mt-2.5 font-display text-[clamp(1.05rem,5.1vw,1.4rem)] leading-[1] sm:mt-3 sm:text-[2.2rem] lg:text-[2.8rem]"><span className="line-mask hero-mask"><span style={{ ["--d" as string]: "90ms" }}>BECOME A PROFESSIONAL PILOT</span></span></h1>
+          <div className="max-w-3xl lg:max-w-[58vw]">
+            <p className="stage-label hero-step sm:text-[clamp(0.75rem,0.42rem+0.5vw,1.05rem)]" style={{ ["--d" as string]: "0ms" }}>Accelerated flight training</p>
+            <h1 className="mt-2.5 font-display text-[clamp(1.05rem,5.1vw,1.4rem)] leading-[1] sm:mt-3 sm:text-[clamp(2.65rem,1.1rem+4.4vw,7.25rem)]"><span className="line-mask hero-mask"><span style={{ ["--d" as string]: "90ms" }}>BECOME A PROFESSIONAL PILOT</span></span></h1>
           </div>
           <HeroCta />
-          <nav aria-label="Training locations" className="hero-step mt-4 flex flex-wrap items-center gap-1 text-xs font-bold uppercase tracking-[0.06em] text-background/75 sm:gap-2 sm:tracking-[0.14em]" style={{ ["--d" as string]: "360ms" }}>
-            <MapPin aria-hidden className="mr-0.5 size-3.5 shrink-0 text-background/55" />
-            {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} className="shrink-0 whitespace-nowrap rounded-full border border-background/25 px-2 py-1.5 transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground sm:px-3">{a.label}, {a.code}</button>)}
+          <nav aria-label="Training locations" className="hero-step mt-4 flex flex-wrap items-center gap-1 text-xs sm:text-[clamp(0.75rem,0.42rem+0.5vw,1.05rem)] lg:mt-6 font-bold uppercase tracking-[0.06em] text-background/75 sm:gap-2 sm:tracking-[0.14em]" style={{ ["--d" as string]: "360ms" }}>
+            <MapPin aria-hidden className="mr-0.5 size-3.5 sm:size-[1.2em] shrink-0 text-background/55" />
+            {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} className="shrink-0 whitespace-nowrap rounded-full border border-background/25 px-2 py-1.5 transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground sm:px-[1em] sm:py-[0.6em]">{a.label}, {a.code}</button>)}
           </nav>
           <ScrollCue targetId="flight-path" />
         </div>
@@ -133,5 +133,5 @@ function HeroCta() {
     el.addEventListener("animationend", end);
     return () => { leave(); window.clearInterval(timer); io.disconnect(); };
   }, []);
-  return <div className="hero-step mt-5" style={{ ["--d" as string]: "270ms" }}><Link ref={ref} to="/contact" className="interactive-arrow group inline-flex min-h-12 items-center gap-4 border-b border-background/45 pb-1 text-sm font-bold uppercase text-background transition-colors hover:border-primary">Build my training plan <span className="cta-orb grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><ArrowRight className="cta-arrow size-4" /></span></Link></div>;
+  return <div className="hero-step mt-5 lg:mt-7" style={{ ["--d" as string]: "270ms" }}><Link ref={ref} to="/contact" className="interactive-arrow group inline-flex min-h-12 items-center gap-4 border-b border-background/45 pb-1 text-sm sm:text-[clamp(0.875rem,0.5rem+0.6vw,1.3rem)] font-bold uppercase text-background transition-colors hover:border-primary">Build my training plan <span className="cta-orb grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><ArrowRight className="cta-arrow size-4" /></span></Link></div>;
 }

@@ -330,4 +330,6 @@ html.hero-enter .hero-mask > span { animation: hero-mask-in .55s var(--d, 0ms) c
 
 /* One fluid site column: phones keep 20px gutters; wider screens grow to ~4.5vw (max 96px) inside 1720px. */
 @utility site-wrap { margin-inline: auto; width: 100%; max-width: 1720px; }
-@utility site-container { margin-inline: auto; width: 100%; max-width: 1720px; padding-inline: 20px; @media (min-width: 641px) { padding-inline: clamp(20px, 4.5vw, 96px); } }
+@utility site-container { margin-inline: auto; width: 100%; max-width: 1720px; padding-inline: var(--gutter); }
+:root { --gutter: 20px; }
+@media (min-width: 641px) { :root { --gutter: clamp(20px, 4.5vw, 96px); } }
