@@ -78,7 +78,7 @@ export function SiteLayout({ children, overlayHeader = false }: { children: Reac
   // once the new route's loaders and code are ready), never on the raw pathname, so the
   // old page stays still until the new one renders and the fade plays exactly once.
   const pageKey = useMatch({ strict: false, select: (match) => match.id });
-  return <><MotionExperience pageKey={pageKey} /><Header overlay={overlayHeader} /><div key={pageKey} className="page-enter">{children}</div><Footer /><MobileActions /></>;
+  return <><MotionExperience pageKey={pageKey} /><Header overlay={overlayHeader} /><main id="main" tabIndex={-1} key={pageKey} className="page-enter outline-none">{children}</main><Footer /><MobileActions /></>;
 }
 
 export function PageIntro({ eyebrow, title, text, image, imageAlt = "" }: { eyebrow: string; title: string; text: string; image?: string; imageAlt?: string }) {

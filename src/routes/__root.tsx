@@ -14,26 +14,25 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ThemeSync } from "../components/theme-sync";
 import { canonicalUrl } from "../lib/site-url";
+import { SiteLayout } from "../components/site-shell";
+import { SCHOOL_PHONE, SCHOOL_PHONE_TEL } from "../lib/site-data";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Go home
-          </Link>
+    <SiteLayout>
+      <section className="mx-auto max-w-3xl px-5 pb-24 pt-36 lg:px-8">
+        <p className="eyebrow text-primary">404</p>
+        <h1 className="mt-4 font-display text-5xl">Page not found</h1>
+        <p className="mt-5 text-lg text-muted-foreground">That page doesn't exist or has moved. Try one of these instead:</p>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Link to="/programs" className="border border-border px-5 py-3 text-sm font-bold uppercase hover:border-primary">Programs</Link>
+          <Link to="/fleet" className="border border-border px-5 py-3 text-sm font-bold uppercase hover:border-primary">Fleet</Link>
+          <Link to="/rates" className="border border-border px-5 py-3 text-sm font-bold uppercase hover:border-primary">Rates</Link>
+          <Link to="/contact" className="bg-primary px-5 py-3 text-sm font-bold uppercase text-primary-foreground">Build my training plan</Link>
         </div>
-      </div>
-    </div>
+        <a href={SCHOOL_PHONE_TEL} className="mt-10 inline-flex font-display text-3xl text-primary">{SCHOOL_PHONE}</a>
+      </section>
+    </SiteLayout>
   );
 }
 
@@ -131,6 +130,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <a href="#main" className="skip-link">Skip to content</a>
       <ThemeSync />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />

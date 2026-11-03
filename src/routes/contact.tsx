@@ -155,7 +155,7 @@ function ContactPage() {
           </div>
           <p className="mt-5 text-xs leading-relaxed text-background/60">All prices are estimates, based on published minimum course days and prices, plus a 20% buffer. Weather, proficiency, examiner fees, tax, aircraft availability, prerequisites, and time-building can change the final schedule and cost.</p>
           <a href="#request" className="mt-6 flex min-h-13 items-center justify-center bg-primary px-5 text-center text-sm font-bold uppercase text-primary-foreground">Send this plan</a>
-        </aside>
+        </div>
       </div>
 
       <section id="request" className="mt-20 scroll-mt-24 border-t border-border pt-14">

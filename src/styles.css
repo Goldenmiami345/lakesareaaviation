@@ -306,3 +306,6 @@ html.hero-enter .hero-mask > span { animation: hero-mask-in .55s var(--d, 0ms) c
   html.hero-enter .hero-step, html.hero-enter .hero-mask > span { animation: hero-fade-in .55s var(--d, 0ms) ease-out both; transform: none; }
   .cta-nudge .cta-orb, .cta-nudge .cta-arrow { animation: none; }
 }
+
+.skip-link { position: fixed; left: 1rem; top: 1rem; z-index: 100; padding: .75rem 1.25rem; background: var(--primary); color: var(--primary-foreground); font-weight: 700; font-size: .875rem; transform: translateY(-200%); transition: transform .15s ease; }
+.skip-link:focus { transform: none; outline: 2px solid var(--ring); outline-offset: 2px; }
