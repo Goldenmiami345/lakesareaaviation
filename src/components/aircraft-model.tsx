@@ -45,16 +45,22 @@ export default function AircraftModel({ src, label, poster, autoRotate = true, o
     if(el.loaded)loaded();
     const resize=new ResizeObserver(()=>fit());resize.observe(el);
     const pause=()=>{window.clearTimeout(resumeTimer);el.removeAttribute('auto-rotate');};
-    const resume=()=>{window.clearTimeout(resumeTimer);if(autoRotate&&!reduce&&!down)resumeTimer=window.setTimeout(()=>el.setAttribute('auto-rotate',''),MODEL_RESUME_MS);};
+    // Only spin (and so only render frames) while the model is on screen and the tab is visible.
+    let inView=false;
+    const canSpin=()=>autoRotate&&!reduce&&!down&&inView&&!document.hidden;
+    const resume=()=>{window.clearTimeout(resumeTimer);if(canSpin())resumeTimer=window.setTimeout(()=>{if(canSpin())el.setAttribute('auto-rotate','');},MODEL_RESUME_MS);};
     const start=()=>{down=true;pause();};
     const end=()=>{down=false;resume();};
     const change=(e:Event)=>{if((e as CustomEvent<{source:string}>).detail?.source==='user-interaction'){pause();resume();}};
     const reset=()=>{el.setAttribute('camera-orbit',homeOrbit);el.setAttribute('field-of-view',MODEL_SETTINGS['field-of-view']);el.resetTurntableRotation?.();pause();resume();};
     const tap=(e:PointerEvent)=>{if(e.pointerType==='mouse')return;const now=performance.now();if(now-lastTap<300)reset();lastTap=now;};
-    if(reduce)pause();
+    pause();
+    const sync=()=>{if(canSpin()){window.clearTimeout(resumeTimer);el.setAttribute('auto-rotate','');}else pause();};
+    const view=new IntersectionObserver(([e])=>{inView=!!e?.isIntersecting;sync();});view.observe(el);
+    document.addEventListener('visibilitychange',sync);
     el.addEventListener('pointerdown',start);el.addEventListener('pointerup',tap);window.addEventListener('pointerup',end);window.addEventListener('pointercancel',end);
     el.addEventListener('camera-change',change);el.addEventListener('dblclick',reset);
-    return()=>{resize.disconnect();window.clearTimeout(resumeTimer);el.removeEventListener('load',loaded);el.removeEventListener('pointerdown',start);el.removeEventListener('pointerup',tap);window.removeEventListener('pointerup',end);window.removeEventListener('pointercancel',end);el.removeEventListener('camera-change',change);el.removeEventListener('dblclick',reset);};
+    return()=>{resize.disconnect();view.disconnect();document.removeEventListener('visibilitychange',sync);window.clearTimeout(resumeTimer);el.removeEventListener('load',loaded);el.removeEventListener('pointerdown',start);el.removeEventListener('pointerup',tap);window.removeEventListener('pointerup',end);window.removeEventListener('pointercancel',end);el.removeEventListener('camera-change',change);el.removeEventListener('dblclick',reset);};
   },[ready,autoRotate]);
   useEffect(() => {
     // The SSR guard removes model-viewer from the server bundle entirely. Without it the
@@ -66,5 +72,5 @@ export default function AircraftModel({ src, label, poster, autoRotate = true, o
     void import('@google/model-viewer').then(() => { if (alive) setReady(true); }).catch(()=>undefined);
     return () => { alive = false; };
   }, []);
-  return ready ? createElement('model-viewer', { ...MODEL_SETTINGS, ref, src, alt: label, poster, 'auto-rotate': autoRotate || undefined, className: 'aircraft-model relative h-full w-full' }) : null;
+  return ready ? createElement('model-viewer', { ...MODEL_SETTINGS, ref, src, alt: label, poster,  className: 'aircraft-model relative h-full w-full' }) : null;
 }
