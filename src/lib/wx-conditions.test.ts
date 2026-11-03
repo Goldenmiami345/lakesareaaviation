@@ -23,7 +23,7 @@ test('flight plan heading crabs into the wind while the track stays on the leg',
 test('density altitude and climb scaling: −7%/1,000 ft above field, floor 50%', () => {
   assert.ok(Math.abs(densityAltitude(0, 15, 29.92)) < 1);
   const hot = densityAltitude(4965, 35, 30.0);
-  assert.ok(hot > 8500 && hot < 9500, String(hot));
+  assert.ok(hot > 8000 && hot < 9000, String(hot));
   assert.ok(Math.abs(climbScale(4965 + 2000, 4965) - 0.86) < 1e-9);
   assert.equal(climbScale(30000, 0), 0.5);
   assert.ok(climbScale(-2000, 0) > 1, 'cold days climb better');
@@ -54,9 +54,9 @@ test('gust jitter: ≤2°, base/final only, none on the ground or under 5 kt spr
 });
 test('METAR parsing and summary', () => {
   const m = parseMetarRow({ icaoId: 'KLXL', obsTime: Date.UTC(2026, 10, 3, 21, 53) / 1000, temp: 7, dewp: 2, wdir: 160, wspd: 10, wgst: 16, visib: '10+', altim: 1016.6, clouds: [{ cover: 'BKN', base: 3500 }], rawOb: 'METAR KLXL 032153Z 16010G16KT 10SM BKN035 07/02 A3002' });
-  assert.equal(m.cat, 'MVFR'); assert.equal(m.ceiling, 3500); assert.equal(m.altim, 30.02);
-  assert.equal(metarSummary({ ...m, cat: 'VFR' }), 'KLXL 2153Z · 160°/10G16 · 7°C/2°C · 30.02 · 10SM · BKN035 · VFR');
-  const c = trafficConditions(m, { elevation: 1123 }, '13');
+  assert.equal(m.cat, 'VFR'); assert.equal(m.ceiling, 3500); assert.equal(m.altim, 30.02);
+  assert.equal(metarSummary(m), 'KLXL 2153Z · 160°/10G16 · 7°C/2°C · 30.02 · 10SM · BKN035 · VFR');
+  const c = trafficConditions({ ...m, cat: flightCategory(2500, 10) }, { elevation: 1123 }, '13');
   assert.equal(c.mode, 'mvfr'); assert.equal(c.gust, 6);
 });
 
