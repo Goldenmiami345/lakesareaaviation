@@ -41,3 +41,4 @@
 
 - Subdirectories have their own AGENTS.md (src/components) to read before changing files there.- Canonical/og:url are emitted only by the root head from src/lib/site-url.ts (SITE_URL + leaf fullPath, sitemap routes only; sitemap uses the same constant), so leaf routes never add their own and the domain switch is one line.
 - Scroll-reveal hidden states apply only under html.reveal-ready (added by MotionExperience after hydration, in-view targets marked visible first), so prerendered/no-JS HTML is always fully visible. SiteLayout owns the single <main id="main">; routes use plain divs inside it.
+- Accent TEXT uses text-primary-text (--primary-text on light, --primary-text-dark inside bg-ink/text-background, per accent theme); fills/buttons keep --primary, because the brand blue fails AA as text on beige and ink.
