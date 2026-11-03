@@ -10,7 +10,11 @@ export function useMetar() {
     let alive = true;
     const load = () => fetch("/api/public/metar")
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((d: { stations?: Record<string, MetarObs> }) => { if (alive) setStations(d.stations ?? null); })
+      .then((d: { stations?: Record<string, MetarObs> }) => { if (!alive) return;
+        // Dev/test hook: ?wxcat=IFR forces the flight category everywhere.
+        const force = import.meta.env.DEV ? new URLSearchParams(location.search).get("wxcat") : null;
+        const st = d.stations ?? null;
+        setStations(st && force ? Object.fromEntries(Object.entries(st).map(([k, v]) => [k, { ...v, cat: force as MetarObs["cat"] }])) : st); })
       .catch(() => { if (alive) setStations(null); });
     const t0 = window.setTimeout(load, 300);
     const id = window.setInterval(load, 10 * 60 * 1000);
