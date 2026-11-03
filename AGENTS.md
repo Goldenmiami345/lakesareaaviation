@@ -39,4 +39,5 @@
 - USE_RENDERED_TOP_SPRITES (site-data) draws photo-derived top renders (src/assets/fleet/top, width = wingspan) for those registrations in the aerial view only, at the vectors' ~3x display scale (full 640px source) with an alpha-derived shadow; the oblique view and other registrations keep SVG vectors, independent of SHOW_3D_MODELS.
 - Airport imagery mounts within 1.5 viewports or on a "journey-target" glide event, phone or desktop aerial only (first-load weight). Models spin only when visible.
 
-- Subdirectories have their own AGENTS.md (src/components) to read before changing files there.
+- Subdirectories have their own AGENTS.md (src/components) to read before changing files there.- Canonical/og:url are emitted only by the root head from src/lib/site-url.ts (SITE_URL + leaf fullPath, sitemap routes only; sitemap uses the same constant), so leaf routes never add their own and the domain switch is one line.
+- Scroll-reveal hidden states apply only under html.reveal-ready (added by MotionExperience after hydration, in-view targets marked visible first), so prerendered/no-JS HTML is always fully visible. SiteLayout owns the single <main id="main">; routes use plain divs inside it.
