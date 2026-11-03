@@ -74,7 +74,7 @@ export class TrafficSchedule {
   /** `offsets` is accepted for API compatibility; the slot rotation fixes the phasing. */
   /** True when IFR: one aircraft flies a straight-in practice approach, no VFR pattern. */
   readonly approach: boolean;
-  constructor(readonly airport: PatternAirport, readonly regs: readonly string[], readonly wind: Wind | null, readonly runwayHeading: number, _offsets?: readonly number[], conditions?: Partial<TrafficConditions>) {
+  constructor(readonly airport: PatternAirport, regs: readonly string[], readonly wind: Wind | null, readonly runwayHeading: number, _offsets?: readonly number[], conditions?: Partial<TrafficConditions>) {
     const opts = { climb: conditions?.climb ?? 1, gust: conditions?.gust ?? 0 };
     this.approach = conditions?.mode === 'ifr';
     if (this.approach) regs = regs.slice(0, 1);
