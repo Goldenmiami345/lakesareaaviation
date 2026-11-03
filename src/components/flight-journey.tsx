@@ -493,7 +493,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   // Active runway per airport stage from live wind; calm-wind runway (and no readout) without weather.
   const ops = useMemo(() => stages.map((st) => {
     if (!st.traffic) return null;
-    const obs = metar?.[st.traffic.wxStation] ?? null;
+    const obs = metar?.[st.traffic.ident] ?? metar?.[st.traffic.wxStation] ?? null;
     const rwy = pickRunway(st.traffic, obs ? { dir: obs.dir, kt: obs.kt } : null);
     return { obs, rwy, pattern: patternFor(st.traffic, rwy) };
   }), [stages, metar]);

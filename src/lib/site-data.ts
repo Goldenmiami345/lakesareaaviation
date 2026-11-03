@@ -118,7 +118,7 @@ export const fleet: Array<{ name: string; registration: string; role: FleetRole;
 // Traffic-pattern data from FAA airport records (NASR via AirNav, effective 2026-10-29):
 // pattern direction and true heading for both main-runway ends. P52 publishes RWY 32 as its
 // calm-wind runway with right traffic; KLXL and 18V publish none, so the school's usual runway is used.
-// wxStation: own METAR (KLXL) or nearest reporting station (KDEN 16 nm for 18V, KSEZ 14 nm for P52).
+// wxStation: fallback only; live wind uses the nearest current METAR by distance (src/lib/wx-stations.ts).
 // field elevation, pattern altitude, active runway and pattern direction.
 // Runway endpoints are measured on each USGS aerial (1500 x 1500 px).
 export const airportTraffic = {
