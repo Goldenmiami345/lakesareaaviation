@@ -42,3 +42,7 @@
 - Subdirectories have their own AGENTS.md (src/components) to read before changing files there.- Canonical/og:url are emitted only by the root head from src/lib/site-url.ts (SITE_URL + leaf fullPath, sitemap routes only; sitemap uses the same constant), so leaf routes never add their own and the domain switch is one line.
 - Scroll-reveal hidden states apply only under html.reveal-ready (added by MotionExperience after hydration, in-view targets marked visible first), so prerendered/no-JS HTML is always fully visible. SiteLayout owns the single <main id="main">; routes use plain divs inside it.
 - Accent TEXT uses text-primary-text (--primary-text on light, --primary-text-dark inside bg-ink/text-background, per accent theme); fills/buttons keep --primary, because the brand blue fails AA as text on beige and ink.
+
+- Every link to the contact/training-plan form is labelled "Build my training plan" (sticky bar: "Build my plan"); distinct actions keep their own labels, so one name always means one destination.
+- Section seams between navy, blue and beige are clean edges (edge-fade utilities are no-ops) because any navy/beige blend passes through grey.
+- Journey ALT readout uses journeyAltitude (round per-stage targets, counting only mid-transition); airport wind uses the nearest current METAR by distance (src/lib/wx-stations.ts) with each field's wxStation as fallback.
