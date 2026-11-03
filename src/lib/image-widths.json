@@ -1,0 +1,149 @@
+{
+ "01-clouds": {
+  "w": 1920,
+  "h": 1088,
+  "variants": [
+   780,
+   1170,
+   1280
+  ]
+ },
+ "01-clouds-phone": {
+  "w": 1280,
+  "h": 1392,
+  "variants": [
+   780,
+   1170
+  ]
+ },
+ "02-runway-corrected": {
+  "w": 1376,
+  "h": 768,
+  "variants": [
+   780,
+   1170,
+   1280
+  ]
+ },
+ "02-runway-corrected-phone": {
+  "w": 1280,
+  "h": 1366,
+  "variants": [
+   780,
+   1170
+  ]
+ },
+ "02-runway": {
+  "w": 1920,
+  "h": 1088,
+  "variants": [
+   780,
+   1170,
+   1280
+  ]
+ },
+ "instrument-imc-cockpit": {
+  "w": 1376,
+  "h": 768,
+  "variants": [
+   780,
+   1170,
+   1280
+  ]
+ },
+ "instrument-imc-cockpit-phone": {
+  "w": 1280,
+  "h": 1006,
+  "variants": [
+   780,
+   1170
+  ]
+ },
+ "04-instructor": {
+  "w": 1920,
+  "h": 1088,
+  "variants": [
+   780,
+   1170,
+   1280
+  ]
+ },
+ "04-instructor-phone": {
+  "w": 1280,
+  "h": 1192,
+  "variants": [
+   780,
+   1170
+  ]
+ },
+ "05-airline": {
+  "w": 1600,
+  "h": 900,
+  "variants": [
+   780,
+   1170,
+   1280
+  ]
+ },
+ "sunset-ramp": {
+  "w": 1584,
+  "h": 672,
+  "variants": [
+   780,
+   1170,
+   1280
+  ]
+ },
+ "sunset-ramp-phone": {
+  "w": 1280,
+  "h": 1189,
+  "variants": [
+   780,
+   1170
+  ]
+ },
+ "above-clouds": {
+  "w": 1434,
+  "h": 1770,
+  "variants": [
+   780,
+   1170,
+   1280
+  ]
+ },
+ "lake-aerial": {
+  "w": 1920,
+  "h": 1285,
+  "variants": [
+   780,
+   1170,
+   1280
+  ]
+ },
+ "sedona-airport": {
+  "w": 1920,
+  "h": 1288,
+  "variants": [
+   780,
+   1170,
+   1280
+  ]
+ },
+ "sedona-wing": {
+  "w": 1920,
+  "h": 1434,
+  "variants": [
+   780,
+   1170,
+   1280
+  ]
+ },
+ "n6717a": {
+  "w": 1280,
+  "h": 960,
+  "variants": [
+   780,
+   1170
+  ]
+ }
+}

@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { srcSetFor } from "@/lib/responsive-image";
 import { ArrowRight, ArrowUp, MapPin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import heroImage from "../assets/photos/sunset-ramp-crisp.webp.asset.json";
@@ -13,8 +14,8 @@ import { FlightJourney, airportStages, glideTo, jumpToJourney } from "../compone
 export const Route = createFileRoute("/")({
   staticData: { sitemap: true },
   head: () => ({ links: [
-    { rel: "preload", as: "image", href: heroTallImage.url, media: "(max-aspect-ratio: 3/2)", fetchpriority: "high" },
-    { rel: "preload", as: "image", href: heroImage.url, media: "(min-aspect-ratio: 3/2)", fetchpriority: "high" },
+    { rel: "preload", as: "image", href: heroTallImage.url, imageSrcSet: srcSetFor(heroTallImage.url), imageSizes: "100vw", media: "(max-aspect-ratio: 3/2)", fetchpriority: "high" },
+    { rel: "preload", as: "image", href: heroImage.url, imageSrcSet: srcSetFor(heroImage.url), imageSizes: "100vw", media: "(min-aspect-ratio: 3/2)", fetchpriority: "high" },
   ], meta: [
     { title: "Zero to Hero Flight Training | Lakes Area Aviation" },
     { name: "description", content: "From your first flight to commercial pilot and instructor. Explore Lakes Area Aviation’s accelerated zero-to-hero training path and build your personal plan." },
@@ -30,7 +31,7 @@ function HomePage() {
   return <SiteLayout overlayHeader>
     <div>
       <section className="relative min-h-[100svh] overflow-hidden bg-ink text-background">
-        <div className="hero-parallax absolute inset-0"><picture><source media="(max-aspect-ratio: 3/2)" srcSet={heroTallImage.url} width={1280} height={1189} /><img src={heroImage.url} alt="Lakes Area Aviation Cessna N6717A and Piper Apache on the ramp at sunset" width={1584} height={672} fetchPriority="high" className="hero-kenburns h-[112%] w-full object-cover object-[35%_center]" /></picture></div>
+        <div className="hero-parallax absolute inset-0"><picture><source media="(max-aspect-ratio: 3/2)" srcSet={srcSetFor(heroTallImage.url)} sizes="100vw" width={1280} height={1189} /><img src={heroImage.url} srcSet={srcSetFor(heroImage.url)} sizes="100vw" decoding="async" alt="Lakes Area Aviation Cessna N6717A and Piper Apache on the ramp at sunset" width={1584} height={672} fetchPriority="high" className="hero-kenburns h-[112%] w-full object-cover object-[35%_center]" /></picture></div>
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/25 to-ink/5 lg:bg-gradient-to-r lg:from-ink lg:via-ink/60 lg:to-transparent" />
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('hero-enter','first-view')" }} />
         <div className="site-container relative flex min-h-[100svh] flex-col justify-end pb-7 pt-24 sm:pb-[4.5rem] sm:pt-32">

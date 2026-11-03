@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { srcSetFor } from "@/lib/responsive-image";
 import { lazy, Suspense, useLayoutEffect, useRef, useState } from "react";
 import { ArrowRight, ChevronDown, Maximize } from "lucide-react";
 import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
@@ -127,7 +128,7 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
       <div className="relative aspect-[4/3] overflow-hidden bg-background">
         {aircraftModelUrl(f.registration)
           ? <AircraftMedia reg={f.registration} photo={f.image} />
-          : <img src={f.image} alt={`${f.name} ${f.registration}${f.nickname ? ` “${f.nickname}”` : ""}`} width={1200} height={900} loading="lazy" decoding="async" className="fleet-cutout h-full w-full object-contain p-5" />}
+          : <img src={f.image} srcSet={srcSetFor(f.image)} sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw" alt={`${f.name} ${f.registration}${f.nickname ? ` “${f.nickname}”` : ""}`} width={1200} height={900} loading="lazy" decoding="async" className="fleet-cutout h-full w-full object-contain p-5" />}
         <Button variant="secondary" onClick={(e) => onView(e.currentTarget)} className="absolute bottom-3 right-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-ink/80 px-4 text-xs font-bold uppercase tracking-[0.14em] text-background backdrop-blur-md hover:bg-primary">
           <Maximize className="size-4" /> View photo
         </Button>
