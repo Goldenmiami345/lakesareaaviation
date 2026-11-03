@@ -94,9 +94,10 @@
 .runway-line { transform-origin: left; animation: runway 1.2s .35s cubic-bezier(.2,.65,.3,1) both; }
 .scroll-progress { position: fixed; inset: 0 auto auto 0; z-index: 80; width: 100%; height: 3px; background: var(--primary); transform: scaleX(var(--scroll-progress, 0)); transform-origin: left; pointer-events: none; }
 .hero-parallax { transform: translate3d(0, var(--hero-shift, 0px), 0) scale(1.04); will-change: transform; }
-[data-scroll-reveal] { opacity: 0; transform: translateY(42px); transition: opacity .8s cubic-bezier(.2,.65,.3,1), transform .8s cubic-bezier(.2,.65,.3,1); }
-[data-scroll-reveal].is-visible { opacity: 1; transform: translateY(0); }
-.stagger-grid > * { opacity: 0; transform: translateY(24px); }
+/* Hidden states apply only after hydration (MotionExperience adds html.reveal-ready), so prerendered/no-JS content is always visible. */
+html.reveal-ready [data-scroll-reveal] { opacity: 0; transform: translateY(42px); transition: opacity .8s cubic-bezier(.2,.65,.3,1), transform .8s cubic-bezier(.2,.65,.3,1); }
+html.reveal-ready [data-scroll-reveal].is-visible { opacity: 1; transform: translateY(0); }
+html.reveal-ready .stagger-grid > * { opacity: 0; transform: translateY(24px); }
 .is-visible .stagger-grid > * { animation: reveal .65s cubic-bezier(.2,.65,.3,1) both; }
 .stagger-grid.is-visible > * { animation: reveal .65s cubic-bezier(.2,.65,.3,1) both; }
 .is-visible .stagger-grid > *:nth-child(2) { animation-delay: .08s; }
@@ -136,12 +137,12 @@
 .marquee-track { display: flex; width: max-content; animation: marquee 30s linear infinite; }
 .marquee-track:hover { animation-play-state: paused; }
 
-[data-scroll-reveal="blur"] { filter: blur(12px); transform: translateY(28px); transition: opacity 1s cubic-bezier(.2,.65,.3,1), transform 1s cubic-bezier(.2,.65,.3,1), filter 1s cubic-bezier(.2,.65,.3,1); }
-[data-scroll-reveal="blur"].is-visible { filter: blur(0); }
+html.reveal-ready [data-scroll-reveal="blur"] { filter: blur(12px); transform: translateY(28px); transition: opacity 1s cubic-bezier(.2,.65,.3,1), transform 1s cubic-bezier(.2,.65,.3,1), filter 1s cubic-bezier(.2,.65,.3,1); }
+html.reveal-ready [data-scroll-reveal="blur"].is-visible { filter: blur(0); }
 
-.zoom-reveal img { transform: scale(1.16); transition: transform 1.5s cubic-bezier(.2,.65,.3,1); }
-.zoom-reveal.is-visible img { transform: scale(1); }
-.is-visible .zoom-reveal img { transform: scale(1); }
+html.reveal-ready .zoom-reveal img { transform: scale(1.16); transition: transform 1.5s cubic-bezier(.2,.65,.3,1); }
+html.reveal-ready .zoom-reveal.is-visible img { transform: scale(1); }
+html.reveal-ready .is-visible .zoom-reveal img { transform: scale(1); }
 
 .btn-shine { position: relative; overflow: hidden; isolation: isolate; }
 .btn-shine::after { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(105deg, transparent 42%, rgba(255,255,255,.38) 50%, transparent 58%); transform: translateX(-130%) skewX(-8deg); transition: transform .75s cubic-bezier(.2,.65,.3,1); pointer-events: none; }
