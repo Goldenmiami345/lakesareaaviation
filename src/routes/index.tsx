@@ -30,7 +30,7 @@ function HomePage() {
       <section className="relative min-h-[100svh] overflow-hidden bg-ink text-background">
         <div className="hero-parallax absolute inset-0"><picture><source media="(max-aspect-ratio: 3/2)" srcSet={heroTallImage.url} width={1280} height={1189} /><img src={heroImage.url} alt="Lakes Area Aviation Cessna N6717A and Piper Apache on the ramp at sunset" width={1584} height={672} fetchPriority="high" className="hero-kenburns h-[112%] w-full object-cover object-[35%_center]" /></picture></div>
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/25 to-ink/5 lg:bg-gradient-to-r lg:from-ink lg:via-ink/60 lg:to-transparent" />
-        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('hero-enter')" }} />
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('hero-enter','first-view')" }} />
         <div className="relative mx-auto flex min-h-[100svh] max-w-7xl flex-col justify-end px-5 pb-7 pt-24 sm:pb-[4.5rem] sm:pt-32 lg:px-8">
           <div className="max-w-3xl">
             <p className="stage-label hero-step" style={{ ["--d" as string]: "0ms" }}>Accelerated flight training</p>
@@ -114,7 +114,8 @@ function HeroCta() {
     // Entrance ran once; drop the class so returning to the page never replays it.
     const done = window.setTimeout(() => document.documentElement.classList.remove("hero-enter"), 1300);
     const el = ref.current;
-    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return () => window.clearTimeout(done);
+    const leave = () => { window.clearTimeout(done); document.documentElement.classList.remove("first-view"); };
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return leave;
     let visible = false, held = false;
     const hold = () => { held = true; el.classList.remove("cta-nudge"); }, release = () => { held = el.matches(":hover") || el.matches(":focus-visible") || el === document.activeElement; };
     const io = new IntersectionObserver(([e]) => { visible = !!e?.isIntersecting; if (!visible) el.classList.remove("cta-nudge"); }, { threshold: 0.5 });
