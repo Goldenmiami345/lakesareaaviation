@@ -109,7 +109,8 @@ let paging = false;
 /** Active paged glide: from/to scrollY and eased progress p (0→1). Journeys crossfade from p, not from scroll bands. */
 let glide: { from: number; to: number; p: number } | null = null;
 // Sine ease of glide TIME: ≥ 500 ms of visible blend, with 0.9→0.1 taking ~60% of the glide.
-const blendEase = (t: number) => (1 - Math.cos(Math.PI * Math.max(0, Math.min(1, t)))) / 2;
+// Half-linear/half-sine ease over the first 90% of the glide: completes before the last pixels of scroll.
+const blendEase = (t: number) => { const x = Math.max(0, Math.min(1, t / 0.9)); return 0.5 * x + 0.25 * (1 - Math.cos(Math.PI * x)); };
 const wheel = newWheelState();
 let tweenFrame = 0;
 let glideTimeout = 0;
@@ -199,7 +200,7 @@ function runPath(path: PageSegment[], touch = false) {
     const y = glideAt(from, to, elapsed, dur);
     window.scrollTo({ top: y, behavior: "instant" });
     // Within a pixel of the stop the blend is complete, so nothing moves after the landing frame.
-    glide = { from, to, p: Math.abs(to - y) <= 3 ? 1 : blendEase(elapsed / dur) };
+    glide = { from, to, p: Math.abs(to - y) <= 1 ? 1 : blendEase(elapsed / dur) };
     renderAll();
     if (elapsed < dur) tweenFrame = requestAnimationFrame(tick); else finish();
   };
