@@ -35,9 +35,9 @@ function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/25 to-ink/5 lg:bg-gradient-to-r lg:from-ink lg:via-ink/60 lg:to-transparent" />
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('hero-enter','first-view')" }} />
         <div className="site-container relative flex min-h-[100svh] flex-col justify-end pb-7 pt-24 sm:pb-[4.5rem] sm:pt-32">
-          <div className="max-w-3xl lg:max-w-[58vw]">
+          <div className="max-w-3xl lg:max-w-[66vw]">
             <p className="stage-label hero-step sm:text-[clamp(0.75rem,0.42rem+0.5vw,1.05rem)]" style={{ ["--d" as string]: "0ms" }}>Accelerated flight training</p>
-            <h1 className="mt-2.5 font-display text-[clamp(1.05rem,5.1vw,1.4rem)] leading-[1] sm:mt-3 sm:text-[clamp(2.65rem,1.1rem+4.4vw,7.25rem)]"><span className="line-mask hero-mask"><span style={{ ["--d" as string]: "90ms" }}>BECOME A PROFESSIONAL PILOT</span></span></h1>
+            <h1 className="mt-2.5 font-display text-[clamp(1.05rem,5.1vw,1.4rem)] leading-[1] sm:mt-3 sm:text-[clamp(2.65rem,1.1rem+4.4vw,7.25rem)]"><span className="line-mask hero-mask"><span style={{ ["--d" as string]: "90ms" }}>BECOME A <span className="sm:whitespace-nowrap">PROFESSIONAL PILOT</span></span></span></h1>
           </div>
           <HeroCta />
           <nav aria-label="Training locations" className="hero-step mt-4 flex flex-wrap items-center gap-1 text-xs sm:text-[clamp(0.75rem,0.42rem+0.5vw,1.05rem)] lg:mt-6 font-bold uppercase tracking-[0.06em] text-background/75 sm:gap-2 sm:tracking-[0.14em]" style={{ ["--d" as string]: "360ms" }}>

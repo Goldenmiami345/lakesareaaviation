@@ -538,7 +538,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         <div ref={fadeBottomRef} aria-hidden className={`pointer-events-none absolute inset-0 z-40 ${fadeBottom === "background" ? "bg-background" : "bg-ink"}`} style={{ opacity: 0 }} />
 
         {/* HUD */}
-        <div className="journey-hud absolute left-5 sm:left-[max(var(--gutter),calc((100%-1720px)/2+var(--gutter)))] top-24 z-20 font-mono text-xs uppercase tracking-[0.2em] text-background/70 lg:text-[13px]">
+        <div className="journey-hud absolute left-5 sm:left-[max(var(--gutter),calc((100%-1720px)/2))] top-24 z-20 font-mono text-xs uppercase tracking-[0.2em] text-background/70 lg:text-[13px]">
           {mode === "alt" ? <p>Alt <span ref={hudRef} className="tabular-nums text-background">0</span> ft</p> : <><p className="text-background">{s.hud}</p>{(() => { const o = ops[active]; if (!o?.obs) return null; const w = o.obs; return (
             <p className="mt-1.5 flex items-center gap-1.5 text-background" data-wind aria-label={`Wind at ${w.station}: ${w.dir === null ? (w.kt ? "variable" : "calm") : `${w.dir} degrees`} ${w.kt} knots${w.gust ? ` gusting ${w.gust}` : ""}. Active runway ${o.rwy.runway}`}>
               {w.dir !== null && w.kt > 0 && <svg viewBox="0 0 12 12" className="size-3 text-[color:var(--radar)]" style={{ transform: `rotate(${w.dir + 180}deg)` }} aria-hidden><path d="M6 1v10M2.5 4.5 6 1l3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>}
@@ -549,7 +549,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         </div>
 
         {/* Stage rail */}
-        <nav aria-label={`${label} stages`} className="absolute right-4 sm:right-[max(var(--gutter),calc((100%-1720px)/2+var(--gutter)))] top-1/2 z-30 flex -translate-y-1/2 items-stretch gap-4">
+        <nav aria-label={`${label} stages`} className="absolute right-4 sm:right-[max(var(--gutter),calc((100%-1720px)/2))] top-1/2 z-30 flex -translate-y-1/2 items-stretch gap-4">
           <div className="journey-stage-rail relative w-px overflow-hidden bg-background/20">
             <div ref={barRef} className="absolute inset-0 origin-top bg-primary" style={{ transform: "scaleY(0)" }} />
             <span aria-hidden="true" className="landing-scroll-stroke absolute inset-x-0 top-0 h-8 bg-background" />
