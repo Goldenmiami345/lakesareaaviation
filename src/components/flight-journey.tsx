@@ -106,6 +106,11 @@ const SCROLL_IDLE_MS = 120;
 type JourneyEntry = { n: number; vh: () => number; render: () => void };
 const journeys = new Map<HTMLElement, JourneyEntry>();
 let paging = false;
+/** Active paged glide: from/to scrollY and eased progress p (0→1). Journeys crossfade from p, not from scroll bands. */
+let glide: { from: number; to: number; p: number } | null = null;
+// Sine ease of glide TIME: ≥ 500 ms of visible blend, with 0.9→0.1 taking ~60% of the glide.
+// Half-linear/half-sine ease over the first 85% of the glide: completes before the last pixels of scroll.
+const blendEase = (t: number) => { const x = Math.max(0, Math.min(1, t / 0.85)); return 0.5 * x + 0.25 * (1 - Math.cos(Math.PI * x)); };
 const wheel = newWheelState();
 let tweenFrame = 0;
 let glideTimeout = 0;
@@ -163,6 +168,7 @@ const renderAll = () => journeys.forEach((j) => j.render());
 function releasePaging() {
   cancelAnimationFrame(tweenFrame);
   window.clearTimeout(glideTimeout);
+  glide = null;
   if (paging) wheel.landedAt = performance.now();
   paging = false;
   wheel.gliding = false;
@@ -182,6 +188,7 @@ function runPath(path: PageSegment[], touch = false) {
     finished = true;
     // A busy main thread can delay frames past the hard timeout; never leave the page short of its stop.
     if (Math.abs(window.scrollY - to) > 0.5) window.scrollTo({ top: to, behavior: "instant" });
+    glide = null;
     renderAll();
     releasePaging();
     setMode(resolveMode(mode, wantedMode, atSwitchPoint(journeyLayout(), window.scrollY)));
@@ -190,7 +197,10 @@ function runPath(path: PageSegment[], touch = false) {
   const start = performance.now();
   const tick = (now: number) => {
     const elapsed = now - start;
-    window.scrollTo({ top: glideAt(from, to, elapsed, dur), behavior: "instant" });
+    const y = glideAt(from, to, elapsed, dur);
+    window.scrollTo({ top: y, behavior: "instant" });
+    // Within a pixel of the stop the blend is complete, so nothing moves after the landing frame.
+    glide = { from, to, p: Math.abs(to - y) <= 1 ? 1 : blendEase(elapsed / dur) };
     renderAll();
     if (elapsed < dur) tweenFrame = requestAnimationFrame(tick); else finish();
   };
@@ -380,6 +390,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let mx = 0, my = 0, frame = 0, last = -1;
+    const fine = window.matchMedia("(pointer: fine)").matches;
     const n = stages.length;
     // Geometry is cached (document offset of the section, pinned length, viewport height) and
     // recomputed only on resize, so a frame never reads layout.
@@ -397,9 +408,17 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const viewportHeight = g0.vh, total = g0.total;
       const rect = { top: g0.base - window.scrollY };
       const scrolled = journeyFrame(-rect.top / total, n);
+      // Paged glide inside this journey: blend over the glide's whole eased progress. Endpoints are
+      // stops (transition 0), so this agrees exactly with the scroll mapping when the glide lands.
+      const inJourney = (y: number) => y >= g0.base - 1 && y <= g0.base + total + 1;
+      const pg = glide && inJourney(glide.from) && inJourney(glide.to) ? (() => {
+        const a = journeyFrame((glide.from - g0.base) / total, n), b = journeyFrame((glide.to - g0.base) / total, n);
+        const sa = a.stage + a.transition, sb = b.stage + b.transition;
+        return { shown: sa + (sb - sa) * glide.p, p: glide.p, alt: journeyAltitude(a, n) + (journeyAltitude(b, n) - journeyAltitude(a, n)) * glide.p, progress: a.progress + (b.progress - a.progress) * glide.p };
+      })() : null;
       const showActive = (idx: number) => {
-        if (hudRef.current) hudRef.current.textContent = journeyAltitude(scrolled, n).toLocaleString("en-US");
-        if (barRef.current) barRef.current.style.transform = `scaleY(${scrolled.progress})`;
+        if (hudRef.current) hudRef.current.textContent = Math.round(pg ? pg.alt : journeyAltitude(scrolled, n)).toLocaleString("en-US");
+        if (barRef.current) barRef.current.style.transform = `scaleY(${pg ? pg.progress : scrolled.progress})`;
         if (idx === last) return;
         last = idx;
         setActive(idx);
@@ -418,6 +437,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
           const off = stackOffset(i, p);
           layer.style.transform = `translate3d(0, ${(off * viewportHeight).toFixed(1)}px, 0)`;
           layer.style.opacity = Math.abs(off) < 1 ? "1" : "0";
+          layer.style.visibility = Math.abs(off) < 1 ? "visible" : "hidden";
           layer.style.pointerEvents = Math.abs(off) < 0.5 ? "auto" : "none";
           layer.dataset["stack"] = "";
         });
@@ -430,20 +450,26 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       if (stackCopyRef.current) stackCopyRef.current.style.visibility = "hidden";
       // Opacity/transform derive directly from the scroll position (no smoothing), so a glide's
       // crossfade is complete on the frame it lands.
-      const shown = scrolled.stage + scrolled.transition;
-      const base = Math.min(n - 1, Math.floor(shown));
+      const shown = pg ? pg.shown : scrolled.stage + scrolled.transition;
+      const base = Math.min(n - 1, Math.floor(shown + 1e-6));
       const t = Math.max(0, Math.min(1, shown - base));
-      const state = { stage: base, next: Math.min(n - 1, base + 1), transition: t, active: t < 0.5 ? base : Math.min(n - 1, base + 1), copyOpacity: Math.abs(1 - 2 * t), progress: scrolled.progress };
+      // During a glide the outgoing copy fades over the first 40%, the incoming over the last 50%.
+      const copyOpacity = pg ? (t < 0.4 ? 1 - t / 0.4 : t > 0.5 ? (t - 0.5) / 0.5 : 0) : Math.abs(1 - 2 * t);
+      const state = { stage: base, next: Math.min(n - 1, base + 1), transition: t, active: t < 0.5 ? base : Math.min(n - 1, base + 1), copyOpacity, progress: scrolled.progress };
       layerRefs.current.forEach((layer, i) => {
         if (!layer) return;
         const st = stages[i];
         const leaving = i === state.stage ? state.transition : 0;
         const coming = i === state.next && i !== state.stage ? 1 - state.transition : 0;
-        const scale = reduce ? 1 : 1 + leaving * (st?.zoom ?? 0.55) + coming * (st?.zoomIn ?? 0.06);
+        // Layers are viewport-sized; pointer parallax is covered by a GPU scale, not a larger raster.
+        const cover = reduce || !fine ? 0 : 0.04;
+        const scale = reduce ? 1 : 1 + cover + leaving * (st?.zoom ?? 0.55) + coming * (st?.zoomIn ?? 0.06);
         const opacity = i === state.stage ? 1 - state.transition : i === state.next ? 1 : 0;
         const depth = reduce ? 0 : 10 + i * 3;
         layer.style.transform = `translate3d(${(mx * -depth).toFixed(2)}px, ${(my * -depth).toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
         layer.style.opacity = opacity.toFixed(3);
+        // Only the outgoing/incoming pair is rendered; others leave the compositor entirely.
+        layer.style.visibility = opacity > 0 || i === state.stage ? "visible" : "hidden";
         layer.style.pointerEvents = opacity > 0.5 ? "auto" : "none";
         delete layer.dataset["stack"];
       });
@@ -517,12 +543,12 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const obs = metar?.[st.traffic.ident] ?? metar?.[st.traffic.wxStation] ?? null;
     const rwy = pickRunway(st.traffic, obs ? { dir: obs.dir, kt: obs.kt } : null);
     const f = WX_FIELDS[st.traffic.ident as keyof typeof WX_FIELDS];
-    const conditions = trafficConditions(obs, { elevation: st.traffic.elevation, ...(f ? { lat: f.lat, lon: f.lon } : {}) }, rwy.runway);
+    const conditions = trafficConditions(obs, { elevation: st.traffic.elevation, ident: st.traffic.ident, ...(f ? { lat: f.lat, lon: f.lon } : {}) }, rwy.runway);
     return { obs, rwy, conditions, pattern: profileAirport(patternFor(st.traffic, rwy), conditions.mode) };
   }), [stages, metar]);
   // Private Pilot oblique view and Instrument stage: Little Falls conditions.
   const klxl = metar?.["KLXL"] ?? null;
-  const klxlConditions = useMemo(() => trafficConditions(klxl, { elevation: 1123, lat: WX_FIELDS.KLXL.lat, lon: WX_FIELDS.KLXL.lon }, "13"), [klxl]);
+  const klxlConditions = useMemo(() => trafficConditions(klxl, { elevation: 1123, ident: "KLXL", lat: WX_FIELDS.KLXL.lat, lon: WX_FIELDS.KLXL.lon }, "13"), [klxl]);
   const [wxOpen, setWxOpen] = useState(false);
   const s = stages[active] ?? stages[0];
   if (!s) return null;
@@ -533,7 +559,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       ))}
       <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className="journey-viewport sticky top-0 h-svh overflow-hidden">
         {stages.map((st, i) => (
-          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="journey-layer absolute -inset-[2%] bg-ink backface-hidden" data-active={i === active ? "" : undefined} style={{ zIndex: stages.length - i }}>
+          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="journey-layer absolute inset-0 bg-ink backface-hidden" data-active={i === active ? "" : undefined} style={{ zIndex: stages.length - i }}>
             <div className="journey-zoom absolute inset-0 origin-top-left">
             {st.traffic && st.phoneImg ? <AirportScene airport={ops[i]?.pattern ?? st.traffic} active={i===active} photo={st.phoneImg} original={st.img} wind={ops[i]?.obs ?? null} runwayHeading={ops[i]?.rwy.trueHdg ?? Number(st.traffic.runway)*10} conditions={ops[i]?.conditions ?? NO_CONDITIONS} /> : st.video ? (
               <video

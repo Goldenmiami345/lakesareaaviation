@@ -8,6 +8,7 @@
 #  (d) a 12 x 8 px trackpad burst moves exactly one stage
 #  (e) boundary flicks land on Discovery / Little Falls / the next section's top
 #  (f) a 100 px hero drag stays on the hero
+#  (g) outgoing layer takes >= 350 ms from 0.9 to 0.1, monotonic (no cut)
 import asyncio, json, sys
 from playwright.async_api import async_playwright
 
@@ -48,8 +49,13 @@ def analyse(rec, j, k, target, y0):
     # first frame after landing that matched the final state (how long the old layer lingers)
     settle = next((r["t"] - land_t for r in rec[idx:] if r["s"][j]["L"][k - 1][0] <= 0.02 and r["s"][j]["c"] >= 0.98), None)
     long_frames = sum(1 for r in rec[1: idx + 1] if r["dt"] > 50)
-    ok = mono and old <= 0.02 and new >= 0.98 and copy >= 0.98 and still and long_frames <= 3
-    return dict(ok=ok, mono=mono, back=round(back), old=round(old, 3), new=round(new, 3), copy=round(copy, 3), still=still, long=long_frames, settle=None if settle is None else round(settle), dur=round(land_t - rec[0]["t"]))
+    ops = [r["s"][j]["L"][k - 1][0] for r in rec[: idx + 1]]
+    fmono = all(b <= a + 1e-3 for a, b in zip(ops, ops[1:]))
+    t9 = next((r["t"] for r in rec[: idx + 1] if r["s"][j]["L"][k - 1][0] <= 0.9), None)
+    t1 = next((r["t"] for r in rec[: idx + 1] if r["s"][j]["L"][k - 1][0] <= 0.1), None)
+    fade = None if t9 is None or t1 is None else round(t1 - t9)
+    ok = mono and old <= 0.02 and new >= 0.98 and copy >= 0.98 and still and long_frames <= 3 and fmono and fade is not None and fade >= 350
+    return dict(ok=ok, fade=fade, fmono=fmono, mono=mono, back=round(back), old=round(old, 3), new=round(new, 3), copy=round(copy, 3), still=still, long=long_frames, settle=None if settle is None else round(settle), dur=round(land_t - rec[0]["t"]))
 
 async def touch_drag(cdp, x, y0, dy, ms, steps=10):
     await cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": x, "y": y0}]})
