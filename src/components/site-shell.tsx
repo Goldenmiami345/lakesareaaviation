@@ -34,7 +34,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
         <Dialog.Trigger aria-label="Open menu" className="grid size-11 place-items-center lg:hidden"><Menu className="size-5" /></Dialog.Trigger>
         <Dialog.Portal>
           {/* Full-height sheet: Radix traps focus, locks body scroll, closes on Esc and returns focus to the trigger. */}
-          <Dialog.Content aria-describedby={undefined} className="fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-background text-foreground lg:hidden">
+          <Dialog.Content aria-modal="true" aria-describedby={undefined} className="fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-background text-foreground lg:hidden">
             <Dialog.Title className="sr-only">Site menu</Dialog.Title>
             <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-5 sm:h-20">
               <img src={logoAsset.url} alt="" className="h-10 w-auto max-w-[190px] object-contain sm:h-12" />
