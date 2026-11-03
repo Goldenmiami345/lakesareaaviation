@@ -339,3 +339,10 @@ html.hero-enter .hero-mask > span { animation: hero-mask-in .55s var(--d, 0ms) c
 @utility site-container { margin-inline: auto; width: 100%; max-width: calc(1720px + 2 * var(--gutter)); padding-inline: var(--gutter); }
 :root { --gutter: 20px; }
 @media (min-width: 641px) { :root { --gutter: clamp(20px, 4.5vw, 96px); } }
+
+/* Phone tap targets: text links keep their look but get a 44px-tall hit box (WCAG 2.5.5/2.5.8). */
+@media (max-width: 640px) {
+  main :is(p, li, dd, blockquote, figcaption, td) a,
+  main a.interactive-arrow:not([class*="min-h-"]) { display: inline-flex; align-items: center; min-height: 44px; margin-block: calc((1lh - 44px) / 2); vertical-align: middle; }
+  nav[aria-label="Training locations"] a { min-height: 44px; }
+}
