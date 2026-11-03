@@ -85,7 +85,7 @@ export function ProgramExplorer() {
   if (!program) return null;
 
   return <section className="bg-secondary py-20 sm:py-28" data-scroll-reveal>
-    <div className="mx-auto max-w-7xl px-5 lg:px-8">
+    <div className="site-container">
       <div className="grid gap-10 lg:grid-cols-[.7fr_1.3fr]">
         <div><p className="eyebrow text-primary-text">Interactive route finder</p><h2 className="mt-4 font-display text-4xl sm:text-5xl">What are you training for next?</h2></div>
         <div>

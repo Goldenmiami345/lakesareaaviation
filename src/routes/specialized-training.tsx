@@ -19,7 +19,7 @@ function Page() {
   return (
     <SiteLayout>
       <PageIntro eyebrow="Specialized training" title="Endorsements and courses beyond the ratings." text="Along with our commitment to providing you the best training to fit your needs and schedule, we also offer specialized training in a variety of endorsements and ratings." />
-      <div className="mx-auto max-w-7xl space-y-16 px-5 py-16 sm:py-20 lg:px-8">
+      <div className="site-container space-y-16 py-16 sm:py-20">
         <section className="grid gap-8 bg-ink p-8 text-background md:grid-cols-[1fr_auto] md:items-end md:p-12" data-scroll-reveal>
           <div>
             <p className="eyebrow text-primary-text">Kodiak 100 training</p>

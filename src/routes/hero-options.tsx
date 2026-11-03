@@ -53,7 +53,7 @@ function Hero({ option, mode }: { option: typeof options[number]; mode: "phone" 
       <img src={logo.url} alt="Lakes Area Aviation" className="h-10 w-auto max-w-[180px] brightness-0 invert" />
       <span className="text-xs font-bold uppercase">Option {option.id} · {mode}</span>
     </div>
-    <div className="option-content relative mx-auto flex h-full max-w-7xl flex-col justify-end px-5 pb-[calc(2.25rem+env(safe-area-inset-bottom))] pt-24 lg:px-8">
+    <div className="site-container option-content relative flex h-full flex-col justify-end pb-[calc(2.25rem+env(safe-area-inset-bottom))] pt-24">
       <div className="option-copy max-w-3xl">
         <p className="stage-label">Accelerated flight training</p>
         <h2 className="mt-4 font-display text-5xl leading-[1.12]">Zero to Hero.</h2>

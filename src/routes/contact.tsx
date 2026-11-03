@@ -121,7 +121,7 @@ function ContactPage() {
 
   return <SiteLayout>
     <PageIntro eyebrow="Training plan estimator" title="Build your training plan." text="Check what you already hold, choose what comes next, and see the published commitment before you call. All prices are estimates." />
-    <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8 lg:py-20">
+    <div className="site-container py-14 lg:py-20">
       <div className="grid gap-10 lg:grid-cols-[1.25fr_.75fr]">
         <div ref={plannerRef}>
           <PlannerStep number="01" title="Ratings you already have">

@@ -34,7 +34,7 @@ function Page() {
   return (
     <SiteLayout>
       <PageIntro eyebrow="Our team" title="Reach your goals with our instructors." text="A talented and dedicated team of flight instructors across airplane, instrument, multi-engine, and helicopter training." />
-      <div className="mx-auto max-w-7xl px-5 py-16 sm:py-20 lg:px-8">
+      <div className="site-container py-16 sm:py-20">
         <div className="stagger-grid grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-5" data-scroll-reveal>
           {team.map((t) => (
             <article key={t.name} className="card-lift group min-w-0 overflow-hidden rounded-sm border border-border bg-card">

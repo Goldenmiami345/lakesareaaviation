@@ -22,7 +22,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
   const pathname = useLocation({ select: location => sitePath(location.pathname) });
   const onHome = (e: MouseEvent) => { if (pathname !== "/") return; e.preventDefault(); setOpen(false); jumpToPageTop(); };
   return <header className={`fixed inset-x-0 top-0 z-50 border-b transition-colors ${overlay ? "border-white/15 bg-ink/25 text-white backdrop-blur-md" : "border-border bg-background/95 text-foreground backdrop-blur-md"}`}>
-    <div className="mx-auto grid h-16 max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 sm:h-20 lg:flex lg:justify-between lg:px-8">
+    <div className="site-container grid h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:h-20 lg:flex lg:justify-between">
       <Link to="/" onClick={onHome} className="flex min-w-0 items-center gap-3" aria-label="Lakes Area Aviation home">
         <img src={logoAsset.url} alt="Lakes Area Aviation" className={`h-10 w-auto max-w-[190px] object-contain sm:h-12 sm:max-w-[220px] ${overlay ? "brightness-0 invert" : ""}`} />
       </Link>
@@ -56,7 +56,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
 
 export function Footer() {
   return <footer data-no-float className="edge-fade-t bg-ink pb-[calc(6rem+env(safe-area-inset-bottom))] pt-28 text-background md:pb-12">
-    <div className="mx-auto grid max-w-7xl gap-12 px-5 md:grid-cols-[1.3fr_2fr] lg:px-8">
+    <div className="site-container grid gap-12 md:grid-cols-[1.3fr_2fr]">
       <div><img src={logoAsset.url} alt="Lakes Area Aviation" loading="lazy" className="h-16 w-auto max-w-full brightness-0 invert" /><p className="mt-5 max-w-sm text-sm text-background/65">Flight instruction, accelerated ratings, commercial pilot services, aircraft management, and specialized training.</p></div>
       <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
         <FooterGroup title="Train" links={[["Accelerated", "/accelerated-training"], ["CFI & CFII", "/programs/cfi-cfii"], ["All programs", "/programs"], ["Local training", "/local-training"], ["Specialized", "/specialized-training"], ["Rates", "/rates"]]} />
@@ -64,7 +64,7 @@ export function Footer() {
         <FooterGroup title="Start" links={[["Intro flight", "/introductory-flights"], ["Scenic flights", "/scenic-flights"], ["New students", "/new-students"], ["Locations", "/locations"], ["Contact", "/contact"]]} />
       </div>
     </div>
-    <div className="mx-auto mt-14 max-w-7xl border-t border-background/15 px-5 pt-6 text-xs text-background/45 lg:px-8">© 2026 Lakes Area Aviation, LLC. Training timelines vary by student readiness, weather, and examiner availability.</div>
+    <div className="site-container mt-14 border-t border-background/15 pt-6 text-xs text-background/45">© 2026 Lakes Area Aviation, LLC. Training timelines vary by student readiness, weather, and examiner availability.</div>
   </footer>;
 }
 
@@ -100,9 +100,9 @@ export function SiteLayout({ children, overlayHeader = false }: { children: Reac
 }
 
 export function PageIntro({ eyebrow, title, text, image, imageAlt = "" }: { eyebrow: string; title: string; text: string; image?: string; imageAlt?: string }) {
-  return <section className="relative isolate overflow-hidden edge-fade-b bg-ink pb-32 pt-36 text-background">{image && <><img src={image} alt={imageAlt} width={1920} height={1080} loading="eager" fetchPriority="high" decoding="async" className="hero-kenburns absolute inset-0 -z-20 h-full w-full object-cover" /><div className="absolute inset-0 -z-10 bg-gradient-to-r from-ink/90 via-ink/65 to-ink/25" /></>}<div className="relative z-10 mx-auto max-w-7xl px-5 lg:px-8" data-scroll-reveal><p className="stage-label">{eyebrow}</p><h1 className="mt-4 max-w-4xl font-display text-5xl sm:text-7xl">{title}</h1><p className="mt-6 max-w-2xl text-lg leading-relaxed text-background/80">{text}</p></div></section>;
+  return <section className="relative isolate overflow-hidden edge-fade-b bg-ink pb-32 pt-36 text-background">{image && <><img src={image} alt={imageAlt} width={1920} height={1080} loading="eager" fetchPriority="high" decoding="async" className="hero-kenburns absolute inset-0 -z-20 h-full w-full object-cover" /><div className="absolute inset-0 -z-10 bg-gradient-to-r from-ink/90 via-ink/65 to-ink/25" /></>}<div className="site-container relative z-10" data-scroll-reveal><p className="stage-label">{eyebrow}</p><h1 className="mt-4 max-w-4xl font-display text-5xl sm:text-7xl">{title}</h1><p className="mt-6 max-w-2xl text-lg leading-relaxed text-background/80">{text}</p></div></section>;
 }
 
 export function InquiryBand() {
-  return <section data-no-float className="bg-primary py-16 text-primary-foreground"><div className="mx-auto grid max-w-7xl items-center gap-8 px-5 md:grid-cols-[1fr_auto] lg:px-8" data-scroll-reveal><div><p className="eyebrow text-primary-foreground">Your next rating</p><h2 className="mt-3 font-display text-4xl">Build a training plan around your timeline.</h2></div><Link to="/contact" className="interactive-arrow inline-flex min-h-14 items-center justify-center bg-ink px-7 text-sm font-bold uppercase tracking-[0.1em] text-background">Build my training plan <span aria-hidden="true">→</span></Link></div></section>;
+  return <section data-no-float className="bg-primary py-16 text-primary-foreground"><div className="site-container grid items-center gap-8 md:grid-cols-[1fr_auto]" data-scroll-reveal><div><p className="eyebrow text-primary-foreground">Your next rating</p><h2 className="mt-3 font-display text-4xl">Build a training plan around your timeline.</h2></div><Link to="/contact" className="interactive-arrow inline-flex min-h-14 items-center justify-center bg-ink px-7 text-sm font-bold uppercase tracking-[0.1em] text-background">Build my training plan <span aria-hidden="true">→</span></Link></div></section>;
 }
