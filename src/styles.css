@@ -214,7 +214,11 @@ html.journey-free, html.journey-free.journey-snap { scroll-snap-type: none !impo
 .traffic-ping { fill: none; stroke: currentColor; stroke-width: 1; opacity: 0; transform-box: fill-box; transform-origin: center; pointer-events: none; }
 .traffic-tag.is-pinging .traffic-ping { animation: traffic-ping .6s ease-out; }
 @keyframes traffic-ping { 0% { transform: scale(1); opacity: .35; } 100% { transform: scale(3); opacity: 0; } }
-.traffic-target { fill:none; stroke:currentColor; stroke-width:.8; opacity:.4; pointer-events:none; }
+/* Always-visible 15px screen ring (tags are drawn at 1/k) with a dark under-stroke so it reads over bright fields. */
+.traffic-target { fill:none; stroke:currentColor; stroke-width:1.1; opacity:.42; pointer-events:none; }
+.traffic-target-halo { fill:none; stroke:var(--ink); stroke-width:2.6; opacity:.28; pointer-events:none; }
+/* Subtle dark outline in the airplane's own units, so white airplanes separate from bright ground. */
+[data-aircraft] { filter: drop-shadow(0 0 .045px rgb(8 12 22 / .95)) drop-shadow(0 0 .12px rgb(8 12 22 / .45)); }
 /* Subtle drawn pattern: 1px dashes at ~half the former opacity, labels ~60%; it
    fades (600ms) in/out via data-shown, pulsed or permanent per traffic_pattern_mode. */
 .traffic-pattern-guide { color:var(--radar); pointer-events:none; opacity:0; transition:opacity .6s ease; }

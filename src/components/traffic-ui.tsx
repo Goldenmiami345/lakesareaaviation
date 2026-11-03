@@ -178,8 +178,9 @@ export function RadarTag({ reg, index, seed, label, tabIndex, hit, tagRef, textR
   return (
     <g ref={tagRef} className="traffic-tag">
       <g className="traffic-history">{[0,1,2,3].map(i=><circle key={i} r={1.75} opacity={.28-i*.055}/>)}</g>
-      <circle r={7} className="traffic-target" />
-      <circle r={7} className="traffic-ping" />
+      <circle r={7.5} className="traffic-target-halo" />
+      <circle r={7.5} className="traffic-target" />
+      <circle r={7.5} className="traffic-ping" />
       <line x1={5} y1={-5} x2={15} y2={-15} className="traffic-leader" />
       <rect x={14} y={-39} width={60} height={30} rx={2} className="traffic-pill" />
       <text ref={textRef} x={20} y={-27} className="traffic-label"><tspan className="traffic-call-title">{reg}</tspan><tspan className="traffic-call-data" x={20} dy={12}/></text>
