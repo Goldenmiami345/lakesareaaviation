@@ -188,3 +188,56 @@ export function journeyAltitude(frame: { stage: number; next: number; transition
   const a = journeyStageAltitude(frame.stage, count, max), b = journeyStageAltitude(frame.next, count, max);
   return Math.round(a + (b - a) * frame.transition);
 }
+
+// ---- Glide timing ----
+export const GLIDE_MS_TOUCH = 650;
+export const GLIDE_MS_WHEEL = 700;
+export const GLIDE_MS_SHORT = 400;
+export const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+export function glideDuration(distance: number, viewportHeight: number, touch: boolean) {
+  if (Math.abs(distance) <= viewportHeight) return GLIDE_MS_SHORT;
+  return touch ? GLIDE_MS_TOUCH : GLIDE_MS_WHEEL;
+}
+// Scroll position at time `elapsed` of a glide: monotonic from `from` to `to`, exactly `to` at the end.
+export function glideAt(from: number, to: number, elapsed: number, duration: number) {
+  const t = clamp(elapsed / Math.max(1, duration));
+  return t >= 1 ? to : from + (to - from) * easeInOutCubic(t);
+}
+
+// ---- Wheel gestures ----
+// One gesture = wheel events until WHEEL_SILENCE_MS after the last one; a sign change starts a new
+// gesture. A gesture pages at most once; events during a glide or shortly after it lands are dropped.
+export const WHEEL_SILENCE_MS = 250;
+export const WHEEL_AFTER_LAND_MS = 300;
+export type WheelState = { lastAt: number; sign: number; used: boolean; landedAt: number; gliding: boolean };
+export const newWheelState = (): WheelState => ({ lastAt: -Infinity, sign: 0, used: false, landedAt: -Infinity, gliding: false });
+// Returns "page" when this event may start a page, "drop" when it must be swallowed, "native" otherwise.
+export function wheelDecision(s: WheelState, now: number, deltaY: number, canPage: boolean): "page" | "drop" | "native" {
+  const sign = Math.sign(deltaY);
+  if (sign === 0) return "native";
+  const fresh = now - s.lastAt > WHEEL_SILENCE_MS || sign !== s.sign;
+  s.lastAt = now; s.sign = sign;
+  if (fresh) s.used = false;
+  if (sign < 0) return s.gliding ? "drop" : "native";
+  if (s.gliding || now - s.landedAt < WHEEL_AFTER_LAND_MS) { s.used = true; return "drop"; }
+  if (s.used) return "drop";
+  if (!canPage) return "native";
+  s.used = true;
+  return "page";
+}
+
+// ---- Proximity snapping at section edges (after native momentum ends) ----
+export const SNAP_WINDOW_VH = 0.6;
+export const SNAP_MIN_DRAG = 40;
+export type SnapZone = { first: number; last: number; end: number };
+// Downward native scrolling that ends just short of a journey's first stage, or just short of the
+// section after a journey, finishes the move; everywhere else native scrolling stays untouched.
+export function snapTarget(zones: SnapZone[], y: number, startY: number, vh: number): number | null {
+  if (y - startY < SNAP_MIN_DRAG) return null;
+  const w = SNAP_WINDOW_VH * vh;
+  for (const z of zones) {
+    if (y < z.first - STOP_TOL && z.first - y <= w) return z.first;
+    if (y > z.last + STOP_TOL && y < z.end - STOP_TOL && z.end - y <= w) return z.end;
+  }
+  return null;
+}

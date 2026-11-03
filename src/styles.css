@@ -177,7 +177,7 @@ html.first-view .page-enter { animation: none; }
 
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
 /* Flight journey (zoom-scroll) */
-.journey-copy { will-change: opacity, transform; }
+.journey-copy, .journey-layer { will-change: opacity, transform; }
 /* Phones: shorter image box shows more of each scene; overlays inside the layer stay aligned. */
 @media (max-width: 639px) { .journey-layer { bottom: 14%; mask-image: linear-gradient(to bottom, #000 82%, transparent); -webkit-mask-image: linear-gradient(to bottom, #000 82%, transparent); } }
 .journey-grain { opacity: .12; background-image: radial-gradient(color-mix(in oklab, var(--background) 60%, transparent) 1px, transparent 1px); background-size: 3px 3px; mix-blend-mode: overlay; }
@@ -258,15 +258,11 @@ html.journey-free, html.journey-free.journey-snap { scroll-snap-type: none !impo
 @media (prefers-reduced-motion: reduce) { .traffic-history, .traffic-pill, .traffic-label, .traffic-leader { display:none; } .traffic-tag.is-pinging .traffic-ping { animation:none; } }
 .traffic-tag circle:focus { outline: none; }
 .traffic-tag circle:focus-visible { outline: none; stroke: var(--radar); stroke-opacity: .6; stroke-width: 1; }
-html.lenis, html.lenis body { height: auto; }
-html.lenis.lenis-smooth { scroll-behavior: auto !important; }
-html.journey-paging { overflow: hidden; overscroll-behavior: none; }
-html.journey-blend .journey-layer, html.journey-blend .journey-layer * { transition: transform 180ms ease-out, opacity 180ms ease-out; }
+/* Glides block native scrolling with non-passive wheel/touchmove preventDefault; overflow is never toggled. */
 
 /* In-stage zoom: the stage owns pinch/double-tap (no browser page zoom); while zoomed, one finger pans. */
 .journey-viewport { touch-action: pan-y; }
 .journey-viewport[data-zoomed] { touch-action: none; }
-.journey-zoom { will-change: transform; }
 .journey-copy-wrap, .journey-hud { transition: opacity .3s ease; }
 .journey-viewport[data-zoomed] .journey-copy-wrap { opacity: 0; pointer-events: none !important; }
 .journey-viewport[data-zoomed] .journey-copy-wrap * { pointer-events: none !important; }
