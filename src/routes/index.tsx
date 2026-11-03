@@ -13,7 +13,10 @@ import { FlightJourney, airportStages, glideTo, jumpToJourney } from "../compone
 
 export const Route = createFileRoute("/")({
   staticData: { sitemap: true },
-  head: () => ({ meta: [
+  head: () => ({ links: [
+    { rel: "preload", as: "image", href: heroTallImage.url, media: "(max-aspect-ratio: 3/2)", fetchpriority: "high" },
+    { rel: "preload", as: "image", href: heroImage.url, media: "(min-aspect-ratio: 3/2)", fetchpriority: "high" },
+  ], meta: [
     { title: "Zero to Hero Flight Training | Lakes Area Aviation" },
     { name: "description", content: "From your first flight to commercial pilot and instructor. Explore Lakes Area Aviation’s accelerated zero-to-hero training path and build your personal plan." },
     { property: "og:title", content: "Zero to Hero Flight Training | Lakes Area Aviation" },
@@ -128,7 +131,7 @@ function HeroCta() {
     el.addEventListener("pointerenter", hold); el.addEventListener("focus", hold);
     el.addEventListener("pointerleave", () => { held = false; release(); }); el.addEventListener("blur", () => { held = false; });
     el.addEventListener("animationend", end);
-    return () => { window.clearTimeout(done); window.clearInterval(timer); io.disconnect(); };
+    return () => { leave(); window.clearInterval(timer); io.disconnect(); };
   }, []);
   return <div className="hero-step mt-5" style={{ ["--d" as string]: "270ms" }}><Link ref={ref} to="/contact" className="interactive-arrow group inline-flex min-h-12 items-center gap-4 border-b border-background/45 pb-1 text-sm font-bold uppercase text-background transition-colors hover:border-primary">Build my training plan <span className="cta-orb grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><ArrowRight className="cta-arrow size-4" /></span></Link></div>;
 }
