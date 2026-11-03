@@ -259,7 +259,6 @@ html.journey-free, html.journey-free.journey-snap { scroll-snap-type: none !impo
 .traffic-tag circle:focus { outline: none; }
 .traffic-tag circle:focus-visible { outline: none; stroke: var(--radar); stroke-opacity: .6; stroke-width: 1; }
 /* Glides block native scrolling with non-passive wheel/touchmove preventDefault; overflow is never toggled. */
-.journey-viewport { overscroll-behavior: contain; }
 
 /* In-stage zoom: the stage owns pinch/double-tap (no browser page zoom); while zoomed, one finger pans. */
 .journey-viewport { touch-action: pan-y; }

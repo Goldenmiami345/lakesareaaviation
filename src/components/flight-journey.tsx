@@ -286,34 +286,39 @@ function installController() {
   };
 
   // Proximity snap once native scrolling has come to rest (scrollend or 120ms without scroll).
-  let lastDir = 1, lastScrollY = window.scrollY, seqStart = window.scrollY, idleTimer = 0, moving = false;
+  // Start of the current native scroll run: reset only after 300ms without scrolling, so a
+  // burst of wheel notches (each with its own scrollend) counts as one move.
+  let lastDir = 1, lastScrollY = window.scrollY, seqStart = window.scrollY, idleTimer = 0, moving = false, lastMoveAt = 0;
   const settle = () => {
     window.clearTimeout(idleTimer);
-    if (!moving) return;
-    if (paging || fingerDown()) return;
+    if (!moving || paging || fingerDown()) return;
+    // Wheel notches still arriving: wait for the gesture to finish.
+    if (performance.now() - wheel.lastAt < SCROLL_IDLE_MS) { scheduleSettle(); return; }
     moving = false;
-    const y = window.scrollY, startY = seqStart;
-    seqStart = y;
+    const y = window.scrollY;
     if (reduce() || free() || zoomedIn() || lastDir < 0) return;
-    const target = snapTarget(journeyLayout().snap, y, startY, window.innerHeight);
+    const target = snapTarget(journeyLayout().snap, y, seqStart, window.innerHeight);
     if (target === null) return;
     // The rest of the wheel gesture that produced this momentum must not page again.
     wheel.used = true;
+    seqStart = target;
     runPath([{ y: target, instant: false }]);
   };
   const scheduleSettle = () => { window.clearTimeout(idleTimer); idleTimer = window.setTimeout(settle, SCROLL_IDLE_MS); };
   const onScroll = () => {
-    const y = window.scrollY;
+    const y = window.scrollY, now = performance.now();
     if (Math.abs(y - lastScrollY) > 0.5) lastDir = y > lastScrollY ? 1 : -1;
+    if (!paging && !touching && now - lastMoveAt > 300) seqStart = lastScrollY;
+    lastMoveAt = now;
     lastScrollY = y;
     if (paging) { seqStart = y; moving = false; return; }
-    if (!moving) { moving = true; if (!touching) seqStart = y - (lastDir > 0 ? 1 : -1); }
+    moving = true;
     scheduleSettle();
     const L = journeyLayout();
     if (lastDir < 0) { wantedMode = "stack"; setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, y))); return; }
     setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, y)));
   };
-  const onScrollEnd = () => settle();
+  const onScrollEnd = () => scheduleSettle();
   const onResize = () => invalidateJourneyLayout();
   const ro = new ResizeObserver(onResize);
   ro.observe(document.body);
