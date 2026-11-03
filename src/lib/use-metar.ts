@@ -14,7 +14,7 @@ export function useMetar() {
         // Dev/test hook: ?wxcat=IFR forces the flight category everywhere.
         const force = import.meta.env.DEV ? new URLSearchParams(location.search).get("wxcat") : null;
         const st = d.stations ?? null;
-        setStations(st && force ? Object.fromEntries(Object.entries(st).map(([k, v]) => [k, { ...v, cat: force as MetarObs["cat"] }])) : st); })
+        setStations(st && force ? Object.fromEntries(Object.entries(st).map(([k, v]) => [k, { ...v, cat: force as NonNullable<MetarObs["cat"]> }])) as Record<string, MetarObs> : st); })
       .catch(() => { if (alive) setStations(null); });
     const t0 = window.setTimeout(load, 300);
     const id = window.setInterval(load, 10 * 60 * 1000);
