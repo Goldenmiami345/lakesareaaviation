@@ -18,8 +18,8 @@ async function nearestByField(now: number): Promise<Record<string, Obs>> {
   const out: Record<string, Obs> = {};
   await Promise.all(Object.entries(WX_FIELDS).map(async ([ident, f]) => {
     const d = WX_SEARCH_DEG;
-    const res = await fetch(`https://aviationweather.gov/api/data/metar?bbox=${f.lat - d},${f.lon - d},${f.lat + d},${f.lon + d}&format=json`, { headers: { "User-Agent": "LakesAreaAviation-site/1.0" } });
-    if (!res.ok) return;
+    const res = await fetch(`https://aviationweather.gov/api/data/metar?bbox=${[f.lat - d, f.lon - d, f.lat + d, f.lon + d].map((v) => v.toFixed(3)).join(",")}&format=json`, { headers: { "User-Agent": "LakesAreaAviation-site/1.0" } });
+    if (!res.ok) return; // keeps the fixed fallback station for this field
     const rows = ((await res.json()) as Row[]).filter((r) => typeof r.wspd === "number" && typeof r.lat === "number" && now - r.obsTime <= MAX_AGE_S);
     const best = nearestStation(f, rows);
     if (best) out[ident] = toObs(best);
