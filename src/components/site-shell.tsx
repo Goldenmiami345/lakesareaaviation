@@ -65,7 +65,7 @@ export function Footer() {
         <FooterGroup title="Start" links={[["Intro flight", "/introductory-flights"], ["Scenic flights", "/scenic-flights"], ["New students", "/new-students"], ["Locations", "/locations"], ["Contact", "/contact"]]} />
       </div>
     </div>
-    <div className="site-container mt-14 border-t border-background/15 pt-6 text-xs text-background/45">© 2026 Lakes Area Aviation, LLC. Training timelines vary by student readiness, weather, and examiner availability.</div>
+    <div className="site-container mt-14 border-t border-background/15 pt-6 text-xs text-[color:var(--muted-on-ink)]">© 2026 Lakes Area Aviation, LLC. Training timelines vary by student readiness, weather, and examiner availability.</div>
   </footer>;
 }
 

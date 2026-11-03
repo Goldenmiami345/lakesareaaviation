@@ -219,9 +219,9 @@ html.journey-free, html.journey-free.journey-snap { scroll-snap-type: none !impo
 /* Always-visible 15px screen ring (tags are drawn at 1/k) with a dark under-stroke so it reads over bright fields. */
 .traffic-target { fill:none; stroke:currentColor; stroke-width:1.1; opacity:.42; pointer-events:none; }
 /* Live METAR: standard flight-category colours (VFR green, MVFR blue, IFR red, LIFR magenta). */
-:root { --wx-vfr: oklch(0.72 0.17 150); --wx-mvfr: oklch(0.66 0.16 250); --wx-ifr: oklch(0.62 0.21 27); --wx-lifr: oklch(0.62 0.24 330); }
+:root { --wx-vfr: oklch(0.72 0.17 150); --wx-mvfr: #1F5FC4; --wx-ifr: #C62828; --wx-lifr: #A3177A; --muted-on-ink: #8D8E90; }
 .wx-chip { display:inline-flex; align-items:center; min-height:1.15rem; padding:0 .35rem; font-weight:700; font-size:12px; letter-spacing:.08em; color:var(--ink); border-radius:2px; }
-.wx-chip-vfr { background:var(--wx-vfr); } .wx-chip-mvfr { background:var(--wx-mvfr); } .wx-chip-ifr { background:var(--wx-ifr); color:var(--background); } .wx-chip-lifr { background:var(--wx-lifr); color:var(--background); }
+.wx-chip-vfr { background:var(--wx-vfr); } .wx-chip-vfr { color:var(--ink, #060F1E); } .wx-chip-mvfr { background:var(--wx-mvfr); color:var(--background); } .wx-chip-ifr { background:var(--wx-ifr); color:var(--background); } .wx-chip-lifr { background:var(--wx-lifr); color:var(--background); }
 /* Reserved before mount so live values never shift the HUD or copy. */
 .wx-hud-slot { min-height: 1.875rem; }
 @media (min-width: 640px) { .wx-hud-slot { min-height: 3.25rem; } }
