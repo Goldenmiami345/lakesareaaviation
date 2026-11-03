@@ -104,5 +104,5 @@ export function PageIntro({ eyebrow, title, text, image, imageAlt = "" }: { eyeb
 }
 
 export function InquiryBand() {
-  return <section data-no-float className="bg-primary py-16 text-primary-foreground"><div className="mx-auto grid max-w-7xl items-center gap-8 px-5 md:grid-cols-[1fr_auto] lg:px-8" data-scroll-reveal><div><p className="eyebrow text-primary-foreground/70">Your next rating</p><h2 className="mt-3 font-display text-4xl">Build a training plan around your timeline.</h2></div><Link to="/contact" className="interactive-arrow inline-flex min-h-14 items-center justify-center bg-ink px-7 text-sm font-bold uppercase tracking-[0.1em] text-background">Start planning <span aria-hidden="true">→</span></Link></div></section>;
+  return <section data-no-float className="bg-primary py-16 text-primary-foreground"><div className="mx-auto grid max-w-7xl items-center gap-8 px-5 md:grid-cols-[1fr_auto] lg:px-8" data-scroll-reveal><div><p className="eyebrow text-primary-foreground">Your next rating</p><h2 className="mt-3 font-display text-4xl">Build a training plan around your timeline.</h2></div><Link to="/contact" className="interactive-arrow inline-flex min-h-14 items-center justify-center bg-ink px-7 text-sm font-bold uppercase tracking-[0.1em] text-background">Start planning <span aria-hidden="true">→</span></Link></div></section>;
 }

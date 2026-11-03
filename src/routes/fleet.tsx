@@ -94,7 +94,7 @@ function Page() {
             return (
               <button key={r.id} type="button" aria-pressed={on} onClick={() => setRole(r.id)}
                 className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-xs font-bold uppercase tracking-[0.14em] transition-colors ${on ? "border-primary bg-primary text-primary-foreground" : "border-border text-foreground hover:border-primary"}`}>
-                {r.label}<span className={on ? "text-primary-foreground/70" : "text-muted-foreground"}>{count}</span>
+                {r.label}<span className={on ? "text-primary-foreground" : "text-muted-foreground"}>{count}</span>
               </button>
             );
           })}
