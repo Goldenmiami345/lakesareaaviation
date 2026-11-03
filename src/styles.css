@@ -218,6 +218,16 @@ html.journey-free, html.journey-free.journey-snap { scroll-snap-type: none !impo
 @keyframes traffic-ping { 0% { transform: scale(1); opacity: .35; } 100% { transform: scale(3); opacity: 0; } }
 /* Always-visible 15px screen ring (tags are drawn at 1/k) with a dark under-stroke so it reads over bright fields. */
 .traffic-target { fill:none; stroke:currentColor; stroke-width:1.1; opacity:.42; pointer-events:none; }
+/* Live METAR: standard flight-category colours (VFR green, MVFR blue, IFR red, LIFR magenta). */
+:root { --wx-vfr: oklch(0.72 0.17 150); --wx-mvfr: oklch(0.66 0.16 250); --wx-ifr: oklch(0.62 0.21 27); --wx-lifr: oklch(0.62 0.24 330); }
+.wx-chip { display:inline-flex; align-items:center; min-height:1.15rem; padding:0 .35rem; font-weight:700; font-size:12px; letter-spacing:.08em; color:var(--ink); border-radius:2px; }
+.wx-chip-vfr { background:var(--wx-vfr); } .wx-chip-mvfr { background:var(--wx-mvfr); } .wx-chip-ifr { background:var(--wx-ifr); color:var(--background); } .wx-chip-lifr { background:var(--wx-lifr); color:var(--background); }
+/* Reserved before mount so live values never shift the HUD or copy. */
+.wx-hud-slot { min-height: 1.875rem; }
+@media (min-width: 640px) { .wx-hud-slot { min-height: 3.25rem; } }
+.wx-instrument-slot { min-height: 2.6rem; }
+/* Night at the field: ring slightly dimmer. */
+.traffic-callouts.is-night .traffic-target { stroke: color-mix(in oklch, currentColor 72%, var(--ink)); }
 .traffic-target-halo { fill:none; stroke:var(--ink); stroke-width:2.6; opacity:.28; pointer-events:none; }
 /* Subtle dark outline in the airplane's own units, so white airplanes separate from bright ground. */
 [data-aircraft] { filter: drop-shadow(0 0 .045px rgb(8 12 22 / .95)) drop-shadow(0 0 .12px rgb(8 12 22 / .45)); }
