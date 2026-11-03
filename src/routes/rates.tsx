@@ -10,8 +10,8 @@ const instruction: [string, string][] = [
 ];
 const aircraft = [
   { name: "Cessna 172", nick: "“Blue,” “Robin,” or “Phoenix”", reg: "$185", pre: "$175" },
-  { name: "Cessna 172K", nick: "“Hawk” or “Cardinal”", reg: "$185", pre: "$175" },
-  { name: "Piper Apache PA-23-160", nick: "“Tot”", reg: "$395", pre: "$375" },
+  { name: "Cessna 172I / 172K", nick: "“Hawk” or “Cardinal”", reg: "$185", pre: "$175" },
+  { name: "Piper Apache PA-23-160", nick: "N4383P", reg: "$395", pre: "$375" },
   { name: "Piper Comanche PA-24-250", nick: "“Chief”", reg: "$265", pre: "$245" },
   { name: "Cessna 150", nick: "“Elliot”", reg: "$125", pre: "$115" },
   { name: "Taylorcraft BC-12D", nick: "“Tweety”", reg: "$135", pre: "$125" },
@@ -30,11 +30,11 @@ function Page() {
       <main className="mx-auto max-w-7xl px-5 py-16 sm:py-20 lg:px-8">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.4fr]">
           <section data-scroll-reveal>
-            <p className="eyebrow text-primary">Instruction</p>
+            <h2 className="eyebrow text-primary">Instruction</h2>
             <div className="mt-4 border-y border-border">{instruction.map(([a, b]) => <Row key={a} a={a} b={b} />)}</div>
           </section>
           <section data-scroll-reveal>
-            <p className="eyebrow text-primary">Plane rental rates</p>
+            <h2 className="eyebrow text-primary">Plane rental rates</h2>
             <div className="mt-4 grid gap-px bg-border sm:grid-cols-2">
               {aircraft.map((x) => (
                 <article key={x.name + x.nick} className="min-w-0 bg-background p-5">

@@ -45,7 +45,7 @@ function Page() {
             </Link>
           ))}
         </div>
-        <p className="mt-10 text-sm text-muted-foreground">Helicopter training is listed on our original menu — <Link to="/contact" className="text-primary underline">contact us</Link> for current availability.</p>
+        <p className="mt-10 text-sm text-muted-foreground">Helicopter training: call or <Link to="/contact" className="text-primary underline">contact us</Link> for current availability.</p>
       </main>
       <InquiryBand />
     </SiteLayout>
