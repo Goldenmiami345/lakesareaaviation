@@ -31,7 +31,7 @@ function HomePage() {
   return <SiteLayout overlayHeader>
     <div>
       <section className="relative min-h-[100svh] overflow-hidden bg-ink text-background">
-        <div className="hero-parallax absolute inset-0"><picture><source media="(max-aspect-ratio: 3/2)" srcSet={srcSetFor(heroTallImage.url)} sizes="100vw" width={1280} height={1189} /><img src={heroImage.url} srcSet={srcSetFor(heroImage.url)} sizes="100vw" decoding="async" alt="Lakes Area Aviation Cessna N6717A and Piper Apache on the ramp at sunset" width={1584} height={672} fetchPriority="high" className="hero-kenburns h-[112%] w-full object-cover object-[35%_center]" /></picture></div>
+        <div className="hero-parallax absolute inset-0"><picture><source media="(max-aspect-ratio: 3/2)" srcSet={srcSetFor(heroTallImage.url)} sizes="100vw" width={1280} height={1189} /><img src={heroImage.url} srcSet={srcSetFor(heroImage.url)} sizes="100vw" decoding="sync" alt="Lakes Area Aviation Cessna N6717A and Piper Apache on the ramp at sunset" width={1584} height={672} fetchPriority="high" className="hero-kenburns h-[112%] w-full object-cover object-[35%_center]" /></picture></div>
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/25 to-ink/5 lg:bg-gradient-to-r lg:from-ink lg:via-ink/60 lg:to-transparent" />
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('hero-enter','first-view')" }} />
         <div className="site-container relative flex min-h-[100svh] flex-col justify-end pb-7 pt-24 sm:pb-[4.5rem] sm:pt-32">
@@ -42,7 +42,7 @@ function HomePage() {
           <HeroCta />
           <nav aria-label="Training locations" className="hero-step mt-4 flex flex-wrap items-center gap-1 text-xs sm:text-[clamp(0.75rem,0.42rem+0.5vw,1.05rem)] lg:mt-6 font-bold uppercase tracking-[0.06em] text-background/75 sm:gap-2 sm:tracking-[0.14em]" style={{ ["--d" as string]: "360ms" }}>
             <MapPin aria-hidden className="mr-0.5 size-3.5 sm:size-[1.2em] shrink-0 text-background/55" />
-            {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} className="shrink-0 whitespace-nowrap rounded-full border border-background/25 px-2 py-1.5 transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground sm:px-[1em] sm:py-[0.6em]">{a.label}, {a.code}</button>)}
+            {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} className="group/chip inline-flex min-h-11 shrink-0 items-center whitespace-nowrap sm:min-h-0"><span className="rounded-full border border-background/25 px-2 py-1.5 transition-colors group-hover/chip:border-primary group-hover/chip:bg-primary group-hover/chip:text-primary-foreground sm:px-[1em] sm:py-[0.6em]">{a.label}, {a.code}</span></button>)}
           </nav>
           <ScrollCue targetId="flight-path" />
         </div>

@@ -219,9 +219,9 @@ html.journey-free, html.journey-free.journey-snap { scroll-snap-type: none !impo
 /* Always-visible 15px screen ring (tags are drawn at 1/k) with a dark under-stroke so it reads over bright fields. */
 .traffic-target { fill:none; stroke:currentColor; stroke-width:1.1; opacity:.42; pointer-events:none; }
 /* Live METAR: standard flight-category colours (VFR green, MVFR blue, IFR red, LIFR magenta). */
-:root { --wx-vfr: oklch(0.72 0.17 150); --wx-mvfr: oklch(0.66 0.16 250); --wx-ifr: oklch(0.62 0.21 27); --wx-lifr: oklch(0.62 0.24 330); }
+:root { --wx-vfr: oklch(0.72 0.17 150); --wx-mvfr: #1F5FC4; --wx-ifr: #C62828; --wx-lifr: #A3177A; --muted-on-ink: #8D8E90; }
 .wx-chip { display:inline-flex; align-items:center; min-height:1.15rem; padding:0 .35rem; font-weight:700; font-size:12px; letter-spacing:.08em; color:var(--ink); border-radius:2px; }
-.wx-chip-vfr { background:var(--wx-vfr); } .wx-chip-mvfr { background:var(--wx-mvfr); } .wx-chip-ifr { background:var(--wx-ifr); color:var(--background); } .wx-chip-lifr { background:var(--wx-lifr); color:var(--background); }
+.wx-chip-vfr { background:var(--wx-vfr); } .wx-chip-vfr { color:var(--ink, #060F1E); } .wx-chip-mvfr { background:var(--wx-mvfr); color:var(--background); } .wx-chip-ifr { background:var(--wx-ifr); color:var(--background); } .wx-chip-lifr { background:var(--wx-lifr); color:var(--background); }
 /* Reserved before mount so live values never shift the HUD or copy. */
 .wx-hud-slot { min-height: 1.875rem; }
 @media (min-width: 640px) { .wx-hud-slot { min-height: 3.25rem; } }
@@ -311,9 +311,9 @@ input.date-field::-webkit-date-and-time-value { text-align: left; margin: 0; }
 .aircraft-top-render { image-rendering: auto; }
 
 /* Homepage hero: staggered first-load entrance (class set by an inline script, so SSR/no-JS text stays visible) */
-@keyframes hero-step-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-@keyframes hero-mask-in { from { transform: translateY(105%); } to { transform: none; } }
-@keyframes hero-fade-in { from { opacity: 0; } to { opacity: 1; } }
+/* Transform-only: hero text is painted (opacity 1, unclipped) from first paint, so it never delays LCP. */
+@keyframes hero-step-in { from { transform: translateY(14px); } to { transform: none; } }
+@keyframes hero-mask-in { from { transform: translateY(.18em); } to { transform: none; } }
 .hero-mask > span { animation: none; }
 html.hero-enter .hero-step { animation: hero-step-in .55s var(--d, 0ms) cubic-bezier(.2,.7,.3,1) both; }
 html.hero-enter .hero-mask > span { animation: hero-mask-in .55s var(--d, 0ms) cubic-bezier(.2,.7,.3,1) both; }
@@ -323,7 +323,7 @@ html.hero-enter .hero-mask > span { animation: hero-mask-in .55s var(--d, 0ms) c
 .cta-nudge .cta-orb { animation: cta-orb-nudge .7s cubic-bezier(.3,.7,.3,1); }
 .cta-nudge .cta-arrow { animation: cta-arrow-spin .7s cubic-bezier(.4,0,.2,1); }
 @media (prefers-reduced-motion: reduce) {
-  html.hero-enter .hero-step, html.hero-enter .hero-mask > span { animation: hero-fade-in .55s var(--d, 0ms) ease-out both; transform: none; }
+  html.hero-enter .hero-step, html.hero-enter .hero-mask > span { animation: none; transform: none; }
   .cta-nudge .cta-orb, .cta-nudge .cta-arrow { animation: none; }
 }
 
@@ -339,3 +339,10 @@ html.hero-enter .hero-mask > span { animation: hero-mask-in .55s var(--d, 0ms) c
 @utility site-container { margin-inline: auto; width: 100%; max-width: calc(1720px + 2 * var(--gutter)); padding-inline: var(--gutter); }
 :root { --gutter: 20px; }
 @media (min-width: 641px) { :root { --gutter: clamp(20px, 4.5vw, 96px); } }
+
+/* Phone tap targets: text links keep their look but get a 44px-tall hit box (WCAG 2.5.5/2.5.8). */
+@media (max-width: 640px) {
+  main :is(p, li, dd, blockquote, figcaption, td) a,
+  main a.interactive-arrow:not([class*="min-h-"]),
+  main a.font-bold:not([class*="min-h-"]):not([class*="py-"]):not([class*="p-"]):not([class*="bg-"]):not([class*="h-"]) { display: inline-flex; align-items: center; min-height: 44px; margin-block: calc((1lh - 44px) / 2); vertical-align: middle; }
+}

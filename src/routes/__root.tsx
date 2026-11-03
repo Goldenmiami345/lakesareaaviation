@@ -102,7 +102,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Andada+Pro:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap" },
+      // Fonts load without blocking first paint (hero text/LCP); the script in RootShell attaches the stylesheet.
+      { rel: "preload", as: "style", href: FONT_CSS },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
       ...(canonical ? [{ rel: "canonical", href: canonical }] : []),
     ],
@@ -114,11 +115,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+const FONT_CSS = "https://fonts.googleapis.com/css2?family=Andada+Pro:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap";
+
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: `(function(){var l=document.createElement('link');l.rel='stylesheet';l.href=${JSON.stringify(FONT_CSS)};document.head.appendChild(l)})()` }} />
+        <noscript><link rel="stylesheet" href={FONT_CSS} /></noscript>
       </head>
       <body>
         {children}

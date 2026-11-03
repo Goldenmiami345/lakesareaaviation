@@ -68,7 +68,7 @@ function Page() {
               </div>
             ))}
           </div>
-          <a href={SCHOOL_PHONE_TEL} className="mt-8 inline-flex items-center gap-3 font-display text-3xl text-primary-text"><Phone className="size-6" />{SCHOOL_PHONE}</a>
+          <a href={SCHOOL_PHONE_TEL} className="mt-8 inline-flex min-h-11 items-center gap-3 font-display text-3xl text-primary-text"><Phone className="size-6" />{SCHOOL_PHONE}</a>
           <Link to="/introductory-flights" className="interactive-arrow mt-10 inline-flex items-center gap-3 text-sm font-bold uppercase text-primary-text">
             Or start with a $100 intro flight <ArrowRight className="size-4" />
           </Link>
