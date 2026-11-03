@@ -48,7 +48,7 @@ export default function AircraftModel({ src, label, poster, autoRotate = true, o
     // Only spin (and so only render frames) while the model is on screen and the tab is visible.
     let inView=false;
     const canSpin=()=>autoRotate&&!reduce&&!down&&inView&&!document.hidden;
-    const resume=()=>{window.clearTimeout(resumeTimer);if(canSpin())resumeTimer=window.setTimeout(()=>el.setAttribute('auto-rotate',''),MODEL_RESUME_MS);};
+    const resume=()=>{window.clearTimeout(resumeTimer);if(canSpin())resumeTimer=window.setTimeout(()=>{if(canSpin())el.setAttribute('auto-rotate','');},MODEL_RESUME_MS);};
     const start=()=>{down=true;pause();};
     const end=()=>{down=false;resume();};
     const change=(e:Event)=>{if((e as CustomEvent<{source:string}>).detail?.source==='user-interaction'){pause();resume();}};
