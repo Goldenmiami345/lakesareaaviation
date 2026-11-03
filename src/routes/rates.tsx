@@ -27,7 +27,7 @@ function Page() {
   return (
     <SiteLayout>
       <PageIntro eyebrow="Our rates" title="Every published rate, in one place." text="We strive to keep our aircraft costs low to make aviation accessible for everyone. All aircraft rates are wet and include fuel and insurance." />
-      <main className="mx-auto max-w-7xl px-5 py-16 sm:py-20 lg:px-8">
+      <div className="mx-auto max-w-7xl px-5 py-16 sm:py-20 lg:px-8">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.4fr]">
           <section data-scroll-reveal>
             <h2 className="eyebrow text-primary">Instruction</h2>
@@ -61,7 +61,7 @@ function Page() {
           <p className="mt-4 max-w-2xl text-muted-foreground">Aircraft time varies with the rating, your current experience, and proficiency. Share your logbook totals and goals for a useful training estimate.</p>
           <Link to="/contact" className="mt-8 inline-flex bg-primary px-6 py-4 text-sm font-bold uppercase text-primary-foreground">Request a training estimate</Link>
         </div>
-      </main>
+      </div>
     </SiteLayout>
   );
 }

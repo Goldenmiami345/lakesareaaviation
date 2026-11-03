@@ -35,7 +35,7 @@ function Page() {
         title="Every rating, endorsement, and experience."
         text="Whether you have zero flight hours or have three-hundred and are looking to finish a multi-engine commercial certificate, we are the school for you. We offer a wide variety of ratings, endorsements, and aviation experiences. All of our offerings are tailored to suit your individual needs."
       />
-      <main className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
+      <div className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
         <div className="stagger-grid grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-3" data-scroll-reveal>
           {services.map(([name, to, text]) => (
             <Link key={to} to={to === "zero" ? "/programs/$slug" : to} params={{ slug: "zero-to-hero" }} className="program-card interactive-arrow group bg-background p-8">
@@ -46,7 +46,7 @@ function Page() {
           ))}
         </div>
         <p className="mt-10 text-sm text-muted-foreground">Helicopter training: call or <Link to="/contact" className="text-primary underline">contact us</Link> for current availability.</p>
-      </main>
+      </div>
       <InquiryBand />
     </SiteLayout>
   );

@@ -31,7 +31,7 @@ const options = [
 const locations = [["Little Falls", "MN", "KLXL"], ["Fort Lupton", "CO", "18V"], ["Cottonwood", "AZ", "P52"]] as const;
 
 function HeroOptions() {
-  return <main className="hero-comparison bg-ink text-background">
+  return <main id="main" className="hero-comparison bg-ink text-background">
     {options.map((option) => <section key={option.id} aria-label={`Option ${option.id}: ${option.title}`}>
       <Hero option={option} mode="phone" />
       <div className="border-y border-background/15 px-5 py-6 lg:px-8">

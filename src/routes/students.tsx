@@ -27,7 +27,7 @@ function Page() {
         title="Helping you reach your aviation goals in three great locations."
         text="New to Lakes Area Aviation or already training with us — start here."
       />
-      <main className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
+      <div className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
         <div className="grid gap-6 md:grid-cols-2" data-scroll-reveal>
           <div className="card-lift border border-border bg-card p-8">
             <p className="eyebrow text-primary">New students</p>
@@ -51,7 +51,7 @@ function Page() {
           ))}
         </div>
         <a href={SCHOOL_PHONE_TEL} className="mt-10 inline-flex items-center gap-3 font-display text-3xl text-primary"><Phone className="size-6" />{SCHOOL_PHONE}</a>
-      </main>
+      </div>
       <InquiryBand />
     </SiteLayout>
   );

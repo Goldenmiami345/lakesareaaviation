@@ -17,7 +17,7 @@ export const Route = createFileRoute('/models-preview')({
 });
 
 function ModelsPreview() {
-  return <main className="bg-background text-foreground">
+  return <main id="main" className="bg-background text-foreground">
     <header className="border-b border-border px-5 py-5"><h1 className="font-display text-3xl">Aircraft model review</h1><p className="mt-2 text-sm text-muted-foreground">Phoenix · Apache · Cardinal</p></header>
     {['N8570B', 'N4383P', 'N46201'].map(reg => {
       const plane = fleet.find(p => p.registration === reg);
