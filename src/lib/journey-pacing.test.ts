@@ -173,3 +173,38 @@ describe("altitude readout", () => {
     assert.ok(v > 7000 && v < 14000);
   });
 });
+
+import { glideAt, glideDuration, newWheelState, wheelDecision, snapTarget, GLIDE_MS_SHORT, GLIDE_MS_TOUCH, GLIDE_MS_WHEEL } from "./journey-pacing";
+describe("Round G glide, wheel gestures and edge snaps", () => {
+  test("glide is strictly monotonic and lands exactly on target", () => {
+    const ys = Array.from({ length: 50 }, (_, i) => glideAt(844, 3680, i * 16, 650));
+    for (let i = 1; i < ys.length; i += 1) assert.ok(ys[i]! >= ys[i - 1]!);
+    assert.equal(ys[0], 844);
+    assert.equal(glideAt(844, 3680, 650, 650), 3680);
+  });
+  test("durations: 650 ms touch, 700 ms wheel, 400 ms for moves of at most one viewport", () => {
+    assert.equal(glideDuration(2000, 844, true), GLIDE_MS_TOUCH);
+    assert.equal(glideDuration(2000, 900, false), GLIDE_MS_WHEEL);
+    assert.equal(glideDuration(800, 900, false), GLIDE_MS_SHORT);
+  });
+  test("a 12 x 8 px trackpad burst over 240 ms pages exactly once", () => {
+    const s = newWheelState();
+    const out = Array.from({ length: 12 }, (_, i) => wheelDecision(s, i * 20, 8, true));
+    assert.equal(out.filter((d) => d === "page").length, 1);
+  });
+  test("events during a glide and within 300 ms after landing are dropped; 250 ms silence starts a new gesture", () => {
+    const s = newWheelState();
+    assert.equal(wheelDecision(s, 0, 100, true), "page");
+    s.gliding = true;
+    assert.equal(wheelDecision(s, 400, 100, true), "drop");
+    s.gliding = false; s.landedAt = 700;
+    assert.equal(wheelDecision(s, 1300, 100, true), "page");
+  });
+  test("edge snap: finishes moves within 0.6 vh downward, never small drags or far positions", () => {
+    const z = [{ first: 844, last: 12998, end: 13842 }];
+    assert.equal(snapTarget(z, 405, 0, 844), 844);
+    assert.equal(snapTarget(z, 85, 0, 844), null);
+    assert.equal(snapTarget(z, 13403, 12998, 844), 13842);
+    assert.equal(snapTarget(z, 820, 790, 844), null);
+  });
+});
