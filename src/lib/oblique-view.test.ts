@@ -36,6 +36,13 @@ describe("KLXL oblique camera", () => {
     const ground = obliqueProject(500, -KLXL_OBLIQUE_PATTERN.offset, 0);
     assert.ok(air.y < ground.y);
   });
+  test("obliqueProject returns the exact camera depth used for clipping at 150 metres", () => {
+    for (const [x, y, agl] of [[500, -616, 1000], [1200, 616, 1000]] as const) {
+      const ground = patternToGround(x, y);
+      const projected = projectGround(ground.e, ground.n, agl * FT);
+      assert.equal(obliqueProject(x, y, agl).z, projected.z);
+    }
+  });
   test("both runway ends are inside the picture", () => {
     for (const k of ["13", "31", "18", "36"] as const) {
       const p = projectGround(KLXL_RUNWAYS[k].e, KLXL_RUNWAYS[k].n);

@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Round L: supplied scroll engine and 18 tests, paging/snap/controller/scripts removed, zoom fast-path and oblique projection corrected. 144 tests, automatic build, model guard, fresh-preview 27-page HTML gate and native drag/wheel checks at 390×844/1440×900 passed. Production-output gate cannot be confirmed: dist/client is not provided by the automatic preview build; physical Safari not available.
+
 - [x] Journeys: one screen of scroll per stage on desktop too (one upward swipe ≈ one stage), softer 700/800ms glides, no forced pull between sections, no photo jump when scrolling up; 155 tests, 21/21 smoothness transitions and phone checks pass.
 
 - [x] Remove touchscreen upward stack drag with compact phone stages; measured 100px scroll now moves imagery 100px instead of 42px, 21/21 downward swipes and 154 tests pass.

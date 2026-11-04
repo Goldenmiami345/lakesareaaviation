@@ -45,7 +45,7 @@ export function useStageZoom({ viewportRef, target, resetKey }: Opts) {
 
   const reset = useCallback(() => apply(IDENTITY, true), [apply]);
 
-  // Leaving the stage (paging, jump) always restores it.
+  // Leaving the stage (scroll, jump) always restores it.
   useEffect(() => {
     const prev = targetRef.current();
     return () => { if (prev) { prev.style.transform = ""; prev.style.transition = ""; } view.current = IDENTITY; document.documentElement.classList.remove("journey-zoomed"); setZoomed(false); };
@@ -64,13 +64,14 @@ export function useStageZoom({ viewportRef, target, resetKey }: Opts) {
 
     const onStart = (e: TouchEvent) => {
       if ((e.target as Element | null)?.closest?.('[data-model-gesture]')) return;
+      if (e.touches.length >= 2 || view.current.s > 1.001) armMove();
       if (e.touches.length >= 2) {
-        const a = e.touches[0]!, b = e.touches[1]!;
+        const a = e.touches[0], b = e.touches[1];
+        if (!a || !b) return;
         const m = mid(a, b), v = view.current;
         // Content point under the fingers, in unzoomed stage pixels.
         pinch = { d0: dist(a, b), v0: v, cx: (m.x - v.x) / v.s, cy: (m.y - v.y) / v.s };
         pan = null;
-        if (e.cancelable) e.preventDefault();
         return;
       }
       const t = e.touches[0];
@@ -82,7 +83,8 @@ export function useStageZoom({ viewportRef, target, resetKey }: Opts) {
       if ((e.target as Element | null)?.closest?.('[data-model-gesture]')) return;
       const { w, h } = size();
       if (pinch && e.touches.length >= 2) {
-        const a = e.touches[0]!, b = e.touches[1]!;
+        const a = e.touches[0], b = e.touches[1];
+        if (!a || !b) return;
         const m = mid(a, b);
         const s = clamp(pinch.v0.s * (dist(a, b) / pinch.d0), 1, ZOOM_MAX);
         apply(clampView({ s, x: m.x - pinch.cx * s, y: m.y - pinch.cy * s }, w, h));
@@ -98,7 +100,7 @@ export function useStageZoom({ viewportRef, target, resetKey }: Opts) {
         apply(clampView({ s: pan.v0.s, x: pan.v0.x + p.x - pan.x, y: pan.v0.y + p.y - pan.y }, w, h));
       }
     };
-    const onEnd = (e: TouchEvent) => {
+    const finishTouch = (e: TouchEvent) => {
       if (pinch && e.touches.length < 2) {
         pinch = null;
         if (view.current.s < 1.05) { apply(IDENTITY, true); pan = null; return; }
@@ -121,10 +123,16 @@ export function useStageZoom({ viewportRef, target, resetKey }: Opts) {
         lastTap.t = 0;
         const { w, h } = size();
         apply(view.current.s > 1.001 ? IDENTITY : zoomAt(view.current, DOUBLE_TAP_ZOOM, at.x, at.y, w, h), true);
-        if (e.cancelable) e.preventDefault();
       } else lastTap = { t: now, ...at };
     };
-    // Desktop: ctrl/⌘-scroll and trackpad pinch (ctrlKey wheel) zoom; a plain wheel still pages.
+    const onEnd = (e: TouchEvent) => {
+      finishTouch(e);
+      if (e.touches.length === 0 && view.current.s <= 1.001) disarmMove();
+    };
+    let moveArmed = false;
+    const armMove = () => { if (!moveArmed) { moveArmed = true; vp.addEventListener("touchmove", onMove, { passive: false }); } };
+    const disarmMove = () => { if (moveArmed) { moveArmed = false; vp.removeEventListener("touchmove", onMove); } };
+    // Desktop: ctrl/⌘-scroll and trackpad pinch (ctrlKey wheel) zoom; a plain wheel scrolls natively.
     const onWheel = (e: WheelEvent) => {
       if ((e.target as Element | null)?.closest?.('[data-model-gesture]')) return;
       if (!e.ctrlKey && !e.metaKey) return;
@@ -141,10 +149,9 @@ export function useStageZoom({ viewportRef, target, resetKey }: Opts) {
     const onUp = () => { drag = null; };
     // iOS Safari: stop its own page-zoom gesture on the stage.
     const noGesture = (e: Event) => e.preventDefault();
-    vp.addEventListener("touchstart", onStart, { passive: false });
-    vp.addEventListener("touchmove", onMove, { passive: false });
-    vp.addEventListener("touchend", onEnd, { passive: false });
-    vp.addEventListener("touchcancel", onEnd, { passive: false });
+    vp.addEventListener("touchstart", onStart, { passive: true });
+    vp.addEventListener("touchend", onEnd, { passive: true });
+    vp.addEventListener("touchcancel", onEnd, { passive: true });
     vp.addEventListener("wheel", onWheel, { passive: false });
     vp.addEventListener("pointerdown", onDown);
     window.addEventListener("pointermove", onPMove);
@@ -153,7 +160,7 @@ export function useStageZoom({ viewportRef, target, resetKey }: Opts) {
     vp.addEventListener("gesturechange", noGesture);
     return () => {
       vp.removeEventListener("touchstart", onStart);
-      vp.removeEventListener("touchmove", onMove);
+      disarmMove();
       vp.removeEventListener("touchend", onEnd);
       vp.removeEventListener("touchcancel", onEnd);
       vp.removeEventListener("wheel", onWheel);

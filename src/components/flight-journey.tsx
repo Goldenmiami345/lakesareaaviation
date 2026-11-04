@@ -3,7 +3,7 @@ import { srcSetFor } from "@/lib/responsive-image";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Phone } from "lucide-react";
 import { Button } from "./ui/button";
-import { journeyFrame, journeyAltitude, glideAt, glideDuration, newWheelState, wheelDecision, snapTarget, pagingUnlock, type SnapZone, pinnedStepDown, stackProgress, stackOffset, touchJourneyFraction, isModeSwitchPoint, resolveMode, STOP_TOL, type JourneyMode, type PageSegment } from "../lib/journey-pacing";
+import { journeyFrame, journeyAltitude, settleTarget, stageLanding, stageLengthFrom, JOURNEY_TAIL, type JourneyGeometry } from "../lib/journey-scroll";
 import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
 import { patternFor, pickRunway, type PatternField } from "../lib/traffic-pattern";
 import { useMetar } from "../lib/use-metar";
@@ -68,368 +68,24 @@ export const airportStages: Stage[] = [
 // Traffic-pattern airplanes on the airport aerials.
 const SHOW_TRAFFIC = true;
 
-// Programmatic glide that temporarily disables journey snapping, so jumps
-// (back to top, location shortcuts) travel straight to their target.
+/** Scroll comes to rest when no scroll event has arrived for this long (scrollend is used too where supported). */
+const SETTLE_IDLE_MS = 140;
+
+const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/** Smooth scroll to a document position; instant under reduced motion or when asked. Never blocks input. */
 export function glideTo(top: number, instant = false) {
-  const root = document.documentElement;
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   window.dispatchEvent(new CustomEvent("journey-target", { detail: top }));
-  root.classList.add("journey-free");
-  let done = false;
-  const finish = () => { if (done) return; done = true; root.classList.remove("journey-free"); window.removeEventListener("scrollend", finish); };
-  window.addEventListener("scrollend", finish);
-  window.setTimeout(finish, 2200);
-  window.scrollTo({ top, behavior: reduce || instant ? "instant" : "smooth" });
-  if (instant) window.requestAnimationFrame(finish);
+  window.scrollTo({ top, behavior: reducedMotion() || instant ? "instant" : "smooth" });
 }
 
-// Instant jump to the very top (logo / Home tapped while already on "/"):
-// drop any engaged snap first so mandatory snapping can't pull the page onto a stop.
+/** Instant jump to the very top (logo / Home tapped while already on "/"). */
 export function jumpToPageTop() {
-  const root = document.documentElement;
-  root.classList.add("journey-free");
-  releasePaging();
-  wantedMode = "fade"; setMode("fade");
   window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-  window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
-    if (window.scrollY !== 0) window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    root.classList.remove("journey-free");
-  }));
 }
 
-
-// ---- Downward: one gesture = one stop. Upward: native scrolling through stacked pages ----
-// Only gestures STARTED in a fully pinned viewport page between that journey's
-// own stages. Entry, last-stage exit and all upward movement stay native, except a
-// short proximity snap after native momentum ends at a section edge.
-const PAGE_SWIPE_PX = 10;
-const ENTRY_TOL = 24;
-const SCROLL_IDLE_MS = 120;
-type JourneyEntry = { n: number; vh: () => number; render: () => void };
-const journeys = new Map<HTMLElement, JourneyEntry>();
-let paging = false;
-/** Active paged glide: from/to scrollY and eased progress p (0→1). Journeys crossfade from p, not from scroll bands. */
-let glide: { from: number; to: number; p: number } | null = null;
-// Sine ease of glide TIME: ≥ 500 ms of visible blend, with 0.9→0.1 taking ~60% of the glide.
-// Half-linear/half-sine ease over the first 85% of the glide: completes before the last pixels of scroll.
-const blendEase = (t: number) => { const x = Math.max(0, Math.min(1, t / 0.85)); return 0.5 * x + 0.25 * (1 - Math.cos(Math.PI * x)); };
-const wheel = newWheelState();
-let tweenFrame = 0;
-let glideTimeout = 0;
-let controllerRefs = 0;
-let removeController: (() => void) | null = null;
-
-let mode: JourneyMode = "fade";
-let wantedMode: JourneyMode = "fade";
-const modeListeners = new Set<() => void>();
-export const journeyMode = () => mode;
-
-// Once the visitor scrolls up, downward one-gesture paging turns off and
-// scrolling is free until they reach the end of the last journey (locations).
-let unlocked = false;
-
-// Stop positions are document offsets (independent of scroll), cached and recomputed only on resize.
-type Layout = { stops: number[]; zones: { from: number; to: number }[]; stages: number[][]; snap: SnapZone[] };
-let layoutCache: Layout | null = null;
-export function invalidateJourneyLayout() { layoutCache = null; }
-function journeyLayout(): Layout {
-  if (layoutCache) return layoutCache;
-  const list = [...journeys].sort((a, b) => a[0].offsetTop - b[0].offsetTop);
-  const maxY = document.documentElement.scrollHeight - window.innerHeight;
-  const stops: number[] = [], zones: Layout["zones"] = [], stages: number[][] = [], snap: SnapZone[] = [];
-  list.forEach(([el, { n, vh }]) => {
-    const base = window.scrollY + el.getBoundingClientRect().top;
-    const h = vh();
-    const total = Math.max(1, el.offsetHeight - h);
-    const own: number[] = [];
-    // Every stage is exactly one viewport of scrolling (phone and desktop).
-    for (let i = 0; i < n; i += 1) own.push(Math.round(base + i * h));
-    stops.push(...own);
-    stages.push(own);
-    zones.push({ from: base, to: Math.min(maxY, base + total) });
-    snap.push({ first: own[0] ?? base, last: own[own.length - 1] ?? base, end: Math.min(maxY, Math.round(base + el.offsetHeight)) });
-  });
-  stops.sort((a, b) => a - b);
-  layoutCache = { stops: stops.filter((s, i) => i === 0 || s - (stops[i - 1] ?? s) > STOP_TOL), zones, stages, snap };
-  return layoutCache;
-}
-const pinnedStages = (L: Layout, y: number) => {
-  // A few px short of fully pinned (native momentum landing) still counts as the first stage.
-  const i = L.zones.findIndex((z) => y >= z.from - ENTRY_TOL && y <= z.to);
-  return i < 0 ? null : L.stages[i] ?? null;
-};
-const lastJourneyEnd = (L: Layout) => (L.zones.length ? (L.zones[L.zones.length - 1]?.to ?? Infinity) : Infinity);
-const downTarget = (y: number) => {
-  if (unlocked) return null;
-  const own = pinnedStages(journeyLayout(), y);
-  if (!own) return null;
-  return pinnedStepDown(own, Math.max(y, own[0] ?? y), own[0] ?? y, own[own.length - 1] ?? y);
-};
-const atSwitchPoint = (L: Layout, y: number) => L.stages.every((own) => isModeSwitchPoint(own, y));
-function setMode(next: JourneyMode) { if (mode === next) return; mode = next; modeListeners.forEach((f) => f()); }
-function requestMode(next: JourneyMode, L: Layout = journeyLayout()) {
-  wantedMode = next;
-  setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, window.scrollY)));
-}
-// Every journey re-renders synchronously from the glide's scroll position in the same frame.
-const renderAll = () => journeys.forEach((j) => j.render());
-
-function releasePaging() {
-  cancelAnimationFrame(tweenFrame);
-  window.clearTimeout(glideTimeout);
-  glide = null;
-  if (paging) wheel.landedAt = performance.now();
-  paging = false;
-  wheel.gliding = false;
-}
-
-// One eased glide from the REAL current scrollY: strictly monotonic, lands exactly on target.
-function runPath(path: PageSegment[], touch = false) {
-  releasePaging();
-  const end = path[path.length - 1];
-  if (!end || Math.abs(end.y - window.scrollY) <= STOP_TOL) return;
-  paging = true; wheel.gliding = true;
-  const from = window.scrollY, to = end.y;
-  const dur = glideDuration(to - from, window.innerHeight, touch);
-  let finished = false;
-  const finish = () => {
-    if (finished) return;
-    finished = true;
-    // A busy main thread can delay frames past the hard timeout; never leave the page short of its stop.
-    if (Math.abs(window.scrollY - to) > 0.5) window.scrollTo({ top: to, behavior: "instant" });
-    glide = null;
-    renderAll();
-    releasePaging();
-    setMode(resolveMode(mode, wantedMode, atSwitchPoint(journeyLayout(), window.scrollY)));
-  };
-  glideTimeout = window.setTimeout(finish, dur + 150);
-  const start = performance.now();
-  const tick = (now: number) => {
-    const elapsed = now - start;
-    const y = glideAt(from, to, elapsed, dur);
-    window.scrollTo({ top: y, behavior: "instant" });
-    // Within a pixel of the stop the blend is complete, so nothing moves after the landing frame.
-    glide = { from, to, p: Math.abs(to - y) <= 1 ? 1 : blendEase(elapsed / dur) };
-    renderAll();
-    if (elapsed < dur) tweenFrame = requestAnimationFrame(tick); else finish();
-  };
-  tweenFrame = requestAnimationFrame(tick);
-}
-
-export function goToJourneyPage(y: number, instant = false) {
-  window.dispatchEvent(new CustomEvent("journey-target", { detail: y }));
-  if (instant) { releasePaging(); window.scrollTo({ top: y, behavior: "instant" }); requestMode(wantedMode); return; }
-  runPath([{ y, instant: false }]);
-}
-
-function installController() {
-  controllerRefs += 1;
-  if (import.meta.env.DEV) (window as unknown as { __journeyStops?: () => number[] }).__journeyStops = () => { invalidateJourneyLayout(); return journeyLayout().stops; };
-  if (removeController) return;
-  const root = document.documentElement;
-  const reduce = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const zoomedIn = () => root.classList.contains("journey-zoomed");
-  const free = () => root.classList.contains("journey-free");
-  // Touch screens: native CSS scroll-snap (snap-stop: always) pages one stage per swipe in both
-  // directions on the compositor; JS never blocks or glides touch scrolling.
-  const coarse = window.matchMedia("(pointer: coarse)").matches;
-  if (coarse && !unlocked) root.classList.add("journey-snap");
-  // Track the scroll-up unlock: while unlocked, downward paging, snapping and the
-  // touch scroll-snap are all off, so scrolling down is plain native scrolling.
-  const syncUnlock = (dir: number, y: number) => {
-    const next = pagingUnlock(unlocked, dir < 0 ? -1 : 1, y, lastJourneyEnd(journeyLayout()));
-    if (next === unlocked) return;
-    unlocked = next;
-    if (coarse) root.classList.toggle("journey-snap", !unlocked);
-  };
-  // A target must be a later stage in the SAME fully pinned journey.
-  const goDown = (touch = false) => {
-    const target = downTarget(window.scrollY);
-    if (target === null) return false;
-    wantedMode = "fade";
-    setMode("fade");
-    runPath([{ y: target, instant: false }], touch);
-    syncMoveBlocker();
-    return true;
-  };
-  const goingUp = () => { syncUnlock(-1, window.scrollY); if (!paging) requestMode("stack"); };
-
-  const onWheel = (e: WheelEvent) => {
-    if ((e.target as Element | null)?.closest?.("[data-model-gesture]")) return;
-    if (reduce() || e.ctrlKey || e.metaKey || Math.abs(e.deltaY) < Math.abs(e.deltaX) || free() || zoomedIn()) return;
-    const d = wheelDecision(wheel, performance.now(), e.deltaY, e.deltaY > 0 && downTarget(window.scrollY) !== null);
-    if (d === "drop") { e.preventDefault(); return; }
-    if (d === "page") { if (goDown()) e.preventDefault(); return; }
-    if (e.deltaY < 0) goingUp();
-  };
-  const onKey = (e: KeyboardEvent) => {
-    if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || reduce() || free() || zoomedIn()) return;
-    const t = e.target as HTMLElement | null;
-    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || (e.key === " " && /^(BUTTON|A)$/.test(t.tagName)))) return;
-    const down = e.key === "PageDown" || e.key === "ArrowDown" || (e.key === " " && !e.shiftKey);
-    const up = e.key === "PageUp" || e.key === "ArrowUp" || e.key === "Home" || (e.key === " " && e.shiftKey);
-    if (up) { goingUp(); return; }
-    if (!down) return;
-    if (paging) { e.preventDefault(); return; }
-    if (goDown()) e.preventDefault();
-  };
-
-  let g: { x: number; y: number; decided: boolean; fired: boolean; eligible: boolean } | null = null;
-  let touching = false;
-  let rejected = false;
-  // Any second finger makes the whole gesture a pinch: it never pages.
-  let multi = false;
-  const cancelForMulti = () => { releasePaging(); multi = true; g = null; rejected = true; };
-  // touchend can be dropped when the main thread is busy; a finger with no touch
-  // events for 150ms is treated as lifted.
-  let lastTouchAt = 0;
-  const fingerDown = () => touching && performance.now() - lastTouchAt < 150;
-  const onTouchStart = (e: TouchEvent) => {
-    if ((e.target as Element | null)?.closest?.("[data-model-gesture]")) { g = null; rejected = true; return; }
-    if (e.touches.length > 1 || multi) { lastTouchAt = performance.now(); touching = true; cancelForMulti(); return; }
-    touching = true; rejected = false; lastTouchAt = performance.now();
-    seqStart = window.scrollY;
-    const t = e.touches[0];
-    g = !coarse && e.touches.length === 1 && t && !reduce() ? { x: t.clientX, y: t.clientY, decided: false, fired: false, eligible: downTarget(window.scrollY) !== null } : null;
-    syncMoveBlocker();
-  };
-  // Passive tracker: runs on every touchmove without ever blocking native scroll.
-  const onTouchMove = (e: TouchEvent) => {
-    if ((e.target as Element | null)?.closest?.("[data-model-gesture]")) { g = null; rejected = true; return; }
-    lastTouchAt = performance.now();
-    if (e.touches.length > 1 || multi) { cancelForMulti(); return; }
-    if (zoomedIn()) { g = null; rejected = true; return; }
-    const t = e.touches[0];
-    // A finger that went down before the handler attached (first load) is adopted here.
-    if (coarse) return;
-    if (!g && !rejected && t && e.touches.length === 1 && !reduce()) { touching = true; g = { x: t.clientX, y: t.clientY, decided: false, fired: false, eligible: false }; return; }
-    if (!g || !t || e.touches.length !== 1) { g = null; rejected = true; return; }
-    const dx = g.x - t.clientX, dy = g.y - t.clientY;
-    if (g.fired || paging) return;
-    if (!g.decided) {
-      if (Math.abs(dx) < 3 && Math.abs(dy) < 3) return; // taps with jitter stay taps
-      g.decided = true;
-      if (Math.abs(dx) > Math.abs(dy) || free()) { g = null; rejected = true; return; }
-      // Upward drags are plain 1:1 native scrolling through stacked pages.
-      if (dy < 0) { goingUp(); g = null; rejected = true; syncMoveBlocker(); return; }
-    }
-    if (!g.eligible) g.eligible = downTarget(window.scrollY) !== null;
-  };
-  // Non-passive blocker: attached ONLY while a downward page can actually start
-  // (fully pinned journey with a later stage, or an active glide). Everywhere
-  // else touchmove stays passive, so native scrolling never waits on this file.
-  const onTouchMoveBlock = (e: TouchEvent) => {
-    // Decide direction in capture, before the browser can commit this move to
-    // native scrolling. The passive tracker remains available outside journeys.
-    onTouchMove(e);
-    if (!e.cancelable) return;
-    // Everything during a glide is swallowed, so native scroll never fights it.
-    if (paging || g?.fired) { e.preventDefault(); return; }
-    if (!g || !g.decided || !g.eligible) return;
-    // A pinned downward drag never starts native scrolling: the glide owns the whole move.
-    e.preventDefault();
-    const t = e.touches[0];
-    if (t && g.y - t.clientY >= PAGE_SWIPE_PX && goDown(true)) g.fired = true;
-  };
-  let moveBlocker = false;
-  const syncMoveBlocker = () => {
-    const want = !coarse && (paging || (!rejected && !reduce() && !free() && !zoomedIn() && downTarget(window.scrollY) !== null));
-    if (want === moveBlocker) return;
-    moveBlocker = want;
-    if (want) window.addEventListener("touchmove", onTouchMoveBlock, { passive: false, capture: true });
-    else window.removeEventListener("touchmove", onTouchMoveBlock, true);
-  };
-  const onTouchEnd = (e: TouchEvent) => {
-    if (e.touches.length === 0) { multi = false; touching = false; g = null; rejected = false; scheduleSettle(); syncMoveBlocker(); }
-  };
-
-  // Proximity snap once native scrolling has come to rest (scrollend or 120ms without scroll).
-  // Start of the current native scroll run: reset only after 300ms without scrolling, so a
-  // burst of wheel notches (each with its own scrollend) counts as one move.
-  let lastDir = 1, lastScrollY = window.scrollY, seqStart = window.scrollY, idleTimer = 0, moving = false, lastMoveAt = 0;
-  const settle = () => {
-    window.clearTimeout(idleTimer);
-    if (!moving || paging || fingerDown()) return;
-    // Wheel notches still arriving: wait for the gesture to finish.
-    if (performance.now() - wheel.lastAt < SCROLL_IDLE_MS) { scheduleSettle(); return; }
-    moving = false;
-    const y = window.scrollY;
-    if (coarse) {
-      // Touch backup for slow drags the browser's proximity snap leaves between stages.
-      if (reduce() || free() || zoomedIn() || unlocked) return;
-      const own = pinnedStages(journeyLayout(), y);
-      if (!own) return;
-      const near = own.reduce((a, b) => (Math.abs(b - y) < Math.abs(a - y) ? b : a), own[0] ?? y);
-      if (Math.abs(near - y) > 2 && Math.abs(near - y) < window.innerHeight * 0.6) window.scrollTo({ top: near, behavior: "smooth" });
-      return;
-    }
-    if (reduce() || free() || zoomedIn() || lastDir < 0 || unlocked) return;
-    const target = snapTarget(journeyLayout().snap, y, seqStart, window.innerHeight);
-    if (target === null) return;
-    // The rest of the wheel gesture that produced this momentum must not page again.
-    wheel.used = true;
-    seqStart = target;
-    runPath([{ y: target, instant: false }]);
-  };
-  const scheduleSettle = () => { window.clearTimeout(idleTimer); idleTimer = window.setTimeout(settle, SCROLL_IDLE_MS); };
-  const onScroll = () => {
-    const y = window.scrollY, now = performance.now();
-    if (Math.abs(y - lastScrollY) > 0.5) lastDir = y > lastScrollY ? 1 : -1;
-    if (!paging && !touching && now - lastMoveAt > 300) seqStart = lastScrollY;
-    lastMoveAt = now;
-    lastScrollY = y;
-    if (!paging) syncUnlock(lastDir, y);
-    if (paging) { seqStart = y; moving = false; return; }
-    moving = true;
-    scheduleSettle();
-    syncMoveBlocker();
-    const L = journeyLayout();
-    if (coarse) { wantedMode = "fade"; setMode("fade"); return; }
-    if (unlocked) { wantedMode = "fade"; setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, y))); return; }
-    if (lastDir < 0) { wantedMode = "stack"; setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, y))); return; }
-    setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, y)));
-  };
-  const onScrollEnd = () => scheduleSettle();
-  const onResize = () => invalidateJourneyLayout();
-  const ro = new ResizeObserver(onResize);
-  ro.observe(document.body);
-  journeys.forEach((_, el) => ro.observe(el));
-  window.addEventListener("wheel", onWheel, { passive: false });
-  window.addEventListener("keydown", onKey);
-  window.addEventListener("touchstart", onTouchStart, { passive: true });
-  window.addEventListener("touchmove", onTouchMove, { passive: true });
-  syncMoveBlocker();
-  window.addEventListener("touchend", onTouchEnd, { passive: true });
-  window.addEventListener("touchcancel", onTouchEnd, { passive: true });
-  window.addEventListener("scroll", onScroll, { passive: true });
-  window.addEventListener("scrollend", onScrollEnd);
-  window.addEventListener("resize", onResize);
-  removeController = () => {
-    ro.disconnect();
-    root.classList.remove("journey-snap");
-    window.clearTimeout(idleTimer);
-    window.removeEventListener("wheel", onWheel);
-    window.removeEventListener("keydown", onKey);
-    window.removeEventListener("touchstart", onTouchStart);
-    window.removeEventListener("touchmove", onTouchMove);
-    window.removeEventListener("touchmove", onTouchMoveBlock, true);
-    moveBlocker = false;
-    window.removeEventListener("touchend", onTouchEnd);
-    window.removeEventListener("touchcancel", onTouchEnd);
-    window.removeEventListener("scroll", onScroll);
-    window.removeEventListener("scrollend", onScrollEnd);
-    window.removeEventListener("resize", onResize);
-    releasePaging();
-  };
-}
-
-function uninstallController() {
-  controllerRefs -= 1;
-  if (controllerRefs <= 0 && removeController) { removeController(); removeController = null; controllerRefs = 0; }
-}
-
-export function jumpToJourney(id: string, index: number) {
-  window.dispatchEvent(new CustomEvent("journey:jump", { detail: { id, index } }));
+export function jumpToJourney(id: string, index: number, animate = false) {
+  window.dispatchEvent(new CustomEvent("journey:jump", { detail: { id, index, animate } }));
 }
 
 type Props = { stages?: Stage[]; id?: string; label?: string; mode?: "alt" | "code"; fadeBottom?: "ink" | "background" };
@@ -440,8 +96,6 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const sectionRef = useRef<HTMLElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const copyRef = useRef<HTMLDivElement>(null);
-  const stackCopyRef = useRef<HTMLDivElement>(null);
-  const stackCopyRefs = useRef<(HTMLDivElement | null)[]>([]);
   const layerRefs = useRef<(HTMLDivElement | null)[]>([]);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const hudRef = useRef<HTMLSpanElement>(null);
@@ -449,135 +103,115 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const [active, setActive] = useState(0);
 
   useEffect(() => {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let mx = 0, my = 0, frame = 0, last = -1;
+    const el = sectionRef.current, viewport = viewportRef.current;
+    if (!el || !viewport) return;
+    const reduce = reducedMotion();
     const fine = window.matchMedia("(pointer: fine)").matches;
-    const phone = window.matchMedia(PHONE_MQ).matches;
     const n = stages.length;
-    // Geometry is cached (document offset of the section, pinned length, viewport height) and
+    let mx = 0, my = 0, frame = 0, last = -1;
+
+    // Geometry (document offset of the section, px per stage, viewport height) is cached and
     // recomputed only on resize, so a frame never reads layout.
-    let geo: { base: number; total: number; vh: number } | null = null;
-    const measure = () => {
-      const el = sectionRef.current;
-      if (!el) return null;
-      const vh = viewportRef.current?.offsetHeight ?? window.innerHeight;
-      geo = { base: window.scrollY + el.getBoundingClientRect().top, total: Math.max(1, el.offsetHeight - vh), vh };
+    let geo: JourneyGeometry | null = null;
+    const measure = (): JourneyGeometry => {
+      const vh = viewport.offsetHeight || window.innerHeight;
+      geo = { base: window.scrollY + el.getBoundingClientRect().top, stage: stageLengthFrom(el.offsetHeight, vh, n), count: n };
       return geo;
     };
+
+    const showActive = (idx: number) => {
+      if (idx === last) return;
+      last = idx;
+      setActive(idx);
+      videoRefs.current.forEach((video, videoIndex) => {
+        if (!video) return;
+        if (videoIndex === idx && !reduce) void video.play().catch(() => undefined);
+        else video.pause();
+      });
+    };
+
+    // Opacity/transform derive directly from the scroll position (no smoothing, no tween):
+    // the picture always sits exactly where the visitor's finger or wheel put it.
     const render = () => {
-      const g0 = geo ?? measure();
-      if (!g0) return;
-      const viewportHeight = g0.vh, total = g0.total;
-      const rect = { top: g0.base - window.scrollY };
-      const fractionAt = (y: number) => touchJourneyFraction((y - g0.base) / viewportHeight, n);
-      const scrolled = journeyFrame(fractionAt(window.scrollY), n);
-      // Paged glide inside this journey: blend over the glide's whole eased progress. Endpoints are
-      // stops (transition 0), so this agrees exactly with the scroll mapping when the glide lands.
-      const inJourney = (y: number) => y >= g0.base - 1 && y <= g0.base + total + 1;
-      const pg = glide && inJourney(glide.from) && inJourney(glide.to) ? (() => {
-        const a = journeyFrame(fractionAt(glide.from), n), b = journeyFrame(fractionAt(glide.to), n);
-        const sa = a.stage + a.transition, sb = b.stage + b.transition;
-        return { shown: sa + (sb - sa) * glide.p, p: glide.p, alt: journeyAltitude(a, n) + (journeyAltitude(b, n) - journeyAltitude(a, n)) * glide.p, progress: a.progress + (b.progress - a.progress) * glide.p };
-      })() : null;
-      const showActive = (idx: number) => {
-        if (hudRef.current) hudRef.current.textContent = Math.round(pg ? pg.alt : journeyAltitude(scrolled, n)).toLocaleString("en-US");
-        if (barRef.current) barRef.current.style.transform = `scaleY(${pg ? pg.progress : scrolled.progress})`;
-        if (idx === last) return;
-        last = idx;
-        setActive(idx);
-        videoRefs.current.forEach((video, videoIndex) => {
-          if (!video) return;
-          if (videoIndex === idx && !reduce) void video.play().catch(() => undefined);
-          else video.pause();
-        });
-      };
-      // Stack mode (scrolling up, and always in reduced motion): each stage is its own
-      // full-height page; stage k sits at translateY((k - progress) * 100%), moving 1:1 with scroll.
-      if (reduce || journeyMode() === "stack") {
-        const p = stackProgress(fractionAt(window.scrollY), n);
-        layerRefs.current.forEach((layer, i) => {
-          if (!layer) return;
-          const off = stackOffset(i, p);
-          // Same cover scale and pointer parallax as fade mode, so switching modes never jumps the photo.
-          const cover = reduce || !fine ? 0 : 0.04, depth = reduce || !fine ? 0 : 10 + i * 3;
-          layer.style.transform = `translate3d(${(mx * -depth).toFixed(2)}px, ${(off * viewportHeight + my * -depth).toFixed(1)}px, 0) scale(${(1 + cover).toFixed(4)})`;
-          layer.style.opacity = Math.abs(off) < 1 ? "1" : "0";
-          layer.style.visibility = Math.abs(off) < 1 ? "visible" : "hidden";
-          layer.style.pointerEvents = Math.abs(off) < 0.5 ? "auto" : "none";
-          layer.dataset["stack"] = "";
-        });
-        if (copyRef.current) { copyRef.current.style.opacity = "0"; copyRef.current.style.transform = "none"; }
-        if (stackCopyRef.current) stackCopyRef.current.style.visibility = "visible";
-        stackCopyRefs.current.forEach((c, i) => { if (c) c.style.transform = `translate3d(0, ${(stackOffset(i, p) * viewportHeight).toFixed(1)}px, 0)`; });
-        showActive(Math.max(0, Math.min(n - 1, Math.round(p))));
-        return;
-      }
-      if (stackCopyRef.current) stackCopyRef.current.style.visibility = "hidden";
-      // Opacity/transform derive directly from the scroll position (no smoothing), so a glide's
-      // crossfade is complete on the frame it lands.
-      const shown = pg ? pg.shown : scrolled.stage + scrolled.transition;
-      const base = Math.min(n - 1, Math.floor(shown + 1e-6));
-      const t = Math.max(0, Math.min(1, shown - base));
-      // During a glide the outgoing copy fades over the first 40%, the incoming over the last 50%.
-      const copyOpacity = pg ? (t < 0.4 ? 1 - t / 0.4 : t > 0.5 ? (t - 0.5) / 0.5 : 0) : Math.abs(1 - 2 * t);
-      const state = { stage: base, next: Math.min(n - 1, base + 1), transition: t, active: t < 0.5 ? base : Math.min(n - 1, base + 1), copyOpacity, progress: scrolled.progress };
+      const g = geo ?? measure();
+      const fr = journeyFrame(g, window.scrollY);
+      if (hudRef.current) hudRef.current.textContent = journeyAltitude(fr, n).toLocaleString("en-US");
+      if (barRef.current) barRef.current.style.transform = `scaleY(${fr.progress})`;
       layerRefs.current.forEach((layer, i) => {
         if (!layer) return;
         const st = stages[i];
-        const leaving = i === state.stage ? state.transition : 0;
-        const coming = i === state.next && i !== state.stage ? 1 - state.transition : 0;
+        const leaving = i === fr.stage ? fr.transition : 0;
+        const coming = i === fr.next && i !== fr.stage ? 1 - fr.transition : 0;
         // Layers are viewport-sized; pointer parallax is covered by a GPU scale, not a larger raster.
         const cover = reduce || !fine ? 0 : 0.04;
         const scale = reduce ? 1 : 1 + cover + leaving * (st?.zoom ?? 0.55) + coming * (st?.zoomIn ?? 0.06);
-        const opacity = i === state.stage ? 1 - state.transition : i === state.next && state.transition > 0 ? 1 : 0;
+        const opacity = i === fr.stage ? 1 - fr.transition : i === fr.next && fr.transition > 0 ? 1 : 0;
         const depth = reduce || !fine ? 0 : 10 + i * 3;
         layer.style.transform = `translate3d(${(mx * -depth).toFixed(2)}px, ${(my * -depth).toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
         layer.style.opacity = opacity.toFixed(3);
-        // Only the outgoing/incoming pair is rendered; others leave the compositor entirely.
-        layer.style.visibility = opacity > 0 || i === state.stage ? "visible" : "hidden";
+        // Only the outgoing/incoming pair is rendered; the others leave the compositor entirely.
+        layer.style.visibility = opacity > 0 || i === fr.stage ? "visible" : "hidden";
         layer.style.pointerEvents = opacity > 0.5 ? "auto" : "none";
-        delete layer.dataset["stack"];
       });
       if (copyRef.current) {
-        copyRef.current.style.opacity = reduce ? "1" : state.copyOpacity.toFixed(3);
-        copyRef.current.style.transform = reduce ? "none" : `translate3d(0, ${((1 - state.copyOpacity) * 8).toFixed(2)}px, 0)`;
+        copyRef.current.style.opacity = reduce ? "1" : fr.copyOpacity.toFixed(3);
+        copyRef.current.style.transform = reduce ? "none" : `translate3d(0, ${((1 - fr.copyOpacity) * 8).toFixed(2)}px, 0)`;
       }
-      showActive(state.active);
+      showActive(fr.active);
     };
     const renderScroll = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(render); };
+
+    // Settle: a scroll that comes to rest INSIDE a crossfade finishes it toward the nearer edge
+    // (never more than half a crossfade window, never while a finger is on the glass). A rest
+    // position inside a hold is never touched, so no swipe is ever undone or "eaten".
+    let idle = 0, fingers = 0, settling: number | null = null;
+    const settle = () => {
+      window.clearTimeout(idle);
+      if (fingers > 0 || document.documentElement.classList.contains("journey-zoomed")) return;
+      const target = settleTarget(geo ?? measure(), window.scrollY);
+      if (target === null) { settling = null; return; }
+      if (settling === target) return; // already on its way there
+      settling = target;
+      window.scrollTo({ top: target, behavior: reduce ? "instant" : "smooth" });
+    };
+    const scheduleSettle = () => { window.clearTimeout(idle); idle = window.setTimeout(settle, SETTLE_IDLE_MS); };
+    const onScroll = () => { renderScroll(); scheduleSettle(); };
+    const onScrollEnd = () => settle();
+    const onTouchStart = (e: TouchEvent) => { fingers = e.touches.length; window.clearTimeout(idle); settling = null; };
+    const onTouchEnd = (e: TouchEvent) => { fingers = e.touches.length; if (fingers === 0) scheduleSettle(); };
+
     const onMove = (e: PointerEvent) => { mx = e.clientX / window.innerWidth - 0.5; my = e.clientY / window.innerHeight - 0.5; renderScroll(); };
-    const el = sectionRef.current;
-    const vh = () => viewportRef.current?.offsetHeight ?? window.innerHeight;
-    if (el) journeys.set(el, { n, vh, render });
-    invalidateJourneyLayout();
-    installController();
-    const remeasure = () => { measure(); invalidateJourneyLayout(); renderScroll(); };
+    const remeasure = () => { measure(); renderScroll(); };
     const ro = new ResizeObserver(remeasure);
-    if (el) ro.observe(el);
+    ro.observe(el);
     ro.observe(document.body);
-    modeListeners.add(renderScroll);
     const onJump = (e: Event) => {
       const d = (e as CustomEvent<{ id: string; index: number; animate?: boolean }>).detail;
-      if (d?.id !== id || !el) return;
-      const base = window.scrollY + el.getBoundingClientRect().top, total = Math.max(1, el.offsetHeight - vh());
-      const y = Math.round(Math.min(base + total, base + Math.min(n - 1, d.index) * vh()));
-      goToJourneyPage(y, !d.animate);
+      if (d?.id !== id) return;
+      const y = stageLanding(measure(), d.index);
+      settling = null;
+      glideTo(y, !d.animate);
     };
     render();
-    window.addEventListener("scroll", renderScroll, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("scrollend", onScrollEnd);
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+    window.addEventListener("touchcancel", onTouchEnd, { passive: true });
     window.addEventListener("resize", remeasure);
     window.addEventListener("journey:jump", onJump);
     if (!reduce && fine) window.addEventListener("pointermove", onMove, { passive: true });
     return () => {
       cancelAnimationFrame(frame);
+      window.clearTimeout(idle);
       ro.disconnect();
-      if (el) journeys.delete(el);
-      invalidateJourneyLayout();
-      modeListeners.delete(renderScroll);
-      uninstallController();
-      window.removeEventListener("journey:jump", onJump);
-      window.removeEventListener("scroll", renderScroll);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("scrollend", onScrollEnd);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchEnd);
       window.removeEventListener("resize", remeasure);
+      window.removeEventListener("journey:jump", onJump);
       window.removeEventListener("pointermove", onMove);
     };
   }, [stages, id]);
@@ -621,10 +255,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const s = stages[active] ?? stages[0];
   if (!s) return null;
   return (
-    <section ref={sectionRef} data-journey-section="" id={id} aria-label={label} className="journey-section relative bg-ink text-background" style={{ height: `${stages.length * 100}svh`, "--journey-count": stages.length } as React.CSSProperties}>
-      {stages.map((st, i) => (
-        <div key={`stop-${st.code}`} aria-hidden className="journey-stop journey-stop-page pointer-events-none absolute left-0 h-px w-px" style={{ top: `${i * 100}svh` }} />
-      ))}
+    <section ref={sectionRef} data-journey-section="" id={id} aria-label={label} className="journey-section relative bg-ink text-background" style={{ height: `calc(${stages.length - 1 + JOURNEY_TAIL} * var(--journey-stage) + 100svh)`, "--journey-count": stages.length } as React.CSSProperties}>
       <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className="journey-viewport sticky top-0 h-svh overflow-hidden">
         {stages.map((st, i) => (
           <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="journey-layer absolute inset-0 bg-ink backface-hidden" data-active={i === active ? "" : undefined} style={{ zIndex: stages.length - i }}>
@@ -700,16 +331,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
             <StageCopy s={s} wx={klxl} wxLoading={metar === undefined} />
           </div>
         </div>
-        {/* Stack mode (scrolling up): every stage's copy rides on its own page. */}
-        <div ref={stackCopyRef} aria-hidden="true" className="journey-copy-stack pointer-events-none absolute inset-0 z-20 overflow-hidden" style={{ visibility: "hidden" }}>
-          {stages.map((st, i) => (
-            <div key={`copy-${st.code}`} ref={(el) => { stackCopyRefs.current[i] = el; }} inert className="absolute inset-0">
-              <div className="site-container journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-lg:!pr-14 sm:pb-24 md:pb-12 lg:pb-16">
-                <div className="journey-copy max-w-2xl"><StageCopy s={st} wx={klxl} wxLoading={metar === undefined} /></div>
-              </div>
-            </div>
-          ))}
-        </div>
+
       </div>
     </section>
   );

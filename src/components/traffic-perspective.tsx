@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { RadarTag, TrafficCard, useTrafficSelection, usePreloadCardPhotos, setTagPosition, setTagRing, ringRadius, fitTagSide, placeCard, radarAltitude, CARD_PHOTOS } from './traffic-ui';
 import { fleet } from '../lib/site-data';
-import { type PatternSample, type Wind, pickRunway, patternFor, patternWaypoints } from '../lib/traffic-pattern';
+import { type PatternSample, type Wind, patternFor, patternWaypoints } from '../lib/traffic-pattern';
 import { airportTraffic } from '../lib/site-data';
 import { KLXL_OBLIQUE, KLXL_OBLIQUE_PATTERN, PX_PER_FT_MID, obliqueProject, patternToGround, projectGroundScaled, groundFromLatLon } from '../lib/oblique-view';
 import { trafficSpanFeet, trafficModelScale, TrafficVector } from './traffic-vector';
@@ -50,11 +50,10 @@ function PlaneArt({reg,load}:{reg:string;load:boolean}){
 }
 
 export function TrafficPerspective({active,viewBox,wind=null,conditions}:{active:boolean;viewBox?:string;wind?:Wind|null;conditions?:TrafficConditions}){
-  // This view always flies the full VFR pattern. Live weather still picks the
-  // runway, climb rate, gust jitter and night dimming, but never closes the
-  // pattern or swaps in a single straight-in aircraft.
+  // Fixed camera south of the field looking NNE: only the runway-13 left-hand pattern lies in front of it.
+  // Live wind still shapes climb, gusts and night dimming here; the live runway choice is shown on the Little Falls aerial.
   const wx=useMemo(()=>conditions?{...conditions,mode:'vfr' as const,approach:null}:undefined,[conditions]);
-  const rwy=useMemo(()=>pickRunway(airportTraffic.KLXL,wind?{dir:wind.dir,kt:wind.kt}:null),[wind]);
+  const rwy=airportTraffic.KLXL.ends[0];
   const a=useMemo(()=>profileAirport(patternFor({...airportTraffic.KLXL,...KLXL_OBLIQUE_PATTERN},rwy),'vfr'),[rwy]);
   const svgRef=useRef<SVGSVGElement>(null),planeRefs=useRef<(SVGGElement|null)[]>([]),shadowRefs=useRef<(SVGGElement|null)[]>([]),tagRefs=useRef<(SVGGElement|null)[]>([]),textRefs=useRef<(SVGTextElement|null)[]>([]),cardRef=useRef<HTMLDivElement>(null);
   // Sprites download only once the stage has been active (first-load weight).
@@ -75,13 +74,30 @@ export function TrafficPerspective({active,viewBox,wind=null,conditions}:{active
   const project=useCallback((s:PatternSample,reg:string)=>{
     const angle=(s.heading-90)*Math.PI/180,g=patternToGround(s.x,s.y),g2=patternToGround(s.x+Math.cos(angle),s.y+Math.sin(angle));
     const p=pose(g.e,g.n,s.agl*FT,deg(Math.atan2(g2.e-g.e,g2.n-g.n)),reg);
+    if(p.z<150)return {...p,lift:s.agl/a.tpaAgl,transform:`matrix(0 0 0 0 ${p.x} ${p.y})`,shadow:`matrix(0 0 0 0 ${p.x} ${p.y})`};
     return {...p,lift:s.agl/a.tpaAgl};
   },[a]);
   useTrafficAnimation({active:active&&!isLive,airport:a,wind,runwayHeading:rwy.trueHdg,regs:a.aircraft,svgRef,planeRefs,shadowRefs,tagRefs,textRefs,cardRef,selectedRef,project,offsets:OFFSETS,...(wx?{conditions:wx}:{})});
-  const path=useMemo(()=>{const w=patternWaypoints(a);const pts:string[]=[];for(let i=0;i<w.length-1;i+=1){const p=w[i]!,q=w[i+1]!;for(let k=0;k<12;k+=1){const t=k/12,o=obliqueProject(p.x+(q.x-p.x)*t,p.y+(q.y-p.y)*t,p.agl+(q.agl-p.agl)*t);pts.push(`${o.x.toFixed(1)},${o.y.toFixed(1)}`);}}const l=w[w.length-1]!,o=obliqueProject(l.x,l.y,l.agl);pts.push(`${o.x.toFixed(1)},${o.y.toFixed(1)}`);return pts.join(' ');},[a]);
+  const path=useMemo(()=>{
+    const w=patternWaypoints(a),commands:string[]=[];
+    let connected=false;
+    const sample=(x:number,y:number,agl:number)=>{
+      const o=obliqueProject(x,y,agl);
+      if(o.z<150){connected=false;return;}
+      commands.push(`${connected?'L':'M'}${o.x.toFixed(1)} ${o.y.toFixed(1)}`);
+      connected=true;
+    };
+    for(let i=0;i<w.length-1;i+=1){
+      const p=w[i],q=w[i+1];
+      if(!p||!q)continue;
+      for(let k=0;k<12;k+=1){const t=k/12;sample(p.x+(q.x-p.x)*t,p.y+(q.y-p.y)*t,p.agl+(q.agl-p.agl)*t);}
+    }
+    const l=w[w.length-1];if(l)sample(l.x,l.y,l.agl);
+    return commands.join(' ');
+  },[a]);
   const info=selected!==null&&!isLive?planes[selected]:null;
   return <div className="absolute inset-0"><svg ref={svgRef} data-traffic="private-pilot" data-live={isLive?'':undefined} viewBox={viewBox??`0 0 ${KLXL_OBLIQUE.width} ${KLXL_OBLIQUE.height}`} preserveAspectRatio="xMidYMid slice" className="traffic-callouts absolute inset-0 h-full w-full" role="group" aria-label={isLive?`Live ADS-B traffic near Little Falls: ${live.length} aircraft`:`Left traffic for runway ${a.runway} at Little Falls, pattern altitude ${(a.elevation+a.tpaAgl).toLocaleString("en-US")} feet MSL`}>
-    <polyline points={path} className="traffic-oblique-path" data-shown={patternShown&&!isLive?'':undefined} aria-hidden/>
+    <path d={path} className="traffic-oblique-path" data-shown={patternShown&&!isLive?'':undefined} aria-hidden/>
     <g className="traffic-sim">
       {planes.map((p,i)=><g key={`s-${p.reg}`} ref={el=>{shadowRefs.current[i]=el;}} className="pointer-events-none traffic-ground-shadow" aria-hidden><TrafficVector reg={p.reg} shadow/></g>)}
       {planes.map((p,i)=><g key={p.reg} data-aircraft={p.reg} ref={el=>{planeRefs.current[i]=el;}} className="pointer-events-none" aria-hidden><PlaneArt reg={p.reg} load={armed}/></g>)}
