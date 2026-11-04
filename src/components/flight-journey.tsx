@@ -265,8 +265,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const s = stages[active] ?? stages[0];
   if (!s) return null;
   return (
-    <section ref={sectionRef} data-journey-section="" id={id} aria-label={label} className="journey-section relative bg-ink text-background" style={{ height: `calc(${stages.length - 1 + JOURNEY_TAIL} * var(--journey-stage) + 100svh)`, "--journey-count": stages.length } as React.CSSProperties}>
-      <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className="journey-viewport sticky top-0 h-svh overflow-hidden">
+    <section ref={sectionRef} data-journey-section="" id={id} aria-label={label} className="journey-section relative bg-ink text-background" style={{ height: `calc(${stages.length - 1 + JOURNEY_TAIL} * var(--journey-stage) + 100dvh)`, "--journey-count": stages.length } as React.CSSProperties}>
+      <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className="journey-viewport sticky top-0 h-dvh overflow-hidden">
         {stages.map((st, i) => (
           <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="journey-layer absolute inset-0 bg-ink backface-hidden" data-active={i === active ? "" : undefined} style={{ zIndex: stages.length - i }}>
             <div className="journey-zoom absolute inset-0 origin-top-left">
