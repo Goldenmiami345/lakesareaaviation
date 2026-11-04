@@ -201,12 +201,13 @@ export function journeyAltitude(frame: { stage: number; next: number; transition
 }
 
 // ---- Glide timing ----
-export const GLIDE_MS_TOUCH = 650;
-export const GLIDE_MS_WHEEL = 700;
+export const GLIDE_MS_TOUCH = 700;
+export const GLIDE_MS_WHEEL = 800;
 export const GLIDE_MS_SHORT = 400;
 export const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+// A stage page is one viewport; only small edge corrections (< 1/3 viewport) use the short glide.
 export function glideDuration(distance: number, viewportHeight: number, touch: boolean) {
-  if (Math.abs(distance) <= viewportHeight) return GLIDE_MS_SHORT;
+  if (Math.abs(distance) < viewportHeight / 3) return GLIDE_MS_SHORT;
   return touch ? GLIDE_MS_TOUCH : GLIDE_MS_WHEEL;
 }
 // Scroll position at time `elapsed` of a glide: monotonic from `from` to `to`, exactly `to` at the end.
@@ -238,7 +239,8 @@ export function wheelDecision(s: WheelState, now: number, deltaY: number, canPag
 }
 
 // ---- Proximity snapping at section edges (after native momentum ends) ----
-export const SNAP_WINDOW_VH = 0.6;
+// Small window: only near-misses are finished, so visitors are never pulled into a section.
+export const SNAP_WINDOW_VH = 0.2;
 export const SNAP_MIN_DRAG = 40;
 export type SnapZone = { first: number; last: number; end: number };
 // Downward native scrolling that ends just short of a journey's first stage, or just short of the
