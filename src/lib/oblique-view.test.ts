@@ -37,7 +37,7 @@ describe("KLXL oblique camera", () => {
     assert.ok(air.y < ground.y);
   });
   test("obliqueProject returns the exact camera depth used for clipping at 150 metres", () => {
-    for (const [x, y, agl] of [[500, -616, 1000], [1200, 616, 1000]]) {
+    for (const [x, y, agl] of [[500, -616, 1000], [1200, 616, 1000]] as const) {
       const ground = patternToGround(x, y);
       const projected = projectGround(ground.e, ground.n, agl * FT);
       assert.equal(obliqueProject(x, y, agl).z, projected.z);
