@@ -64,7 +64,7 @@ export function TrafficPerspective({active,viewBox,wind=null,conditions}:{active
   const [demo,setDemo]=useState<LiveAircraft[]|null>(null);
   // Preview-only check hook: ?livedemo flies two sample real-world reports (one ours, one not).
   useEffect(()=>{if(!import.meta.env.DEV||!new URLSearchParams(location.search).has('livedemo'))return;const t=Date.now();
-    setDemo([{id:'N4383P',altFt:2100,kt:95,distNm:1.2,bearing:300,lat:45.9545,lon:-94.336,track:310,vs:0,t,hex:'a51c2d'},{id:'N512SR',callsign:'N512SR',type:'SR22',desc:'CIRRUS SR-22',altFt:1800,kt:120,distNm:1,bearing:200,lat:45.945,lon:-94.358,track:220,vs:500,t,hex:'a6b1f0',origin:'STC',destination:'BRD'}]);},[]);
+    setDemo([{id:'N4383P',altFt:2100,kt:95,distNm:1.2,bearing:300,lat:45.9545,lon:-94.336,track:310,vs:0,t,hex:'a51c2d'},{id:'N512SR',callsign:'N512SR',type:'SR22',desc:'CIRRUS SR-22',altFt:1700,kt:120,distNm:1,bearing:200,lat:45.9495,lon:-94.3525,track:220,vs:500,t,hex:'a6b1f0',origin:'STC',destination:'BRD'}]);},[]);
   const live=useMemo(()=>demo??patternTraffic(liveFields?.['KLXL'],ELEV),[liveFields,demo]);
   const isLive=active&&live.length>0;
   const {selected,selectedRef,open,hitProps}=useTrafficSelection(active&&!isLive);
