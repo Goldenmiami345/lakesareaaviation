@@ -233,7 +233,15 @@ function installController() {
   // Touch screens: native CSS scroll-snap (snap-stop: always) pages one stage per swipe in both
   // directions on the compositor; JS never blocks or glides touch scrolling.
   const coarse = window.matchMedia("(pointer: coarse)").matches;
-  if (coarse) root.classList.add("journey-snap");
+  if (coarse && !unlocked) root.classList.add("journey-snap");
+  // Track the scroll-up unlock: while unlocked, downward paging, snapping and the
+  // touch scroll-snap are all off, so scrolling down is plain native scrolling.
+  const syncUnlock = (dir: 1 | -1, y: number) => {
+    const next = pagingUnlock(unlocked, dir, y, lastJourneyEnd(journeyLayout()));
+    if (next === unlocked) return;
+    unlocked = next;
+    if (coarse) root.classList.toggle("journey-snap", !unlocked);
+  };
   // A target must be a later stage in the SAME fully pinned journey.
   const goDown = (touch = false) => {
     const target = downTarget(window.scrollY);
@@ -244,7 +252,7 @@ function installController() {
     syncMoveBlocker();
     return true;
   };
-  const goingUp = () => { if (!paging) requestMode("stack"); };
+  const goingUp = () => { syncUnlock(-1, window.scrollY); if (!paging) requestMode("stack"); };
 
   const onWheel = (e: WheelEvent) => {
     if ((e.target as Element | null)?.closest?.("[data-model-gesture]")) return;
@@ -348,14 +356,14 @@ function installController() {
     const y = window.scrollY;
     if (coarse) {
       // Touch backup for slow drags the browser's proximity snap leaves between stages.
-      if (reduce() || free() || zoomedIn()) return;
+      if (reduce() || free() || zoomedIn() || unlocked) return;
       const own = pinnedStages(journeyLayout(), y);
       if (!own) return;
       const near = own.reduce((a, b) => (Math.abs(b - y) < Math.abs(a - y) ? b : a), own[0] ?? y);
       if (Math.abs(near - y) > 2 && Math.abs(near - y) < window.innerHeight * 0.6) window.scrollTo({ top: near, behavior: "smooth" });
       return;
     }
-    if (reduce() || free() || zoomedIn() || lastDir < 0) return;
+    if (reduce() || free() || zoomedIn() || lastDir < 0 || unlocked) return;
     const target = snapTarget(journeyLayout().snap, y, seqStart, window.innerHeight);
     if (target === null) return;
     // The rest of the wheel gesture that produced this momentum must not page again.
@@ -370,12 +378,14 @@ function installController() {
     if (!paging && !touching && now - lastMoveAt > 300) seqStart = lastScrollY;
     lastMoveAt = now;
     lastScrollY = y;
+    if (!paging) syncUnlock(lastDir, y);
     if (paging) { seqStart = y; moving = false; return; }
     moving = true;
     scheduleSettle();
     syncMoveBlocker();
     const L = journeyLayout();
     if (coarse) { wantedMode = "fade"; setMode("fade"); return; }
+    if (unlocked) { wantedMode = "fade"; setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, y))); return; }
     if (lastDir < 0) { wantedMode = "stack"; setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, y))); return; }
     setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, y)));
   };
