@@ -27,7 +27,7 @@ export const KLXL_OBLIQUE = {
 export const KLXL_OBLIQUE_PATTERN: PatternAirport = {
   ident: "KLXL", elevation: 1123, tpaAgl: 1000, runway: "13", runwayFt: 4010, side: "left",
   threshold: { x: 0, y: 0 }, end: { x: 1000, y: 0 }, offset: 616, extension: 220,
-  aircraft: ["N6717A", "N8570B", "N4383P"],
+  aircraft: ["N8570B", "N4383P", "N46201"],
 };
 
 const r13 = KLXL_RUNWAYS["13"], r31 = KLXL_RUNWAYS["31"];
@@ -59,6 +59,19 @@ export function patternToGround(x: number, y: number) {
 const MID = projectGround(r13.e + U.e * LEN / 2, r13.n + U.n * LEN / 2);
 /** Picture px per foot at the runway midpoint (ground). */
 export const PX_PER_FT_MID = (c.f / MID.z) * FT;
+
+/** Ground point (m) to picture px with scale relative to the runway midpoint. */
+export function projectGroundScaled(e: number, n: number, h = 0) {
+  const p = projectGround(e, n, h);
+  return { x: p.x, y: p.y, scale: MID.z / p.z, z: p.z };
+}
+
+// Runway 13 end (FAA): 45°57.157'N 094°21.067'W — origin of the ground frame.
+export const KLXL_R13 = { lat: 45 + 57.157 / 60, lon: -(94 + 21.067 / 60) } as const;
+/** Latitude/longitude to ground metres east/north of the runway 13 end. */
+export function groundFromLatLon(lat: number, lon: number) {
+  return { e: (lon - KLXL_R13.lon) * 111_320 * Math.cos((KLXL_R13.lat * Math.PI) / 180), n: (lat - KLXL_R13.lat) * 110_540 };
+}
 
 /** Project a local pattern point at `aglFt` to picture px; scale is relative to the runway midpoint. */
 export function obliqueProject(x: number, y: number, aglFt = 0) {
