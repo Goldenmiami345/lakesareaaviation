@@ -27,8 +27,8 @@ describe("Private Pilot live traffic", () => {
   test("simulated pattern flies our three 3D-modelled airplanes", () => {
     assert.deepEqual([...KLXL_OBLIQUE_PATTERN.aircraft], ["N8570B", "N4383P", "N46201"]);
   });
-  test("target ring is always bigger than the airplane (1.6x span), min 7.5 px radius", () => {
-    assert.equal(ringRadius(4), 7.5);
+  test("target ring is always bigger than the airplane (1.6x span), min 11 px radius", () => {
+    assert.equal(ringRadius(4), 11);
     assert.equal(ringRadius(30), 24);
     assert.ok(ringRadius(30) * 2 > 30);
   });

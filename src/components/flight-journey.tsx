@@ -8,7 +8,7 @@ import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
 import { patternFor, pickRunway, type PatternField } from "../lib/traffic-pattern";
 import { useMetar } from "../lib/use-metar";
 import { useLiveTraffic } from "../lib/use-live-traffic";
-import { livePerformance, compass, type LiveAircraft } from "../lib/live-traffic";
+import { compass, type LiveAircraft } from "../lib/live-traffic";
 import { profileAirport, trafficConditions, NO_CONDITIONS, type Metar } from "../lib/wx-conditions";
 import { WX_FIELDS } from "../lib/wx-stations";
 import { MetarLine, InstrumentConditions } from "./live-wx";
@@ -722,16 +722,14 @@ function StageCopy({ s, wx, wxLoading }: { s: Stage; wx: Metar | null; wxLoading
 // Hybrid live-ops readout: real ADS-B traffic near the field when any is broadcasting, otherwise
 // the simulated school pattern is labelled as such; live density altitude/climb from METAR. Client-only data.
 function LiveOps({ ident, elevation, obs, traffic }: { ident: string; elevation: number; obs: Metar | null; traffic: Record<string, LiveAircraft[]> | null | undefined }) {
-  const perf = livePerformance(obs, elevation);
+  // Only real, currently-reporting aircraft are shown; no performance numbers, no "quiet" placeholder.
+  void obs; void elevation;
   const list = traffic?.[ident];
-  if (!perf && !list) return null;
   const near = list?.[0];
+  if (!near) return null;
   return (
     <div className="mt-1" data-live-ops>
-      {perf && <p>DA {perf.da.toLocaleString("en-US")} FT · Climb +{perf.fpm} FPM</p>}
-      {list && <p className="text-background" aria-live="polite">
-        {near ? <>Live · {near.id} {near.altFt.toLocaleString("en-US")} FT {near.distNm} NM {compass(near.bearing)}{list.length > 1 ? ` · +${list.length - 1}` : ""}</> : <span className="text-background/60">Live ADS-B · field quiet · sim pattern</span>}
-      </p>}
+      <p className="text-background" aria-live="polite">Live · {near.id} {near.altFt.toLocaleString("en-US")} FT {near.distNm} NM {compass(near.bearing)}{list.length > 1 ? ` · +${list.length - 1}` : ""}</p>
     </div>
   );
 }
