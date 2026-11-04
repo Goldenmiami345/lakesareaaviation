@@ -17,8 +17,7 @@ URL = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8080/"
 STOPS_JS = """() => [...document.querySelectorAll('[data-journey-section]')].map(sec => {
   const n = sec.querySelectorAll('.journey-layer').length, vh = sec.querySelector('.journey-viewport').offsetHeight;
   const base = scrollY + sec.getBoundingClientRect().top, total = sec.offsetHeight - vh;
-  const f = k => k <= 0 ? 0 : k >= n - 1 ? 1 : (k + 0.4) / n;
-  return { stops: [...Array(n)].map((_, k) => Math.round(base + total * f(k))), end: Math.round(base + sec.offsetHeight) };
+  return { stops: [...Array(n)].map((_, k) => Math.round(base + k * vh)), end: Math.round(base + sec.offsetHeight) };
 })"""
 
 REC_JS = """() => { window.__rec = []; let last = performance.now();

@@ -3,7 +3,7 @@ import { srcSetFor } from "@/lib/responsive-image";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Phone } from "lucide-react";
 import { Button } from "./ui/button";
-import { journeyFrame, journeyAltitude, journeyStop, glideAt, glideDuration, newWheelState, wheelDecision, snapTarget, type SnapZone, pinnedStepDown, stackProgress, stackOffset, touchJourneyFraction, isModeSwitchPoint, resolveMode, STOP_TOL, type JourneyMode, type PageSegment } from "../lib/journey-pacing";
+import { journeyFrame, journeyAltitude, glideAt, glideDuration, newWheelState, wheelDecision, snapTarget, type SnapZone, pinnedStepDown, stackProgress, stackOffset, touchJourneyFraction, isModeSwitchPoint, resolveMode, STOP_TOL, type JourneyMode, type PageSegment } from "../lib/journey-pacing";
 import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
 import { patternFor, pickRunway, type PatternField } from "../lib/traffic-pattern";
 import { useMetar } from "../lib/use-metar";
