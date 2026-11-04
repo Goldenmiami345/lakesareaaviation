@@ -13,10 +13,9 @@ for (const name of readdirSync(dir).filter((n) => n.endsWith('.glb')).sort()) {
   const len = buf.readUInt32LE(12);
   const gltf = JSON.parse(buf.subarray(20, 20 + len).toString('utf8'));
   const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
-  (gltf.accessors || []).forEach((a, i) => { if (!a.min || !a.max) errs.push(`accessor ${i} lacks min/max`); });
   (gltf.meshes || []).forEach((m, mi) => m.primitives.forEach((p, pi) => {
     const a = gltf.accessors[p.attributes.POSITION];
-    if (!a?.min || !a?.max) return;
+    if (!a?.min || !a?.max) { errs.push(`mesh ${mi} prim ${pi} POSITION accessor lacks min/max`); return; }
     for (let k = 0; k < 3; k++) {
       if (a.min[k] === a.max[k]) errs.push(`mesh ${mi} prim ${pi} POSITION collapsed on axis ${'xyz'[k]} (min ${a.min} max ${a.max})`);
       lo[k] = Math.min(lo[k], a.min[k]); hi[k] = Math.max(hi[k], a.max[k]);
