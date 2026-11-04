@@ -28,7 +28,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
         <img src={logoAsset.url} alt="Lakes Area Aviation" className={`h-10 w-auto max-w-[190px] object-contain sm:h-12 sm:max-w-[220px] ${overlay ? "brightness-0 invert" : ""}`} />
       </Link>
       <nav className="hidden items-center gap-7 lg:flex" aria-label="Main navigation">
-        {nav.map(([label, to]) => <Link key={to} to={to} className="link-underline text-xs font-semibold uppercase tracking-[0.12em] transition-colors hover:text-primary-text">{label}</Link>)}
+        {nav.map(([label, to]) => <Link key={to} to={to} className="link-underline inline-flex min-h-6 items-center after:bottom-0 text-xs font-semibold uppercase tracking-[0.12em] transition-colors hover:text-primary-text">{label}</Link>)}
         <Link to="/contact" className={`group inline-flex items-center gap-2 rounded-full border py-1.5 pl-4 pr-1.5 text-xs font-semibold tracking-[0.04em] backdrop-blur transition-all duration-300 hover:border-primary ${overlay ? "border-white/30 bg-white/10" : "border-border bg-background"}`}>Build my training plan<span className="grid size-7 place-items-center rounded-full bg-primary text-primary-foreground transition-transform duration-300 group-hover:rotate-45"><ArrowUpRight className="size-3.5" /></span></Link>
       </nav>
       <Dialog.Root open={open} onOpenChange={setOpen}>
