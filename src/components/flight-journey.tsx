@@ -228,6 +228,7 @@ function installController() {
     wantedMode = "fade";
     setMode("fade");
     runPath([{ y: target, instant: false }], touch);
+    syncMoveBlocker();
     return true;
   };
   const goingUp = () => { if (!paging) requestMode("stack"); };
@@ -269,6 +270,7 @@ function installController() {
     seqStart = window.scrollY;
     const t = e.touches[0];
     g = e.touches.length === 1 && t && !reduce() ? { x: t.clientX, y: t.clientY, decided: false, fired: false, eligible: downTarget(window.scrollY) !== null } : null;
+    syncMoveBlocker();
   };
   // Passive tracker: runs on every touchmove without ever blocking native scroll.
   const onTouchMove = (e: TouchEvent) => {
