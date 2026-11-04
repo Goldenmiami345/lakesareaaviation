@@ -36,7 +36,7 @@ test('camera radius contains the whole rotational envelope at fleet and traffic 
 test('viewer uses requested rotation and lighting', () => {
   assert.equal(MODEL_SETTINGS['auto-rotate-delay'], 0);
   assert.equal(MODEL_SETTINGS['rotation-per-second'], '9deg');
-  assert.equal(MODEL_SETTINGS['shadow-intensity'], 0.8);
+  assert.equal(MODEL_SETTINGS['shadow-intensity'], 1);
   assert.equal(MODEL_SETTINGS['shadow-softness'], 0.9);
   assert.equal(MODEL_SETTINGS.exposure, 1);
   assert.equal(MODEL_SETTINGS['environment-image'], 'neutral');
