@@ -7,12 +7,13 @@ import { placePatternLabel } from './traffic-ui';
 /** Pulse timing: fade in every 6–8 s (random), hold ~3 s, 600 ms fades (CSS). */
 export const PATTERN_PULSE = { minGapMs: 6000, maxGapMs: 8000, holdMs: 3000, fadeMs: 600 } as const;
 
-export function TrafficPath({airport,active,mode,paused=false}:{airport:PatternAirport;active:boolean;mode:Exclude<TrafficPatternMode,'off'>;paused?:boolean}) {
-  const path=useMemo(()=>trafficPath(airport),[airport]),ref=useRef<SVGGElement>(null);
+/** Shared pulse controller: fade in every 6–8 s (random), hold ~3 s, 600 ms CSS fades. */
+export function usePatternPulse(mode:TrafficPatternMode,active:boolean,paused=false){
   const [shown,setShown]=useState(mode==='always');
   useEffect(()=>{
     if(mode==='always'){setShown(true);return;}
     setShown(false);
+    if(mode!=='pulse')return;
     // Pulsing pauses while an info card is open; reduced motion never pulses.
     if(!active||paused||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
     let timer=0;
@@ -25,6 +26,11 @@ export function TrafficPath({airport,active,mode,paused=false}:{airport:PatternA
     cycle();
     return()=>window.clearTimeout(timer);
   },[mode,active,paused]);
+  return shown;
+}
+export function TrafficPath({airport,active,mode,paused=false}:{airport:PatternAirport;active:boolean;mode:Exclude<TrafficPatternMode,'off'>;paused?:boolean}) {
+  const path=useMemo(()=>trafficPath(airport),[airport]),ref=useRef<SVGGElement>(null);
+  const shown=usePatternPulse(mode,active,paused);
   useEffect(()=>{
     if(!active||!shown)return;
     let frame=0,last=0;
