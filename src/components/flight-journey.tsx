@@ -290,7 +290,7 @@ function installController() {
       g.decided = true;
       if (Math.abs(dx) > Math.abs(dy) || free()) { g = null; rejected = true; return; }
       // Upward drags are plain 1:1 native scrolling through stacked pages.
-      if (dy < 0) { goingUp(); g = null; rejected = true; return; }
+      if (dy < 0) { goingUp(); g = null; rejected = true; syncMoveBlocker(); return; }
     }
     if (!g.eligible) g.eligible = downTarget(window.scrollY) !== null;
   };
@@ -312,14 +312,14 @@ function installController() {
   };
   let moveBlocker = false;
   const syncMoveBlocker = () => {
-    const want = paging || (!reduce() && !free() && !zoomedIn() && downTarget(window.scrollY) !== null);
+    const want = paging || (!rejected && !reduce() && !free() && !zoomedIn() && downTarget(window.scrollY) !== null);
     if (want === moveBlocker) return;
     moveBlocker = want;
     if (want) window.addEventListener("touchmove", onTouchMoveBlock, { passive: false, capture: true });
     else window.removeEventListener("touchmove", onTouchMoveBlock, true);
   };
   const onTouchEnd = (e: TouchEvent) => {
-    if (e.touches.length === 0) { multi = false; touching = false; g = null; scheduleSettle(); syncMoveBlocker(); }
+    if (e.touches.length === 0) { multi = false; touching = false; g = null; rejected = false; scheduleSettle(); syncMoveBlocker(); }
   };
 
   // Proximity snap once native scrolling has come to rest (scrollend or 120ms without scroll).

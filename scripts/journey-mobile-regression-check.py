@@ -42,6 +42,8 @@ async def main():
             await swipe(-100)
             after = await page.evaluate('scrollY')
             assert after<before, 'upward swipe blocked'
+            offset = await page.locator('#airports .journey-layer').last.evaluate('l=>new DOMMatrixReadOnly(getComputedStyle(l).transform).m42') if await page.locator('#airports').count() else await page.locator('[data-journey-section]').last.locator('.journey-layer').last.evaluate('l=>new DOMMatrixReadOnly(getComputedStyle(l).transform).m42')
+            assert abs(offset-(before-after))<=1, f'upward image drag: {offset}px image for {before-after}px native scroll'
             await page.wait_for_timeout(600)
             assert await page.evaluate('scrollY')==after, 'upward scroll forced a settle'
             print(f'{width}x{height}: {checked}/7 single-swipe transitions; no photo-edge parallax; native upward scroll {before}->{after}')
