@@ -14,7 +14,7 @@ export const OBLIQUE_SPRITES: Record<string, { url: string; span: number }> = {
   N46201: { url: cardinal.url, span: 0.9573 },
 };
 /** On-screen boost over literal scale so the airplanes read at a glance (owner: "much bigger"). */
-export const OBLIQUE_PLANE_BOOST = 2.4;
+export const OBLIQUE_PLANE_BOOST = 3;
 
 /** Atlas frame for an airplane flying `trackDeg` (true) seen along `viewBearingDeg` (camera → airplane). */
 export function spriteFrame(trackDeg: number, viewBearingDeg: number) {
