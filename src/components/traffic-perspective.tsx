@@ -64,7 +64,7 @@ export function TrafficPerspective({active,viewBox,wind=null,conditions}:{active
   const [demo,setDemo]=useState<LiveAircraft[]|null>(null);
   // Preview-only check hook: ?livedemo flies two sample real-world reports (one ours, one not).
   useEffect(()=>{if(!import.meta.env.DEV||!new URLSearchParams(location.search).has('livedemo'))return;const t=Date.now();
-    setDemo([{id:'N4383P',altFt:2100,kt:95,distNm:1.2,bearing:300,lat:45.962,lon:-94.362,track:130,vs:-300,t,hex:'a51c2d'},{id:'N512SR',callsign:'N512SR',type:'SR22',desc:'CIRRUS SR-22',altFt:2600,kt:140,distNm:2,bearing:200,lat:45.968,lon:-94.335,track:220,vs:500,t,hex:'a6b1f0',origin:'STC',destination:'BRD'}]);},[]);
+    setDemo([{id:'N4383P',altFt:2100,kt:95,distNm:1.2,bearing:300,lat:45.9545,lon:-94.336,track:310,vs:0,t,hex:'a51c2d'},{id:'N512SR',callsign:'N512SR',type:'SR22',desc:'CIRRUS SR-22',altFt:1800,kt:120,distNm:1,bearing:200,lat:45.945,lon:-94.358,track:220,vs:500,t,hex:'a6b1f0',origin:'STC',destination:'BRD'}]);},[]);
   const live=useMemo(()=>demo??patternTraffic(liveFields?.['KLXL'],ELEV),[liveFields,demo]);
   const isLive=active&&live.length>0;
   const {selected,selectedRef,open,hitProps}=useTrafficSelection(active&&!isLive);
@@ -89,7 +89,7 @@ export function TrafficPerspective({active,viewBox,wind=null,conditions}:{active
     </g>
     {isLive&&<LivePlanes list={live} svgRef={svgRef}/>}
   </svg>
-  {isLive&&<p className="traffic-live-chip pointer-events-none absolute left-5 top-[4.6rem] z-20 font-mono text-[12px] uppercase tracking-[0.2em] sm:left-[max(var(--gutter),calc((100%-1720px)/2))]"><span aria-hidden className="traffic-live-dot"/>Live · ADS-B</p>}
+  {isLive&&<LiveChip svgRef={svgRef}/>}
   {info&&<TrafficCard key={info.reg} ref={cardRef} plane={info} runway={a.runway} onOpen={()=>open(info.reg)}/>}</div>;
 }
 
@@ -167,3 +167,11 @@ const LiveCard=({a,ref}:{a:LiveAircraft;ref:React.RefObject<HTMLDivElement|null>
       :<a href={trackerUrl(a)} target="_blank" rel="noopener noreferrer" className="mt-1 flex min-h-11 w-full items-center text-xs font-bold uppercase tracking-[0.16em] text-[color:var(--radar)]">Track on ADSB.lol ↗</a>}
   </div>,document.body);
 };
+
+/** Subtle "LIVE" tag at the top left, just above the stage HUD (portalled so the photo shade never dims it). */
+function LiveChip({svgRef}:{svgRef:React.RefObject<SVGSVGElement|null>}){
+  const [host,setHost]=useState<Element|null>(null);
+  useEffect(()=>{setHost(svgRef.current?.closest('section')?.querySelector('.journey-hud')??null);},[svgRef]);
+  if(!host)return null;
+  return createPortal(<p className="traffic-live-chip pointer-events-none absolute -top-6 left-0 whitespace-nowrap font-mono text-[12px] uppercase tracking-[0.2em]"><span aria-hidden className="traffic-live-dot"/>Live · ADS-B</p>,host);
+}
