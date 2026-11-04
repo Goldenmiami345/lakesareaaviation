@@ -34,7 +34,7 @@ async def main():
                     # A touch at the right side used to translate the top photo left,
                     # revealing the next fully opaque photo behind it at rest.
                     visible = await page.locator('.journey-layer').evaluate_all('ls=>ls.filter(l=>l.style.visibility==="visible"&&+l.style.opacity>0).map(l=>({opacity:+l.style.opacity, transform:l.style.transform}))')
-                    assert all(v['opacity']==1 and v['transform'].startswith('translate3d(0.00px, 0.00px') for v in visible), visible
+                    assert all(v['opacity']==1 and v['transform'].startswith('translate3d(0px, 0px') for v in visible), visible
                     checked += 1
                     if target==stops[1]:
                         await page.screenshot(path=str(output/f'private-pilot-{width}.png'))
