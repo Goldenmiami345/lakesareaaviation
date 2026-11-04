@@ -3,9 +3,11 @@ import { CALL_DURATION_MS, MAX_CALLS } from '../lib/traffic-flight';
 import { TrafficSchedule, legOf, type Leg } from '../lib/traffic-sequence';
 import { positionReport, type PatternAirport, type PatternSample, type Wind } from '../lib/traffic-pattern';
 import type { TrafficConditions } from '../lib/wx-conditions';
-import { fitTagSide, tagSideHolds, tagBounds, setTagPosition, placeCard, radarAltitude, writeCard } from './traffic-ui';
+import { setTagRing, ringRadius, fitTagSide, tagSideHolds, tagBounds, setTagPosition, placeCard, radarAltitude, writeCard } from './traffic-ui';
 
-type Projection = {x:number;y:number;transform:string;shadow:string;lift:number};
+type Projection = {x:number;y:number;transform:string;shadow:string;lift:number;
+  /** Optional per-frame hook (e.g. pick a sprite heading frame) and on-screen span in SVG units for the ring. */
+  apply?:(plane:SVGGElement)=>void; span?:number};
 type Options = {
   active:boolean; airport:PatternAirport; wind:Wind|null; runwayHeading:number;
   regs:readonly string[]; svgRef:RefObject<SVGSVGElement|null>;
@@ -40,6 +42,7 @@ export function useTrafficAnimation(o:Options) {
         if(!state)return;const {s,p}=state;
         const plane=planeRefs.current[i];
         plane?.setAttribute('transform',p.transform);
+        if(plane&&p.apply)p.apply(plane);
         if(schedule.approach){const v=String(schedule.visibility(i,secs));plane?.setAttribute('opacity',v);tagRefs.current[i]?.setAttribute('opacity',v);}
         plane?.setAttribute('data-ground-speed',String(s.knots));plane?.setAttribute('data-msl',String(s.msl));plane?.setAttribute('data-phase',s.phase);
         // Verification hook: data-leg changes only when the leg does, not per frame.
@@ -49,6 +52,7 @@ export function useTrafficAnimation(o:Options) {
         const tag=tagRefs.current[i];setTagPosition(tag,m,p.x,p.y);
         if(m&&tag){
           const current=screen(p,m),k=Math.hypot(m.a,m.b)||1;
+          if(p.span!==undefined)setTagRing(tag,ringRadius(p.span*k));
           tag.querySelectorAll('.traffic-history circle').forEach((dot,j)=>{
             const old=sample(i,secs-(j+1)*1.2);if(!old)return;const q=project(old,regs[i]??'');
             dot.setAttribute('cx',String((q.x-p.x)*k));dot.setAttribute('cy',String((q.y-p.y)*k));

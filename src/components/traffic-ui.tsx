@@ -169,25 +169,18 @@ export function writeCard(card: HTMLElement | null, s: { msl: number; agl: numbe
  * Radar-style data tag drawn in screen pixels (the parent applies scale(1/k)).
  * Includes an invisible 44 px tap target and a staggered return-refresh ring.
  */
-export function RadarTag({ reg, index, seed, label, tabIndex, hit, tagRef, textRef, compact = false }: {
-  reg: string; index: number; seed: number; label: string; tabIndex: number; compact?: boolean;
-  hit: ReturnType<ReturnType<typeof useTrafficSelection>["hitProps"]>;
+export function RadarTag({ reg, index, seed, label, tabIndex, hit, tagRef, textRef }: {
+  reg: string; index: number; seed: number; label: string; tabIndex: number;
+  hit: Partial<ReturnType<ReturnType<typeof useTrafficSelection>["hitProps"]>> & { onClick?: () => void; onKeyDown?: (e: React.KeyboardEvent) => void };
   tagRef: (el: SVGGElement | null) => void; textRef: (el: SVGTextElement | null) => void;
 }) {
   void index; void seed;
   return (
     <g ref={tagRef} className="traffic-tag">
       <g className="traffic-history">{[0,1,2,3].map(i=><circle key={i} r={1.75} opacity={.28-i*.055}/>)}</g>
-      {compact ? <>
-        {/* Minimal digital target: small square brackets, sized for distant oblique-view airplanes. */}
-        <path d="M-4 -2V-4H-2M2 -4H4V-2M4 2V4H2M-2 4H-4V2" className="traffic-target-halo" />
-        <path d="M-4 -2V-4H-2M2 -4H4V-2M4 2V4H2M-2 4H-4V2" className="traffic-target traffic-target-compact" />
-        <rect x={-4} y={-4} width={8} height={8} className="traffic-ping" />
-      </> : <>
       <circle r={7.5} className="traffic-target-halo" />
       <circle r={7.5} className="traffic-target" />
       <circle r={7.5} className="traffic-ping" />
-      </>}
       <line x1={5} y1={-5} x2={15} y2={-15} className="traffic-leader" />
       <rect x={14} y={-39} width={60} height={30} rx={2} className="traffic-pill" />
       <text ref={textRef} x={20} y={-27} className="traffic-label"><tspan className="traffic-call-title">{reg}</tspan><tspan className="traffic-call-data" x={20} dy={12}/></text>
@@ -298,4 +291,15 @@ export function setTagPosition(g: SVGGElement | null | undefined, m: DOMMatrix |
   let ux = x, uy = y;
   if (m && m.a) { ux = (Math.round(m.a * x + m.e) - m.e) / m.a; uy = (Math.round(m.d * y + m.f) - m.f) / m.d; }
   g.setAttribute("transform", `translate(${ux.toFixed(3)} ${uy.toFixed(3)}) scale(${(1 / k).toFixed(4)})`);
+}
+
+/** Ring radius in screen px: always about 1.6x the airplane's on-screen wingspan, never under 7.5 px. */
+export const ringRadius = (spanScreenPx: number) => Math.max(7.5, spanScreenPx * 0.8);
+/** Resize a tag's target ring (screen px); skips sub-quarter-pixel changes. */
+export function setTagRing(g: SVGGElement | null | undefined, r: number) {
+  if (!g) return;
+  const st = g as SVGGElement & { __ring?: number };
+  if (st.__ring !== undefined && Math.abs(st.__ring - r) < 0.25) return;
+  st.__ring = r;
+  g.querySelectorAll(':scope > circle.traffic-target, :scope > circle.traffic-target-halo, :scope > circle.traffic-ping').forEach(c => c.setAttribute('r', r.toFixed(1)));
 }
