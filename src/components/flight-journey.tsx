@@ -8,7 +8,7 @@ import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
 import { patternFor, pickRunway, type PatternField } from "../lib/traffic-pattern";
 import { useMetar } from "../lib/use-metar";
 import { useLiveTraffic } from "../lib/use-live-traffic";
-import { livePerformance, compass, type LiveAircraft } from "../lib/live-traffic";
+import { compass, type LiveAircraft } from "../lib/live-traffic";
 import { profileAirport, trafficConditions, NO_CONDITIONS, type Metar } from "../lib/wx-conditions";
 import { WX_FIELDS } from "../lib/wx-stations";
 import { MetarLine, InstrumentConditions } from "./live-wx";
