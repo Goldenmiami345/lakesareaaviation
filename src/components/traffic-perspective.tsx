@@ -65,7 +65,7 @@ export function TrafficPerspective({active,viewBox,wind=null,conditions}:{active
   // Preview-only check hook: ?livedemo flies two sample real-world reports (one ours, one not).
   useEffect(()=>{if(!import.meta.env.DEV||!new URLSearchParams(location.search).has('livedemo'))return;const t=Date.now();
     setDemo([{id:'N4383P',altFt:2100,kt:95,distNm:1.2,bearing:300,lat:45.962,lon:-94.362,track:130,vs:-300,t,hex:'a51c2d'},{id:'N512SR',callsign:'N512SR',type:'SR22',desc:'CIRRUS SR-22',altFt:2600,kt:140,distNm:2,bearing:200,lat:45.94,lon:-94.37,track:40,vs:500,t,hex:'a6b1f0',origin:'STC',destination:'BRD'}]);},[]);
-  const live=useMemo(()=>demo??patternTraffic(liveFields?.KLXL,ELEV),[liveFields,demo]);
+  const live=useMemo(()=>demo??patternTraffic(liveFields?.['KLXL'],ELEV),[liveFields,demo]);
   const isLive=active&&live.length>0;
   const {selected,selectedRef,open,hitProps}=useTrafficSelection(active&&!isLive);
   const patternMode=useTrafficPatternMode();

@@ -21,7 +21,7 @@ async function addRoutes(list: LiveAircraft[]) {
       }
     } catch { /* routes are optional */ }
   }
-  for (const a of list) { const r = a.callsign ? routes.get(a.callsign) : undefined; if (r?.origin) { a.origin = r.origin; a.destination = r.destination; } }
+  for (const a of list) { const r = a.callsign ? routes.get(a.callsign) : undefined; if (r?.origin && r.destination) { a.origin = r.origin; a.destination = r.destination; } }
 }
 let cache: { at: number; body: string } | null = null;
 

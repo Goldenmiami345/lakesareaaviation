@@ -7,7 +7,7 @@ import { setTagRing, ringRadius, fitTagSide, tagSideHolds, tagBounds, setTagPosi
 
 type Projection = {x:number;y:number;transform:string;shadow:string;lift:number;
   /** Optional per-frame hook (e.g. pick a sprite heading frame) and on-screen span in SVG units for the ring. */
-  apply?:(plane:SVGGElement)=>void; span?:number};
+  apply?:((plane:SVGGElement)=>void)|undefined; span?:number};
 type Options = {
   active:boolean; airport:PatternAirport; wind:Wind|null; runwayHeading:number;
   regs:readonly string[]; svgRef:RefObject<SVGSVGElement|null>;
