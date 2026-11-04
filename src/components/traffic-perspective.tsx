@@ -6,6 +6,8 @@ import { airportTraffic } from '../lib/site-data';
 import { KLXL_OBLIQUE, KLXL_OBLIQUE_PATTERN, PX_PER_FT_MID, obliqueProject } from '../lib/oblique-view';
 import { trafficSpanFeet, trafficModelScale, TrafficVector } from './traffic-vector';
 import { useTrafficAnimation } from './use-traffic-animation';
+import { usePatternPulse } from './traffic-path';
+import { useTrafficPatternMode } from '../lib/use-site-settings';
 import { profileAirport, type TrafficConditions } from '../lib/wx-conditions';
 const OFFSETS=[.08,.68,.95] as const;
 export function TrafficPerspective({active,viewBox,wind=null,conditions}:{active:boolean;viewBox?:string;wind?:Wind|null;conditions?:TrafficConditions}){
@@ -18,6 +20,9 @@ export function TrafficPerspective({active,viewBox,wind=null,conditions}:{active
   const a=useMemo(()=>profileAirport(patternFor({...airportTraffic.KLXL,...KLXL_OBLIQUE_PATTERN},rwy),'vfr'),[rwy]);
   const svgRef=useRef<SVGSVGElement>(null),planeRefs=useRef<(SVGGElement|null)[]>([]),shadowRefs=useRef<(SVGGElement|null)[]>([]),tagRefs=useRef<(SVGGElement|null)[]>([]),textRefs=useRef<(SVGTextElement|null)[]>([]),cardRef=useRef<HTMLDivElement>(null);
   const {selected,selectedRef,open,hitProps}=useTrafficSelection(active);
+  // Pattern line pulses briefly, like the airport-map drawn pattern; pauses while a card is open.
+  const patternMode=useTrafficPatternMode();
+  const patternShown=usePatternPulse(patternMode,active,selected!==null);
   usePreloadCardPhotos(a.aircraft,active);
   const planes=useMemo(()=>a.aircraft.map(reg=>{const f=fleet.find(x=>x.registration===reg);return {reg,type:f?.name??'Training aircraft',nickname:f?.nickname??''};}),[a]);
   const project=useCallback((s:PatternSample,reg:string)=>{
@@ -42,7 +47,7 @@ export function TrafficPerspective({active,viewBox,wind=null,conditions}:{active
   const path=useMemo(()=>{const w=patternWaypoints(a);const pts:string[]=[];for(let i=0;i<w.length-1;i+=1){const p=w[i]!,q=w[i+1]!;for(let k=0;k<12;k+=1){const t=k/12,o=obliqueProject(p.x+(q.x-p.x)*t,p.y+(q.y-p.y)*t,p.agl+(q.agl-p.agl)*t);pts.push(`${o.x.toFixed(1)},${o.y.toFixed(1)}`);}}const l=w[w.length-1]!,o=obliqueProject(l.x,l.y,l.agl);pts.push(`${o.x.toFixed(1)},${o.y.toFixed(1)}`);return pts.join(' ');},[a]);
   const info=selected!==null?planes[selected]:null;
   return <div className="absolute inset-0"><svg ref={svgRef} data-traffic="private-pilot" viewBox={viewBox??`0 0 ${KLXL_OBLIQUE.width} ${KLXL_OBLIQUE.height}`} preserveAspectRatio="xMidYMid slice" className="traffic-callouts absolute inset-0 h-full w-full" role="group" aria-label={`Live left traffic for runway ${a.runway} at Little Falls, pattern altitude ${(a.elevation+a.tpaAgl).toLocaleString("en-US")} feet MSL`}>
-    <polyline points={path} className="traffic-oblique-path" aria-hidden/>
+    <polyline points={path} className="traffic-oblique-path" data-shown={patternShown?'':undefined} aria-hidden/>
     {planes.map((p,i)=><g key={`s-${p.reg}`} ref={el=>{shadowRefs.current[i]=el;}} className="pointer-events-none traffic-ground-shadow" aria-hidden><TrafficVector reg={p.reg} shadow/></g>)}
     {planes.map((p,i)=><g key={p.reg} data-aircraft={p.reg} ref={el=>{planeRefs.current[i]=el;}} className="pointer-events-none" aria-hidden><TrafficVector reg={p.reg}/></g>)}
     {active&&planes.map((p,i)=><RadarTag key={`t-${p.reg}`} reg={p.reg} index={i} seed={0} label={`${p.reg}, ${p.type}. Show details`} tabIndex={0} compact hit={hitProps(i,p.reg)} tagRef={el=>{tagRefs.current[i]=el;}} textRef={el=>{textRefs.current[i]=el;}}/>)}
