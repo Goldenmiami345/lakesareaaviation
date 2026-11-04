@@ -25,6 +25,7 @@
 }
 
 :root {
+  --journey-stage: 100svh;
   --background: oklch(0.975 0.012 75);
   --foreground: oklch(0.19 0.012 55);
   --ink: oklch(0.17 0.035 258);
@@ -180,7 +181,6 @@ html.first-view .page-enter { animation: none; }
 .journey-copy, .journey-layer { will-change: opacity, transform; }
 /* Phones: shorter image box shows more of each scene; overlays inside the layer stay aligned. */
 @media (max-width: 639px) { .journey-layer { bottom: 14%; mask-image: linear-gradient(to bottom, #000 82%, transparent); -webkit-mask-image: linear-gradient(to bottom, #000 82%, transparent); } }
-@media (max-width: 639px) { .journey-layer[data-stack] { bottom: 0; mask-image: none; -webkit-mask-image: none; } }
 .journey-grain { background-image: url("./assets/journey/grain-tile.png"); background-size: 96px 96px; } /* pre-rendered low-alpha tile, no blend mode: cheap to composite */
 @media (prefers-reduced-motion: reduce) { .journey-copy > * { animation: none; } }
 
@@ -193,7 +193,6 @@ html.first-view .page-enter { animation: none; }
 @media (prefers-reduced-motion: reduce) { .tap-scroll-dot { animation: none; opacity: .7; } }
 @media (prefers-reduced-motion: reduce) { .landing-scroll-stroke { animation: none; opacity: .7; transform: none; } }
 
-html.journey-free.journey-snap, html.journey-zoomed.journey-snap { scroll-snap-type: none !important; }
 
 /* Airport traffic pattern overlay */
 .traffic-path { stroke: color-mix(in oklab, var(--primary-foreground) 55%, transparent); }
@@ -264,7 +263,6 @@ html.journey-free.journey-snap, html.journey-zoomed.journey-snap { scroll-snap-t
 @media (prefers-reduced-motion: reduce) { .traffic-history, .traffic-pill, .traffic-label, .traffic-leader { display:none; } .traffic-tag.is-pinging .traffic-ping { animation:none; } }
 .traffic-tag circle:focus { outline: none; }
 .traffic-tag circle:focus-visible { outline: none; stroke: var(--radar); stroke-opacity: .6; stroke-width: 1; }
-/* Glides block native scrolling with non-passive wheel/touchmove preventDefault; overflow is never toggled. */
 
 /* In-stage zoom: the stage owns pinch/double-tap (no browser page zoom); while zoomed, one finger pans. */
 .journey-viewport { touch-action: pan-y; }
@@ -355,8 +353,4 @@ html.hero-enter .hero-mask > span { animation: hero-mask-in .55s var(--d, 0ms) c
 @keyframes traffic-live-dot { 0% { box-shadow:0 0 0 0 color-mix(in oklab, #E5484D 55%, transparent); } 70%,100% { box-shadow:0 0 0 6px transparent; } }
 @media (prefers-reduced-motion: reduce) { .traffic-live-dot { animation:none; } }
 
-/* Touch: native one-swipe-one-stage paging in both directions (compositor-driven, no JS glide). */
-html.journey-snap { scroll-snap-type: y proximity; }
-html.journey-snap .journey-stop-page { height: 100svh; width: 1px; scroll-snap-align: start; scroll-snap-stop: always; }
-html.journey-snap .journey-section { scroll-snap-align: none; }
-@media (prefers-reduced-motion: reduce) { html.journey-snap { scroll-snap-type: none; } }
+@media (pointer: fine) and (min-width: 1024px) { :root { --journey-stage: 75vh; } }

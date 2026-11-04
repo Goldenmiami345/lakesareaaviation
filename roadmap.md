@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Round L: replace paging with the supplied scroll engine and 18 tests; remove snap/controller/scripts, keep zoom fast-path, fix oblique projection, verify touch/desktop and automatic build gates.
+
 - [x] Journeys: one screen of scroll per stage on desktop too (one upward swipe ≈ one stage), softer 700/800ms glides, no forced pull between sections, no photo jump when scrolling up; 155 tests, 21/21 smoothness transitions and phone checks pass.
 
 - [x] Remove touchscreen upward stack drag with compact phone stages; measured 100px scroll now moves imagery 100px instead of 42px, 21/21 downward swipes and 154 tests pass.
