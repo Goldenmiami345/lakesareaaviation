@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef } from 'react';
 import { RadarTag, TrafficCard, useTrafficSelection, usePreloadCardPhotos } from './traffic-ui';
 import { fleet } from '../lib/site-data';
 import { type PatternSample, type Wind, pickRunway, patternFor } from '../lib/traffic-pattern';
-import { trafficAirports } from '../lib/site-data';
+import { airportTraffic } from '../lib/site-data';
 import { KLXL_OBLIQUE, KLXL_OBLIQUE_PATTERN, PX_PER_FT_MID, obliqueProject } from '../lib/oblique-view';
 import { trafficSpanFeet, trafficModelScale, TrafficVector } from './traffic-vector';
 import { useTrafficAnimation } from './use-traffic-animation';
@@ -11,8 +11,8 @@ const OFFSETS=[.08,.68,.95] as const;
 export function TrafficPerspective({active,viewBox,wind=null,conditions}:{active:boolean;viewBox?:string;wind?:Wind|null;conditions?:TrafficConditions}){
   const mode=conditions?.mode??'vfr';
   // Same live-wind runway choice as the aerial view; local space swaps ends for 31.
-  const rwy=useMemo(()=>pickRunway(trafficAirports.KLXL,wind?{dir:wind.dir,kt:wind.kt}:null),[wind]);
-  const a=useMemo(()=>profileAirport(patternFor({...trafficAirports.KLXL,...KLXL_OBLIQUE_PATTERN},rwy),mode),[mode,rwy]);
+  const rwy=useMemo(()=>pickRunway(airportTraffic.KLXL,wind?{dir:wind.dir,kt:wind.kt}:null),[wind]);
+  const a=useMemo(()=>profileAirport(patternFor({...airportTraffic.KLXL,...KLXL_OBLIQUE_PATTERN},rwy),mode),[mode,rwy]);
   const svgRef=useRef<SVGSVGElement>(null),planeRefs=useRef<(SVGGElement|null)[]>([]),shadowRefs=useRef<(SVGGElement|null)[]>([]),tagRefs=useRef<(SVGGElement|null)[]>([]),textRefs=useRef<(SVGTextElement|null)[]>([]),cardRef=useRef<HTMLDivElement>(null);
   const {selected,selectedRef,open,hitProps}=useTrafficSelection(active);
   usePreloadCardPhotos(a.aircraft,active);
