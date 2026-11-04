@@ -180,6 +180,7 @@ html.first-view .page-enter { animation: none; }
 .journey-copy, .journey-layer { will-change: opacity, transform; }
 /* Phones: shorter image box shows more of each scene; overlays inside the layer stay aligned. */
 @media (max-width: 639px) { .journey-layer { bottom: 14%; mask-image: linear-gradient(to bottom, #000 82%, transparent); -webkit-mask-image: linear-gradient(to bottom, #000 82%, transparent); } }
+@media (max-width: 639px) { .journey-layer[data-stack] { bottom: 0; mask-image: none; -webkit-mask-image: none; } }
 .journey-grain { background-image: url("./assets/journey/grain-tile.png"); background-size: 96px 96px; } /* pre-rendered low-alpha tile, no blend mode: cheap to composite */
 @media (prefers-reduced-motion: reduce) { .journey-copy > * { animation: none; } }
 
