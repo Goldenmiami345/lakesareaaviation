@@ -1,5 +1,6 @@
 # Traffic component rules
 
+- The Private Pilot oblique view (traffic-perspective.tsx) always flies the full VFR pattern: live weather only picks the runway, climb rate, gust jitter and night dimming there — it must never close the pattern or swap in a single straight-in aircraft (owner request, 2026-11-04).
 - Journey touch direction is decided by the conditional capture-phase blocker before native scroll commits; coarse pointers never apply photo parallax, and settled stages hide the next layer to prevent edge slivers.
 - Phone journeys have one native viewport per stage; touchJourneyFraction maps compact scroll offsets to shared fade stops so upward stacks move 1:1 without changing desktop pacing or downward paging.
 
