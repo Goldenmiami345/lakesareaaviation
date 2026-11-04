@@ -315,7 +315,7 @@ function installController() {
     else window.removeEventListener("touchmove", onTouchMoveBlock);
   };
   const onTouchEnd = (e: TouchEvent) => {
-    if (e.touches.length === 0) { multi = false; touching = false; g = null; scheduleSettle(); }
+    if (e.touches.length === 0) { multi = false; touching = false; g = null; scheduleSettle(); syncMoveBlocker(); }
   };
 
   // Proximity snap once native scrolling has come to rest (scrollend or 120ms without scroll).
@@ -347,6 +347,7 @@ function installController() {
     if (paging) { seqStart = y; moving = false; return; }
     moving = true;
     scheduleSettle();
+    syncMoveBlocker();
     const L = journeyLayout();
     if (lastDir < 0) { wantedMode = "stack"; setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, y))); return; }
     setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, y)));
