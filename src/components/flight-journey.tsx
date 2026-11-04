@@ -418,6 +418,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let mx = 0, my = 0, frame = 0, last = -1;
     const fine = window.matchMedia("(pointer: fine)").matches;
+    const phone = window.matchMedia(PHONE_MQ).matches;
     const n = stages.length;
     // Geometry is cached (document offset of the section, pinned length, viewport height) and
     // recomputed only on resize, so a frame never reads layout.
@@ -434,7 +435,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       if (!g0) return;
       const viewportHeight = g0.vh, total = g0.total;
       const rect = { top: g0.base - window.scrollY };
-      const fractionAt = (y: number) => window.matchMedia(PHONE_MQ).matches ? touchJourneyFraction((y - g0.base) / viewportHeight, n) : (y - g0.base) / total;
+      const fractionAt = (y: number) => phone ? touchJourneyFraction((y - g0.base) / viewportHeight, n) : (y - g0.base) / total;
       const scrolled = journeyFrame(fractionAt(window.scrollY), n);
       // Paged glide inside this journey: blend over the glide's whole eased progress. Endpoints are
       // stops (transition 0), so this agrees exactly with the scroll mapping when the glide lands.
@@ -583,7 +584,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   return (
     <section ref={sectionRef} data-journey-section="" id={id} aria-label={label} className="journey-section relative bg-ink text-background" style={{ height: `${stages.length * JOURNEY_STAGE_SVH + 100}svh`, "--journey-count": stages.length } as React.CSSProperties}>
       {stages.map((st, i) => (
-        <div key={`stop-${st.code}`} aria-hidden className="journey-stop journey-stop-page pointer-events-none absolute left-0 h-px w-px" style={{ top: `${journeyStop(i, stages.length) * stages.length * JOURNEY_STAGE_SVH}svh` }} />
+        <div key={`stop-${st.code}`} aria-hidden className="journey-stop journey-stop-page pointer-events-none absolute left-0 h-px w-px" style={{ top: `${journeyStop(i, stages.length) * stages.length * JOURNEY_STAGE_SVH}svh`, "--phone-stop": `${i * 100}svh` } as React.CSSProperties} />
       ))}
       <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className="journey-viewport sticky top-0 h-svh overflow-hidden">
         {stages.map((st, i) => (
