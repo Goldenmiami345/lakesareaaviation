@@ -201,6 +201,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     render();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("scrollend", onScrollEnd);
+    window.addEventListener("wheel", onInput, { passive: true });
+    window.addEventListener("keydown", onInput, { passive: true });
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchend", onTouchEnd, { passive: true });
     window.addEventListener("touchcancel", onTouchEnd, { passive: true });
@@ -213,6 +215,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       ro.disconnect();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("scrollend", onScrollEnd);
+      window.removeEventListener("wheel", onInput);
+      window.removeEventListener("keydown", onInput);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchend", onTouchEnd);
       window.removeEventListener("touchcancel", onTouchEnd);
