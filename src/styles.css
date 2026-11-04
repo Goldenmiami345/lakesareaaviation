@@ -178,6 +178,7 @@ html.first-view .page-enter { animation: none; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
 /* Flight journey (zoom-scroll) */
 .journey-copy, .journey-layer { will-change: opacity, transform; }
+@media (max-width: 639px) { .journey-section { height: calc(var(--journey-count) * 100svh) !important; } }
 /* Phones: shorter image box shows more of each scene; overlays inside the layer stay aligned. */
 @media (max-width: 639px) { .journey-layer { bottom: 14%; mask-image: linear-gradient(to bottom, #000 82%, transparent); -webkit-mask-image: linear-gradient(to bottom, #000 82%, transparent); } }
 .journey-grain { background-image: url("./assets/journey/grain-tile.png"); background-size: 96px 96px; } /* pre-rendered low-alpha tile, no blend mode: cheap to composite */
