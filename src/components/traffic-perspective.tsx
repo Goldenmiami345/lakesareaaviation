@@ -39,7 +39,7 @@ function pose(e:number,n:number,hM:number,track:number,reg:string){
     transform=`translate(${air.x} ${air.y}) scale(${span/(sprite.span*SPRITE_FRAME)})`;
     apply=(plane)=>{const s=plane.querySelector('svg[data-sprite]') as (SVGSVGElement&{__k?:number})|null;if(s&&s.__k!==k){s.__k=k;s.setAttribute('viewBox',frameViewBox(k));}};
   }
-  return {x:air.x,y:air.y,span,transform,shadow:matrix(0,g),apply};
+  return {x:air.x,y:air.y,z:air.z,span,transform,shadow:matrix(0,g),apply};
 }
 
 /** Airplane art: our 3D-model heading sprites when we have them, the drawn vector otherwise. */
@@ -64,7 +64,7 @@ export function TrafficPerspective({active,viewBox,wind=null,conditions}:{active
   const [demo,setDemo]=useState<LiveAircraft[]|null>(null);
   // Preview-only check hook: ?livedemo flies two sample real-world reports (one ours, one not).
   useEffect(()=>{if(!import.meta.env.DEV||!new URLSearchParams(location.search).has('livedemo'))return;const t=Date.now();
-    setDemo([{id:'N4383P',altFt:2100,kt:95,distNm:1.2,bearing:300,lat:45.962,lon:-94.362,track:130,vs:-300,t,hex:'a51c2d'},{id:'N512SR',callsign:'N512SR',type:'SR22',desc:'CIRRUS SR-22',altFt:2600,kt:140,distNm:2,bearing:200,lat:45.94,lon:-94.37,track:40,vs:500,t,hex:'a6b1f0',origin:'STC',destination:'BRD'}]);},[]);
+    setDemo([{id:'N4383P',altFt:2100,kt:95,distNm:1.2,bearing:300,lat:45.962,lon:-94.362,track:130,vs:-300,t,hex:'a51c2d'},{id:'N512SR',callsign:'N512SR',type:'SR22',desc:'CIRRUS SR-22',altFt:2600,kt:140,distNm:2,bearing:200,lat:45.968,lon:-94.335,track:220,vs:500,t,hex:'a6b1f0',origin:'STC',destination:'BRD'}]);},[]);
   const live=useMemo(()=>demo??patternTraffic(liveFields?.['KLXL'],ELEV),[liveFields,demo]);
   const isLive=active&&live.length>0;
   const {selected,selectedRef,open,hitProps}=useTrafficSelection(active&&!isLive);
@@ -112,7 +112,12 @@ function LivePlanes({list,svgRef}:{list:LiveAircraft[];svgRef:React.RefObject<SV
         const g=groundFromLatLon(pos.lat,pos.lon);
         const altFt=Math.max(ELEV,a.altFt+(a.vs??0)*Math.min(30,Math.max(0,dt))/60);
         const p=pose(g.e,g.n,(altFt-ELEV)*FT,a.track??0,a.id);
-        const plane=planeRefs.current[a.id];if(plane){plane.setAttribute('transform',p.transform);p.apply?.(plane);}
+        // Aircraft at or behind the photo's camera cannot be drawn honestly: hide them.
+        const behind=p.z<300;
+        const plane=planeRefs.current[a.id];if(plane){plane.style.visibility=behind?'hidden':'';plane.setAttribute('transform',p.transform);p.apply?.(plane);}
+        const sh=shadowRefs.current[a.id];if(sh)sh.style.visibility=behind?'hidden':'';
+        if(tagRefs.current[a.id])tagRefs.current[a.id]!.style.visibility=behind?'hidden':'';
+        if(behind)continue;
         shadowRefs.current[a.id]?.setAttribute('transform',p.shadow);
         const tag=tagRefs.current[a.id];setTagPosition(tag,m,p.x,p.y);
         if(m&&tag){
