@@ -173,5 +173,5 @@ function LiveChip({svgRef}:{svgRef:React.RefObject<SVGSVGElement|null>}){
   const [host,setHost]=useState<Element|null>(null);
   useEffect(()=>{setHost(svgRef.current?.closest('section')?.querySelector('.journey-hud')??null);},[svgRef]);
   if(!host)return null;
-  return createPortal(<p className="traffic-live-chip pointer-events-none absolute -top-6 left-0 whitespace-nowrap font-mono text-[12px] uppercase tracking-[0.2em]"><span aria-hidden className="traffic-live-dot"/>Live · ADS-B</p>,host);
+  return createPortal(<p className="traffic-live-chip pointer-events-none absolute left-0 top-full mt-2 whitespace-nowrap font-mono text-[12px] uppercase tracking-[0.2em]"><span aria-hidden className="traffic-live-dot"/>Live · ADS-B</p>,host);
 }
