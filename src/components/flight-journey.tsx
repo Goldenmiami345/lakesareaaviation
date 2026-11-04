@@ -3,7 +3,7 @@ import { srcSetFor } from "@/lib/responsive-image";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Phone } from "lucide-react";
 import { Button } from "./ui/button";
-import { journeyFrame, journeyAltitude, glideAt, glideDuration, newWheelState, wheelDecision, snapTarget, type SnapZone, pinnedStepDown, stackProgress, stackOffset, touchJourneyFraction, isModeSwitchPoint, resolveMode, STOP_TOL, type JourneyMode, type PageSegment } from "../lib/journey-pacing";
+import { journeyFrame, journeyAltitude, glideAt, glideDuration, newWheelState, wheelDecision, snapTarget, pagingUnlock, type SnapZone, pinnedStepDown, stackProgress, stackOffset, touchJourneyFraction, isModeSwitchPoint, resolveMode, STOP_TOL, type JourneyMode, type PageSegment } from "../lib/journey-pacing";
 import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
 import { patternFor, pickRunway, type PatternField } from "../lib/traffic-pattern";
 import { useMetar } from "../lib/use-metar";
@@ -124,6 +124,10 @@ let wantedMode: JourneyMode = "fade";
 const modeListeners = new Set<() => void>();
 export const journeyMode = () => mode;
 
+// Once the visitor scrolls up, downward one-gesture paging turns off and
+// scrolling is free until they reach the end of the last journey (locations).
+let unlocked = false;
+
 // Stop positions are document offsets (independent of scroll), cached and recomputed only on resize.
 type Layout = { stops: number[]; zones: { from: number; to: number }[]; stages: number[][]; snap: SnapZone[] };
 let layoutCache: Layout | null = null;
@@ -154,7 +158,9 @@ const pinnedStages = (L: Layout, y: number) => {
   const i = L.zones.findIndex((z) => y >= z.from - ENTRY_TOL && y <= z.to);
   return i < 0 ? null : L.stages[i] ?? null;
 };
+const lastJourneyEnd = (L: Layout) => (L.zones.length ? (L.zones[L.zones.length - 1]?.to ?? Infinity) : Infinity);
 const downTarget = (y: number) => {
+  if (unlocked) return null;
   const own = pinnedStages(journeyLayout(), y);
   if (!own) return null;
   return pinnedStepDown(own, Math.max(y, own[0] ?? y), own[0] ?? y, own[own.length - 1] ?? y);
