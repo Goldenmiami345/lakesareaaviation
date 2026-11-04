@@ -193,12 +193,7 @@ html.first-view .page-enter { animation: none; }
 @media (prefers-reduced-motion: reduce) { .tap-scroll-dot { animation: none; opacity: .7; } }
 @media (prefers-reduced-motion: reduce) { .landing-scroll-stroke { animation: none; opacity: .7; transform: none; } }
 
-/* Home journey: one page per swipe via native mandatory snap stops. */
-html.journey-snap { scroll-snap-type: y mandatory; }
-.journey-stop { scroll-snap-align: start; }
-.journey-stop-page { scroll-snap-stop: always; }
-html.journey-free, html.journey-free.journey-snap { scroll-snap-type: none !important; }
-@media (prefers-reduced-motion: reduce) { html.journey-snap { scroll-snap-type: none; } }
+html.journey-free.journey-snap, html.journey-zoomed.journey-snap { scroll-snap-type: none !important; }
 
 /* Airport traffic pattern overlay */
 .traffic-path { stroke: color-mix(in oklab, var(--primary-foreground) 55%, transparent); }
