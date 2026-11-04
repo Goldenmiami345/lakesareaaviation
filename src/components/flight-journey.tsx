@@ -360,7 +360,8 @@ function installController() {
   window.addEventListener("wheel", onWheel, { passive: false });
   window.addEventListener("keydown", onKey);
   window.addEventListener("touchstart", onTouchStart, { passive: true });
-  window.addEventListener("touchmove", onTouchMove, { passive: false });
+  window.addEventListener("touchmove", onTouchMove, { passive: true });
+  syncMoveBlocker();
   window.addEventListener("touchend", onTouchEnd, { passive: true });
   window.addEventListener("touchcancel", onTouchEnd, { passive: true });
   window.addEventListener("scroll", onScroll, { passive: true });
@@ -373,6 +374,8 @@ function installController() {
     window.removeEventListener("keydown", onKey);
     window.removeEventListener("touchstart", onTouchStart);
     window.removeEventListener("touchmove", onTouchMove);
+    window.removeEventListener("touchmove", onTouchMoveBlock);
+    moveBlocker = false;
     window.removeEventListener("touchend", onTouchEnd);
     window.removeEventListener("touchcancel", onTouchEnd);
     window.removeEventListener("scroll", onScroll);
