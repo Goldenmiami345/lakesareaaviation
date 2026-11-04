@@ -9,10 +9,13 @@ import { useTrafficAnimation } from './use-traffic-animation';
 import { profileAirport, type TrafficConditions } from '../lib/wx-conditions';
 const OFFSETS=[.08,.68,.95] as const;
 export function TrafficPerspective({active,viewBox,wind=null,conditions}:{active:boolean;viewBox?:string;wind?:Wind|null;conditions?:TrafficConditions}){
-  const mode=conditions?.mode??'vfr';
+  // This view always flies the full VFR pattern. Live weather still picks the
+  // runway, climb rate, gust jitter and night dimming, but never closes the
+  // pattern or swaps in a single straight-in aircraft.
+  const wx=useMemo(()=>conditions?{...conditions,mode:'vfr' as const,approach:null}:undefined,[conditions]);
   // Same live-wind runway choice as the aerial view; local space swaps ends for 31.
   const rwy=useMemo(()=>pickRunway(airportTraffic.KLXL,wind?{dir:wind.dir,kt:wind.kt}:null),[wind]);
-  const a=useMemo(()=>profileAirport(patternFor({...airportTraffic.KLXL,...KLXL_OBLIQUE_PATTERN},rwy),mode),[mode,rwy]);
+  const a=useMemo(()=>profileAirport(patternFor({...airportTraffic.KLXL,...KLXL_OBLIQUE_PATTERN},rwy),'vfr'),[rwy]);
   const svgRef=useRef<SVGSVGElement>(null),planeRefs=useRef<(SVGGElement|null)[]>([]),shadowRefs=useRef<(SVGGElement|null)[]>([]),tagRefs=useRef<(SVGGElement|null)[]>([]),textRefs=useRef<(SVGTextElement|null)[]>([]),cardRef=useRef<HTMLDivElement>(null);
   const {selected,selectedRef,open,hitProps}=useTrafficSelection(active);
   usePreloadCardPhotos(a.aircraft,active);
