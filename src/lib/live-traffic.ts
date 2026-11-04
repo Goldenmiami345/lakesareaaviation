@@ -3,8 +3,13 @@
 import { distanceNm } from "./wx-stations";
 import { densityAltitude, climbScale, type Metar } from "./wx-conditions";
 
-export type LiveAircraft = { id: string; altFt: number; kt: number; distNm: number; bearing: number };
-export type AdsbRow = { hex?: string; flight?: string; r?: string; alt_baro?: number | "ground"; gs?: number; lat?: number; lon?: number };
+export type LiveAircraft = {
+  id: string; altFt: number; kt: number; distNm: number; bearing: number;
+  // Optional detail for the live map view (absent in older payloads).
+  hex?: string; callsign?: string; type?: string; desc?: string; lat?: number; lon?: number;
+  track?: number; vs?: number; t?: number; origin?: string; destination?: string;
+};
+export type AdsbRow = { hex?: string; flight?: string; r?: string; t?: string; desc?: string; alt_baro?: number | "ground"; gs?: number; lat?: number; lon?: number; track?: number; baro_rate?: number; seen_pos?: number };
 
 export const LIVE_RADIUS_NM = 10;
 export const LIVE_CEILING_AGL = 6000;
@@ -28,7 +33,12 @@ export function localTraffic(field: { lat: number; lon: number; elevation: numbe
     if (d > LIVE_RADIUS_NM) continue;
     const id = (a.r || a.flight || a.hex || "").trim().toUpperCase();
     if (!id) continue;
-    out.push({ id, altFt: Math.round(a.alt_baro / 100) * 100, kt: Math.round(a.gs ?? 0), distNm: Math.round(d * 10) / 10, bearing: Math.round(bearingDeg(field.lat, field.lon, a.lat, a.lon)) });
+    const row: LiveAircraft = { id, altFt: Math.round(a.alt_baro / 100) * 100, kt: Math.round(a.gs ?? 0), distNm: Math.round(d * 10) / 10, bearing: Math.round(bearingDeg(field.lat, field.lon, a.lat, a.lon)), lat: a.lat, lon: a.lon, track: a.track ?? 0, vs: a.baro_rate ?? 0 };
+    if (a.hex) row.hex = a.hex.trim().toLowerCase();
+    if (a.flight?.trim()) row.callsign = a.flight.trim().toUpperCase();
+    if (a.t) row.type = a.t;
+    if (a.desc) row.desc = a.desc;
+    out.push(row);
   }
   return out.sort((p, q) => p.distNm - q.distNm).slice(0, 5);
 }
@@ -41,4 +51,18 @@ export function livePerformance(obs: Metar | null | undefined, elevation: number
   // Climb falls ~7% per 1,000 ft of density altitude above sea level.
   const fpm = BASE_CLIMB_FPM * climbScale(da, 0);
   return { da: Math.round(da / 10) * 10, fpm: Math.round(fpm / 10) * 10 };
+}
+
+/** Live map view switches on only for real aircraft in or near the pattern: within 4 nm and below 3,000 ft AGL. */
+export const PATTERN_RADIUS_NM = 4;
+export const PATTERN_CEILING_AGL = 3000;
+export function patternTraffic(list: readonly LiveAircraft[] | null | undefined, elevation: number) {
+  return (list ?? []).filter((a) => typeof a.lat === "number" && typeof a.lon === "number" && a.distNm <= PATTERN_RADIUS_NM && a.altFt - elevation <= PATTERN_CEILING_AGL);
+}
+/** Public tracker page for one airplane (the same open ADS-B network the data comes from). */
+export const trackerUrl = (a: Pick<LiveAircraft, "hex" | "id">) => a.hex ? `https://globe.adsb.lol/?icao=${encodeURIComponent(a.hex)}` : `https://globe.adsb.lol/?reg=${encodeURIComponent(a.id)}`;
+/** Dead-reckon a report forward along its track (capped at 30 s so stale data never flies off). */
+export function deadReckon(a: { lat: number; lon: number; kt: number; track: number }, seconds: number) {
+  const s = Math.max(0, Math.min(30, seconds)), m = a.kt * 0.514444 * s, t = (a.track * Math.PI) / 180;
+  return { lat: a.lat + (Math.cos(t) * m) / 110_540, lon: a.lon + (Math.sin(t) * m) / (111_320 * Math.cos((a.lat * Math.PI) / 180)) };
 }
