@@ -4,8 +4,8 @@ export const MODEL_SETTINGS = {
   'min-camera-orbit': 'auto 20deg auto', 'max-camera-orbit': 'auto 100deg auto',
   'field-of-view': '30deg', 'min-field-of-view': '15deg', 'max-field-of-view': '45deg',
   'rotation-per-second': '9deg', 'auto-rotate-delay': 0,
-  'shadow-intensity': 0.8, 'shadow-softness': 0.9, exposure: 1,
-  'environment-image': 'neutral', 'tone-mapping': 'commerce', 'interaction-prompt': 'none',
+  'shadow-intensity': 1, 'shadow-softness': 0.7, exposure: 1.1,
+  'environment-image': 'legacy', 'tone-mapping': 'aces', 'interaction-prompt': 'none',
 } as const;
 export const MODEL_RESUME_MS = 3000;
 /** Fit the rotating aircraft envelope, not a tall sphere in a wide media slot.
