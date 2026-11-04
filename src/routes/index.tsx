@@ -35,12 +35,12 @@ function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/25 to-ink/5 lg:bg-gradient-to-r lg:from-ink lg:via-ink/60 lg:to-transparent" />
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('hero-enter','first-view')" }} />
         <div className="site-container relative flex min-h-[100svh] flex-col justify-end pb-7 pt-24 sm:pb-[4.5rem] sm:pt-32">
-          <div className="max-w-3xl lg:max-w-[66vw]">
+          <div className="mx-auto max-w-3xl text-center lg:max-w-[66vw]">
             <p className="stage-label hero-step sm:text-[clamp(0.75rem,0.42rem+0.5vw,1.05rem)]" style={{ ["--d" as string]: "0ms" }}>Accelerated flight training</p>
             <h1 className="mt-1.5 font-display text-[min(2.1rem,calc((100vw-40px)/16.6))] leading-[1.02] sm:mt-2 sm:text-[clamp(1.25rem,1.65vw,2.75rem)] sm:whitespace-nowrap"><span className="line-mask hero-mask"><span style={{ ["--d" as string]: "90ms" }}><span className="max-sm:whitespace-nowrap">BECOME A PROFESSIONAL PILOT</span></span></span></h1>
           </div>
           <HeroCta />
-          <nav aria-label="Training locations" className="hero-step mt-1.5 flex flex-nowrap items-center gap-1 text-xs sm:text-[clamp(0.75rem,0.42rem+0.5vw,1.05rem)] lg:mt-2.5 font-bold uppercase tracking-[0.02em] text-background/75 sm:gap-2 sm:tracking-[0.14em]" style={{ ["--d" as string]: "360ms" }}>
+          <nav aria-label="Training locations" className="hero-step mt-1.5 flex flex-nowrap items-center justify-center gap-1 text-xs sm:text-[clamp(0.75rem,0.42rem+0.5vw,1.05rem)] lg:mt-2.5 font-bold uppercase tracking-[0.02em] text-background/75 sm:gap-2 sm:tracking-[0.14em]" style={{ ["--d" as string]: "360ms" }}>
             <MapPin aria-hidden className="mr-0.5 hidden size-3.5 sm:size-[1.2em] shrink-0 text-background/55 sm:block" />
             {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} aria-label={`${a.label}, ${a.code}`} className="group/chip inline-flex min-h-11 shrink-0 items-center whitespace-nowrap sm:min-h-0"><span className="rounded-full border border-background/25 px-1 py-1.5 transition-colors group-hover/chip:border-primary group-hover/chip:bg-primary group-hover/chip:text-primary-foreground sm:px-[1em] sm:py-[0.6em]">{a.label}<span className="hidden sm:inline">, {a.code}</span></span></button>)}
           </nav>
@@ -133,5 +133,5 @@ function HeroCta() {
     el.addEventListener("animationend", end);
     return () => { leave(); window.clearInterval(timer); io.disconnect(); };
   }, []);
-  return <div className="hero-step mt-2.5 lg:mt-3.5" style={{ ["--d" as string]: "270ms" }}><Link ref={ref} to="/contact" className="interactive-arrow group inline-flex min-h-12 items-center gap-4 border-b border-background/45 pb-1 text-sm sm:text-[clamp(0.875rem,0.5rem+0.6vw,1.3rem)] font-bold uppercase text-background transition-colors hover:border-primary">Build my training plan <span className="cta-orb grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><ArrowRight className="cta-arrow size-4" /></span></Link></div>;
+  return <div className="hero-step mt-2.5 flex justify-center lg:mt-3.5" style={{ ["--d" as string]: "270ms" }}><Link ref={ref} to="/contact" className="interactive-arrow group inline-flex min-h-12 items-center gap-4 border-b border-background/45 pb-1 text-sm sm:text-[clamp(0.875rem,0.5rem+0.6vw,1.3rem)] font-bold uppercase text-background transition-colors hover:border-primary">Build my training plan <span className="cta-orb grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><ArrowRight className="cta-arrow size-4" /></span></Link></div>;
 }

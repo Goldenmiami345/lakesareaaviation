@@ -85,3 +85,6 @@
 - [x] Clarify that “1-hour oral · 1-hour flight” describes the CFI/CFII exam, modernize its presentation, and simplify the mobile scroll cue.
 
 - [x] Reduce the size of the "1"s in the "1 hour oral / 1 hour flight" line so they sit level with the words on phone and desktop.
+
+- [x] Scroll-up unlock: after any upward scroll, downward paging and snapping stay off until the end of the locations journey; 164 tests pass.
+- [x] Hero title: "BECOME A PROFESSIONAL PILOT", CTA and location chips centered as one group on phone and desktop; verified with screenshots.
