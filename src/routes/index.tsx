@@ -133,5 +133,5 @@ function HeroCta() {
     el.addEventListener("animationend", end);
     return () => { leave(); window.clearInterval(timer); io.disconnect(); };
   }, []);
-  return <div className="hero-step mt-2 lg:mt-2" style={{ ["--d" as string]: "270ms" }}><Link ref={ref} to="/contact" className="interactive-arrow group inline-flex min-h-12 items-center gap-4 border-b border-background/45 pb-1 text-sm sm:text-[clamp(0.875rem,0.5rem+0.6vw,1.3rem)] font-bold uppercase text-background transition-colors hover:border-primary">Build my training plan <span className="cta-orb grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><ArrowRight className="cta-arrow size-4" /></span></Link></div>;
+  return <div className="hero-step mt-1" style={{ ["--d" as string]: "270ms" }}><Link ref={ref} to="/contact" className="interactive-arrow group inline-flex min-h-12 items-center gap-4 border-b border-background/45 pb-1 text-sm sm:text-[clamp(0.875rem,0.5rem+0.6vw,1.3rem)] font-bold uppercase text-background transition-colors hover:border-primary">Build my training plan <span className="cta-orb grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><ArrowRight className="cta-arrow size-4" /></span></Link></div>;
 }
