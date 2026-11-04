@@ -77,5 +77,5 @@ export function groundFromLatLon(lat: number, lon: number) {
 export function obliqueProject(x: number, y: number, aglFt = 0) {
   const g = patternToGround(x, y);
   const p = projectGround(g.e, g.n, aglFt * FT);
-  return { x: p.x, y: p.y, scale: MID.z / p.z };
+  return { x: p.x, y: p.y, scale: MID.z / p.z, z: p.z };
 }
