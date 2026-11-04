@@ -254,3 +254,13 @@ export function snapTarget(zones: SnapZone[], y: number, startY: number, vh: num
   }
   return null;
 }
+
+// ---- Scroll-up unlocks downward paging ----
+// Once the visitor scrolls up, forced one-gesture paging turns off and scrolling
+// back down is free and native, until they reach the end of the last journey
+// (the locations section), where normal paging resumes.
+export function pagingUnlock(unlocked: boolean, dir: 1 | -1, y: number, lastJourneyEnd: number): boolean {
+  if (y >= lastJourneyEnd - STOP_TOL) return false;
+  if (dir < 0) return true;
+  return unlocked;
+}
