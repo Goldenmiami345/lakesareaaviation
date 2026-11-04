@@ -69,7 +69,22 @@ export default function AircraftModel({ src, label, poster, autoRotate = true, o
     // SiteShell page threw "HTMLElement is not defined" during server rendering.
     if (import.meta.env.SSR) return;
     let alive = true;
-    void import('@google/model-viewer').then(() => { if (alive) setReady(true); }).catch(()=>undefined);
+    void import('@google/model-viewer')
+      .then(async ({ ModelViewerElement }) => {
+        // public/models/*.glb are meshopt-compressed (gltfpack -cc) and model-viewer ships no
+        // decoder, so every load failed with "THREE.GLTFLoader: setMeshoptDecoder must be
+        // called before loading compressed files". The decoder is self-hosted (no CDN).
+        // model-viewer pulls it in with a classic <script> tag, and Vite refuses to let a
+        // module import a JS file out of public/, so the warm-up is a plain fetch.
+        try {
+          await fetch('/models/meshopt_decoder.js');
+          ModelViewerElement.meshoptDecoderLocation = '/models/meshopt_decoder.js';
+        } catch {
+          // Decoder unavailable: still mount so the photo poster shows instead of a blank.
+        }
+        if (alive) setReady(true);
+      })
+      .catch(() => { if (alive) setReady(true); });
     return () => { alive = false; };
   }, []);
   return ready ? createElement('model-viewer', { ...MODEL_SETTINGS, ref, src, alt: label, poster,  className: 'aircraft-model relative h-full w-full' }) : null;
