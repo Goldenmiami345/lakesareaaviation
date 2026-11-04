@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "node:test";
 import { localTraffic, livePerformance, compass } from "./live-traffic";
 
 const field = { lat: 45.9497, lon: -94.3473, elevation: 1123 };
