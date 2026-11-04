@@ -265,7 +265,8 @@ export function fitTagSide(g: SVGGElement | null | undefined, pts: { x: number; 
     text.setAttribute("x", String(ox + 7)); text.setAttribute("y", String(oy + 12.5));
     text.querySelectorAll('tspan').forEach(t=>t.setAttribute('x',String(ox+7)));
     const len = Math.hypot(tx, ty) || 1;
-    line.setAttribute("x1", (tx / len * 6).toFixed(1)); line.setAttribute("y1", (ty / len * 6).toFixed(1));
+    const r0 = Math.max(6, (g as SVGGElement & { __ring?: number }).__ring ?? 0);
+    line.setAttribute("x1", (tx / len * r0).toFixed(1)); line.setAttribute("y1", (ty / len * r0).toFixed(1));
     line.setAttribute("x2", String(tx)); line.setAttribute("y2", String(ty));
     return true;
   }
