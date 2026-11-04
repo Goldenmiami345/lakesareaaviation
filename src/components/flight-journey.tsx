@@ -228,6 +228,7 @@ function installController() {
     wantedMode = "fade";
     setMode("fade");
     runPath([{ y: target, instant: false }], touch);
+    syncMoveBlocker();
     return true;
   };
   const goingUp = () => { if (!paging) requestMode("stack"); };
@@ -269,7 +270,9 @@ function installController() {
     seqStart = window.scrollY;
     const t = e.touches[0];
     g = e.touches.length === 1 && t && !reduce() ? { x: t.clientX, y: t.clientY, decided: false, fired: false, eligible: downTarget(window.scrollY) !== null } : null;
+    syncMoveBlocker();
   };
+  // Passive tracker: runs on every touchmove without ever blocking native scroll.
   const onTouchMove = (e: TouchEvent) => {
     if ((e.target as Element | null)?.closest?.("[data-model-gesture]")) { g = null; rejected = true; return; }
     lastTouchAt = performance.now();
@@ -280,8 +283,7 @@ function installController() {
     if (!g && !rejected && t && e.touches.length === 1 && !reduce()) { touching = true; g = { x: t.clientX, y: t.clientY, decided: false, fired: false, eligible: false }; return; }
     if (!g || !t || e.touches.length !== 1) { g = null; rejected = true; return; }
     const dx = g.x - t.clientX, dy = g.y - t.clientY;
-    // Everything during a glide is swallowed, so native scroll never fights it.
-    if (g.fired || paging) { if (e.cancelable) e.preventDefault(); return; }
+    if (g.fired || paging) return;
     if (!g.decided) {
       if (Math.abs(dx) < 3 && Math.abs(dy) < 3) return; // taps with jitter stay taps
       g.decided = true;
@@ -289,14 +291,31 @@ function installController() {
       // Upward drags are plain 1:1 native scrolling through stacked pages.
       if (dy < 0) { goingUp(); g = null; rejected = true; return; }
     }
+    if (!g.eligible) g.eligible = downTarget(window.scrollY) !== null;
+  };
+  // Non-passive blocker: attached ONLY while a downward page can actually start
+  // (fully pinned journey with a later stage, or an active glide). Everywhere
+  // else touchmove stays passive, so native scrolling never waits on this file.
+  const onTouchMoveBlock = (e: TouchEvent) => {
+    if (!e.cancelable) return;
+    // Everything during a glide is swallowed, so native scroll never fights it.
+    if (paging || g?.fired) { e.preventDefault(); return; }
+    if (!g || !g.decided || !g.eligible) return;
     // A pinned downward drag never starts native scrolling: the glide owns the whole move.
-    if (!g.eligible && e.cancelable) g.eligible = downTarget(window.scrollY) !== null;
-    if (!g.eligible) return;
-    if (e.cancelable) e.preventDefault();
-    if (dy >= PAGE_SWIPE_PX && e.cancelable && goDown(true)) g.fired = true;
+    e.preventDefault();
+    const t = e.touches[0];
+    if (t && g.y - t.clientY >= PAGE_SWIPE_PX && goDown(true)) g.fired = true;
+  };
+  let moveBlocker = false;
+  const syncMoveBlocker = () => {
+    const want = paging || (!reduce() && !free() && !zoomedIn() && downTarget(window.scrollY) !== null);
+    if (want === moveBlocker) return;
+    moveBlocker = want;
+    if (want) window.addEventListener("touchmove", onTouchMoveBlock, { passive: false });
+    else window.removeEventListener("touchmove", onTouchMoveBlock);
   };
   const onTouchEnd = (e: TouchEvent) => {
-    if (e.touches.length === 0) { multi = false; touching = false; g = null; scheduleSettle(); }
+    if (e.touches.length === 0) { multi = false; touching = false; g = null; scheduleSettle(); syncMoveBlocker(); }
   };
 
   // Proximity snap once native scrolling has come to rest (scrollend or 120ms without scroll).
@@ -328,6 +347,7 @@ function installController() {
     if (paging) { seqStart = y; moving = false; return; }
     moving = true;
     scheduleSettle();
+    syncMoveBlocker();
     const L = journeyLayout();
     if (lastDir < 0) { wantedMode = "stack"; setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, y))); return; }
     setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, y)));
@@ -340,7 +360,8 @@ function installController() {
   window.addEventListener("wheel", onWheel, { passive: false });
   window.addEventListener("keydown", onKey);
   window.addEventListener("touchstart", onTouchStart, { passive: true });
-  window.addEventListener("touchmove", onTouchMove, { passive: false });
+  window.addEventListener("touchmove", onTouchMove, { passive: true });
+  syncMoveBlocker();
   window.addEventListener("touchend", onTouchEnd, { passive: true });
   window.addEventListener("touchcancel", onTouchEnd, { passive: true });
   window.addEventListener("scroll", onScroll, { passive: true });
@@ -353,6 +374,8 @@ function installController() {
     window.removeEventListener("keydown", onKey);
     window.removeEventListener("touchstart", onTouchStart);
     window.removeEventListener("touchmove", onTouchMove);
+    window.removeEventListener("touchmove", onTouchMoveBlock);
+    moveBlocker = false;
     window.removeEventListener("touchend", onTouchEnd);
     window.removeEventListener("touchcancel", onTouchEnd);
     window.removeEventListener("scroll", onScroll);
