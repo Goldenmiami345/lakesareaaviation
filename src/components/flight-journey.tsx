@@ -3,7 +3,7 @@ import { srcSetFor } from "@/lib/responsive-image";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Phone } from "lucide-react";
 import { Button } from "./ui/button";
-import { journeyFrame, journeyAltitude, journeyStop, glideAt, glideDuration, newWheelState, wheelDecision, snapTarget, type SnapZone, JOURNEY_STAGE_SVH, pinnedStepDown, stageStopFraction, stackProgress, stackOffset, isModeSwitchPoint, resolveMode, STOP_TOL, type JourneyMode, type PageSegment } from "../lib/journey-pacing";
+import { journeyFrame, journeyAltitude, journeyStop, glideAt, glideDuration, newWheelState, wheelDecision, snapTarget, type SnapZone, JOURNEY_STAGE_SVH, pinnedStepDown, stageStopFraction, stackProgress, stackOffset, touchJourneyFraction, isModeSwitchPoint, resolveMode, STOP_TOL, type JourneyMode, type PageSegment } from "../lib/journey-pacing";
 import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
 import { patternFor, pickRunway, type PatternField } from "../lib/traffic-pattern";
 import { useMetar } from "../lib/use-metar";
@@ -136,7 +136,8 @@ function journeyLayout(): Layout {
     const h = vh();
     const total = Math.max(1, el.offsetHeight - h);
     const own: number[] = [];
-    for (let i = 0; i < n; i += 1) own.push(Math.round(base + total * stageStopFraction(i, n)));
+    const phone = window.matchMedia(PHONE_MQ).matches;
+    for (let i = 0; i < n; i += 1) own.push(Math.round(base + (phone ? i * h : total * stageStopFraction(i, n))));
     stops.push(...own);
     stages.push(own);
     zones.push({ from: base, to: Math.min(maxY, base + total) });
@@ -289,7 +290,7 @@ function installController() {
       g.decided = true;
       if (Math.abs(dx) > Math.abs(dy) || free()) { g = null; rejected = true; return; }
       // Upward drags are plain 1:1 native scrolling through stacked pages.
-      if (dy < 0) { goingUp(); g = null; rejected = true; return; }
+      if (dy < 0) { goingUp(); g = null; rejected = true; syncMoveBlocker(); return; }
     }
     if (!g.eligible) g.eligible = downTarget(window.scrollY) !== null;
   };
@@ -311,14 +312,14 @@ function installController() {
   };
   let moveBlocker = false;
   const syncMoveBlocker = () => {
-    const want = paging || (!reduce() && !free() && !zoomedIn() && downTarget(window.scrollY) !== null);
+    const want = paging || (!rejected && !reduce() && !free() && !zoomedIn() && downTarget(window.scrollY) !== null);
     if (want === moveBlocker) return;
     moveBlocker = want;
     if (want) window.addEventListener("touchmove", onTouchMoveBlock, { passive: false, capture: true });
     else window.removeEventListener("touchmove", onTouchMoveBlock, true);
   };
   const onTouchEnd = (e: TouchEvent) => {
-    if (e.touches.length === 0) { multi = false; touching = false; g = null; scheduleSettle(); syncMoveBlocker(); }
+    if (e.touches.length === 0) { multi = false; touching = false; g = null; rejected = false; scheduleSettle(); syncMoveBlocker(); }
   };
 
   // Proximity snap once native scrolling has come to rest (scrollend or 120ms without scroll).
@@ -417,6 +418,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let mx = 0, my = 0, frame = 0, last = -1;
     const fine = window.matchMedia("(pointer: fine)").matches;
+    const phone = window.matchMedia(PHONE_MQ).matches;
     const n = stages.length;
     // Geometry is cached (document offset of the section, pinned length, viewport height) and
     // recomputed only on resize, so a frame never reads layout.
@@ -433,12 +435,13 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       if (!g0) return;
       const viewportHeight = g0.vh, total = g0.total;
       const rect = { top: g0.base - window.scrollY };
-      const scrolled = journeyFrame(-rect.top / total, n);
+      const fractionAt = (y: number) => phone ? touchJourneyFraction((y - g0.base) / viewportHeight, n) : (y - g0.base) / total;
+      const scrolled = journeyFrame(fractionAt(window.scrollY), n);
       // Paged glide inside this journey: blend over the glide's whole eased progress. Endpoints are
       // stops (transition 0), so this agrees exactly with the scroll mapping when the glide lands.
       const inJourney = (y: number) => y >= g0.base - 1 && y <= g0.base + total + 1;
       const pg = glide && inJourney(glide.from) && inJourney(glide.to) ? (() => {
-        const a = journeyFrame((glide.from - g0.base) / total, n), b = journeyFrame((glide.to - g0.base) / total, n);
+        const a = journeyFrame(fractionAt(glide.from), n), b = journeyFrame(fractionAt(glide.to), n);
         const sa = a.stage + a.transition, sb = b.stage + b.transition;
         return { shown: sa + (sb - sa) * glide.p, p: glide.p, alt: journeyAltitude(a, n) + (journeyAltitude(b, n) - journeyAltitude(a, n)) * glide.p, progress: a.progress + (b.progress - a.progress) * glide.p };
       })() : null;
@@ -457,7 +460,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       // Stack mode (scrolling up, and always in reduced motion): each stage is its own
       // full-height page; stage k sits at translateY((k - progress) * 100%), moving 1:1 with scroll.
       if (reduce || journeyMode() === "stack") {
-        const p = stackProgress(-rect.top / total, n);
+        const p = stackProgress(fractionAt(window.scrollY), n);
         layerRefs.current.forEach((layer, i) => {
           if (!layer) return;
           const off = stackOffset(i, p);
@@ -521,7 +524,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const d = (e as CustomEvent<{ id: string; index: number; animate?: boolean }>).detail;
       if (d?.id !== id || !el) return;
       const base = window.scrollY + el.getBoundingClientRect().top, total = Math.max(1, el.offsetHeight - vh());
-      const y = Math.round(d.index >= n - 1 ? base + total : base + total * journeyStop(d.index, n));
+      const y = Math.round(window.matchMedia(PHONE_MQ).matches ? base + Math.min(n - 1, d.index) * vh() : d.index >= n - 1 ? base + total : base + total * journeyStop(d.index, n));
       goToJourneyPage(y, !d.animate);
     };
     render();
@@ -579,9 +582,9 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const s = stages[active] ?? stages[0];
   if (!s) return null;
   return (
-    <section ref={sectionRef} data-journey-section="" id={id} aria-label={label} className="relative bg-ink text-background" style={{ height: `${stages.length * JOURNEY_STAGE_SVH + 100}svh` }}>
+    <section ref={sectionRef} data-journey-section="" id={id} aria-label={label} className="journey-section relative bg-ink text-background" style={{ height: `${stages.length * JOURNEY_STAGE_SVH + 100}svh`, "--journey-count": stages.length } as React.CSSProperties}>
       {stages.map((st, i) => (
-        <div key={`stop-${st.code}`} aria-hidden className="journey-stop journey-stop-page pointer-events-none absolute left-0 h-px w-px" style={{ top: `${journeyStop(i, stages.length) * stages.length * JOURNEY_STAGE_SVH}svh` }} />
+        <div key={`stop-${st.code}`} aria-hidden className="journey-stop journey-stop-page pointer-events-none absolute left-0 h-px w-px" style={{ top: `${journeyStop(i, stages.length) * stages.length * JOURNEY_STAGE_SVH}svh`, "--phone-stop": `${i * 100}svh` } as React.CSSProperties} />
       ))}
       <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className="journey-viewport sticky top-0 h-svh overflow-hidden">
         {stages.map((st, i) => (

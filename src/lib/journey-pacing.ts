@@ -166,6 +166,17 @@ export function stackProgress(fraction: number, count: number) {
 // Stage k's vertical offset in viewport heights: 0 = on screen, negative = stacked above.
 export const stackOffset = (index: number, progress: number) => index - progress;
 
+// Touchscreen stacks use one real viewport per stage, rather than stretching
+// each viewport over the desktop reading corridor.
+export function touchJourneyFraction(position: number, count: number) {
+  const n = Math.max(1, count);
+  const p = clamp(position, 0, n - 1);
+  const k = Math.floor(p);
+  const a = stageStopFraction(k, n);
+  const b = stageStopFraction(Math.min(n - 1, k + 1), n);
+  return a + (b - a) * (p - k);
+}
+
 // Crossfade and stack render identically only on a stop or outside a journey's pinned stretch.
 export function isModeSwitchPoint(stageStops: number[], y: number) {
   if (!stageStops.length) return true;

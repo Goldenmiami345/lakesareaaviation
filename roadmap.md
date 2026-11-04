@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Remove touchscreen upward stack drag with compact phone stages; measured 100px scroll now moves imagery 100px instead of 42px, 21/21 downward swipes and 154 tests pass.
+
 - [x] Fix mobile journey background slivers; 21/21 one-swipe transitions pass at 360/390/402px, upward scrolling remains native, and 153 tests pass. Broader phone performance check still misses three timing targets; production prerender output is unavailable.
 
 - [x] Tighten shared model camera framing; fleet widths 86.9–87.6% at 390×844/1280×800, 14 tests pass. Traffic slots reach 57–60%: their unchanged 80px height limits safe framing at 73° polar; 85% requires taller slots or a lower view.

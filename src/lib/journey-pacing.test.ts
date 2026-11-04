@@ -175,6 +175,17 @@ describe("altitude readout", () => {
 });
 
 import { glideAt, glideDuration, newWheelState, wheelDecision, snapTarget, GLIDE_MS_SHORT, GLIDE_MS_TOUCH, GLIDE_MS_WHEEL } from "./journey-pacing";
+test("touchscreen upward stacks move one pixel for each native scroll pixel", async () => {
+  const { touchJourneyFraction, stackProgress } = await import("./journey-pacing");
+  for (const n of [3, 6]) for (const vh of [725, 844]) {
+    for (let k = 1; k < n; k++) {
+      const before = stackProgress(touchJourneyFraction(k, n), n);
+      const after = stackProgress(touchJourneyFraction(k - 100 / vh, n), n);
+      assert.ok(Math.abs((before - after) * vh - 100) < 1e-8);
+      assert.equal(touchJourneyFraction(k, n), stageStopFraction(k, n));
+    }
+  }
+});
 describe("Round G glide, wheel gestures and edge snaps", () => {
   test("glide is strictly monotonic and lands exactly on target", () => {
     const ys = Array.from({ length: 50 }, (_, i) => glideAt(844, 3680, i * 16, 650));
