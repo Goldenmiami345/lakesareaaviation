@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef } from 'react';
 import { RadarTag, TrafficCard, useTrafficSelection, usePreloadCardPhotos } from './traffic-ui';
 import { fleet } from '../lib/site-data';
-import { type PatternSample, type Wind, pickRunway, patternFor } from '../lib/traffic-pattern';
+import { type PatternSample, type Wind, pickRunway, patternFor, patternWaypoints } from '../lib/traffic-pattern';
 import { airportTraffic } from '../lib/site-data';
 import { KLXL_OBLIQUE, KLXL_OBLIQUE_PATTERN, PX_PER_FT_MID, obliqueProject } from '../lib/oblique-view';
 import { trafficSpanFeet, trafficModelScale, TrafficVector } from './traffic-vector';
@@ -38,10 +38,13 @@ export function TrafficPerspective({active,viewBox,wind=null,conditions}:{active
     return {x:air.x,y:air.y,lift:s.agl/a.tpaAgl,transform:projectMatrix(s.agl,air),shadow:projectMatrix(0,g)};
   },[a]);
   useTrafficAnimation({active,airport:a,wind,runwayHeading:rwy.trueHdg,regs:a.aircraft,svgRef,planeRefs,shadowRefs,tagRefs,textRefs,cardRef,selectedRef,project,offsets:OFFSETS,...(wx?{conditions:wx}:{})});
+  // Projected pattern line at its real altitude on each leg (same waypoints the airplanes fly).
+  const path=useMemo(()=>{const w=patternWaypoints(a);const pts:string[]=[];for(let i=0;i<w.length-1;i+=1){const p=w[i]!,q=w[i+1]!;for(let k=0;k<12;k+=1){const t=k/12,o=obliqueProject(p.x+(q.x-p.x)*t,p.y+(q.y-p.y)*t,p.agl+(q.agl-p.agl)*t);pts.push(`${o.x.toFixed(1)},${o.y.toFixed(1)}`);}}const l=w[w.length-1]!,o=obliqueProject(l.x,l.y,l.agl);pts.push(`${o.x.toFixed(1)},${o.y.toFixed(1)}`);return pts.join(' ');},[a]);
   const info=selected!==null?planes[selected]:null;
   return <div className="absolute inset-0"><svg ref={svgRef} data-traffic="private-pilot" viewBox={viewBox??`0 0 ${KLXL_OBLIQUE.width} ${KLXL_OBLIQUE.height}`} preserveAspectRatio="xMidYMid slice" className="traffic-callouts absolute inset-0 h-full w-full" role="group" aria-label={`Live left traffic for runway ${a.runway} at Little Falls, pattern altitude ${(a.elevation+a.tpaAgl).toLocaleString("en-US")} feet MSL`}>
+    <polyline points={path} className="traffic-oblique-path" aria-hidden/>
     {planes.map((p,i)=><g key={`s-${p.reg}`} ref={el=>{shadowRefs.current[i]=el;}} className="pointer-events-none traffic-ground-shadow" aria-hidden><TrafficVector reg={p.reg} shadow/></g>)}
     {planes.map((p,i)=><g key={p.reg} data-aircraft={p.reg} ref={el=>{planeRefs.current[i]=el;}} className="pointer-events-none" aria-hidden><TrafficVector reg={p.reg}/></g>)}
-    {active&&planes.map((p,i)=><RadarTag key={`t-${p.reg}`} reg={p.reg} index={i} seed={0} label={`${p.reg}, ${p.type}. Show details`} tabIndex={0} hit={hitProps(i,p.reg)} tagRef={el=>{tagRefs.current[i]=el;}} textRef={el=>{textRefs.current[i]=el;}}/>)}
+    {active&&planes.map((p,i)=><RadarTag key={`t-${p.reg}`} reg={p.reg} index={i} seed={0} label={`${p.reg}, ${p.type}. Show details`} tabIndex={0} compact hit={hitProps(i,p.reg)} tagRef={el=>{tagRefs.current[i]=el;}} textRef={el=>{textRefs.current[i]=el;}}/>)}
   </svg>{info&&<TrafficCard key={info.reg} ref={cardRef} plane={info} runway={a.runway} onOpen={()=>open(info.reg)}/>}</div>;
 }

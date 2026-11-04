@@ -347,3 +347,7 @@ html.hero-enter .hero-mask > span { animation: hero-mask-in .55s var(--d, 0ms) c
   main a.interactive-arrow:not([class*="min-h-"]),
   main a.font-bold:not([class*="min-h-"]):not([class*="py-"]):not([class*="p-"]):not([class*="bg-"]):not([class*="h-"]) { display: inline-flex; align-items: center; min-height: 44px; margin-block: calc((1lh - 44px) / 2); vertical-align: middle; }
 }
+
+/* Private Pilot oblique view: minimal digital pattern line and compact bracket targets. */
+.traffic-oblique-path { fill:none; stroke:var(--radar, currentColor); stroke-width:1; stroke-width:1.25; stroke-dasharray:3 4; opacity:.65; vector-effect:non-scaling-stroke; pointer-events:none; }
+.traffic-target-compact { opacity:.8; stroke-width:1; }
