@@ -1,7 +1,7 @@
 # Traffic component rules
 
 - The Private Pilot oblique view (traffic-perspective.tsx) always flies the full VFR pattern: live weather only picks the runway, climb rate, gust jitter and night dimming there — it must never close the pattern or swap in a single straight-in aircraft (owner request, 2026-11-04).
-- Journey touch direction is decided by the conditional capture-phase blocker before native scroll commits; coarse pointers never apply photo parallax, and settled stages hide the next layer to prevent edge slivers.
+- Touch (coarse pointer) journeys page with native CSS scroll-snap (html.journey-snap, snap-stop: always on .journey-stop-page) in both directions plus a smooth rest-snap for slow drags; JS never blocks or glides touch scrolling, because JS glides felt laggy. Coarse pointers never apply photo parallax; settled stages hide the next layer.
 - Journeys (phone and desktop) have one native viewport of scroll per stage; touchJourneyFraction maps it to shared fade stops so upward scrolling moves 1:1 (one swipe ≈ one stage), and stack mode keeps fade mode's cover scale/parallax so mode switches never jump.
 
 - Traffic tag sides are chosen once per display window with a look-ahead along the airplane path (fitTagSide in traffic-ui.tsx); no per-frame re-layout, positions snap to whole pixels, and a callout with no clear side is skipped, because per-frame flipping made tags jitter.
@@ -13,3 +13,4 @@
 - Every airplane always shows a 15px screen-constant target ring with a dark under-stroke, and [data-aircraft] carries a unit-relative dark drop-shadow, so tiny planes read on bright fields without changing scale or hit areas.
 - GLB sources live in models-src/; public/models is packed from them with `gltfpack -cc -vpf -vt 12 -vn 8` and decoded by the self-hosted public/models/meshopt_decoder.js registered in aircraft-model.tsx. Never re-pack an already packed file (it collapsed geometry once); scripts/check-models.mjs guards this in build.
 - Live-ops HUD (live-traffic.ts, /api/public/live-traffic via adsb.lol, 45s cache) is hybrid: real ADS-B shown as a readout when present; simulated pattern always keeps flying, never replaced.
+- Airport traffic always flies the pattern even in IFR (owner request); weather only shapes runway, wind, climb.
