@@ -297,6 +297,9 @@ function installController() {
   // (fully pinned journey with a later stage, or an active glide). Everywhere
   // else touchmove stays passive, so native scrolling never waits on this file.
   const onTouchMoveBlock = (e: TouchEvent) => {
+    // Decide direction in capture, before the browser can commit this move to
+    // native scrolling. The passive tracker remains available outside journeys.
+    onTouchMove(e);
     if (!e.cancelable) return;
     // Everything during a glide is swallowed, so native scroll never fights it.
     if (paging || g?.fired) { e.preventDefault(); return; }
@@ -311,8 +314,8 @@ function installController() {
     const want = paging || (!reduce() && !free() && !zoomedIn() && downTarget(window.scrollY) !== null);
     if (want === moveBlocker) return;
     moveBlocker = want;
-    if (want) window.addEventListener("touchmove", onTouchMoveBlock, { passive: false });
-    else window.removeEventListener("touchmove", onTouchMoveBlock);
+    if (want) window.addEventListener("touchmove", onTouchMoveBlock, { passive: false, capture: true });
+    else window.removeEventListener("touchmove", onTouchMoveBlock, true);
   };
   const onTouchEnd = (e: TouchEvent) => {
     if (e.touches.length === 0) { multi = false; touching = false; g = null; scheduleSettle(); syncMoveBlocker(); }
@@ -374,7 +377,7 @@ function installController() {
     window.removeEventListener("keydown", onKey);
     window.removeEventListener("touchstart", onTouchStart);
     window.removeEventListener("touchmove", onTouchMove);
-    window.removeEventListener("touchmove", onTouchMoveBlock);
+    window.removeEventListener("touchmove", onTouchMoveBlock, true);
     moveBlocker = false;
     window.removeEventListener("touchend", onTouchEnd);
     window.removeEventListener("touchcancel", onTouchEnd);
@@ -487,8 +490,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         // Layers are viewport-sized; pointer parallax is covered by a GPU scale, not a larger raster.
         const cover = reduce || !fine ? 0 : 0.04;
         const scale = reduce ? 1 : 1 + cover + leaving * (st?.zoom ?? 0.55) + coming * (st?.zoomIn ?? 0.06);
-        const opacity = i === state.stage ? 1 - state.transition : i === state.next ? 1 : 0;
-        const depth = reduce ? 0 : 10 + i * 3;
+        const opacity = i === state.stage ? 1 - state.transition : i === state.next && state.transition > 0 ? 1 : 0;
+        const depth = reduce || !fine ? 0 : 10 + i * 3;
         layer.style.transform = `translate3d(${(mx * -depth).toFixed(2)}px, ${(my * -depth).toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
         layer.style.opacity = opacity.toFixed(3);
         // Only the outgoing/incoming pair is rendered; others leave the compositor entirely.
@@ -525,7 +528,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     window.addEventListener("scroll", renderScroll, { passive: true });
     window.addEventListener("resize", remeasure);
     window.addEventListener("journey:jump", onJump);
-    if (!reduce) window.addEventListener("pointermove", onMove, { passive: true });
+    if (!reduce && fine) window.addEventListener("pointermove", onMove, { passive: true });
     return () => {
       cancelAnimationFrame(frame);
       ro.disconnect();
