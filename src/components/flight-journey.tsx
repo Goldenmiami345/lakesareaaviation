@@ -162,12 +162,15 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const renderScroll = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(render); };
 
     // Settle: a scroll that comes to rest INSIDE a crossfade finishes it toward the nearer edge
-    // (never more than half a crossfade window, never while a finger is on the glass). A rest
-    // position inside a hold is never touched, so no swipe is ever undone or "eaten".
-    let idle = 0, fingers = 0, settling: number | null = null;
+    // (never more than half a crossfade window, never while a finger is on the glass, never while
+    // wheel or keyboard input is still arriving). A rest position inside a hold is never touched,
+    // so no swipe, notch or key press is ever undone or "eaten".
+    const INPUT_QUIET_MS = 200;
+    let idle = 0, fingers = 0, settling: number | null = null, lastInputAt = -Infinity;
     const settle = () => {
       window.clearTimeout(idle);
       if (fingers > 0 || document.documentElement.classList.contains("journey-zoomed")) return;
+      if (performance.now() - lastInputAt < INPUT_QUIET_MS) { scheduleSettle(); return; }
       const target = settleTarget(geo ?? measure(), window.scrollY);
       if (target === null) { settling = null; return; }
       if (settling === target) return; // already on its way there
@@ -176,8 +179,11 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     };
     const scheduleSettle = () => { window.clearTimeout(idle); idle = window.setTimeout(settle, SETTLE_IDLE_MS); };
     const onScroll = () => { renderScroll(); scheduleSettle(); };
-    const onScrollEnd = () => settle();
-    const onTouchStart = (e: TouchEvent) => { fingers = e.touches.length; window.clearTimeout(idle); settling = null; };
+    // scrollend fires after every wheel notch's own animation, so it only re-arms the idle timer.
+    const onScrollEnd = () => scheduleSettle();
+    // Any new input cancels a settle in flight (the browser already stops the programmatic scroll).
+    const onInput = () => { lastInputAt = performance.now(); settling = null; window.clearTimeout(idle); };
+    const onTouchStart = (e: TouchEvent) => { fingers = e.touches.length; onInput(); };
     const onTouchEnd = (e: TouchEvent) => { fingers = e.touches.length; if (fingers === 0) scheduleSettle(); };
 
     const onMove = (e: PointerEvent) => { mx = e.clientX / window.innerWidth - 0.5; my = e.clientY / window.innerHeight - 0.5; renderScroll(); };
@@ -195,6 +201,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     render();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("scrollend", onScrollEnd);
+    window.addEventListener("wheel", onInput, { passive: true });
+    window.addEventListener("keydown", onInput, { passive: true });
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchend", onTouchEnd, { passive: true });
     window.addEventListener("touchcancel", onTouchEnd, { passive: true });
@@ -207,6 +215,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       ro.disconnect();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("scrollend", onScrollEnd);
+      window.removeEventListener("wheel", onInput);
+      window.removeEventListener("keydown", onInput);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchend", onTouchEnd);
       window.removeEventListener("touchcancel", onTouchEnd);
