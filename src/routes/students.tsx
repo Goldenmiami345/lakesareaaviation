@@ -50,7 +50,7 @@ function Page() {
             </div>
           ))}
         </div>
-        <a href={SCHOOL_PHONE_TEL} className="mt-10 inline-flex items-center gap-3 font-display text-3xl text-primary-text"><Phone className="size-6" />{SCHOOL_PHONE}</a>
+        <a href={SCHOOL_PHONE_TEL} className="mt-9 -mb-1 inline-flex min-h-11 items-center gap-3 font-display text-3xl text-primary-text"><Phone className="size-6" />{SCHOOL_PHONE}</a>
       </div>
       <InquiryBand />
     </SiteLayout>
