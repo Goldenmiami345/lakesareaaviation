@@ -24,7 +24,6 @@ export const getRouter = () => {
   router.subscribe("onBeforeRouteMount", (event) => {
     if (typeof document === 'undefined') return;
     if (event.fromLocation && event.fromLocation.pathname !== event.toLocation.pathname) {
-      document.documentElement.classList.remove("journey-snap");
       if (event.toLocation.hash) return;
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     }
