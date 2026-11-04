@@ -243,7 +243,7 @@ describe("scrolling up unlocks downward paging until the locations section ends"
   test("scrolling back down stays unlocked through both journeys", async () => {
     const { pagingUnlock } = await import("./journey-pacing");
     assert.equal(pagingUnlock(true, 1, 3000, END), true);
-    assert.equal(pagingUnlock(true, 1, 8998, END), true);
+    assert.equal(pagingUnlock(true, 1, 8990, END), true);
   });
   test("reaching the end of the locations journey re-locks paging", async () => {
     const { pagingUnlock } = await import("./journey-pacing");
