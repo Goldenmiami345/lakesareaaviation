@@ -236,8 +236,8 @@ function installController() {
   if (coarse && !unlocked) root.classList.add("journey-snap");
   // Track the scroll-up unlock: while unlocked, downward paging, snapping and the
   // touch scroll-snap are all off, so scrolling down is plain native scrolling.
-  const syncUnlock = (dir: 1 | -1, y: number) => {
-    const next = pagingUnlock(unlocked, dir, y, lastJourneyEnd(journeyLayout()));
+  const syncUnlock = (dir: number, y: number) => {
+    const next = pagingUnlock(unlocked, dir < 0 ? -1 : 1, y, lastJourneyEnd(journeyLayout()));
     if (next === unlocked) return;
     unlocked = next;
     if (coarse) root.classList.toggle("journey-snap", !unlocked);
