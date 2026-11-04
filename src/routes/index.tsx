@@ -37,7 +37,7 @@ function HomePage() {
         <div className="site-container relative flex min-h-[100svh] flex-col justify-end pb-7 pt-24 sm:pb-[4.5rem] sm:pt-32">
           <div className="max-w-3xl lg:max-w-[66vw]">
             <p className="stage-label hero-step sm:text-[clamp(0.75rem,0.42rem+0.5vw,1.05rem)]" style={{ ["--d" as string]: "0ms" }}>Accelerated flight training</p>
-            <h1 className="mt-2.5 font-display text-[min(2.1rem,calc((100vw-40px)/16.6))] leading-[1.02] sm:mt-3 sm:text-[clamp(2.25rem,1rem+2.4vw,4rem)] sm:whitespace-nowrap"><span className="line-mask hero-mask"><span style={{ ["--d" as string]: "90ms" }}><span className="max-sm:whitespace-nowrap">BECOME A PROFESSIONAL PILOT</span></span></span></h1>
+            <h1 className="mt-2.5 font-display text-[min(2.1rem,calc((100vw-40px)/16.6))] leading-[1.02] sm:mt-3 sm:text-[clamp(1.25rem,1.65vw,2.75rem)] sm:whitespace-nowrap"><span className="line-mask hero-mask"><span style={{ ["--d" as string]: "90ms" }}><span className="max-sm:whitespace-nowrap">BECOME A PROFESSIONAL PILOT</span></span></span></h1>
           </div>
           <HeroCta />
           <nav aria-label="Training locations" className="hero-step mt-4 flex flex-nowrap items-center gap-1 text-xs sm:text-[clamp(0.75rem,0.42rem+0.5vw,1.05rem)] lg:mt-6 font-bold uppercase tracking-[0.02em] text-background/75 sm:gap-2 sm:tracking-[0.14em]" style={{ ["--d" as string]: "360ms" }}>
