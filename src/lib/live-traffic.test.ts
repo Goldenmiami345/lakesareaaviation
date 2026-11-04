@@ -1,4 +1,5 @@
-import { describe, expect, test } from "node:test";
+import { describe, test } from "node:test";
+import assert from "node:assert/strict";
 import { localTraffic, livePerformance, compass } from "./live-traffic";
 
 const field = { lat: 45.9497, lon: -94.3473, elevation: 1123 };
@@ -12,13 +13,13 @@ describe("live traffic", () => {
       { r: "N1G", alt_baro: "ground" as const, lat: 45.95, lon: -94.35 },
     ];
     const t = localTraffic(field, rows);
-    expect(t.map((a) => a.id)).toEqual(["N123AB"]);
-    expect(compass(t[0]!.bearing)).toBe("N");
+    assert.deepEqual(t.map((a) => a.id), ["N123AB"]);
+    assert.equal(compass(t[0]!.bearing), "N");
   });
   test("hot day raises density altitude and cuts climb", () => {
     const p = livePerformance({ station: "KLXL", dir: 0, kt: 0, gust: null, obsTime: 0, raw: "", temp: 35, altim: 29.92 }, 1123)!;
-    expect(p.da).toBeGreaterThan(3500);
-    expect(p.fpm).toBeLessThan(560);
-    expect(livePerformance(null, 1123)).toBeNull();
+    assert.ok(p.da > 3500);
+    assert.ok(p.fpm < 560);
+    assert.equal(livePerformance(null, 1123), null);
   });
 });
