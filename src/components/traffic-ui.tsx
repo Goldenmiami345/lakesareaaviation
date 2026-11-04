@@ -294,8 +294,8 @@ export function setTagPosition(g: SVGGElement | null | undefined, m: DOMMatrix |
   g.setAttribute("transform", `translate(${ux.toFixed(3)} ${uy.toFixed(3)}) scale(${(1 / k).toFixed(4)})`);
 }
 
-/** Ring radius in screen px: always about 1.6x the airplane's on-screen wingspan, never under 7.5 px. */
-export const ringRadius = (spanScreenPx: number) => Math.max(7.5, spanScreenPx * 0.8);
+/** Ring radius in screen px: always about 1.6x the airplane's on-screen wingspan, never under 11 px (22 px circle). */
+export const ringRadius = (spanScreenPx: number) => Math.max(11, spanScreenPx * 0.8);
 /** Resize a tag's target ring (screen px); skips sub-quarter-pixel changes. */
 export function setTagRing(g: SVGGElement | null | undefined, r: number) {
   if (!g) return;

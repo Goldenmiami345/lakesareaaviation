@@ -13,8 +13,8 @@ export const OBLIQUE_SPRITES: Record<string, { url: string; span: number }> = {
   N4383P: { url: apache.url, span: 0.9329 },
   N46201: { url: cardinal.url, span: 0.9573 },
 };
-/** On-screen boost over literal scale so the airplanes read at a glance (owner: "much bigger"). */
-export const OBLIQUE_PLANE_BOOST = 3;
+/** True scale: the airplane is drawn at its real wingspan for its distance from the camera (owner: realistic, to scale). */
+export const OBLIQUE_PLANE_BOOST = 1;
 
 /** Atlas frame for an airplane flying `trackDeg` (true) seen along `viewBearingDeg` (camera → airplane). */
 export function spriteFrame(trackDeg: number, viewBearingDeg: number) {
