@@ -193,10 +193,12 @@ describe("Round G glide, wheel gestures and edge snaps", () => {
     assert.equal(ys[0], 844);
     assert.equal(glideAt(844, 3680, 650, 650), 3680);
   });
-  test("durations: 650 ms touch, 700 ms wheel, 400 ms for moves of at most one viewport", () => {
-    assert.equal(glideDuration(2000, 844, true), GLIDE_MS_TOUCH);
-    assert.equal(glideDuration(2000, 900, false), GLIDE_MS_WHEEL);
-    assert.equal(glideDuration(800, 900, false), GLIDE_MS_SHORT);
+  test("durations: one-stage pages use the full soft glide; only small corrections are short", () => {
+    assert.equal(GLIDE_MS_TOUCH, 700);
+    assert.equal(GLIDE_MS_WHEEL, 800);
+    assert.equal(glideDuration(844, 844, true), GLIDE_MS_TOUCH);
+    assert.equal(glideDuration(900, 900, false), GLIDE_MS_WHEEL);
+    assert.equal(glideDuration(150, 900, false), GLIDE_MS_SHORT);
   });
   test("a 12 x 8 px trackpad burst over 240 ms pages exactly once", () => {
     const s = newWheelState();
@@ -211,11 +213,18 @@ describe("Round G glide, wheel gestures and edge snaps", () => {
     s.gliding = false; s.landedAt = 700;
     assert.equal(wheelDecision(s, 1300, 100, true), "page");
   });
-  test("edge snap: finishes moves within 0.6 vh downward, never small drags or far positions", () => {
+  test("edge snap: only finishes near-misses within 0.2 vh, never pulls from further away", () => {
     const z = [{ first: 844, last: 12998, end: 13842 }];
-    assert.equal(snapTarget(z, 405, 0, 844), 844);
-    assert.equal(snapTarget(z, 85, 0, 844), null);
-    assert.equal(snapTarget(z, 13403, 12998, 844), 13842);
+    assert.equal(snapTarget(z, 700, 0, 844), 844);
+    assert.equal(snapTarget(z, 405, 0, 844), null);
+    assert.equal(snapTarget(z, 13700, 12998, 844), 13842);
+    assert.equal(snapTarget(z, 13403, 12998, 844), null);
     assert.equal(snapTarget(z, 820, 790, 844), null);
+  });
+  test("every stage (phone and desktop) is exactly one viewport of scrolling", async () => {
+    const { touchJourneyFraction, stackProgress } = await import("./journey-pacing");
+    for (const n of [3, 6]) for (let k = 1; k < n; k += 1) {
+      assert.equal(Math.round(stackProgress(touchJourneyFraction(k, n), n) * 1e6) / 1e6, k);
+    }
   });
 });

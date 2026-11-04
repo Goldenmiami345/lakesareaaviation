@@ -3,7 +3,7 @@ import { srcSetFor } from "@/lib/responsive-image";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Phone } from "lucide-react";
 import { Button } from "./ui/button";
-import { journeyFrame, journeyAltitude, journeyStop, glideAt, glideDuration, newWheelState, wheelDecision, snapTarget, type SnapZone, JOURNEY_STAGE_SVH, pinnedStepDown, stageStopFraction, stackProgress, stackOffset, touchJourneyFraction, isModeSwitchPoint, resolveMode, STOP_TOL, type JourneyMode, type PageSegment } from "../lib/journey-pacing";
+import { journeyFrame, journeyAltitude, glideAt, glideDuration, newWheelState, wheelDecision, snapTarget, type SnapZone, pinnedStepDown, stackProgress, stackOffset, touchJourneyFraction, isModeSwitchPoint, resolveMode, STOP_TOL, type JourneyMode, type PageSegment } from "../lib/journey-pacing";
 import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
 import { patternFor, pickRunway, type PatternField } from "../lib/traffic-pattern";
 import { useMetar } from "../lib/use-metar";
@@ -136,8 +136,8 @@ function journeyLayout(): Layout {
     const h = vh();
     const total = Math.max(1, el.offsetHeight - h);
     const own: number[] = [];
-    const phone = window.matchMedia(PHONE_MQ).matches;
-    for (let i = 0; i < n; i += 1) own.push(Math.round(base + (phone ? i * h : total * stageStopFraction(i, n))));
+    // Every stage is exactly one viewport of scrolling (phone and desktop).
+    for (let i = 0; i < n; i += 1) own.push(Math.round(base + i * h));
     stops.push(...own);
     stages.push(own);
     zones.push({ from: base, to: Math.min(maxY, base + total) });
@@ -435,7 +435,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       if (!g0) return;
       const viewportHeight = g0.vh, total = g0.total;
       const rect = { top: g0.base - window.scrollY };
-      const fractionAt = (y: number) => phone ? touchJourneyFraction((y - g0.base) / viewportHeight, n) : (y - g0.base) / total;
+      const fractionAt = (y: number) => touchJourneyFraction((y - g0.base) / viewportHeight, n);
       const scrolled = journeyFrame(fractionAt(window.scrollY), n);
       // Paged glide inside this journey: blend over the glide's whole eased progress. Endpoints are
       // stops (transition 0), so this agrees exactly with the scroll mapping when the glide lands.
@@ -464,7 +464,9 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         layerRefs.current.forEach((layer, i) => {
           if (!layer) return;
           const off = stackOffset(i, p);
-          layer.style.transform = `translate3d(0, ${(off * viewportHeight).toFixed(1)}px, 0)`;
+          // Same cover scale and pointer parallax as fade mode, so switching modes never jumps the photo.
+          const cover = reduce || !fine ? 0 : 0.04, depth = reduce || !fine ? 0 : 10 + i * 3;
+          layer.style.transform = `translate3d(${(mx * -depth).toFixed(2)}px, ${(off * viewportHeight + my * -depth).toFixed(1)}px, 0) scale(${(1 + cover).toFixed(4)})`;
           layer.style.opacity = Math.abs(off) < 1 ? "1" : "0";
           layer.style.visibility = Math.abs(off) < 1 ? "visible" : "hidden";
           layer.style.pointerEvents = Math.abs(off) < 0.5 ? "auto" : "none";
@@ -524,7 +526,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const d = (e as CustomEvent<{ id: string; index: number; animate?: boolean }>).detail;
       if (d?.id !== id || !el) return;
       const base = window.scrollY + el.getBoundingClientRect().top, total = Math.max(1, el.offsetHeight - vh());
-      const y = Math.round(window.matchMedia(PHONE_MQ).matches ? base + Math.min(n - 1, d.index) * vh() : d.index >= n - 1 ? base + total : base + total * journeyStop(d.index, n));
+      const y = Math.round(Math.min(base + total, base + Math.min(n - 1, d.index) * vh()));
       goToJourneyPage(y, !d.animate);
     };
     render();
@@ -582,9 +584,9 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const s = stages[active] ?? stages[0];
   if (!s) return null;
   return (
-    <section ref={sectionRef} data-journey-section="" id={id} aria-label={label} className="journey-section relative bg-ink text-background" style={{ height: `${stages.length * JOURNEY_STAGE_SVH + 100}svh`, "--journey-count": stages.length } as React.CSSProperties}>
+    <section ref={sectionRef} data-journey-section="" id={id} aria-label={label} className="journey-section relative bg-ink text-background" style={{ height: `${stages.length * 100}svh`, "--journey-count": stages.length } as React.CSSProperties}>
       {stages.map((st, i) => (
-        <div key={`stop-${st.code}`} aria-hidden className="journey-stop journey-stop-page pointer-events-none absolute left-0 h-px w-px" style={{ top: `${journeyStop(i, stages.length) * stages.length * JOURNEY_STAGE_SVH}svh`, "--phone-stop": `${i * 100}svh` } as React.CSSProperties} />
+        <div key={`stop-${st.code}`} aria-hidden className="journey-stop journey-stop-page pointer-events-none absolute left-0 h-px w-px" style={{ top: `${i * 100}svh` }} />
       ))}
       <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className="journey-viewport sticky top-0 h-svh overflow-hidden">
         {stages.map((st, i) => (
