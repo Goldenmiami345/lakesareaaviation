@@ -1,5 +1,7 @@
 # Traffic component rules
 
+- Journey touch direction is decided by the conditional capture-phase blocker before native scroll commits; coarse pointers never apply photo parallax, and settled stages hide the next layer to prevent edge slivers.
+
 - Traffic tag sides are chosen once per display window with a look-ahead along the airplane path (fitTagSide in traffic-ui.tsx); no per-frame re-layout, positions snap to whole pixels, and a callout with no clear side is skipped, because per-frame flipping made tags jitter.
 - Call placement uses the pure traffic-call-placement helper with screen-pixel leader caps and projected runway-relative side preference; panel collisions flip sides rather than extending leaders, keeping zoom independent of placement.
 - Card placement is WeakMap-locked until out of bounds; stable contain-fit media prevents jumps. Shared desktop selection ignores aircraft pointerleave: close on actual pointer travel >24px away from opening point when over neither hit nor card, or panel exit; touch taps unchanged.
