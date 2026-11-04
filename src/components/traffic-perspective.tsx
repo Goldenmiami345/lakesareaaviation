@@ -61,7 +61,11 @@ export function TrafficPerspective({active,viewBox,wind=null,conditions}:{active
   const [armed,setArmed]=useState(false);useEffect(()=>{if(active)setArmed(true);},[active]);
   // Real ADS-B traffic in the pattern switches this view to live.
   const liveFields=useLiveTraffic(10_000,active);
-  const live=useMemo(()=>patternTraffic(liveFields?.KLXL,ELEV),[liveFields]);
+  const [demo,setDemo]=useState<LiveAircraft[]|null>(null);
+  // Preview-only check hook: ?livedemo flies two sample real-world reports (one ours, one not).
+  useEffect(()=>{if(!import.meta.env.DEV||!new URLSearchParams(location.search).has('livedemo'))return;const t=Date.now();
+    setDemo([{id:'N4383P',altFt:2100,kt:95,distNm:1.2,bearing:300,lat:45.962,lon:-94.362,track:130,vs:-300,t,hex:'a51c2d'},{id:'N512SR',callsign:'N512SR',type:'SR22',desc:'CIRRUS SR-22',altFt:2600,kt:140,distNm:2,bearing:200,lat:45.94,lon:-94.37,track:40,vs:500,t,hex:'a6b1f0',origin:'STC',destination:'BRD'}]);},[]);
+  const live=useMemo(()=>demo??patternTraffic(liveFields?.KLXL,ELEV),[liveFields,demo]);
   const isLive=active&&live.length>0;
   const {selected,selectedRef,open,hitProps}=useTrafficSelection(active&&!isLive);
   const patternMode=useTrafficPatternMode();
@@ -155,6 +159,6 @@ const LiveCard=({a,ref}:{a:LiveAircraft;ref:React.RefObject<HTMLDivElement|null>
     </dl>
     {ours
       ?<button type="button" onClick={()=>void navigate({to:'/fleet',hash:a.id.toLowerCase(),hashScrollIntoView:false})} className="mt-1 flex min-h-11 w-full items-center text-left text-xs font-bold uppercase tracking-[0.16em] text-[color:var(--radar)]">View in fleet →</button>
-      :<a href={trackerUrl(a)} target="_blank" rel="noopener noreferrer" className="mt-1 flex min-h-11 w-full items-center text-xs font-bold uppercase tracking-[0.16em] text-[color:var(--radar)]">Track on ADS-B Exchange ↗</a>}
+      :<a href={trackerUrl(a)} target="_blank" rel="noopener noreferrer" className="mt-1 flex min-h-11 w-full items-center text-xs font-bold uppercase tracking-[0.16em] text-[color:var(--radar)]">Track on ADSB.lol ↗</a>}
   </div>,document.body);
 };
