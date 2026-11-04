@@ -340,7 +340,16 @@ function installController() {
     if (performance.now() - wheel.lastAt < SCROLL_IDLE_MS) { scheduleSettle(); return; }
     moving = false;
     const y = window.scrollY;
-    if (coarse || reduce() || free() || zoomedIn() || lastDir < 0) return;
+    if (coarse) {
+      // Touch backup for slow drags the browser's proximity snap leaves between stages.
+      if (reduce() || free() || zoomedIn()) return;
+      const own = pinnedStages(journeyLayout(), y);
+      if (!own) return;
+      const near = own.reduce((a, b) => (Math.abs(b - y) < Math.abs(a - y) ? b : a), own[0] ?? y);
+      if (Math.abs(near - y) > 2 && Math.abs(near - y) < window.innerHeight * 0.6) window.scrollTo({ top: near, behavior: "smooth" });
+      return;
+    }
+    if (reduce() || free() || zoomedIn() || lastDir < 0) return;
     const target = snapTarget(journeyLayout().snap, y, seqStart, window.innerHeight);
     if (target === null) return;
     // The rest of the wheel gesture that produced this momentum must not page again.
