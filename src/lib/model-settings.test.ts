@@ -37,8 +37,8 @@ test('viewer uses requested rotation and lighting', () => {
   assert.equal(MODEL_SETTINGS['auto-rotate-delay'], 0);
   assert.equal(MODEL_SETTINGS['rotation-per-second'], '9deg');
   assert.equal(MODEL_SETTINGS['shadow-intensity'], 1);
-  assert.equal(MODEL_SETTINGS['shadow-softness'], 0.9);
-  assert.equal(MODEL_SETTINGS.exposure, 1);
-  assert.equal(MODEL_SETTINGS['environment-image'], 'neutral');
-  assert.equal(MODEL_SETTINGS['tone-mapping'], 'commerce');
+  assert.equal(MODEL_SETTINGS['shadow-softness'], 0.7);
+  assert.equal(MODEL_SETTINGS.exposure, 1.1);
+  assert.equal(MODEL_SETTINGS['environment-image'], 'legacy');
+  assert.equal(MODEL_SETTINGS['tone-mapping'], 'aces');
 });
