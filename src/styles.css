@@ -278,7 +278,8 @@ html.journey-free, html.journey-free.journey-snap { scroll-snap-type: none !impo
 .journey-viewport[data-zoomed] .journey-copy-wrap { opacity: 0; pointer-events: none !important; }
 .journey-viewport[data-zoomed] .journey-copy-wrap * { pointer-events: none !important; }
 /* Phones: darken only the lower ~40% behind the copy plus a light band under the header, so photos stay clear. */
-.journey-shade { background: linear-gradient(to top, var(--ink) 0%, color-mix(in oklab, var(--ink) 94%, transparent) 26%, color-mix(in oklab, var(--ink) 60%, transparent) 36%, transparent 46%, transparent 80%, color-mix(in oklab, var(--ink) 45%, transparent) 100%); }
+.journey-shade { background: linear-gradient(to top, color-mix(in oklab, var(--ink) 78%, transparent) 0%, color-mix(in oklab, var(--ink) 45%, transparent) 18%, transparent 34%, transparent 82%, color-mix(in oklab, var(--ink) 35%, transparent) 100%); }
+@media (max-width: 1023px) { .journey-copy { text-shadow: 0 1px 2px color-mix(in oklab, var(--ink) 85%, transparent), 0 0 18px color-mix(in oklab, var(--ink) 70%, transparent); } }
 @media (min-width: 1024px) { .journey-shade { background: linear-gradient(to top, var(--ink) 0%, color-mix(in oklab, var(--ink) 40%, transparent) 50%, color-mix(in oklab, var(--ink) 50%, transparent) 100%); } }
 .journey-viewport[data-zoomed] .journey-shade { opacity: .3; }
 
@@ -351,3 +352,9 @@ html.hero-enter .hero-mask > span { animation: hero-mask-in .55s var(--d, 0ms) c
 /* Private Pilot oblique view: minimal digital pattern line and compact bracket targets. */
 .traffic-oblique-path { fill:none; stroke:var(--radar, currentColor); stroke-width:1; stroke-width:1.25; stroke-dasharray:3 4; opacity:.65; vector-effect:non-scaling-stroke; pointer-events:none; }
 .traffic-target-compact { opacity:.8; stroke-width:1; }
+
+/* Touch: native one-swipe-one-stage paging in both directions (compositor-driven, no JS glide). */
+html.journey-snap { scroll-snap-type: y proximity; }
+html.journey-snap .journey-stop-page { height: 100svh; width: 1px; scroll-snap-align: start; scroll-snap-stop: always; }
+html.journey-snap .journey-section { scroll-snap-align: none; }
+@media (prefers-reduced-motion: reduce) { html.journey-snap { scroll-snap-type: none; } }

@@ -224,6 +224,10 @@ function installController() {
   const reduce = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const zoomedIn = () => root.classList.contains("journey-zoomed");
   const free = () => root.classList.contains("journey-free");
+  // Touch screens: native CSS scroll-snap (snap-stop: always) pages one stage per swipe in both
+  // directions on the compositor; JS never blocks or glides touch scrolling.
+  const coarse = window.matchMedia("(pointer: coarse)").matches;
+  if (coarse) root.classList.add("journey-snap");
   // A target must be a later stage in the SAME fully pinned journey.
   const goDown = (touch = false) => {
     const target = downTarget(window.scrollY);
@@ -272,7 +276,7 @@ function installController() {
     touching = true; rejected = false; lastTouchAt = performance.now();
     seqStart = window.scrollY;
     const t = e.touches[0];
-    g = e.touches.length === 1 && t && !reduce() ? { x: t.clientX, y: t.clientY, decided: false, fired: false, eligible: downTarget(window.scrollY) !== null } : null;
+    g = !coarse && e.touches.length === 1 && t && !reduce() ? { x: t.clientX, y: t.clientY, decided: false, fired: false, eligible: downTarget(window.scrollY) !== null } : null;
     syncMoveBlocker();
   };
   // Passive tracker: runs on every touchmove without ever blocking native scroll.
@@ -283,6 +287,7 @@ function installController() {
     if (zoomedIn()) { g = null; rejected = true; return; }
     const t = e.touches[0];
     // A finger that went down before the handler attached (first load) is adopted here.
+    if (coarse) return;
     if (!g && !rejected && t && e.touches.length === 1 && !reduce()) { touching = true; g = { x: t.clientX, y: t.clientY, decided: false, fired: false, eligible: false }; return; }
     if (!g || !t || e.touches.length !== 1) { g = null; rejected = true; return; }
     const dx = g.x - t.clientX, dy = g.y - t.clientY;
@@ -314,7 +319,7 @@ function installController() {
   };
   let moveBlocker = false;
   const syncMoveBlocker = () => {
-    const want = paging || (!rejected && !reduce() && !free() && !zoomedIn() && downTarget(window.scrollY) !== null);
+    const want = !coarse && (paging || (!rejected && !reduce() && !free() && !zoomedIn() && downTarget(window.scrollY) !== null));
     if (want === moveBlocker) return;
     moveBlocker = want;
     if (want) window.addEventListener("touchmove", onTouchMoveBlock, { passive: false, capture: true });
@@ -335,7 +340,7 @@ function installController() {
     if (performance.now() - wheel.lastAt < SCROLL_IDLE_MS) { scheduleSettle(); return; }
     moving = false;
     const y = window.scrollY;
-    if (reduce() || free() || zoomedIn() || lastDir < 0) return;
+    if (coarse || reduce() || free() || zoomedIn() || lastDir < 0) return;
     const target = snapTarget(journeyLayout().snap, y, seqStart, window.innerHeight);
     if (target === null) return;
     // The rest of the wheel gesture that produced this momentum must not page again.
@@ -355,6 +360,7 @@ function installController() {
     scheduleSettle();
     syncMoveBlocker();
     const L = journeyLayout();
+    if (coarse) { wantedMode = "fade"; setMode("fade"); return; }
     if (lastDir < 0) { wantedMode = "stack"; setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, y))); return; }
     setMode(resolveMode(mode, wantedMode, atSwitchPoint(L, y)));
   };
@@ -375,6 +381,7 @@ function installController() {
   window.addEventListener("resize", onResize);
   removeController = () => {
     ro.disconnect();
+    root.classList.remove("journey-snap");
     window.clearTimeout(idleTimer);
     window.removeEventListener("wheel", onWheel);
     window.removeEventListener("keydown", onKey);
@@ -577,7 +584,9 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const obs = metar?.[st.traffic.ident] ?? metar?.[st.traffic.wxStation] ?? null;
     const rwy = pickRunway(st.traffic, obs ? { dir: obs.dir, kt: obs.kt } : null);
     const f = WX_FIELDS[st.traffic.ident as keyof typeof WX_FIELDS];
-    const conditions = trafficConditions(obs, { elevation: st.traffic.elevation, ident: st.traffic.ident, ...(f ? { lat: f.lat, lon: f.lon } : {}) }, rwy.runway);
+    const live = trafficConditions(obs, { elevation: st.traffic.elevation, ident: st.traffic.ident, ...(f ? { lat: f.lat, lon: f.lon } : {}) }, rwy.runway);
+    // Owner: planes always fly the pattern, even in IFR (weather only shapes wind/climb/runway).
+    const conditions = { ...live, mode: live.mode === "ifr" ? "mvfr" as const : live.mode, approach: null };
     return { obs, rwy, conditions, pattern: profileAirport(patternFor(st.traffic, rwy), conditions.mode) };
   }), [stages, metar]);
   // Private Pilot oblique view and Instrument stage: Little Falls conditions.
@@ -634,7 +643,6 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
               <span aria-hidden className="text-background/60 sm:hidden">{wxOpen ? "▴" : "▾"}</span>
             </button>
             <p className={`mt-1 max-w-[min(34rem,calc(100vw-6rem))] ${wxOpen ? "" : "max-sm:hidden"}`}><MetarLine obs={w} /></p>
-            {o.conditions.mode === "ifr" && <p className="mt-1 font-bold text-background" data-pattern-closed>{o.obs.cat ?? "IFR"} — pattern closed</p>}
           </>); })()}</div>}{s.traffic && <p className="mt-1 hidden sm:block">RWY {ops[active]?.rwy.runway ?? s.traffic.runway} · {ops[active]?.rwy.side ?? s.traffic.side} traffic · TPA {(s.traffic.elevation + (ops[active]?.pattern.tpaAgl ?? s.traffic.tpaAgl)).toLocaleString("en-US")} MSL</p>}</>}
           {(s.traffic || s.perspective) && <LiveOps ident={s.traffic?.ident ?? "KLXL"} elevation={s.traffic?.elevation ?? 1123} obs={s.traffic ? ops[active]?.obs ?? null : klxl} traffic={liveTraffic} />}
           <p className="mt-1 hidden sm:block">Stage {s.code} / 0{stages.length}</p>
