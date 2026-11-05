@@ -263,7 +263,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
 
   // ---- Story mode: sideways stages with a box-turn; vertical swipes are handled here (locked screen).
   // Taps and auto-advance crossfade; only a finger swipe turns the box.
-  const fadeNextRef = useRef(false);
+  const swipeRef = useRef(false);
   const flatTimer = useRef(0);
   const paintStory = (pos: number, animate: boolean, fade = false) => {
     const reduce = reducedMotion();
@@ -317,7 +317,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       layerRefs.current.forEach((l) => { if (l) { l.style.transition = ""; l.style.transformOrigin = ""; } });
       return;
     }
-    paintStory(active, true);
+    paintStory(active, true, !carousel && !swipeRef.current);
+    swipeRef.current = false;
     if (copyRef.current) { copyRef.current.style.opacity = "1"; copyRef.current.style.transform = "none"; }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [story, active]);
@@ -427,7 +428,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         let dir = 0;
         if (Math.abs(v) > 0.35) dir = v < 0 && dx < 0 ? 1 : v > 0 && dx > 0 ? -1 : 0;
         else if (Math.abs(dx) > w * 0.5) dir = dx < 0 ? 1 : -1;
-        if (dir) go(dir as 1 | -1); else paintStory(activeRef.current, true);
+        if (dir) { swipeRef.current = true; go(dir as 1 | -1); } else paintStory(activeRef.current, true);
         return;
       }
       if (axis === "y" && !carousel) {
