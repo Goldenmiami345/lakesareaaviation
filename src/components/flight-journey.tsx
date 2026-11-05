@@ -18,7 +18,7 @@ import { storyStep } from "../lib/story-nav";
 import { TrafficPattern } from "./traffic-pattern";
 import { AirportScene } from './airport-scene';
 import { TrafficPerspective } from "./traffic-perspective";
-import airlineVideo from "../assets/journey/airline-approach.mp4.asset.json";
+import airlineVideo from "../assets/journey/airline-approach-1080.mp4.asset.json";
 import clouds from "../assets/journey/01-clouds.webp";
 import runway from "../assets/journey/02-runway-corrected.webp";
 import instrument from "../assets/journey/instrument-imc-cockpit.webp";
