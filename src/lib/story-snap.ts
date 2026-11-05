@@ -67,7 +67,12 @@ function start(): () => void {
   };
   const onEnd = (e: TouchEvent) => { fingers = e.touches.length; if (!fingers) schedule(); };
   const schedule = () => { window.clearTimeout(idle); idle = window.setTimeout(settle, 180); };
-  const onScroll = () => { if (!fingers) schedule(); };
+  const onScroll = () => {
+    if (fingers) return;
+    // Free momentum from the content crossing back into the sections: lock so it stops at the first section it meets.
+    if (on === false && !zoomed() && window.scrollY < end - 1) set(true);
+    schedule();
+  };
 
   measure();
   set(storySnapWanted(window.scrollY, end, false));
