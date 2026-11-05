@@ -182,7 +182,7 @@ export const LiveCard=({a,ref}:{a:LiveAircraft;ref:React.RefObject<HTMLDivElemen
     </dl>
     {ours
       ?<button type="button" onClick={()=>void navigate({to:'/fleet',hash:a.id.toLowerCase(),hashScrollIntoView:false})} className="mt-1 flex min-h-11 w-full items-center text-left text-xs font-bold uppercase tracking-[0.16em] text-[color:var(--radar)]">View in fleet →</button>
-      :<a href={trackerUrl(a)} target="_blank" rel="noopener noreferrer" className="mt-1 flex min-h-11 w-full items-center text-xs font-bold uppercase tracking-[0.16em] text-[color:var(--radar)]">Track on ADSB.lol ↗</a>}
+      :<a href={trackerUrl(a)} target="_blank" rel="noopener noreferrer" className="mt-1 flex min-h-11 w-full items-center text-xs font-bold uppercase tracking-[0.16em] text-[color:var(--radar)]">Track ↗</a>}
   </div>,document.body);
 };
 

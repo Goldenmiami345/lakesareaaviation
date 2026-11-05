@@ -18,7 +18,7 @@ describe("Private Pilot live traffic", () => {
     assert.deepEqual(patternTraffic(null, 1123), []);
   });
   test("non-school aircraft link to their tracker page by ICAO hex", () => {
-    assert.equal(trackerUrl({ id: "N512SR", hex: "a6b1f0" }), "https://globe.adsb.lol/?icao=a6b1f0");
+    assert.equal(trackerUrl({ id: "N512SR", hex: "a6b1f0" }), "https://www.flightaware.com/live/flight/N512SR");
   });
   test("dead reckoning is capped at 30 seconds", () => {
     const a = { lat: 45.95, lon: -94.35, kt: 100, track: 0 };
