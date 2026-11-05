@@ -16,7 +16,7 @@ import { useStageZoom } from "../lib/stage-zoom";
 import { useDesktopJourneyMode, useMobileJourneyMode } from "../lib/use-site-settings";
 import { storyStep } from "../lib/story-nav";
 import { useStorySnap } from "../lib/story-snap";
-import { trafficCardIsOpen, useTrafficCardOpen } from "../lib/traffic-card-open";
+import { trafficCardIsOpen, trafficCardRecentlyOpen, useTrafficCardOpen } from "../lib/traffic-card-open";
 import { TrafficPattern } from "./traffic-pattern";
 import { AirportScene } from './airport-scene';
 import { TrafficPerspective } from "./traffic-perspective";
@@ -448,7 +448,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       }
       if (axis === null && !interactive(e.target)) {
         // This tap only closed an airplane's card: it must not also move the stage.
-        if (cardTap.open) { cardTap.open = false; return; }
+        if (cardTap.open || trafficCardRecentlyOpen()) { cardTap.open = false; return; }
         // Tapping while caught between two sections first snaps this one into place.
         const top = box().top;
         if (Math.abs(top) > 2) { glideTo(window.scrollY + top); return; }
