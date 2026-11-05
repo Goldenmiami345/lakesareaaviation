@@ -37,7 +37,7 @@ export function MotionExperience({ pageKey }: { pageKey: string }) {
         const y = window.scrollY;
         const progress = (max > 0 ? Math.min(1, y / max) : 0).toFixed(4);
         if (bar && progress !== lastProgress && !document.documentElement.classList.contains("story-mode")) { lastProgress = progress; bar.style.setProperty("--scroll-progress", progress); }
-        const shift = `${Math.round(Math.min(y * 0.16, 120))}px`;
+        const shift = `${Math.min(y * 0.16, 120).toFixed(1)}px`;
         if (shift !== lastShift) { lastShift = shift; heroes.forEach((h) => h.style.setProperty("--hero-shift", shift)); }
       });
     };
