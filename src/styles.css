@@ -110,6 +110,8 @@
 .runway-line { transform-origin: left; animation: runway 1.2s .35s cubic-bezier(.2,.65,.3,1) both; }
 .scroll-progress { position: fixed; inset: 0 auto auto 0; z-index: 80; width: 100%; height: 3px; background: var(--primary); transform: scaleX(var(--scroll-progress, 0)); transform-origin: left; pointer-events: none; }
 html.story-mode .scroll-progress { display: none; }
+.carousel-fill { animation: carousel-fill linear both; }
+@keyframes carousel-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 .story-hint-tap { opacity: 0; animation: sh-tap 1.4s ease-out both; }
 .story-hint-ring { animation: sh-ring .7s ease-out 2 both; }
 .story-hint-swipe { opacity: 0; animation: sh-swipe 1.6s 1.4s ease-in-out both; }

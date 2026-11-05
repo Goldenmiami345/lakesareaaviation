@@ -58,3 +58,23 @@ export function useMobileJourneyMode() {
   }, []);
   return mode;
 }
+
+export type DesktopJourneyMode = "scroll" | "carousel";
+export const parseDesktopJourneyMode = (v: unknown): DesktopJourneyMode => (v === "carousel" ? "carousel" : "scroll");
+let cachedDesktop: Promise<DesktopJourneyMode> | null = null;
+/** Owner setting for computer home sections (site_settings.desktop_journey_mode); 'scroll' until loaded (prerender-safe). */
+export function useDesktopJourneyMode() {
+  const [mode, setMode] = useState<DesktopJourneyMode>("scroll");
+  useLayoutEffect(() => {
+    if (import.meta.env.DEV && new URLSearchParams(window.location.search).has("carousel")) { setMode("carousel"); return; }
+    try { setMode(parseDesktopJourneyMode(localStorage.getItem("desktop-journey-mode") ?? undefined)); } catch { /* ignore */ }
+    cachedDesktop ??= (async () => {
+      const { data } = await supabase.from("site_settings").select("desktop_journey_mode").eq("id", "brand").maybeSingle();
+      return parseDesktopJourneyMode((data as { desktop_journey_mode?: string } | null)?.desktop_journey_mode);
+    })().catch(() => "scroll" as const);
+    let live = true;
+    void cachedDesktop.then((v) => { if (!live) return; setMode(v); try { localStorage.setItem("desktop-journey-mode", v); } catch { /* ignore */ } });
+    return () => { live = false; };
+  }, []);
+  return mode;
+}

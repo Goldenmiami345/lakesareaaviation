@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { Check, LogOut, Palette } from "lucide-react";
 import { parseMobileJourneyMode, type MobileJourneyMode } from "@/lib/story-nav";
+import { parseDesktopJourneyMode, type DesktopJourneyMode } from "@/lib/use-site-settings";
 import { Button } from "@/components/ui/button";
 import { applyAccentTheme, type AccentTheme } from "@/components/theme-sync";
 import { lovable } from "@/integrations/lovable";
@@ -27,6 +28,7 @@ function AdminPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [theme, setTheme] = useState<AccentTheme>("blue");
   const [journey, setJourney] = useState<MobileJourneyMode>("scroll");
+  const [desktopJourney, setDesktopJourney] = useState<DesktopJourneyMode>("scroll");
   const [fleetModels, setFleetModels] = useState(false);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -36,11 +38,12 @@ function AdminPage() {
       const { data: auth } = await supabase.auth.getUser();
       setUser(auth.user ?? null);
       const [{ data: setting }, { data: role }] = await Promise.all([
-        supabase.from("site_settings").select("accent_theme, mobile_journey_mode, fleet_show_models").eq("id", "brand").single(),
+        supabase.from("site_settings").select("accent_theme, mobile_journey_mode, desktop_journey_mode, fleet_show_models").eq("id", "brand").single(),
         auth.user ? supabase.from("user_roles").select("id").eq("user_id", auth.user.id).eq("role", "admin").maybeSingle() : Promise.resolve({ data: null }),
       ]);
       if (setting?.accent_theme === "blue" || setting?.accent_theme === "orange") setTheme(setting.accent_theme);
       setJourney(parseMobileJourneyMode(setting?.mobile_journey_mode));
+      setDesktopJourney(parseDesktopJourneyMode(setting?.desktop_journey_mode));
       setFleetModels(Boolean(setting?.fleet_show_models));
       setIsAdmin(Boolean(role));
     };
@@ -85,6 +88,16 @@ function AdminPage() {
     setBusy(false);
   }
 
+  async function changeDesktopJourney(next: DesktopJourneyMode) {
+    if (!user || !isAdmin) return;
+    setBusy(true); setMessage("");
+    const { error } = await supabase.from("site_settings").update({ desktop_journey_mode: next, updated_at: new Date().toISOString(), updated_by: user.id }).eq("id", "brand");
+    if (!error) try { localStorage.setItem("desktop-journey-mode", next); } catch { /* ignore */ }
+    if (error) setMessage(error.message);
+    else { setDesktopJourney(next); setMessage(`Computers now show ${next === "carousel" ? "Carousel" : "Fading scroll"} on the home page.`); }
+    setBusy(false);
+  }
+
   async function changeFleetModels(next: boolean) {
     if (!user || !isAdmin) return;
     setBusy(true); setMessage("");
@@ -116,9 +129,14 @@ function AdminPage() {
           </div>}
           {isAdmin && <div className="mt-8">
             <h2 className="font-display text-xl">Mobile home sections</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Phones only. Desktop always keeps the scroll version.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Phones only.</p>
             <div className="mt-3 grid grid-cols-2 gap-3">
               {(["scroll", "story"] as const).map(option => <Button key={option} disabled={busy} variant={journey === option ? "default" : "outline"} className="h-auto min-h-16 rounded-none p-4" onClick={() => changeJourney(option)}>{option === "scroll" ? "Fading scroll" : "Story mode"}{journey === option && <Check />}</Button>)}
+            </div>
+            <h2 className="mt-8 font-display text-xl">Computer home sections</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Laptops and desktops only. Carousel plays each stage on its own; visitors can pause, click, use arrow keys or swipe sideways on a trackpad.</p>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              {(["scroll", "carousel"] as const).map(option => <Button key={option} disabled={busy} variant={desktopJourney === option ? "default" : "outline"} className="h-auto min-h-16 rounded-none p-4" onClick={() => changeDesktopJourney(option)}>{option === "scroll" ? "Fading scroll" : "Carousel"}{desktopJourney === option && <Check />}</Button>)}
             </div>
             <h2 className="mt-8 font-display text-xl">Fleet page airplanes</h2>
             <p className="mt-1 text-sm text-muted-foreground">Traffic cards always show 3D models when available.</p>

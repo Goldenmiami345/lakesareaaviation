@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { srcSetFor } from "@/lib/responsive-image";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Phone } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Pause, Phone, Play } from "lucide-react";
 import { Button } from "./ui/button";
 import { journeyFrame, journeyAltitude, settleTarget, stageLanding, stageLengthFrom, JOURNEY_TAIL, type JourneyGeometry } from "../lib/journey-scroll";
 import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
@@ -13,7 +13,7 @@ import { profileAirport, trafficConditions, NO_CONDITIONS, type Metar } from "..
 import { WX_FIELDS } from "../lib/wx-stations";
 import { MetarLine, InstrumentConditions } from "./live-wx";
 import { useStageZoom } from "../lib/stage-zoom";
-import { useMobileJourneyMode } from "../lib/use-site-settings";
+import { useDesktopJourneyMode, useMobileJourneyMode } from "../lib/use-site-settings";
 import { storyStep } from "../lib/story-nav";
 import { TrafficPattern } from "./traffic-pattern";
 import { AirportScene } from './airport-scene';
@@ -106,7 +106,14 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const isPhone = useIsPhone();
   const journeyMode = useMobileJourneyMode();
   // Story mode (owner admin switch): phones only; desktop always keeps the scroll version.
-  const story = journeyMode === "story" && isPhone;
+  const desktopMode = useDesktopJourneyMode();
+  // Computer equivalent (separate owner switch): an Apple-style auto-advancing carousel built on the same story engine.
+  const carousel = desktopMode === "carousel" && !isPhone;
+  const story = (journeyMode === "story" && isPhone) || carousel;
+  const [playing, setPlaying] = useState(true);
+  const [inView, setInView] = useState(false);
+  const AUTO_MS = 7000;
+  const autoOn = carousel && playing && inView;
   const activeRef = useRef(0);
   activeRef.current = active;
 
@@ -307,6 +314,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const box = () => (el.parentElement ?? el).getBoundingClientRect();
     const exitSection = () => glideTo(window.scrollY + box().top + el.offsetHeight);
     const go = (dir: 1 | -1) => {
+      if (carousel) { setPlaying(false); setActive((a) => (a + dir + n) % n); return; }
       const next = storyStep(activeRef.current, n, dir);
       if (next === "exit") { paintStory(activeRef.current, true); exitSection(); return; }
       if (next === activeRef.current) { paintStory(next, true); return; }
@@ -332,6 +340,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       }
       dy = my;
       // Vertical: the page follows the finger 1:1 (natural), the lock only helps on release.
+      if (axis === "y" && carousel) return; // mouse/trackpad: page scrolls natively
       if (axis === "y") { window.scrollTo({ top: Math.max(0, sScroll - my), behavior: "instant" }); return; }
       if (axis !== "x") return;
       dx = mx;
@@ -355,7 +364,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         if (dir) go(dir as 1 | -1); else paintStory(activeRef.current, true);
         return;
       }
-      if (axis === "y") {
+      if (axis === "y" && !carousel) {
         // The finger already moved the page; on release ease into the nearest resting place:
         // a deliberate pull (flick or past ~30% of the screen) carries on to the next section, otherwise it settles back.
         const v = stale ? 0 : vy, h = window.innerHeight;
@@ -395,8 +404,43 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       window.removeEventListener("journey:jump", onJump);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [story, stages, id]);
+  }, [story, carousel, stages, id]);
 
+  useEffect(() => {
+    if (!carousel) return;
+    const vp = viewportRef.current;
+    if (!vp) return;
+    const io = new IntersectionObserver(([en]) => setInView(!!en?.isIntersecting && en.intersectionRatio > 0.6), { threshold: [0.6] });
+    io.observe(vp);
+    if (reducedMotion()) setPlaying(false);
+    const n = stages.length;
+    const step = (dir: 1 | -1) => setActive((a) => (a + dir + n) % n);
+    const onKey = (e: KeyboardEvent) => {
+      const r = vp.getBoundingClientRect();
+      if (r.top > window.innerHeight * 0.4 || r.bottom < window.innerHeight * 0.6) return;
+      if ((e.target as Element | null)?.closest?.("input,textarea,select")) return;
+      if (e.key === "ArrowRight") { e.preventDefault(); setPlaying(false); step(1); }
+      else if (e.key === "ArrowLeft") { e.preventDefault(); setPlaying(false); step(-1); }
+    };
+    // Two-finger sideways swipe on a trackpad turns one stage; vertical scrolling stays native.
+    let acc = 0, cool = 0;
+    const onWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+      e.preventDefault();
+      const now = performance.now();
+      if (now < cool) return;
+      acc += e.deltaX;
+      if (Math.abs(acc) > 50) { setPlaying(false); step(acc > 0 ? 1 : -1); acc = 0; cool = now + 700; }
+    };
+    window.addEventListener("keydown", onKey);
+    vp.addEventListener("wheel", onWheel, { passive: false });
+    return () => { io.disconnect(); window.removeEventListener("keydown", onKey); vp.removeEventListener("wheel", onWheel); };
+  }, [carousel, stages.length]);
+  useEffect(() => {
+    if (!autoOn) return;
+    const t = window.setTimeout(() => setActive((a) => (a + 1) % stages.length), AUTO_MS);
+    return () => window.clearTimeout(t);
+  }, [autoOn, active, stages.length]);
   const { zoomed, reset } = useStageZoom({ viewportRef, target: () => layerRefs.current[active]?.querySelector<HTMLElement>(".journey-zoom") ?? null, resetKey: active });
   const metar = useMetar();
   const liveTraffic = useLiveTraffic();
@@ -421,11 +465,18 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     <section ref={sectionRef} data-journey-section="" id={id} aria-label={label} className={`journey-section ${story ? "sticky top-0" : "relative"} bg-ink text-background`} data-story={story ? "" : undefined} style={{ height: story ? "100lvh" : `calc(${stages.length - 1 + JOURNEY_TAIL} * var(--journey-stage) + 100dvh)`, "--journey-count": stages.length } as React.CSSProperties}>
       <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className={`journey-viewport sticky top-0 ${story ? "h-lvh" : "h-dvh"} overflow-hidden`} style={story ? { perspective: "1200px", touchAction: "none", overscrollBehavior: "none" } : undefined}>
         {story && (
-          <div className="absolute inset-x-3 top-[calc(env(safe-area-inset-top)+3.6rem)] z-30 flex gap-1">
-            {stages.map((st, i) => <button key={st.code} type="button" aria-label={`Show ${st.label}`} onClick={() => { setActive(i); const top = (sectionRef.current?.parentElement ?? sectionRef.current)?.getBoundingClientRect().top ?? 0; if (Math.abs(top) > 2) glideTo(window.scrollY + top); }} className="flex h-6 flex-1 items-center"><span className="block h-[3px] w-full overflow-hidden rounded-full bg-background/30"><span className="block h-full origin-left bg-primary transition-transform duration-300" style={{ transform: `scaleX(${i <= active ? 1 : 0})` }} /></span></button>)}
+          <div className={carousel ? "absolute bottom-[2.6rem] left-1/2 z-30 flex w-[min(28rem,40vw)] -translate-x-1/2 gap-1.5" : "absolute inset-x-3 top-[calc(env(safe-area-inset-top)+3.6rem)] z-30 flex gap-1"}>
+            {stages.map((st, i) => <button key={st.code} type="button" aria-label={`Show ${st.label}`} onClick={() => { setActive(i); const top = (sectionRef.current?.parentElement ?? sectionRef.current)?.getBoundingClientRect().top ?? 0; if (Math.abs(top) > 2) glideTo(window.scrollY + top); }} className="flex h-6 flex-1 items-center"><span className="block h-[3px] w-full overflow-hidden rounded-full bg-background/30"><span key={i === active && autoOn ? "run" : "idle"} className={`block h-full origin-left bg-primary ${i === active && autoOn ? "carousel-fill" : "transition-transform duration-300"}`} style={i === active && autoOn ? { animationDuration: `${AUTO_MS}ms` } : { transform: `scaleX(${i <= active ? 1 : 0})` }} /></span></button>)}
           </div>
         )}
-        {story && hint && (
+        {carousel && (
+          <div data-interactive="" className="absolute bottom-8 right-[max(var(--gutter),calc((100%-1720px)/2))] z-30 flex items-center gap-1 rounded-full bg-ink/45 p-1 text-background backdrop-blur-md">
+            <button type="button" aria-label="Previous stage" onClick={() => { setPlaying(false); setActive((a) => (a - 1 + stages.length) % stages.length); }} className="grid size-10 place-items-center rounded-full transition-colors hover:bg-background/15"><ChevronLeft className="size-5" /></button>
+            <button type="button" aria-label={playing ? "Pause" : "Play"} onClick={() => setPlaying((p) => !p)} className="grid size-10 place-items-center rounded-full transition-colors hover:bg-background/15">{playing ? <Pause className="size-4" /> : <Play className="size-4" />}</button>
+            <button type="button" aria-label="Next stage" onClick={() => { setPlaying(false); setActive((a) => (a + 1) % stages.length); }} className="grid size-10 place-items-center rounded-full transition-colors hover:bg-background/15"><ChevronRight className="size-5" /></button>
+          </div>
+        )}
+        {story && !carousel && hint && (
           <div aria-hidden className="story-hint pointer-events-none absolute inset-0 z-30">
             {/* Tap: a pulse where tapping advances (right side). */}
             <div className="story-hint-tap absolute right-[14%] top-[42%] flex flex-col items-center gap-2">
