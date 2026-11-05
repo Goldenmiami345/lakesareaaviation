@@ -262,20 +262,50 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const jump = (i: number) => jumpToJourney(id, i);
 
   // ---- Story mode: sideways stages with a box-turn; vertical swipes are handled here (locked screen).
-  const paintStory = (pos: number, animate: boolean) => {
+  // Taps and auto-advance crossfade; only a finger swipe turns the box.
+  const swipeRef = useRef(false);
+  const flatTimer = useRef(0);
+  const paintStory = (pos: number, animate: boolean, fade = false) => {
     const reduce = reducedMotion();
+    window.clearTimeout(flatTimer.current);
+    const settled = Number.isInteger(pos);
     layerRefs.current.forEach((layer, i) => {
       if (!layer) return;
       const rel = i - pos;
       const vis = Math.abs(rel) < 1;
-      layer.style.transition = animate ? (reduce ? "opacity 240ms ease-out" : "transform 360ms cubic-bezier(0.2,0,0,1), opacity 360ms ease-out") : "none";
-      layer.style.visibility = vis || Math.round(pos) === i ? "visible" : "hidden";
-      layer.style.pointerEvents = Math.round(pos) === i ? "auto" : "none";
-      if (reduce) { layer.style.transform = "none"; layer.style.opacity = String(Math.max(0, 1 - Math.abs(rel))); return; }
+      const cur = Math.round(pos) === i;
+      layer.style.pointerEvents = cur ? "auto" : "none";
+      if (reduce || fade) {
+        // Simple crossfade: previous layer stays underneath while the new one fades in on top.
+        const wasVisible = layer.style.visibility === "visible" && layer.style.opacity !== "0";
+        layer.style.transition = animate ? "opacity 260ms ease-out" : "none";
+        layer.style.transform = "none";
+        layer.style.zIndex = cur ? "60" : "";
+        layer.style.visibility = cur || wasVisible ? "visible" : "hidden";
+        layer.style.opacity = cur ? "1" : wasVisible ? "1" : "0";
+        if (cur && animate && !wasVisible) { layer.style.opacity = "0"; void layer.offsetWidth; layer.style.opacity = "1"; }
+        return;
+      }
+      layer.style.zIndex = "";
+      layer.style.transition = animate ? "transform 360ms cubic-bezier(0.2,0,0,1)" : "none";
+      layer.style.visibility = vis || cur ? "visible" : "hidden";
       layer.style.opacity = vis ? "1" : "0";
       layer.style.transformOrigin = rel >= 0 ? "left center" : "right center";
       layer.style.transform = `translate3d(${(rel * 100).toFixed(3)}%,0,0) rotateY(${(rel * 90).toFixed(3)}deg)`;
     });
+    // At rest, drop all 3D so vertical scrolling composites one flat layer (3D layers flickered black while sliding).
+    if (settled) {
+      flatTimer.current = window.setTimeout(() => {
+        layerRefs.current.forEach((layer, i) => {
+          if (!layer) return;
+          layer.style.transition = "none";
+          layer.style.transform = "none";
+          layer.style.zIndex = "";
+          layer.style.opacity = i === pos ? "1" : "0";
+          layer.style.visibility = i === pos ? "visible" : "hidden";
+        });
+      }, animate ? 380 : 0);
+    }
     // Altitude follows the finger between stages, like the scroll version's climb.
     if (hudRef.current) {
       const n = stages.length, p = Math.max(0, Math.min(n - 1, pos)), a = Math.floor(p);
@@ -287,7 +317,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       layerRefs.current.forEach((l) => { if (l) { l.style.transition = ""; l.style.transformOrigin = ""; } });
       return;
     }
-    paintStory(active, true);
+    paintStory(active, true, !carousel && !swipeRef.current);
+    swipeRef.current = false;
     if (copyRef.current) { copyRef.current.style.opacity = "1"; copyRef.current.style.transform = "none"; }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [story, active]);
@@ -350,8 +381,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const go = (dir: 1 | -1) => {
       if (carousel) { setPlaying(false); setActive((a) => (a + dir + n) % n); return; }
       const next = storyStep(activeRef.current, n, dir);
-      if (next === "exit") { paintStory(activeRef.current, true); exitSection(); return; }
-      if (next === activeRef.current) { paintStory(next, true); return; }
+      if (next === "exit") { swipeRef.current = false; paintStory(activeRef.current, true); exitSection(); return; }
+      if (next === activeRef.current) { swipeRef.current = false; paintStory(next, true); return; }
       setActive(next);
     };
     let sx = 0, sy = 0, axis: "x" | "y" | null = null, down = false, dx = 0, dy = 0, vx = 0, vy = 0, lx = 0, ly = 0, lt = 0, sScroll = 0, sTop = 0, swipeLimit: number | null = null;
@@ -397,7 +428,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         let dir = 0;
         if (Math.abs(v) > 0.35) dir = v < 0 && dx < 0 ? 1 : v > 0 && dx > 0 ? -1 : 0;
         else if (Math.abs(dx) > w * 0.5) dir = dx < 0 ? 1 : -1;
-        if (dir) go(dir as 1 | -1); else paintStory(activeRef.current, true);
+        if (dir) { swipeRef.current = true; go(dir as 1 | -1); } else paintStory(activeRef.current, true);
         return;
       }
       if (axis === "y" && !carousel) {
