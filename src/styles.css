@@ -377,7 +377,7 @@ html.hero-enter .hero-mask > span { animation: hero-mask-in .55s var(--d, 0ms) c
 /* Phone tap targets: text links keep their look but get a 44px-tall hit box (WCAG 2.5.5/2.5.8). */
 @media (max-width: 640px) {
   main :is(p, li, dd, blockquote, figcaption, td) a,
-  main a.interactive-arrow:not([class*="min-h-"]),
+  main a.interactive-arrow:not([class*="min-h-"]):not(.program-card):not([class*="p-"]),
   main a.font-bold:not([class*="min-h-"]):not([class*="py-"]):not([class*="p-"]):not([class*="bg-"]):not([class*="h-"]) { display: inline-flex; align-items: center; min-height: 44px; margin-block: calc((1lh - 44px) / 2); vertical-align: middle; }
 }
 
