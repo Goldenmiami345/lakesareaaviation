@@ -94,3 +94,5 @@
 - [x] Hero title: "BECOME A PROFESSIONAL PILOT", CTA and location chips centered as one group on phone and desktop; verified with screenshots.
 
 - [x] Journey stages cut to one text line (bigger headline only, small subtext removed); instrument stage line swapped per owner red line; 149 tests, build OK, phone story all six stages + desktop + airport section checked.
+
+- [x] State codes added to the home location buttons on phones (were hidden below 640px); fits 320-1280 with no clipping, 44px tap areas kept, build OK.
