@@ -554,9 +554,15 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
             {SHOW_TRAFFIC && st.traffic && !st.phoneImg && <TrafficPattern airport={ops[i]?.pattern ?? st.traffic} wind={ops[i]?.obs ?? null} runwayHeading={ops[i]?.rwy.trueHdg ?? Number(st.traffic.runway)*10} conditions={ops[i]?.conditions ?? NO_CONDITIONS} active={i === active} />}
             {st.perspective && <TrafficPerspective wind={klxl} conditions={klxlConditions} active={i === active} {...(isPhone && st.phoneView ? { viewBox: st.phoneView } : {})} />}
             </div>
+            {story && <>
+              <div className="journey-shade pointer-events-none absolute inset-0 transition-opacity duration-300" />
+              <div inert={i !== active || undefined} className="site-container journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 pb-[calc(2.75rem+env(safe-area-inset-bottom)+100lvh-100dvh)] sm:pb-24 md:pb-12 lg:pb-16">
+                <div className="journey-copy max-w-2xl"><StageCopy s={st} wx={klxl} wxLoading={metar === undefined} /></div>
+              </div>
+            </>}
           </div>
         ))}
-        <div className="journey-shade pointer-events-none absolute inset-0 z-10 transition-opacity duration-300" />
+        {!story && <div className="journey-shade pointer-events-none absolute inset-0 z-10 transition-opacity duration-300" />}
         
         <div ref={fadeTopRef} aria-hidden className="pointer-events-none absolute inset-0 z-40 bg-ink" style={{ opacity: 0 }} />
         <div ref={fadeBottomRef} aria-hidden className={`pointer-events-none absolute inset-0 z-40 ${fadeBottom === "background" ? "bg-background" : "bg-ink"}`} style={{ opacity: 0 }} />
@@ -598,11 +604,11 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
           <button type="button" onClick={reset} aria-label="Reset zoom" className="absolute right-4 top-24 z-30 inline-flex min-h-11 min-w-11 items-center gap-1.5 border border-background/40 bg-ink/70 px-3 font-mono text-xs font-bold uppercase tracking-[0.14em] text-background backdrop-blur-sm">✕ Reset</button>
         )}
         {/* Copy */}
-        <div className={`site-container journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 z-20 ${story ? "pb-[calc(2.75rem+env(safe-area-inset-bottom)+100lvh-100dvh)]" : "pb-[calc(2.75rem+env(safe-area-inset-bottom))] max-lg:!pr-14 "} sm:pb-24 md:pb-12 lg:pb-16`}>
+        {!story && <div className="site-container journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 z-20 pb-[calc(2.75rem+env(safe-area-inset-bottom))] max-lg:!pr-14 sm:pb-24 md:pb-12 lg:pb-16">
           <div ref={copyRef} className="journey-copy max-w-2xl">
             <StageCopy s={s} wx={klxl} wxLoading={metar === undefined} />
           </div>
-        </div>
+        </div>}
 
       </div>
     </section>
