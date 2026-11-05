@@ -287,16 +287,15 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     if (!story) return;
     const root = document.documentElement;
     root.classList.add("story-mode"); // hides the page-progress bar; the trail shows progress instead
-    let seen = false;
-    try { seen = localStorage.getItem("story-hint-seen") === "1"; } catch { /* ignore */ }
     const vp = viewportRef.current;
-    if (seen || !vp) return () => root.classList.remove("story-mode");
-    // Like Stories' first-run coach mark: shown until the first touch, then never again.
-    const io = new IntersectionObserver(([en]) => { if (en?.isIntersecting && en.intersectionRatio > 0.6) setHint(true); }, { threshold: [0.6] });
+    if (!vp) return () => root.classList.remove("story-mode");
+    // Coach mark: fades in after a short idle while this section fills the screen; any touch hides it and restarts the wait.
+    let inView = false, timer = 0;
+    const arm = () => { window.clearTimeout(timer); setHint(false); if (inView) timer = window.setTimeout(() => setHint(true), 1800); };
+    const io = new IntersectionObserver(([en]) => { inView = !!en?.isIntersecting && en.intersectionRatio > 0.85; arm(); }, { threshold: [0.85] });
     io.observe(vp);
-    const dismiss = () => { setHint(false); io.disconnect(); try { localStorage.setItem("story-hint-seen", "1"); } catch { /* ignore */ } };
-    vp.addEventListener("pointerdown", dismiss, { once: true });
-    return () => { root.classList.remove("story-mode"); io.disconnect(); vp.removeEventListener("pointerdown", dismiss); };
+    vp.addEventListener("pointerdown", arm);
+    return () => { root.classList.remove("story-mode"); io.disconnect(); window.clearTimeout(timer); vp.removeEventListener("pointerdown", arm); };
   }, [story]);
   useEffect(() => {
     if (!story) return;
@@ -415,8 +414,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const s = stages[active] ?? stages[0];
   if (!s) return null;
   return (
-    <section ref={sectionRef} data-journey-section="" id={id} aria-label={label} className={`journey-section ${story ? "sticky top-0" : "relative"} bg-ink text-background`} data-story={story ? "" : undefined} style={{ height: story ? "100dvh" : `calc(${stages.length - 1 + JOURNEY_TAIL} * var(--journey-stage) + 100dvh)`, "--journey-count": stages.length } as React.CSSProperties}>
-      <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className="journey-viewport sticky top-0 h-dvh overflow-hidden" style={story ? { perspective: "1200px", touchAction: "none", overscrollBehavior: "none" } : undefined}>
+    <section ref={sectionRef} data-journey-section="" id={id} aria-label={label} className={`journey-section ${story ? "sticky top-0" : "relative"} bg-ink text-background`} data-story={story ? "" : undefined} style={{ height: story ? "100lvh" : `calc(${stages.length - 1 + JOURNEY_TAIL} * var(--journey-stage) + 100dvh)`, "--journey-count": stages.length } as React.CSSProperties}>
+      <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className={`journey-viewport sticky top-0 ${story ? "h-lvh" : "h-dvh"} overflow-hidden`} style={story ? { perspective: "1200px", touchAction: "none", overscrollBehavior: "none" } : undefined}>
         {story && (
           <div className="absolute inset-x-3 top-[calc(env(safe-area-inset-top)+3.6rem)] z-30 flex gap-1">
             {stages.map((st, i) => <button key={st.code} type="button" aria-label={`Show ${st.label}`} onClick={() => { setActive(i); const top = (sectionRef.current?.parentElement ?? sectionRef.current)?.getBoundingClientRect().top ?? 0; if (Math.abs(top) > 2) glideTo(window.scrollY + top); }} className="flex h-6 flex-1 items-center"><span className="block h-[3px] w-full overflow-hidden rounded-full bg-background/30"><span className="block h-full origin-left bg-primary transition-transform duration-300" style={{ transform: `scaleX(${i <= active ? 1 : 0})` }} /></span></button>)}
@@ -496,7 +495,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
           <button type="button" onClick={reset} aria-label="Reset zoom" className="absolute right-4 top-24 z-30 inline-flex min-h-11 min-w-11 items-center gap-1.5 border border-background/40 bg-ink/70 px-3 font-mono text-xs font-bold uppercase tracking-[0.14em] text-background backdrop-blur-sm">✕ Reset</button>
         )}
         {/* Copy */}
-        <div className={`site-container journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 z-20 pb-[calc(1.5rem+env(safe-area-inset-bottom))] ${story ? "" : "max-lg:!pr-14 "}sm:pb-24 md:pb-12 lg:pb-16`}>
+        <div className={`site-container journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 z-20 ${story ? "pb-[calc(1.5rem+env(safe-area-inset-bottom)+100lvh-100dvh)]" : "pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-lg:!pr-14 "} sm:pb-24 md:pb-12 lg:pb-16`}>
           <div ref={copyRef} className="journey-copy max-w-2xl">
             <StageCopy s={s} wx={klxl} wxLoading={metar === undefined} />
           </div>

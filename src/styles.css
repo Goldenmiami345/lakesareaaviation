@@ -308,6 +308,12 @@ input.date-field::-webkit-date-and-time-value { text-align: left; margin: 0; }
 .journey-drift { transform-origin: 55% 40%; }
 .journey-layer[data-active] .journey-drift { animation: journey-drift 14s ease-in-out infinite alternate; }
 @media (prefers-reduced-motion: reduce) { .journey-layer[data-active] .journey-drift { animation: none; } }
+/* Phones: instrument photo shown ~15% wider (zoomed out), anchored to the copy; the top fades into ink under the header. */
+@keyframes journey-drift-phone { from { transform: scale(.85); } to { transform: scale(.9) translate3d(-1%, 0, 0); } }
+@media (max-width: 639px) {
+  .journey-drift { transform: scale(.85); transform-origin: 55% 100%; -webkit-mask-image: linear-gradient(to bottom, transparent, black 14%); mask-image: linear-gradient(to bottom, transparent, black 14%); }
+  .journey-layer[data-active] .journey-drift { animation-name: journey-drift-phone; }
+}
 
 /* Radio call: the calling airplane's target brightens and pulses, its leader is full
    strength, and other airplanes' history trails dim while any call is showing. */
