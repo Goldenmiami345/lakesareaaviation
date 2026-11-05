@@ -47,3 +47,4 @@
 - Seams between navy, blue and beige are clean edges (edge-fade no-ops): navy/beige blends go grey.
 - Layout width uses site-container/site-wrap and --gutter (styles.css), never max-w-7xl, so header, sections and journey HUD/rail share one edge.
 - ALT readout: journeyAltitude; wind: nearest METAR (wx-stations.ts), wxStation fallback.
+- Mobile Story section boundaries use story-nav.ts bounds shared by finger-following drags and incoming native momentum; a fresh touch unlocks the next boundary so one gesture cannot skip a section. Native fading-scroll and desktop scrolling remain unchanged.

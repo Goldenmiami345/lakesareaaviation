@@ -14,7 +14,7 @@ import { WX_FIELDS } from "../lib/wx-stations";
 import { MetarLine, InstrumentConditions } from "./live-wx";
 import { useStageZoom } from "../lib/stage-zoom";
 import { useDesktopJourneyMode, useMobileJourneyMode } from "../lib/use-site-settings";
-import { storyStep } from "../lib/story-nav";
+import { storyStep, storySwipeLimit, boundedStoryScroll } from "../lib/story-nav";
 import { TrafficPattern } from "./traffic-pattern";
 import { AirportScene } from './airport-scene';
 import { TrafficPerspective } from "./traffic-perspective";
@@ -307,6 +307,33 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     vp.addEventListener("pointerdown", arm);
     return () => { root.classList.remove("story-mode"); io.disconnect(); window.clearTimeout(timer); window.clearTimeout(hide); vp.removeEventListener("pointerdown", arm); };
   }, [story]);
+  // Catch native momentum arriving from the opening photo. Keep the bound after touchend:
+  // inertia belongs to that same gesture, and only a new touch can unlock the next boundary.
+  useEffect(() => {
+    if (!story || carousel) return;
+    const el = sectionRef.current;
+    if (!el) return;
+    let limit: number | null = null;
+    const begin = () => {
+      if (document.documentElement.classList.contains("journey-zoomed")) { limit = null; return; }
+      const base = window.scrollY + (el.parentElement ?? el).getBoundingClientRect().top;
+      limit = storySwipeLimit(window.scrollY, base, el.offsetHeight);
+      // Cancel any previous glide before a fresh gesture takes ownership.
+      window.scrollTo({ top: window.scrollY, behavior: "instant" });
+    };
+    const bound = () => {
+      if (limit !== null && window.scrollY > limit) window.scrollTo({ top: limit, behavior: "instant" });
+    };
+    const bypass = () => { limit = null; }; // Explicit links and section glides are intentional navigation.
+    window.addEventListener("touchstart", begin, { passive: true });
+    window.addEventListener("scroll", bound, { passive: true });
+    window.addEventListener("journey-target", bypass);
+    return () => {
+      window.removeEventListener("touchstart", begin);
+      window.removeEventListener("scroll", bound);
+      window.removeEventListener("journey-target", bypass);
+    };
+  }, [story, carousel]);
   useEffect(() => {
     if (!story) return;
     const el = sectionRef.current, viewport = viewportRef.current;
@@ -322,11 +349,12 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       if (next === activeRef.current) { paintStory(next, true); return; }
       setActive(next);
     };
-    let sx = 0, sy = 0, axis: "x" | "y" | null = null, down = false, dx = 0, dy = 0, vx = 0, vy = 0, lx = 0, ly = 0, lt = 0, sScroll = 0, sTop = 0;
+    let sx = 0, sy = 0, axis: "x" | "y" | null = null, down = false, dx = 0, dy = 0, vx = 0, vy = 0, lx = 0, ly = 0, lt = 0, sScroll = 0, sTop = 0, swipeLimit: number | null = null;
     const interactive = (t: EventTarget | null) => t instanceof Element && !!t.closest("a,button,input,select,textarea,[role=button],[data-interactive],.journey-hud,nav,svg [tabindex]");
     const onDown = (e: PointerEvent) => {
       if (!e.isPrimary || document.documentElement.classList.contains("journey-zoomed")) return;
       down = true; axis = null; dx = 0; dy = 0; vx = 0; vy = 0; sx = lx = e.clientX; sy = ly = e.clientY; lt = performance.now(); sScroll = window.scrollY; sTop = box().top; if (!carousel) setHolding(true);
+      swipeLimit = storySwipeLimit(sScroll, sScroll + sTop, el.offsetHeight);
     };
     const onMove = (e: PointerEvent) => {
       if (!down) return;
@@ -343,7 +371,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       dy = my;
       // Vertical: the page follows the finger 1:1 (natural), the lock only helps on release.
       if (axis === "y" && carousel) return; // mouse/trackpad: page scrolls natively
-      if (axis === "y") { window.scrollTo({ top: Math.max(0, sScroll - my), behavior: "instant" }); return; }
+      if (axis === "y") { window.scrollTo({ top: boundedStoryScroll(sScroll - my, swipeLimit), behavior: "instant" }); return; }
       if (axis !== "x") return;
       dx = mx;
       const w = viewport.offsetWidth || 1;
@@ -374,7 +402,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         const here = sScroll + sTop;
         const commit = (Math.abs(v) > 0.45 && Math.sign(v) === Math.sign(dy)) || Math.abs(dy) > h * 0.3;
         if (Math.abs(sTop) > 2 || !commit) { glideTo(here); return; }
-        if (dy < 0) glideTo(here + el.offsetHeight); else glideTo(Math.max(0, here - h));
+        if (dy < 0) glideTo(boundedStoryScroll(here + el.offsetHeight, swipeLimit)); else glideTo(Math.max(0, here - h));
         return;
       }
       if (axis === null && !interactive(e.target)) {
