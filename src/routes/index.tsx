@@ -64,7 +64,7 @@ function HomePage() {
             <ServiceLink eyebrow="Specialty courses" title="Fly something new" text="Mountain flying, light aerobatics, ski plane, and Cirrus transition." to="/specialized-training" />
             <ServiceLink eyebrow="Stay proficient" title="Flight reviews" text="Continue training with instruction tailored to your experience and goals." to="/local-training" />
           </div>
-          <p className="mt-px bg-background p-6 text-sm leading-relaxed text-muted-foreground lg:p-7">First time in the air? <Link to="/introductory-flights" className="font-bold text-primary-text">Introductory flights from $100</Link> — or <Link to="/scenic-flights" className="font-bold text-primary-text">book a scenic flight</Link> for up to three passengers.</p>
+          <p className="mt-px bg-background p-6 text-sm leading-relaxed text-muted-foreground lg:p-7">First time in the air? <Link to="/introductory-flights" className="font-bold text-primary-text">Introductory flights from $100</Link>. Or <Link to="/scenic-flights" className="font-bold text-primary-text">book a scenic flight</Link> for up to three passengers.</p>
         </div>
       </section>
 
