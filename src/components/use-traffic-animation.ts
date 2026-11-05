@@ -33,7 +33,11 @@ export function useTrafficAnimation(o:Options) {
     const origin=performance.now();let raf=0;
     const sample=(i:number,t:number)=>schedule.sample(i,t);
     const screen=(p:Projection,m:DOMMatrix)=>({x:m.a*p.x+m.c*p.y+m.e,y:m.b*p.x+m.d*p.y+m.f});
+    // A journey section that is off screen or covered by the next one carries data-offstage:
+    // skip all per-frame work there so it never competes with the visible section's scrolling.
+    const host=svgRef.current?.closest('[data-journey-section]');
     const draw=(now:number)=>{
+      if(host?.hasAttribute('data-offstage')){raf=requestAnimationFrame(draw);return;}
       const secs=reduce?0:(now-origin)/1000;
       const m=svgRef.current?.getScreenCTM();
       const states=schedule.regs.map((reg,i)=>{const s=sample(i,secs);return s?{s,p:project(s,reg)}:null;});

@@ -38,7 +38,7 @@ export function TrafficPath({airport,active,mode,paused=false}:{airport:PatternA
     if(!active||!shown)return;
     let frame=0,last=0;
     const update=(now:number)=>{
-      if(now-last>120){last=now;const m=ref.current?.ownerSVGElement?.getScreenCTM();const occupied:DOMRect[]=[];
+      if(now-last>120&&!ref.current?.closest('[data-offstage]')){last=now;const m=ref.current?.ownerSVGElement?.getScreenCTM();const occupied:DOMRect[]=[];
         ref.current?.querySelectorAll<SVGTextElement>('text').forEach((el,i)=>{const label=path.labels[i];if(m&&label)placePatternLabel(el,m,label,occupied);});
       }
       frame=requestAnimationFrame(update);
