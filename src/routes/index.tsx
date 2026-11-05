@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { srcSetFor } from "@/lib/responsive-image";
-import { ArrowRight, ArrowUp, MapPin } from "lucide-react";
+import { ArrowRight, MapPin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import heroImage from "../assets/photos/sunset-ramp-crisp.webp.asset.json";
 import heroTallImage from "../assets/photos/sunset-ramp-tall.webp.asset.json";
@@ -69,7 +69,6 @@ function HomePage() {
       <section className="bg-secondary py-20 sm:py-28"><div className="mx-auto max-w-5xl px-5 lg:px-8" data-scroll-reveal="blur"><p className="eyebrow text-primary-text">Student experience</p><blockquote className="mt-6 font-display text-3xl leading-snug sm:text-5xl">“{featuredStory.quote}”<footer className="mt-8 font-sans text-sm font-bold uppercase text-foreground">{featuredStory.name}</footer></blockquote><Link to="/student-success" className="interactive-arrow mt-8 inline-flex items-center gap-2 text-sm font-bold uppercase text-primary-text">More stories <ArrowRight className="size-4" /></Link><p className="mt-6 text-xs text-muted-foreground">Individual results vary.</p></div></section>
       <InquiryBand />
     </div>
-    <BackToTop />
   </SiteLayout>;
 }
 
@@ -80,30 +79,6 @@ function ServiceLink({ eyebrow, title, text, to, slug }: { eyebrow: string; titl
   return slug
     ? <Link to={to} params={{ slug }} className="program-card interactive-arrow group min-h-72 bg-background p-7 sm:p-8">{content}</Link>
     : <Link to={to} className="program-card interactive-arrow group min-h-72 bg-background p-7 sm:p-8">{content}</Link>;
-}
-
-function BackToTop() {
-  const [show, setShow] = useState(false);
-  const ref = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    // Hidden whenever the inquiry band/footer is on screen or any interactive control sits under it.
-    const onScroll = () => {
-      let ok = window.scrollY > window.innerHeight * 1.5;
-      if (ok) ok = ![...document.querySelectorAll("[data-no-float]")].some((el) => { const r = el.getBoundingClientRect(); return r.top < window.innerHeight && r.bottom > 0; });
-      const btn = ref.current;
-      if (ok && btn) {
-        const r = btn.getBoundingClientRect();
-        const pts: [number, number][] = [[r.left - 6, r.top - 6], [r.right + 6, r.top - 6], [r.left - 6, r.bottom + 6], [r.right + 6, r.bottom + 6], [r.left + r.width / 2, r.top + r.height / 2]];
-        ok = !pts.some(([x, y]) => document.elementsFromPoint(x, y).some((el) => el !== btn && !btn.contains(el) && !!el.closest("a,button,input,select,textarea,[role=button]") && !el.closest("[aria-hidden=true]")));
-      }
-      setShow(ok);
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); };
-  }, []);
-  return <button ref={ref} type="button" aria-label="Back to top" tabIndex={show ? 0 : -1} onClick={() => glideTo(0)} className={`fixed bottom-[calc(5.75rem+env(safe-area-inset-bottom))] right-4 z-40 grid size-11 place-items-center rounded-full border border-background/25 bg-ink/80 text-background shadow-xl backdrop-blur-md transition-all duration-300 hover:bg-primary md:bottom-6 md:right-6 ${show ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`}><ArrowUp className="size-4" /></button>;
 }
 
 function HeroCta() {

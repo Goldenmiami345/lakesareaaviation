@@ -1,6 +1,6 @@
 import { Link, useLocation, useMatch } from "@tanstack/react-router";
 import { srcSetFor } from "@/lib/responsive-image";
-import { ArrowUpRight, Menu, Phone, X } from "lucide-react";
+import { ArrowUp, ArrowUpRight, Menu, Phone, X } from "lucide-react";
 import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
 import logoAsset from "../assets/lakes-logo-transparent.png.asset.json";
 import { MotionExperience } from "./motion-experience";
@@ -88,8 +88,16 @@ export function MobileActions() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, [pathname]);
-  if (pathname === "/contact") return null;
-  return <div aria-hidden={!show} className={`fixed inset-x-3 bottom-[calc(.75rem+env(safe-area-inset-bottom))] z-50 grid grid-cols-2 overflow-hidden border border-background/20 bg-ink text-background shadow-2xl transition-all duration-500 ease-out md:hidden ${show ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-[140%] opacity-0"}`}><a tabIndex={show ? 0 : -1} href="tel:3183479004" className="flex min-h-14 items-center justify-center gap-2 text-sm font-bold"><Phone className="size-4" /> Call</a><Link tabIndex={show ? 0 : -1} to="/contact" className="flex min-h-14 items-center justify-center bg-primary text-sm font-bold text-primary-foreground">Build my plan</Link></div>;
+  const [up, setUp] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setUp(window.scrollY > window.innerHeight * 1.5);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [pathname]);
+  const topButton = <button type="button" aria-label="Back to top" tabIndex={up ? 0 : -1} aria-hidden={!up} onClick={() => jumpToPageTop()} className={`fixed right-3 z-50 grid size-11 place-items-center rounded-full border border-background/20 bg-ink/80 text-background shadow-xl backdrop-blur-md transition-all duration-500 ease-out md:hidden ${show && pathname !== "/contact" ? "bottom-[calc(5rem+env(safe-area-inset-bottom))]" : "bottom-[calc(.75rem+env(safe-area-inset-bottom))]"} ${up ? "opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`}><ArrowUp className="size-5" /></button>;
+  if (pathname === "/contact") return topButton;
+  return <>{topButton}<div aria-hidden={!show} className={`fixed inset-x-3 bottom-[calc(.75rem+env(safe-area-inset-bottom))] z-50 grid grid-cols-2 overflow-hidden border border-background/20 bg-ink text-background shadow-2xl transition-all duration-500 ease-out md:hidden ${show ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-[140%] opacity-0"}`}><a tabIndex={show ? 0 : -1} href="tel:3183479004" className="flex min-h-14 items-center justify-center gap-2 text-sm font-bold"><Phone className="size-4" /> Call</a><Link tabIndex={show ? 0 : -1} to="/contact" className="flex min-h-14 items-center justify-center bg-primary text-sm font-bold text-primary-foreground">Build my plan</Link></div></>;
 }
 
 export function SiteLayout({ children, overlayHeader = false }: { children: ReactNode; overlayHeader?: boolean }) {
