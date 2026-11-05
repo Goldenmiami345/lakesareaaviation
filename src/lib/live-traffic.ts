@@ -66,3 +66,14 @@ export function deadReckon(a: { lat: number; lon: number; kt: number; track: num
   const s = Math.max(0, Math.min(30, seconds)), m = a.kt * 0.514444 * s, t = (a.track * Math.PI) / 180;
   return { lat: a.lat + (Math.cos(t) * m) / 110_540, lon: a.lon + (Math.sin(t) * m) / (111_320 * Math.cos((a.lat * Math.PI) / 180)) };
 }
+/** Lat/lon → the airport map's north-up USGS pixel space, anchored on the runway midpoint (the field reference point). */
+export function mapPixel(field: { lat: number; lon: number }, mid: { x: number; y: number }, feetPerPx: number, lat: number, lon: number) {
+  const eastFt = ((lon - field.lon) * 111_320 * Math.cos((field.lat * Math.PI) / 180)) / 0.3048;
+  const northFt = ((lat - field.lat) * 110_540) / 0.3048;
+  return { x: mid.x + eastFt / feetPerPx, y: mid.y - northFt / feetPerPx };
+}
+/** Pattern traffic that actually lands inside the visible map rectangle. */
+export function visibleOnMap(list: readonly LiveAircraft[], toPx: (lat: number, lon: number) => { x: number; y: number }, box: readonly [number, number, number, number]) {
+  const [bx, by, bw, bh] = box;
+  return list.filter((a) => { const p = toPx(a.lat!, a.lon!); return p.x >= bx && p.x <= bx + bw && p.y >= by && p.y <= by + bh; });
+}
