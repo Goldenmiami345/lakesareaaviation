@@ -25,7 +25,7 @@ function Page() {
       <PageIntro image={heroImg} imageAlt="Sunset above the clouds"
         eyebrow="Students"
         title="Helping you reach your aviation goals in three great locations."
-        text="New to Lakes Area Aviation or already training with us — start here."
+        text="New to Lakes Area Aviation or already training with us? Start here."
       />
       <div className="site-container py-20">
         <div className="grid gap-6 md:grid-cols-2" data-scroll-reveal>

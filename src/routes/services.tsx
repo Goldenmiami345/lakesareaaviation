@@ -22,7 +22,7 @@ const services = [
   ["Accelerated Training", "/accelerated-training", "Full-time, focused training built around your next rating and checkride."],
   ["Introductory Flights", "/introductory-flights", "Take the controls for the first time with one of our instructors."],
   ["Local Training", "/local-training", "Train at your own pace close to home and join a community of aviators."],
-  ["Scenic Flights", "/scenic-flights", "See the lakes and landscapes from above — up to three passengers."],
+  ["Scenic Flights", "/scenic-flights", "See the lakes and landscapes from above. Up to three passengers."],
   ["Specialized Training", "/specialized-training", "Kodiak 100 training, endorsements, and specialty courses."],
   ["Zero-to-Hero", "zero", "From zero flight hours through your instructor ratings in one plan."],
 ] as const;

@@ -27,9 +27,9 @@ export function MetarLine({ obs }: { obs: Metar }) {
 }
 
 const CAPTION: Record<"VFR" | "MVFR" | "IFR", string> = {
-  VFR: "VMC at Little Falls right now — hood work and the sim.",
-  MVFR: "Marginal VMC at Little Falls — low ceilings, real IMC practice.",
-  IFR: "IMC at Little Falls right now — actual instrument conditions.",
+  VFR: "VMC at Little Falls right now. Hood work and the sim.",
+  MVFR: "Marginal VMC at Little Falls. Low ceilings, real IMC practice.",
+  IFR: "IMC at Little Falls right now. Actual instrument conditions.",
 };
 
 /** Instrument-rating stage: live Little Falls conditions. Reserves its height while loading; collapses when weather is unavailable. */
