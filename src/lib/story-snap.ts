@@ -23,6 +23,7 @@ export function nearestSnap(y: number, points: number[]): number | null {
 }
 
 let owners = 0;
+let firstStartDone = false;
 let stop: (() => void) | null = null;
 
 function start(): () => void {
@@ -75,7 +76,19 @@ function start(): () => void {
   };
 
   measure();
+  // Fresh page load: Safari restores the old scroll offset from the taller fading-scroll layout, and
+  // mandatory snapping then lands on the nearest section (the Discovery Flight). Always open on the hero.
+  let touched = false;
+  const fresh = !firstStartDone && !window.location.hash;
+  firstStartDone = true;
+  if (fresh) window.scrollTo({ top: 0, behavior: "instant" });
   set(storySnapWanted(window.scrollY, end, false));
+  // Late restores/layout settles in the first moments (before any touch) are pulled back to the top too.
+  const keepTop = fresh ? window.setInterval(() => { if (!touched && window.scrollY > 0) window.scrollTo({ top: 0, behavior: "instant" }); }, 100) : 0;
+  const stopKeep = window.setTimeout(() => window.clearInterval(keepTop), 1500);
+  const markTouched = () => { touched = true; window.clearInterval(keepTop); };
+  window.addEventListener("touchstart", markTouched, { passive: true, once: true });
+  window.addEventListener("wheel", markTouched, { passive: true, once: true });
   const ro = new ResizeObserver(measure);
   ro.observe(document.body);
   window.addEventListener("touchstart", onStart, { passive: true });
@@ -86,6 +99,10 @@ function start(): () => void {
   return () => {
     ro.disconnect();
     window.clearTimeout(idle);
+    window.clearInterval(keepTop);
+    window.clearTimeout(stopKeep);
+    window.removeEventListener("touchstart", markTouched);
+    window.removeEventListener("wheel", markTouched);
     window.removeEventListener("touchstart", onStart);
     window.removeEventListener("touchmove", onMove);
     window.removeEventListener("touchend", onEnd);
