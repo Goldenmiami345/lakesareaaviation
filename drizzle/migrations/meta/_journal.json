@@ -43,6 +43,13 @@
       "when": 1793562936610,
       "tag": "0005_site_settings_traffic_pattern_mode",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793878753444,
+      "tag": "0006_migration",
+      "breakpoints": true
     }
   ]
 }

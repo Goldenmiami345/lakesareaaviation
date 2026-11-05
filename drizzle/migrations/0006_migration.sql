@@ -1,0 +1,1 @@
+ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS mobile_journey_mode text NOT NULL DEFAULT 'scroll' CHECK (mobile_journey_mode IN ('scroll','story'));
