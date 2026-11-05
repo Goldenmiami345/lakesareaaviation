@@ -480,6 +480,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
             <button type="button" aria-label="Next stage" onClick={() => { setPlaying(false); setActive((a) => (a + 1) % stages.length); }} className="grid size-10 place-items-center rounded-full transition-colors hover:bg-background/15"><ChevronRight className="size-5" /></button>
           </div>
         )}
+        {/* Safari tints its toolbar from the pixels at the screen's bottom edge; keep that edge plain dark ink so buttons never bleed a hard blue line into it. */}
+        <div aria-hidden className="journey-edge-ink pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[calc(4.5rem+env(safe-area-inset-bottom)+100lvh-100dvh)] bg-gradient-to-t from-ink via-ink/80 to-transparent sm:hidden" />
         {story && !carousel && hint && (
           <div aria-hidden className="story-hint pointer-events-none absolute inset-0 z-30">
             {/* Tap: a pulse where tapping advances (right side). */}
@@ -563,7 +565,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
           <button type="button" onClick={reset} aria-label="Reset zoom" className="absolute right-4 top-24 z-30 inline-flex min-h-11 min-w-11 items-center gap-1.5 border border-background/40 bg-ink/70 px-3 font-mono text-xs font-bold uppercase tracking-[0.14em] text-background backdrop-blur-sm">✕ Reset</button>
         )}
         {/* Copy */}
-        <div className={`site-container journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 z-20 ${story ? "pb-[calc(1.5rem+env(safe-area-inset-bottom)+100lvh-100dvh)]" : "pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-lg:!pr-14 "} sm:pb-24 md:pb-12 lg:pb-16`}>
+        <div className={`site-container journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 z-20 ${story ? "pb-[calc(2.75rem+env(safe-area-inset-bottom)+100lvh-100dvh)]" : "pb-[calc(2.75rem+env(safe-area-inset-bottom))] max-lg:!pr-14 "} sm:pb-24 md:pb-12 lg:pb-16`}>
           <div ref={copyRef} className="journey-copy max-w-2xl">
             <StageCopy s={s} wx={klxl} wxLoading={metar === undefined} />
           </div>
