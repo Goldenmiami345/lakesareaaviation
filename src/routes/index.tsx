@@ -107,5 +107,5 @@ function HeroCta() {
     el.addEventListener("animationend", end);
     return () => { leave(); window.clearInterval(timer); io.disconnect(); };
   }, []);
-  return <div className="hero-step mt-4" style={{ ["--d" as string]: "270ms" }}><Link ref={ref} to="/contact" className="interactive-arrow group inline-flex min-h-11 items-center gap-1.5 rounded-full bg-primary pl-5 pr-4 text-[15px] font-semibold tracking-[-0.01em] text-primary-foreground shadow-[0_8px_24px_-8px_color-mix(in_oklab,var(--primary)_70%,transparent)] transition-[background-color,transform] hover:bg-primary/90 active:scale-[0.96] sm:min-h-12 sm:text-[17px]">Build my training plan <ArrowRight className="cta-arrow size-4 transition-transform group-hover:translate-x-0.5" /></Link></Link></div>;
+  return <div className="hero-step mt-4" style={{ ["--d" as string]: "270ms" }}><Link ref={ref} to="/contact" className="interactive-arrow group inline-flex min-h-11 items-center gap-1.5 rounded-full bg-primary pl-5 pr-4 text-[15px] font-semibold tracking-[-0.01em] text-primary-foreground shadow-[0_8px_24px_-8px_color-mix(in_oklab,var(--primary)_70%,transparent)] transition-[background-color,transform] hover:bg-primary/90 active:scale-[0.96] sm:min-h-12 sm:text-[17px]">Build my training plan <ArrowRight className="cta-arrow size-4 transition-transform group-hover:translate-x-0.5" /></Link></div>;
 }
