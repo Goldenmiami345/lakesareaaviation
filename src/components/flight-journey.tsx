@@ -252,7 +252,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
 
   const jump = (i: number) => jumpToJourney(id, i);
 
-  // ---- Story mode: sideways stages with a box-turn; vertical scrolling stays native (touch-action: pan-y).
+  // ---- Story mode: sideways stages with a box-turn; vertical swipes are handled here (locked screen).
   const paintStory = (pos: number, animate: boolean) => {
     const reduce = reducedMotion();
     layerRefs.current.forEach((layer, i) => {
