@@ -310,7 +310,6 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const settled = Number.isInteger(pos);
     // 3D (perspective + hidden backfaces) exists only while the box is actually turning;
     // at rest every layer is a plain flat picture, so vertical slides composite cheaply.
-    // Flat 2D slide (no 3D): turning full stages with text, maps and video in 3D stuttered on iPhone.
     layerRefs.current.forEach((layer, i) => {
       if (!layer) return;
       const rel = i - pos;
@@ -328,19 +327,35 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         if (cur && animate && !wasVisible) { layer.style.opacity = "0"; void layer.offsetWidth; layer.style.opacity = "1"; }
         return;
       }
+      // Instagram-style cube: each whole page (photo, copy, buttons, trail, altitude) is a face hinged on
+      // its shared edge with the neighbour. Only GPU transforms change per frame; no layout, no filters.
       layer.style.zIndex = "";
-      layer.style.transition = animate ? "transform 320ms cubic-bezier(0.2,0,0,1)" : "none";
+      layer.style.transition = animate ? "transform 360ms cubic-bezier(0.22,0.61,0.36,1)" : "none";
       layer.style.visibility = vis || cur ? "visible" : "hidden";
       layer.style.opacity = vis ? "1" : "0";
-      layer.style.transform = `translate3d(${(rel * 100).toFixed(3)}%,0,0)`;
+      layer.style.backfaceVisibility = "hidden";
+      layer.style.willChange = settled ? "" : "transform";
+      layer.style.transformOrigin = rel < 0 ? "100% 50%" : "0% 50%";
+      const r = Math.max(-1, Math.min(1, rel));
+      layer.style.transform = `translate3d(${(r * 100).toFixed(3)}%,0,0) rotateY(${(r * 90).toFixed(3)}deg)`;
     });
+    const box = layerRefs.current[0]?.parentElement;
+    if (box && !reduce && !fade) {
+      box.style.perspective = `${Math.round(Math.max(800, box.clientWidth * 2.2))}px`;
+      box.style.perspectiveOrigin = "50% 50%";
+    }
     // At rest, drop all 3D so vertical scrolling composites one flat layer (3D layers flickered black while sliding).
     if (settled) {
       flatTimer.current = window.setTimeout(() => {
+        const b = layerRefs.current[0]?.parentElement;
+        if (b) b.style.perspective = "";
         layerRefs.current.forEach((layer, i) => {
           if (!layer) return;
           layer.style.transition = "none";
           layer.style.transform = "none";
+          layer.style.transformOrigin = "";
+          layer.style.willChange = "";
+          layer.style.backfaceVisibility = "";
           layer.style.zIndex = "";
           layer.style.opacity = i === pos ? "1" : "0";
           layer.style.visibility = i === pos ? "visible" : "hidden";
