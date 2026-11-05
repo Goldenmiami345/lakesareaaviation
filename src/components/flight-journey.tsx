@@ -112,8 +112,10 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const story = (journeyMode === "story" && isPhone) || carousel;
   const [playing, setPlaying] = useState(true);
   const [inView, setInView] = useState(false);
-  const AUTO_MS = 7000;
-  const autoOn = carousel && playing && inView;
+  const AUTO_MS = 5000; // Instagram's photo-story timer
+  const [holding, setHolding] = useState(false);
+  // Phones advance like Stories (finger down holds, stops on the last stage); computers loop and can be paused.
+  const autoOn = story && playing && inView && !holding && (carousel || active < stages.length - 1);
   const activeRef = useRef(0);
   activeRef.current = active;
 
@@ -324,7 +326,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const interactive = (t: EventTarget | null) => t instanceof Element && !!t.closest("a,button,input,select,textarea,[role=button],[data-interactive],.journey-hud,nav,svg [tabindex]");
     const onDown = (e: PointerEvent) => {
       if (!e.isPrimary || document.documentElement.classList.contains("journey-zoomed")) return;
-      down = true; axis = null; dx = 0; dy = 0; vx = 0; vy = 0; sx = lx = e.clientX; sy = ly = e.clientY; lt = performance.now(); sScroll = window.scrollY; sTop = box().top;
+      down = true; axis = null; dx = 0; dy = 0; vx = 0; vy = 0; sx = lx = e.clientX; sy = ly = e.clientY; lt = performance.now(); sScroll = window.scrollY; sTop = box().top; if (!carousel) setHolding(true);
     };
     const onMove = (e: PointerEvent) => {
       if (!down) return;
@@ -351,6 +353,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       paintStory(a + Math.max(-1, Math.min(1, t)), false);
     };
     const onUp = (e: PointerEvent) => {
+      setHolding(false);
       if (!down) return;
       down = false;
       const w = viewport.offsetWidth || 1;
@@ -381,7 +384,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         go(e.clientX < w * 0.3 ? -1 : 1);
       }
     };
-    const onCancel = () => { if (down) { down = false; paintStory(activeRef.current, true); } };
+    const onCancel = () => { setHolding(false); if (down) { down = false; paintStory(activeRef.current, true); } };
     const onJump = (e: Event) => {
       const d = (e as CustomEvent<{ id: string; index: number; animate?: boolean }>).detail;
       if (d?.id !== id) return;
@@ -407,11 +410,12 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   }, [story, carousel, stages, id]);
 
   useEffect(() => {
-    if (!carousel) return;
+    if (!story) return;
     const vp = viewportRef.current;
     if (!vp) return;
-    const io = new IntersectionObserver(([en]) => setInView(!!en?.isIntersecting && en.intersectionRatio > 0.6), { threshold: [0.6] });
+    const io = new IntersectionObserver(([en]) => setInView(!!en?.isIntersecting && en.intersectionRatio > 0.9), { threshold: [0.9] });
     io.observe(vp);
+    if (!carousel) { if (reducedMotion()) setPlaying(false); return () => io.disconnect(); }
     if (reducedMotion()) setPlaying(false);
     const n = stages.length;
     const step = (dir: 1 | -1) => setActive((a) => (a + dir + n) % n);
@@ -435,7 +439,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     window.addEventListener("keydown", onKey);
     vp.addEventListener("wheel", onWheel, { passive: false });
     return () => { io.disconnect(); window.removeEventListener("keydown", onKey); vp.removeEventListener("wheel", onWheel); };
-  }, [carousel, stages.length]);
+  }, [story, carousel, stages.length]);
   useEffect(() => {
     if (!autoOn) return;
     const t = window.setTimeout(() => setActive((a) => (a + 1) % stages.length), AUTO_MS);
