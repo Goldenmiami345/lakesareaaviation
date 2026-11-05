@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { srcSetFor } from "@/lib/responsive-image";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Phone } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Pause, Phone, Play } from "lucide-react";
 import { Button } from "./ui/button";
 import { journeyFrame, journeyAltitude, settleTarget, stageLanding, stageLengthFrom, JOURNEY_TAIL, type JourneyGeometry } from "../lib/journey-scroll";
 import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
@@ -111,10 +111,9 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const carousel = desktopMode === "carousel" && !isPhone;
   const story = (journeyMode === "story" && isPhone) || carousel;
   const [playing, setPlaying] = useState(true);
-  const [hover, setHover] = useState(false);
   const [inView, setInView] = useState(false);
   const AUTO_MS = 7000;
-  const autoOn = carousel && playing && !hover && inView;
+  const autoOn = carousel && playing && inView;
   const activeRef = useRef(0);
   activeRef.current = active;
 
@@ -467,7 +466,14 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className={`journey-viewport sticky top-0 ${story ? "h-lvh" : "h-dvh"} overflow-hidden`} style={story ? { perspective: "1200px", touchAction: "none", overscrollBehavior: "none" } : undefined}>
         {story && (
           <div className="absolute inset-x-3 top-[calc(env(safe-area-inset-top)+3.6rem)] z-30 flex gap-1">
-            {stages.map((st, i) => <button key={st.code} type="button" aria-label={`Show ${st.label}`} onClick={() => { setActive(i); const top = (sectionRef.current?.parentElement ?? sectionRef.current)?.getBoundingClientRect().top ?? 0; if (Math.abs(top) > 2) glideTo(window.scrollY + top); }} className="flex h-6 flex-1 items-center"><span className="block h-[3px] w-full overflow-hidden rounded-full bg-background/30"><span className="block h-full origin-left bg-primary transition-transform duration-300" style={{ transform: `scaleX(${i <= active ? 1 : 0})` }} /></span></button>)}
+            {stages.map((st, i) => <button key={st.code} type="button" aria-label={`Show ${st.label}`} onClick={() => { setActive(i); const top = (sectionRef.current?.parentElement ?? sectionRef.current)?.getBoundingClientRect().top ?? 0; if (Math.abs(top) > 2) glideTo(window.scrollY + top); }} className="flex h-6 flex-1 items-center"><span className="block h-[3px] w-full overflow-hidden rounded-full bg-background/30"><span key={i === active && autoOn ? "run" : "idle"} className={`block h-full origin-left bg-primary ${i === active && autoOn ? "carousel-fill" : "transition-transform duration-300"}`} style={i === active && autoOn ? { animationDuration: `${AUTO_MS}ms` } : { transform: `scaleX(${i <= active ? 1 : 0})` }} /></span></button>)}
+          </div>
+        )}
+        {carousel && (
+          <div data-interactive="" className="absolute bottom-8 right-[max(var(--gutter),calc((100%-1720px)/2))] z-30 flex items-center gap-1 rounded-full bg-ink/45 p-1 text-background backdrop-blur-md">
+            <button type="button" aria-label="Previous stage" onClick={() => { setPlaying(false); setActive((a) => (a - 1 + stages.length) % stages.length); }} className="grid size-10 place-items-center rounded-full transition-colors hover:bg-background/15"><ChevronLeft className="size-5" /></button>
+            <button type="button" aria-label={playing ? "Pause" : "Play"} onClick={() => setPlaying((p) => !p)} className="grid size-10 place-items-center rounded-full transition-colors hover:bg-background/15">{playing ? <Pause className="size-4" /> : <Play className="size-4" />}</button>
+            <button type="button" aria-label="Next stage" onClick={() => { setPlaying(false); setActive((a) => (a + 1) % stages.length); }} className="grid size-10 place-items-center rounded-full transition-colors hover:bg-background/15"><ChevronRight className="size-5" /></button>
           </div>
         )}
         {story && !carousel && hint && (
