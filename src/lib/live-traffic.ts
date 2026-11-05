@@ -60,7 +60,13 @@ export function patternTraffic(list: readonly LiveAircraft[] | null | undefined,
   return (list ?? []).filter((a) => typeof a.lat === "number" && typeof a.lon === "number" && a.distNm <= PATTERN_RADIUS_NM && a.altFt - elevation <= PATTERN_CEILING_AGL);
 }
 /** Public tracker page for one airplane (the same open ADS-B network the data comes from). */
-export const trackerUrl = (a: Pick<LiveAircraft, "hex" | "id">) => a.hex ? `https://globe.adsb.lol/?icao=${encodeURIComponent(a.hex)}` : `https://globe.adsb.lol/?reg=${encodeURIComponent(a.id)}`;
+/** FlightAware (owner preference) by callsign or tail number; ADSB.lol by hex only when neither exists. */
+export const trackerUrl = (a: Pick<LiveAircraft, "hex" | "id" | "callsign">) => {
+  const ident = (a.callsign || a.id || "").trim().replace(/\s+/g, "");
+  if (ident) return `https://www.flightaware.com/live/flight/${encodeURIComponent(ident.toUpperCase())}`;
+  return legacyTrackerUrl(a);
+};
+const legacyTrackerUrl = (a: Pick<LiveAircraft, "hex" | "id">) => a.hex ? `https://globe.adsb.lol/?icao=${encodeURIComponent(a.hex)}` : `https://globe.adsb.lol/?reg=${encodeURIComponent(a.id)}`;
 /** Dead-reckon a report forward along its track (capped at 30 s so stale data never flies off). */
 export function deadReckon(a: { lat: number; lon: number; kt: number; track: number }, seconds: number) {
   const s = Math.max(0, Math.min(30, seconds)), m = a.kt * 0.514444 * s, t = (a.track * Math.PI) / 180;
