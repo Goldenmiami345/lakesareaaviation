@@ -36,12 +36,12 @@ function HomePage() {
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('hero-enter','first-view')" }} />
         <div className="site-container relative flex min-h-[100dvh] flex-col justify-end pb-3 pt-24 sm:pb-[4.5rem] sm:pt-32">
           <div className="max-w-3xl lg:max-w-[66vw]">
-            <h1 className="font-display text-[min(2.1rem,calc((100vw-40px)/16.6))] leading-[1.02] sm:text-[clamp(1.75rem,2.4vw,3.75rem)] sm:whitespace-nowrap"><span className="line-mask hero-mask"><span style={{ ["--d" as string]: "60ms" }}><span className="max-sm:whitespace-nowrap">BECOME A PROFESSIONAL PILOT</span></span></span></h1>
+            <h1 className="font-display text-[min(3rem,calc(65vw/16.6))] leading-[1.02] whitespace-nowrap"><span className="line-mask hero-mask"><span style={{ ["--d" as string]: "60ms" }}><span>BECOME A PROFESSIONAL PILOT</span></span></span></h1>
           </div>
           <HeroCta />
-          <nav aria-label="Training locations" className="hero-step mt-2.5 flex flex-nowrap items-center gap-1 text-xs sm:text-[clamp(0.75rem,0.42rem+0.5vw,1.05rem)] lg:mt-3.5 font-bold uppercase tracking-[0.02em] text-background/75 sm:gap-2 sm:tracking-[0.14em]" style={{ ["--d" as string]: "360ms" }}>
-            <MapPin aria-hidden className="mr-0.5 hidden size-3.5 sm:size-[1.2em] shrink-0 text-background/55 sm:block" />
-            {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} aria-label={`${a.label}, ${a.code}`} className="group/chip inline-flex min-h-11 uppercase shrink-0 items-center whitespace-nowrap sm:min-h-0"><span className="rounded-full border border-background/25 px-1 py-1.5 transition-colors group-hover/chip:border-primary group-hover/chip:bg-primary group-hover/chip:text-primary-foreground sm:px-[1em] sm:py-[0.6em]">{a.label}<span className="hidden sm:inline">, {a.code}</span></span></button>)}
+          <nav aria-label="Training locations" className="hero-step mt-2.5 flex flex-nowrap items-center gap-1 text-xs lg:mt-3.5 font-medium uppercase text-background/75 sm:gap-2" style={{ ["--d" as string]: "360ms" }}>
+            <MapPin aria-hidden className="size-3 shrink-0 text-background/55" />
+            {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} aria-label={`${a.label}, ${a.code}`} className="group/chip inline-flex min-h-11 uppercase shrink-0 items-center whitespace-nowrap"><span className="rounded-full border border-background/25 px-1 py-1 transition-colors group-hover/chip:border-primary group-hover/chip:bg-primary group-hover/chip:text-primary-foreground sm:px-2">{a.label}<span className="hidden sm:inline">, {a.code}</span></span></button>)}
           </nav>
           <ScrollCue targetId="flight-path" />
         </div>
