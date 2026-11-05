@@ -79,13 +79,15 @@ function start(): () => void {
   // Fresh page load: Safari restores the old scroll offset from the taller fading-scroll layout, and
   // mandatory snapping then lands on the nearest section (the Discovery Flight). Always open on the hero.
   let touched = false;
-  const fresh = !firstStartDone && !window.location.hash;
+  // Every arrival on the homepage (reload, back button, link) opens on the hero unless a #hash asks otherwise.
+  const fresh = !window.location.hash;
   firstStartDone = true;
+  try { window.history.scrollRestoration = "manual"; } catch { /* ignore */ }
   if (fresh) window.scrollTo({ top: 0, behavior: "instant" });
   set(storySnapWanted(window.scrollY, end, false));
   // Late restores/layout settles in the first moments (before any touch) are pulled back to the top too.
   const keepTop = fresh ? window.setInterval(() => { if (!touched && window.scrollY > 0) window.scrollTo({ top: 0, behavior: "instant" }); }, 100) : 0;
-  const stopKeep = window.setTimeout(() => window.clearInterval(keepTop), 1500);
+  const stopKeep = window.setTimeout(() => window.clearInterval(keepTop), 3000);
   const markTouched = () => { touched = true; window.clearInterval(keepTop); };
   window.addEventListener("touchstart", markTouched, { passive: true, once: true });
   window.addEventListener("wheel", markTouched, { passive: true, once: true });
@@ -109,6 +111,7 @@ function start(): () => void {
     window.removeEventListener("touchcancel", onEnd);
     window.removeEventListener("scroll", onScroll);
     root.classList.remove("story-snapping", "story-phone");
+    try { window.history.scrollRestoration = "auto"; } catch { /* ignore */ }
   };
 }
 
