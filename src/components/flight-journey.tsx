@@ -324,7 +324,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
             {stages.map((st, i) => (
               <li key={st.code}>
                 <Button variant="ghost" type="button" aria-label={st.label} aria-current={i === active ? "step" : undefined} onClick={() => jump(i)} className={`group h-11 min-w-11 justify-start gap-3 rounded-none px-2 text-left text-xs lg:text-[13px] font-bold uppercase tracking-[0.16em] transition-colors hover:bg-transparent ${i === active ? "outlined-accent-label" : "text-background/55 hover:text-background/80"}`}>
-                  <span className={`size-2 rounded-full border border-current transition-all ${i === active ? "scale-150 bg-primary border-primary" : ""}`} />
+                  <span className={`size-2 rounded-full border border-current transition-[scale,background-color,border-color] ${i === active ? "scale-150 bg-primary border-primary" : ""}`} />
                   <span className="hidden sm:inline">{st.label}</span>
                 </Button>
               </li>
