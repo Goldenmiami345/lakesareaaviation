@@ -114,8 +114,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const [inView, setInView] = useState(false);
   const AUTO_MS = 5000; // Instagram's photo-story timer
   const [holding, setHolding] = useState(false);
-  // Phones advance like Stories (finger down holds, stops on the last stage); computers loop and can be paused.
-  const autoOn = story && playing && inView && !holding && (carousel || active < stages.length - 1);
+  // Every 5s, looping back to the first stage after the last (owner request); finger down holds, computers can pause.
+  const autoOn = story && playing && inView && !holding;
   const activeRef = useRef(0);
   activeRef.current = active;
 
