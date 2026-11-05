@@ -381,8 +381,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const go = (dir: 1 | -1) => {
       if (carousel) { setPlaying(false); setActive((a) => (a + dir + n) % n); return; }
       const next = storyStep(activeRef.current, n, dir);
-      if (next === "exit") { paintStory(activeRef.current, true); exitSection(); return; }
-      if (next === activeRef.current) { paintStory(next, true); return; }
+      if (next === "exit") { swipeRef.current = false; paintStory(activeRef.current, true); exitSection(); return; }
+      if (next === activeRef.current) { swipeRef.current = false; paintStory(next, true); return; }
       setActive(next);
     };
     let sx = 0, sy = 0, axis: "x" | "y" | null = null, down = false, dx = 0, dy = 0, vx = 0, vy = 0, lx = 0, ly = 0, lt = 0, sScroll = 0, sTop = 0, swipeLimit: number | null = null;
