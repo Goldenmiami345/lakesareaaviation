@@ -162,7 +162,7 @@ function LivePlanes({list,svgRef}:{list:LiveAircraft[];svgRef:React.RefObject<SV
   </>;
 }
 
-const LiveCard=({a,ref}:{a:LiveAircraft;ref:React.RefObject<HTMLDivElement|null>})=>{
+export const LiveCard=({a,ref}:{a:LiveAircraft;ref:React.RefObject<HTMLDivElement|null>})=>{
   const ours=fleet.find(f=>f.registration===a.id);
   const navigate=useNavigate();
   const vs=a.vs??0;
@@ -187,7 +187,7 @@ const LiveCard=({a,ref}:{a:LiveAircraft;ref:React.RefObject<HTMLDivElement|null>
 };
 
 /** Subtle "LIVE" tag at the top left, just above the stage HUD (portalled so the photo shade never dims it). */
-function LiveChip({svgRef}:{svgRef:React.RefObject<SVGSVGElement|null>}){
+export function LiveChip({svgRef}:{svgRef:React.RefObject<SVGSVGElement|null>}){
   const [host,setHost]=useState<Element|null>(null);
   useEffect(()=>{setHost(svgRef.current?.closest('section')?.querySelector('.journey-hud')??null);},[svgRef]);
   if(!host)return null;
