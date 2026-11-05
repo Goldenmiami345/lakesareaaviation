@@ -1,3 +1,4 @@
+import { parseMobileJourneyMode, type MobileJourneyMode } from "./story-nav";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -22,8 +23,6 @@ export function useTrafficPatternMode() {
   return mode;
 }
 
-export type MobileJourneyMode = "scroll" | "story";
-export const parseMobileJourneyMode = (v: unknown): MobileJourneyMode => (v === "story" ? "story" : "scroll");
 let cachedJourney: Promise<MobileJourneyMode> | null = null;
 function loadJourneyMode() {
   cachedJourney ??= (async () => {

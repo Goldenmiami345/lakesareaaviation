@@ -1,10 +1,10 @@
-import { describe, expect, it } from "vitest";
-import { storyStep } from "./story-nav";
-import { parseMobileJourneyMode } from "./use-site-settings";
+import { describe, test as it } from "node:test";
+import assert from "node:assert/strict";
+import { storyStep, parseMobileJourneyMode } from "./story-nav";
 
 describe("story mode", () => {
-  it("forward moves one stage", () => expect(storyStep(0, 6, 1)).toBe(1));
-  it("forward on the last stage exits to the next section", () => expect(storyStep(5, 6, 1)).toBe("exit"));
-  it("back on the first stage stays", () => expect(storyStep(0, 6, -1)).toBe(0));
-  it("unknown setting defaults to the scroll version", () => { expect(parseMobileJourneyMode(undefined)).toBe("scroll"); expect(parseMobileJourneyMode("story")).toBe("story"); });
+  it("forward moves one stage", () => assert.equal(storyStep(0, 6, 1), 1));
+  it("forward on the last stage exits to the next section", () => assert.equal(storyStep(5, 6, 1), "exit"));
+  it("back on the first stage stays", () => assert.equal(storyStep(0, 6, -1), 0));
+  it("unknown setting defaults to the scroll version", () => { assert.equal(parseMobileJourneyMode(undefined), "scroll"); assert.equal(parseMobileJourneyMode("story"), "story"); });
 });
