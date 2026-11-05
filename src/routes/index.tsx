@@ -49,7 +49,7 @@ function HomePage() {
       </section>
 
       <div className="relative z-10">
-        <div><FlightJourney /></div>
+        <FlightJourney />
         <div className="relative z-20"><FlightJourney stages={airportStages} id="airports" label="Three airports to train from" mode="code" fadeBottom="background" /></div>
       </div>
       </div>
