@@ -498,14 +498,17 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const [wxOpen, setWxOpen] = useState(false);
   const s = stages[active] ?? stages[0];
   if (!s) return null;
+  const phoneStory = story && !carousel;
+  // Phone stories: trail + altitude live inside each card so the whole page turns with the swipe (Instagram-style).
+  const trail = (cur: number) => (
+          <div className={carousel ? "absolute bottom-[2.6rem] left-1/2 z-30 flex w-[min(28rem,40vw)] -translate-x-1/2 gap-1.5" : "absolute inset-x-3 top-[calc(env(safe-area-inset-top)+3.6rem)] z-30 flex gap-1"}>
+            {stages.map((st, i) => <button key={st.code} type="button" aria-label={`Show ${st.label}`} onClick={() => { setActive(i); const top = (sectionRef.current?.parentElement ?? sectionRef.current)?.getBoundingClientRect().top ?? 0; if (Math.abs(top) > 2) glideTo(window.scrollY + top); }} className="flex h-6 flex-1 items-center"><span className="block h-[3px] w-full overflow-hidden rounded-full bg-background/30"><span key={i === cur && autoOn ? "run" : "idle"} className={`block h-full origin-left bg-primary ${i === cur && autoOn ? "carousel-fill" : "transition-transform duration-300"}`} style={i === cur && autoOn ? { animationDuration: `${AUTO_MS}ms` } : { transform: `scaleX(${i <= cur ? 1 : 0})` }} /></span></button>)}
+          </div>
+  );
   return (
     <section ref={sectionRef} data-journey-section="" id={id} aria-label={label} className={`journey-section ${story ? "sticky top-0" : "relative"} bg-ink text-background`} data-story={story ? "" : undefined} style={{ height: story ? "100lvh" : `calc(${stages.length - 1 + JOURNEY_TAIL} * var(--journey-stage) + 100dvh)`, "--journey-count": stages.length } as React.CSSProperties}>
       <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className={`journey-viewport sticky top-0 ${story ? "h-lvh" : "h-dvh"} overflow-hidden`} style={story ? { perspective: "1200px", touchAction: "none", overscrollBehavior: "none" } : undefined}>
-        {story && (
-          <div className={carousel ? "absolute bottom-[2.6rem] left-1/2 z-30 flex w-[min(28rem,40vw)] -translate-x-1/2 gap-1.5" : "absolute inset-x-3 top-[calc(env(safe-area-inset-top)+3.6rem)] z-30 flex gap-1"}>
-            {stages.map((st, i) => <button key={st.code} type="button" aria-label={`Show ${st.label}`} onClick={() => { setActive(i); const top = (sectionRef.current?.parentElement ?? sectionRef.current)?.getBoundingClientRect().top ?? 0; if (Math.abs(top) > 2) glideTo(window.scrollY + top); }} className="flex h-6 flex-1 items-center"><span className="block h-[3px] w-full overflow-hidden rounded-full bg-background/30"><span key={i === active && autoOn ? "run" : "idle"} className={`block h-full origin-left bg-primary ${i === active && autoOn ? "carousel-fill" : "transition-transform duration-300"}`} style={i === active && autoOn ? { animationDuration: `${AUTO_MS}ms` } : { transform: `scaleX(${i <= active ? 1 : 0})` }} /></span></button>)}
-          </div>
-        )}
+        {story && carousel && trail(active)}
         {carousel && (
           <div data-interactive="" className="absolute bottom-8 right-[max(var(--gutter),calc((100%-1720px)/2))] z-30 flex items-center gap-1 rounded-full bg-ink/45 p-1 text-background backdrop-blur-md">
             <button type="button" aria-label="Previous stage" onClick={() => { setPlaying(false); setActive((a) => (a - 1 + stages.length) % stages.length); }} className="grid size-10 place-items-center rounded-full transition-colors hover:bg-background/15"><ChevronLeft className="size-5" /></button>
@@ -555,6 +558,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
             {st.perspective && <TrafficPerspective wind={klxl} conditions={klxlConditions} active={i === active} {...(isPhone && st.phoneView ? { viewBox: st.phoneView } : {})} />}
             </div>
             {story && <>
+              {phoneStory && trail(i)}
+              {phoneStory && mode === "alt" && <p aria-hidden={i !== active || undefined} className="absolute left-5 top-24 z-20 font-mono text-xs uppercase tracking-[0.2em] text-background/70">Alt <span className="tabular-nums text-background">{journeyAltitude({ stage: i, next: i, transition: 0 }, stages.length).toLocaleString("en-US")}</span> ft</p>}
               <div className="journey-shade pointer-events-none absolute inset-0 transition-opacity duration-300" />
               <div inert={i !== active || undefined} className="site-container journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 pb-[calc(2.75rem+env(safe-area-inset-bottom)+100lvh-100dvh)] sm:pb-24 md:pb-12 lg:pb-16">
                 <div className="journey-copy max-w-2xl"><StageCopy s={st} wx={klxl} wxLoading={metar === undefined} /></div>
@@ -568,7 +573,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         <div ref={fadeBottomRef} aria-hidden className={`pointer-events-none absolute inset-0 z-40 ${fadeBottom === "background" ? "bg-background" : "bg-ink"}`} style={{ opacity: 0 }} />
 
         {/* HUD */}
-        <div className="journey-hud absolute left-5 sm:left-[max(var(--gutter),calc((100%-1720px)/2))] top-24 z-20 font-mono text-xs uppercase tracking-[0.2em] text-background/70 lg:text-[13px]">
+        <div className={`journey-hud ${phoneStory && mode === "alt" ? "hidden " : ""}absolute left-5 sm:left-[max(var(--gutter),calc((100%-1720px)/2))] top-24 z-20 font-mono text-xs uppercase tracking-[0.2em] text-background/70 lg:text-[13px]`}>
           {mode === "alt" ? <p>Alt <span ref={hudRef} className="tabular-nums text-background">0</span> ft</p> : <><p className="text-background">{s.hud}</p>{s.traffic && <div className="wx-hud-slot">{(() => { const o = ops[active]; if (!o?.obs) return null; const w = o.obs; return (<>
             <button type="button" onClick={() => setWxOpen((v) => !v)} aria-expanded={wxOpen} className="pointer-events-auto flex min-h-11 items-center gap-1.5 text-left uppercase tracking-[inherit] text-background sm:pointer-events-none sm:cursor-default" data-wind aria-label={`Wind at ${w.station}: ${w.dir === null ? (w.kt ? "variable" : "calm") : `${w.dir} degrees`} ${w.kt} knots${w.gust ? ` gusting ${w.gust}` : ""}. Active runway ${o.rwy.runway}. ${wxOpen ? "Hide" : "Show"} full METAR`}>
               {w.dir !== null && w.kt > 0 && <svg viewBox="0 0 12 12" className="size-3 text-[color:var(--radar)]" style={{ transform: `rotate(${w.dir + 180}deg)` }} aria-hidden><path d="M6 1v10M2.5 4.5 6 1l3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>}
