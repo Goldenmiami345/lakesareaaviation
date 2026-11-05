@@ -38,7 +38,7 @@ export function MotionExperience({ pageKey }: { pageKey: string }) {
         const progress = (max > 0 ? Math.min(1, y / max) : 0).toFixed(4);
         if (bar && progress !== lastProgress && !document.documentElement.classList.contains("story-mode")) { lastProgress = progress; bar.style.setProperty("--scroll-progress", progress); }
         const shift = `${Math.min(y * 0.16, 120).toFixed(1)}px`;
-        if (shift !== lastShift) { lastShift = shift; heroes.forEach((h) => h.style.setProperty("--hero-shift", shift)); }
+        if (shift !== lastShift && !document.documentElement.classList.contains("story-phone")) { lastShift = shift; heroes.forEach((h) => h.style.setProperty("--hero-shift", shift)); }
       });
     };
     measure();
