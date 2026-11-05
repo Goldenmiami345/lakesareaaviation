@@ -120,7 +120,9 @@ function LivePlanes({list,svgRef}:{list:LiveAircraft[];svgRef:React.RefObject<SV
   useEffect(()=>{if(!sel)return;const close=(e:PointerEvent)=>{if((e.target as Element|null)?.closest?.('[data-traffic-hit],[data-traffic-card]'))return;setSel(null);};document.addEventListener('pointerdown',close,true);return()=>document.removeEventListener('pointerdown',close,true);},[sel]);
   useEffect(()=>{
     let raf=0;const placed=new Set<string>();
+    const host=svgRef.current?.closest('[data-journey-section]');
     const draw=()=>{
+      if(host?.hasAttribute('data-offstage')){raf=requestAnimationFrame(draw);return;}
       const m=svgRef.current?.getScreenCTM();const k=m?Math.hypot(m.a,m.b)||1:1;
       for(const a of listRef.current){
         const dt=(Date.now()-(a.t??Date.now()))/1000;

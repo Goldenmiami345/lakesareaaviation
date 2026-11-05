@@ -40,8 +40,10 @@ export function AirportScene({ airport, active, photo, original, wind, runwayHea
       });
       setFrame(airportFraming(airport,w,h,phone,phone?{left:dx+18,top:dy+Math.max(165,(hud?.bottom??165)-(vp?.top??0)+20),right:dx+(rail?.left??w-65)-(vp?.left??0)-18,bottom:dy+(copy?.top??h-200)-(vp?.top??0)-20}:{left:dx+18,top:dy+88,right:dx+(vp?.width??w)-18,bottom:dy+(vp?.height??h)-18},phone?[]:protectedRects));
     };
-    update();const ro=new ResizeObserver(update);ro.observe(el);window.addEventListener('resize',update);
-    return()=>{ro.disconnect();window.removeEventListener('resize',update);};
+    // Phone toolbars fire window resize while scrolling; only a width change can move the framing.
+    let lastW=window.innerWidth;const onResize=()=>{if(window.innerWidth===lastW)return;lastW=window.innerWidth;update();};
+    update();const ro=new ResizeObserver(update);ro.observe(el);window.addEventListener('resize',onResize);
+    return()=>{ro.disconnect();window.removeEventListener('resize',onResize);};
   },[airport,active]);
   const backdrop=airportBackdrops[airport.ident];
   return <div ref={ref} data-airport-framing={airport.ident} data-default-zoom={frame?.multiplier.toFixed(4)} className="absolute inset-0">

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { startTransition, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { srcSetFor } from "@/lib/responsive-image";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, ChevronLeft, ChevronRight, Pause, Phone, Play } from "lucide-react";
@@ -118,6 +118,38 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const autoOn = story && playing && inView && !holding;
   const activeRef = useRef(0);
   activeRef.current = active;
+  const storyRef = useRef(story);
+  storyRef.current = story;
+
+  // Offstage = scrolled away, or (Story mode) fully covered by the next section sliding over it.
+  // Marked with an attribute (no React render): traffic loops, videos and CSS animations idle there,
+  // so the section on screen gets the whole frame budget while sections slide in and out.
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    let seen = false, full = false, covered = false, lastOff: boolean | null = null, lastIn: boolean | null = null;
+    const apply = () => {
+      const off = !seen || covered;
+      if (off !== lastOff) {
+        lastOff = off;
+        el.toggleAttribute("data-offstage", off);
+        const reduce = reducedMotion();
+        videoRefs.current.forEach((v, i) => {
+          if (!v) return;
+          if (off || reduce || i !== activeRef.current) v.pause(); else void v.play().catch(() => undefined);
+        });
+      }
+      const inV = full && !covered;
+      if (storyRef.current && inV !== lastIn) { lastIn = inV; startTransition(() => setInView(inV)); }
+    };
+    const io = new IntersectionObserver(([en]) => { seen = !!en?.isIntersecting; full = seen && (en?.intersectionRatio ?? 0) > 0.9; apply(); }, { threshold: [0, 0.9] });
+    io.observe(el);
+    const next = el.nextElementSibling;
+    // The next sibling spanning the top edge of the screen means it has slid completely over this section.
+    const cover = next ? new IntersectionObserver(([en]) => { covered = !!en?.isIntersecting; apply(); }, { rootMargin: "0px 0px -99% 0px" }) : null;
+    if (next) cover?.observe(next);
+    return () => { io.disconnect(); cover?.disconnect(); el.removeAttribute("data-offstage"); };
+  }, [story]);
 
   useEffect(() => {
     const el = sectionRef.current, viewport = viewportRef.current;
@@ -246,9 +278,10 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
 
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const off = !!sectionRef.current?.hasAttribute("data-offstage");
     videoRefs.current.forEach((video, videoIndex) => {
       if (!video) return;
-      if (videoIndex === active && !reduce) void video.play().catch(() => undefined);
+      if (videoIndex === active && !reduce && !off) void video.play().catch(() => undefined);
       else video.pause();
     });
     // Decode the next/previous stage images before they can become visible.
@@ -269,6 +302,10 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const reduce = reducedMotion();
     window.clearTimeout(flatTimer.current);
     const settled = Number.isInteger(pos);
+    // 3D (perspective + hidden backfaces) exists only while the box is actually turning;
+    // at rest every layer is a plain flat picture, so vertical slides composite cheaply.
+    const turning = !(reduce || fade) && (animate || !settled);
+    if (turning && viewportRef.current) viewportRef.current.style.perspective = "1200px";
     layerRefs.current.forEach((layer, i) => {
       if (!layer) return;
       const rel = i - pos;
@@ -287,6 +324,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         return;
       }
       layer.style.zIndex = "";
+      layer.style.backfaceVisibility = vis ? "hidden" : "";
       layer.style.transition = animate ? "transform 360ms cubic-bezier(0.2,0,0,1)" : "none";
       layer.style.visibility = vis || cur ? "visible" : "hidden";
       layer.style.opacity = vis ? "1" : "0";
@@ -296,10 +334,12 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     // At rest, drop all 3D so vertical scrolling composites one flat layer (3D layers flickered black while sliding).
     if (settled) {
       flatTimer.current = window.setTimeout(() => {
+        if (viewportRef.current) viewportRef.current.style.perspective = "";
         layerRefs.current.forEach((layer, i) => {
           if (!layer) return;
           layer.style.transition = "none";
           layer.style.transform = "none";
+          layer.style.backfaceVisibility = "";
           layer.style.zIndex = "";
           layer.style.opacity = i === pos ? "1" : "0";
           layer.style.visibility = i === pos ? "visible" : "hidden";
@@ -389,7 +429,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const interactive = (t: EventTarget | null) => t instanceof Element && !!t.closest("a,button,input,select,textarea,[role=button],[data-interactive],.journey-hud,nav,svg [tabindex]");
     const onDown = (e: PointerEvent) => {
       if (!e.isPrimary || document.documentElement.classList.contains("journey-zoomed")) return;
-      down = true; axis = null; dx = 0; dy = 0; vx = 0; vy = 0; sx = lx = e.clientX; sy = ly = e.clientY; lt = performance.now(); sScroll = window.scrollY; sTop = box().top; if (!carousel) setHolding(true);
+      down = true; axis = null; dx = 0; dy = 0; vx = 0; vy = 0; sx = lx = e.clientX; sy = ly = e.clientY; lt = performance.now(); sScroll = window.scrollY; sTop = box().top; if (!carousel) startTransition(() => setHolding(true));
       swipeLimit = storySwipeLimit(sScroll, sScroll + sTop, el.offsetHeight);
     };
     const onMove = (e: PointerEvent) => {
@@ -417,7 +457,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       paintStory(a + Math.max(-1, Math.min(1, t)), false);
     };
     const onUp = (e: PointerEvent) => {
-      setHolding(false);
+      startTransition(() => setHolding(false));
       if (!down) return;
       down = false;
       const w = viewport.offsetWidth || 1;
@@ -448,7 +488,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         go(e.clientX < w * 0.3 ? -1 : 1);
       }
     };
-    const onCancel = () => { setHolding(false); if (down) { down = false; paintStory(activeRef.current, true); } };
+    const onCancel = () => { startTransition(() => setHolding(false)); if (down) { down = false; paintStory(activeRef.current, true); } };
     const onJump = (e: Event) => {
       const d = (e as CustomEvent<{ id: string; index: number; animate?: boolean }>).detail;
       if (d?.id !== id) return;
@@ -477,9 +517,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     if (!story) return;
     const vp = viewportRef.current;
     if (!vp) return;
-    const io = new IntersectionObserver(([en]) => setInView(!!en?.isIntersecting && en.intersectionRatio > 0.9), { threshold: [0.9] });
-    io.observe(vp);
-    if (!carousel) { if (reducedMotion()) setPlaying(false); return () => io.disconnect(); }
+    // inView (autoplay) comes from the offstage observer above, which also knows when a section is covered.
+    if (!carousel) { if (reducedMotion()) setPlaying(false); return; }
     if (reducedMotion()) setPlaying(false);
     const n = stages.length;
     const step = (dir: 1 | -1) => setActive((a) => (a + dir + n) % n);
@@ -502,7 +541,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     };
     window.addEventListener("keydown", onKey);
     vp.addEventListener("wheel", onWheel, { passive: false });
-    return () => { io.disconnect(); window.removeEventListener("keydown", onKey); vp.removeEventListener("wheel", onWheel); };
+    return () => { window.removeEventListener("keydown", onKey); vp.removeEventListener("wheel", onWheel); };
   }, [story, carousel, stages.length]);
   useEffect(() => {
     if (!autoOn) return;
@@ -538,7 +577,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   );
   return (
     <section ref={sectionRef} data-journey-section="" id={id} aria-label={label} className={`journey-section ${story ? "sticky top-0" : "relative"} bg-ink text-background`} data-story={story ? "" : undefined} style={{ height: story ? "100lvh" : `calc(${stages.length - 1 + JOURNEY_TAIL} * var(--journey-stage) + 100dvh)`, "--journey-count": stages.length } as React.CSSProperties}>
-      <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className={`journey-viewport sticky top-0 ${story ? "h-lvh" : "h-dvh"} overflow-hidden`} style={story ? { perspective: "1200px", touchAction: "none", overscrollBehavior: "none" } : undefined}>
+      <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className={`journey-viewport sticky top-0 ${story ? "h-lvh" : "h-dvh"} overflow-hidden`} style={story ? { touchAction: "none", overscrollBehavior: "none" } : undefined}>
         {story && carousel && trail(active)}
         {carousel && (
           <div data-interactive="" className="absolute bottom-8 right-[max(var(--gutter),calc((100%-1720px)/2))] z-30 flex items-center gap-1 rounded-full bg-ink/45 p-1 text-background backdrop-blur-md">
@@ -564,7 +603,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
           </div>
         )}
         {stages.map((st, i) => (
-          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="journey-layer absolute inset-0 bg-ink backface-hidden" data-active={i === active ? "" : undefined} style={{ zIndex: stages.length - i }}>
+          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className={`journey-layer absolute inset-0 bg-ink${story ? "" : " backface-hidden"}`} data-active={i === active ? "" : undefined} style={{ zIndex: stages.length - i }}>
             <div className="journey-zoom absolute inset-0 origin-top-left">
             {st.traffic && st.phoneImg ? <AirportScene airport={ops[i]?.pattern ?? st.traffic} active={i===active} photo={st.phoneImg} original={st.img} wind={ops[i]?.obs ?? null} runwayHeading={ops[i]?.rwy.trueHdg ?? Number(st.traffic.runway)*10} conditions={ops[i]?.conditions ?? NO_CONDITIONS} /> : st.video ? (
               <video

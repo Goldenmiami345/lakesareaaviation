@@ -85,16 +85,19 @@ export function MobileActions() {
   const pathname = useLocation({ select: location => sitePath(location.pathname) });
   const [show, setShow] = useState(false);
   useEffect(() => {
-    const onScroll = () => {
+    // Layout reads run at most once per frame (not on every scroll event).
+    let frame = 0;
+    const onScroll = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(check); };
+    const check = () => {
       // Hide while the inquiry band (its own CTA) or the footer reaches the bottom of the screen.
       const nearEnd = [...document.querySelectorAll("[data-no-float]")].some((el) => { const r = el.getBoundingClientRect(); return r.top < window.innerHeight - 8 && r.bottom > 0; });
       // Home journeys carry a button on every stage, so the bar stays away while one is on screen.
       const inJourney = [...document.querySelectorAll("[data-journey-section]")].some((el) => { const r = el.getBoundingClientRect(); return r.top < window.innerHeight - 8 && r.bottom > 8; });
       setShow(window.scrollY > window.innerHeight * 0.9 && !nearEnd && !inJourney);
     };
-    onScroll();
+    check();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => { cancelAnimationFrame(frame); window.removeEventListener("scroll", onScroll); };
   }, [pathname]);
   const [up, setUp] = useState(false);
   useEffect(() => {
