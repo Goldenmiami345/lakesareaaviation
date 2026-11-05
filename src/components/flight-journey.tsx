@@ -429,7 +429,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const interactive = (t: EventTarget | null) => t instanceof Element && !!t.closest("a,button,input,select,textarea,[role=button],[data-interactive],.journey-hud,nav,svg [tabindex]");
     const onDown = (e: PointerEvent) => {
       if (!e.isPrimary || document.documentElement.classList.contains("journey-zoomed")) return;
-      down = true; axis = null; dx = 0; dy = 0; vx = 0; vy = 0; sx = lx = e.clientX; sy = ly = e.clientY; lt = performance.now(); sScroll = window.scrollY; sTop = box().top; if (!carousel) setHolding(true);
+      down = true; axis = null; dx = 0; dy = 0; vx = 0; vy = 0; sx = lx = e.clientX; sy = ly = e.clientY; lt = performance.now(); sScroll = window.scrollY; sTop = box().top; if (!carousel) startTransition(() => setHolding(true));
       swipeLimit = storySwipeLimit(sScroll, sScroll + sTop, el.offsetHeight);
     };
     const onMove = (e: PointerEvent) => {
@@ -457,7 +457,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       paintStory(a + Math.max(-1, Math.min(1, t)), false);
     };
     const onUp = (e: PointerEvent) => {
-      setHolding(false);
+      startTransition(() => setHolding(false));
       if (!down) return;
       down = false;
       const w = viewport.offsetWidth || 1;
@@ -488,7 +488,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         go(e.clientX < w * 0.3 ? -1 : 1);
       }
     };
-    const onCancel = () => { setHolding(false); if (down) { down = false; paintStory(activeRef.current, true); } };
+    const onCancel = () => { startTransition(() => setHolding(false)); if (down) { down = false; paintStory(activeRef.current, true); } };
     const onJump = (e: Event) => {
       const d = (e as CustomEvent<{ id: string; index: number; animate?: boolean }>).detail;
       if (d?.id !== id) return;
@@ -577,7 +577,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   );
   return (
     <section ref={sectionRef} data-journey-section="" id={id} aria-label={label} className={`journey-section ${story ? "sticky top-0" : "relative"} bg-ink text-background`} data-story={story ? "" : undefined} style={{ height: story ? "100lvh" : `calc(${stages.length - 1 + JOURNEY_TAIL} * var(--journey-stage) + 100dvh)`, "--journey-count": stages.length } as React.CSSProperties}>
-      <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className={`journey-viewport sticky top-0 ${story ? "h-lvh" : "h-dvh"} overflow-hidden`} style={story ? { perspective: "1200px", touchAction: "none", overscrollBehavior: "none" } : undefined}>
+      <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className={`journey-viewport sticky top-0 ${story ? "h-lvh" : "h-dvh"} overflow-hidden`} style={story ? { touchAction: "none", overscrollBehavior: "none" } : undefined}>
         {story && carousel && trail(active)}
         {carousel && (
           <div data-interactive="" className="absolute bottom-8 right-[max(var(--gutter),calc((100%-1720px)/2))] z-30 flex items-center gap-1 rounded-full bg-ink/45 p-1 text-background backdrop-blur-md">
@@ -603,7 +603,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
           </div>
         )}
         {stages.map((st, i) => (
-          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="journey-layer absolute inset-0 bg-ink backface-hidden" data-active={i === active ? "" : undefined} style={{ zIndex: stages.length - i }}>
+          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className={`journey-layer absolute inset-0 bg-ink${story ? "" : " backface-hidden"}`} data-active={i === active ? "" : undefined} style={{ zIndex: stages.length - i }}>
             <div className="journey-zoom absolute inset-0 origin-top-left">
             {st.traffic && st.phoneImg ? <AirportScene airport={ops[i]?.pattern ?? st.traffic} active={i===active} photo={st.phoneImg} original={st.img} wind={ops[i]?.obs ?? null} runwayHeading={ops[i]?.rwy.trueHdg ?? Number(st.traffic.runway)*10} conditions={ops[i]?.conditions ?? NO_CONDITIONS} /> : st.video ? (
               <video
