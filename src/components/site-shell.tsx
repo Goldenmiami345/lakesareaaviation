@@ -1,7 +1,7 @@
 import { Link, useLocation, useMatch } from "@tanstack/react-router";
 import { srcSetFor } from "@/lib/responsive-image";
 import { ArrowUp, ArrowUpRight, Menu, Phone, X } from "lucide-react";
-import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import logoAsset from "../assets/lakes-logo-transparent.png.asset.json";
 import { MotionExperience } from "./motion-experience";
 import { jumpToPageTop } from "./flight-journey";
@@ -37,19 +37,19 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
           <Phone className="size-4 shrink-0" aria-hidden="true" />
           <span className="hidden min-[360px]:inline text-[11px] font-bold tabular-nums tracking-[0.02em]">{SCHOOL_PHONE}</span>
         </a>
-        <Dialog.Trigger aria-label="Open menu" className="grid size-11 place-items-center"><Menu className="size-5" /></Dialog.Trigger>
+        <Dialog.Trigger aria-label="Open menu" className="grid size-11 place-items-center transition-transform duration-200 active:scale-90"><Menu className="size-5" /></Dialog.Trigger>
       </div>
         <Dialog.Portal>
           {/* Full-height sheet: Radix traps focus, locks body scroll, closes on Esc and returns focus to the trigger. */}
-          <Dialog.Content aria-modal="true" aria-describedby={undefined} className="fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-background text-foreground lg:hidden">
+          <Dialog.Content aria-modal="true" aria-describedby={undefined} className="menu-roll fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-background text-foreground lg:hidden">
             <Dialog.Title className="sr-only">Site menu</Dialog.Title>
             <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-5 sm:h-20">
               <img src={logoAsset.url} alt="" className="h-10 w-auto max-w-[190px] object-contain sm:h-12" />
-              <Dialog.Close aria-label="Close menu" className="grid size-11 place-items-center"><X className="size-5" /></Dialog.Close>
+              <Dialog.Close aria-label="Close menu" className="grid size-11 place-items-center transition-transform duration-200 active:scale-90"><X className="size-5" /></Dialog.Close>
             </div>
             <nav className="px-5 py-5" aria-label="Mobile navigation">
-              <div className="grid gap-1">{nav.map(([label, to]) => <Link key={to} to={to} onClick={() => setOpen(false)} className="border-b border-border py-4 font-display text-xl">{label}</Link>)}</div>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-1">{nav.map(([label, to], i) => <Link key={to} to={to} onClick={() => setOpen(false)} style={{ "--i": i } as CSSProperties} className="menu-item border-b border-border py-4 font-display text-xl">{label}</Link>)}</div>
+              <div className="menu-item mt-4 grid gap-3 sm:grid-cols-2" style={{ "--i": nav.length } as CSSProperties}>
                 <Link to="/contact" onClick={() => setOpen(false)} className="bg-primary px-5 py-4 text-center text-sm font-bold uppercase text-primary-foreground">Build my training plan</Link>
                 <a href={SCHOOL_PHONE_TEL} className="inline-flex items-center justify-center gap-2 border border-border px-5 py-4 text-center text-sm font-bold uppercase"><Phone className="size-4" />Call {SCHOOL_PHONE}</a>
               </div>

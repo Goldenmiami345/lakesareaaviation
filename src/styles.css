@@ -190,6 +190,17 @@ html.reveal-ready .is-visible .zoom-reveal img { transform: scale(1); }
 /* First homepage load: the hero photo (LCP) must paint as soon as it downloads, never behind the page fade. */
 html.first-view .page-enter { animation: none; }
 
+/* Mobile menu: the sheet unrolls down from the header like a window shade, then its
+   links settle into place. clip-path reveals without stretching the type, and Radix
+   keeps the node mounted until this animation ends, so closing rolls back up. */
+@keyframes menu-roll-down { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes menu-roll-up { from { clip-path: inset(0 0 0 0); } to { clip-path: inset(0 0 100% 0); } }
+@keyframes menu-item-in { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+.menu-roll[data-state="open"] { animation: menu-roll-down .5s cubic-bezier(.16,.84,.24,1) both; }
+.menu-roll[data-state="closed"] { animation: menu-roll-up .32s cubic-bezier(.5,.05,.75,.3) both; }
+.menu-roll .menu-item { animation: menu-item-in .5s cubic-bezier(.16,.84,.24,1) both; animation-delay: calc(90ms + var(--i, 0) * 45ms); }
+@media (prefers-reduced-motion: reduce) { .menu-roll[data-state="open"], .menu-roll[data-state="closed"] { animation: none; } .menu-roll .menu-item { animation: none; } }
+
 @keyframes float-slow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 .float-slow { animation: float-slow 5s ease-in-out infinite; }
 
