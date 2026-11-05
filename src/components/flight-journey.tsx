@@ -295,7 +295,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
           </div>
         ))}
         <div className="journey-shade pointer-events-none absolute inset-0 z-10 transition-opacity duration-300" />
-        <div className="journey-grain pointer-events-none absolute inset-0 z-10" />
+        
         <div ref={fadeTopRef} aria-hidden className="pointer-events-none absolute inset-0 z-40 bg-ink" style={{ opacity: 0 }} />
         <div ref={fadeBottomRef} aria-hidden className={`pointer-events-none absolute inset-0 z-40 ${fadeBottom === "background" ? "bg-background" : "bg-ink"}`} style={{ opacity: 0 }} />
 

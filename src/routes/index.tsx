@@ -30,11 +30,12 @@ function HomePage() {
   if (!featuredStory) return null;
   return <SiteLayout overlayHeader>
     <div>
-      <section className="relative min-h-[100lvh] overflow-hidden bg-ink text-background">
+      <div className="relative">
+      <section className="sticky top-0 z-0 min-h-[100lvh] overflow-hidden bg-ink text-background">
         <div className="hero-parallax absolute inset-0"><picture className="absolute inset-0 block"><source media="(max-aspect-ratio: 3/2)" srcSet={srcSetFor(heroTallImage.url)} sizes="100vw" /><img src={heroImage.url} srcSet={srcSetFor(heroImage.url)} sizes="100vw" decoding="sync" alt="Lakes Area Aviation Cessna N6717A and Piper Apache on the ramp at sunset" width={1584} height={672} fetchPriority="high" className="hero-kenburns h-[112%] w-full object-cover object-[35%_center]" /></picture></div>
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/25 to-ink/5 lg:bg-gradient-to-r lg:from-ink lg:via-ink/60 lg:to-transparent" />
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('hero-enter','first-view')" }} />
-        <div className="site-container relative flex min-h-[100dvh] flex-col justify-end pb-3 pt-24 sm:pb-[4.5rem] sm:pt-32">
+        <div className="relative flex min-h-[100dvh] w-full px-[var(--gutter)] flex-col justify-end pb-3 pt-24 sm:pb-[4.5rem] sm:pt-32">
           <div className="max-w-3xl lg:max-w-[66vw]">
             <h1 className="font-display text-[min(3rem,calc(65vw/16.6))] leading-[1.02] whitespace-nowrap"><span className="line-mask hero-mask"><span style={{ ["--d" as string]: "60ms" }}><span>BECOME A PROFESSIONAL PILOT</span></span></span></h1>
           </div>
@@ -47,7 +48,8 @@ function HomePage() {
         </div>
       </section>
 
-      <FlightJourney />
+      <div className="relative z-10"><FlightJourney /></div>
+      </div>
       <FlightJourney stages={airportStages} id="airports" label="Three airports to train from" mode="code" fadeBottom="background" />
 
       <section className="bg-background py-20 sm:py-28" data-scroll-reveal>

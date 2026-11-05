@@ -181,7 +181,6 @@ html.first-view .page-enter { animation: none; }
 .journey-copy, .journey-layer { will-change: opacity, transform; }
 /* Phones: shorter image box shows more of each scene; overlays inside the layer stay aligned. */
 
-.journey-grain { background-image: url("./assets/journey/grain-tile.png"); background-size: 96px 96px; } /* pre-rendered low-alpha tile, no blend mode: cheap to composite */
 @media (prefers-reduced-motion: reduce) { .journey-copy > * { animation: none; } }
 
 @keyframes scroll-stroke { 0%, 12% { opacity: 0; transform: translateY(-120%); } 26% { opacity: 1; } 68% { opacity: 1; } 84%, 100% { opacity: 0; transform: translateY(320%); } }
