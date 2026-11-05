@@ -42,7 +42,7 @@ function HomePage() {
           <HeroCta />
           <nav aria-label="Training locations" className="hero-step mt-3 inline-flex w-fit max-w-full flex-nowrap items-center rounded-full border border-background/15 bg-ink/35 pl-3 pr-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-background/80 backdrop-blur-xl backdrop-saturate-150 sm:text-[11px]" style={{ ["--d" as string]: "360ms" }}>
             <MapPin aria-hidden className="mr-1 size-3 shrink-0 text-background/55" />
-            {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} aria-label={`${a.label}, ${a.code}`} className="group/chip inline-flex min-h-11 shrink-0 items-center whitespace-nowrap">{i > 0 && <span aria-hidden className="h-3 w-px bg-background/20" />}<span className="rounded-full px-2 py-1 transition-colors group-hover/chip:bg-background/15 group-hover/chip:text-background">{a.label}<span className="hidden sm:inline">, {a.code}</span></span></button>)}
+            {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} aria-label={`${a.label}, ${a.code}`} className="group/chip inline-flex min-h-11 shrink-0 uppercase items-center whitespace-nowrap">{i > 0 && <span aria-hidden className="h-3 w-px bg-background/20" />}<span className="rounded-full px-2 py-1 transition-colors group-hover/chip:bg-background/15 group-hover/chip:text-background">{a.label}<span className="hidden sm:inline">, {a.code}</span></span></button>)}
           </nav>
           <ScrollCue targetId="flight-path" />
         </div>
