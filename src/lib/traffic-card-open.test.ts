@@ -40,7 +40,7 @@ describe("airplane info card open state", () => {
 });
 
 import { trafficCardRecentlyOpen } from "./traffic-card-open";
-test("a card put away just now still counts, so the dismissing tap never flips the stage", () => {
+it("a card put away just now still counts, so the dismissing tap never flips the stage", () => {
   const close = openTrafficCard();
   close();
   assert.equal(trafficCardRecentlyOpen(700), true);
