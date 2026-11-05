@@ -353,12 +353,15 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       setActive(Math.max(0, Math.min(n - 1, d.index)));
       glideTo(window.scrollY + el.getBoundingClientRect().top, !d.animate);
     };
+    const noDrag = (e: Event) => e.preventDefault(); // native image drag would steal the pointer mid-swipe
+    viewport.addEventListener("dragstart", noDrag);
     viewport.addEventListener("pointerdown", onDown);
     viewport.addEventListener("pointermove", onMove, { passive: true });
     viewport.addEventListener("pointerup", onUp);
     viewport.addEventListener("pointercancel", onCancel);
     window.addEventListener("journey:jump", onJump);
     return () => {
+      viewport.removeEventListener("dragstart", noDrag);
       viewport.removeEventListener("pointerdown", onDown);
       viewport.removeEventListener("pointermove", onMove);
       viewport.removeEventListener("pointerup", onUp);
