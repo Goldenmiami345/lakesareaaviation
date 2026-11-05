@@ -25,20 +25,30 @@ export function MotionExperience({ pageKey }: { pageKey: string }) {
     });
     document.documentElement.classList.add("reveal-ready");
 
-    let frame = 0;
+    // Scroll-linked variables are written on the elements that use them (never on <html>, which
+    // restyled the whole page every frame), page height is cached, and unchanged values are skipped.
+    let frame = 0, max = 0, lastProgress = "", lastShift = "";
+    const bar = document.querySelector<HTMLElement>(".scroll-progress");
+    const heroes = Array.from(document.querySelectorAll<HTMLElement>(".hero-parallax"));
+    const measure = () => { max = document.documentElement.scrollHeight - window.innerHeight; };
     const updateScroll = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        const max = document.documentElement.scrollHeight - window.innerHeight;
-        const progress = max > 0 ? window.scrollY / max : 0;
-        document.documentElement.style.setProperty("--scroll-progress", String(progress));
-        document.documentElement.style.setProperty("--hero-shift", `${Math.min(window.scrollY * 0.16, 120)}px`);
+        const y = window.scrollY;
+        const progress = (max > 0 ? Math.min(1, y / max) : 0).toFixed(4);
+        if (bar && progress !== lastProgress && !document.documentElement.classList.contains("story-mode")) { lastProgress = progress; bar.style.setProperty("--scroll-progress", progress); }
+        const shift = `${Math.round(Math.min(y * 0.16, 120))}px`;
+        if (shift !== lastShift) { lastShift = shift; heroes.forEach((h) => h.style.setProperty("--hero-shift", shift)); }
       });
     };
+    measure();
     updateScroll();
+    const ro = new ResizeObserver(() => { measure(); updateScroll(); });
+    ro.observe(document.body);
     window.addEventListener("scroll", updateScroll, { passive: true });
     return () => {
       observer.disconnect();
+      ro.disconnect();
       cancelAnimationFrame(frame);
       window.removeEventListener("scroll", updateScroll);
     };
