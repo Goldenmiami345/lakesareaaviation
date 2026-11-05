@@ -13,6 +13,8 @@ import { profileAirport, trafficConditions, NO_CONDITIONS, type Metar } from "..
 import { WX_FIELDS } from "../lib/wx-stations";
 import { MetarLine, InstrumentConditions } from "./live-wx";
 import { useStageZoom } from "../lib/stage-zoom";
+import { useMobileJourneyMode } from "../lib/use-site-settings";
+import { storyStep } from "../lib/story-nav";
 import { TrafficPattern } from "./traffic-pattern";
 import { AirportScene } from './airport-scene';
 import { TrafficPerspective } from "./traffic-perspective";
@@ -101,10 +103,17 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const hudRef = useRef<HTMLSpanElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
+  const isPhone = useIsPhone();
+  const journeyMode = useMobileJourneyMode();
+  // Story mode (owner admin switch): phones only; desktop always keeps the scroll version.
+  const story = journeyMode === "story" && isPhone;
+  const activeRef = useRef(0);
+  activeRef.current = active;
 
   useEffect(() => {
     const el = sectionRef.current, viewport = viewportRef.current;
     if (!el || !viewport) return;
+    if (story) return;
     const reduce = reducedMotion();
     const fine = window.matchMedia("(pointer: fine)").matches;
     const n = stages.length;
@@ -224,7 +233,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       window.removeEventListener("journey:jump", onJump);
       window.removeEventListener("pointermove", onMove);
     };
-  }, [stages, id]);
+  }, [stages, id, story]);
 
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -243,7 +252,95 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
 
   const jump = (i: number) => jumpToJourney(id, i);
 
-  const isPhone = useIsPhone();
+  // ---- Story mode: sideways stages with a box-turn; vertical scrolling stays native (touch-action: pan-y).
+  const paintStory = (pos: number, animate: boolean) => {
+    const reduce = reducedMotion();
+    layerRefs.current.forEach((layer, i) => {
+      if (!layer) return;
+      const rel = i - pos;
+      const vis = Math.abs(rel) < 1;
+      layer.style.transition = animate ? (reduce ? "opacity 240ms ease-out" : "transform 360ms cubic-bezier(0.2,0,0,1), opacity 360ms ease-out") : "none";
+      layer.style.visibility = vis || Math.round(pos) === i ? "visible" : "hidden";
+      layer.style.pointerEvents = Math.round(pos) === i ? "auto" : "none";
+      if (reduce) { layer.style.transform = "none"; layer.style.opacity = String(Math.max(0, 1 - Math.abs(rel))); return; }
+      layer.style.opacity = vis ? "1" : "0";
+      layer.style.transformOrigin = rel >= 0 ? "left center" : "right center";
+      layer.style.transform = `translate3d(${(rel * 100).toFixed(3)}%,0,0) rotateY(${(rel * 90).toFixed(3)}deg)`;
+    });
+  };
+  useEffect(() => {
+    if (!story) {
+      layerRefs.current.forEach((l) => { if (l) { l.style.transition = ""; l.style.transformOrigin = ""; } });
+      return;
+    }
+    paintStory(active, true);
+    if (copyRef.current) { copyRef.current.style.opacity = "1"; copyRef.current.style.transform = "none"; }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [story, active]);
+  useEffect(() => {
+    if (!story) return;
+    const el = sectionRef.current, viewport = viewportRef.current;
+    if (!el || !viewport) return;
+    const n = stages.length;
+    const exitSection = () => glideTo(window.scrollY + el.getBoundingClientRect().bottom);
+    const go = (dir: 1 | -1) => {
+      const next = storyStep(activeRef.current, n, dir);
+      if (next === "exit") { paintStory(activeRef.current, true); exitSection(); return; }
+      if (next === activeRef.current) { paintStory(next, true); return; }
+      setActive(next);
+    };
+    let sx = 0, sy = 0, t0 = 0, axis: "x" | "y" | null = null, down = false, dx = 0;
+    const interactive = (t: EventTarget | null) => t instanceof Element && !!t.closest("a,button,input,select,textarea,[role=button],[data-interactive],.journey-hud,nav,svg [tabindex]");
+    const onDown = (e: PointerEvent) => {
+      if (!e.isPrimary || document.documentElement.classList.contains("journey-zoomed")) return;
+      down = true; axis = null; dx = 0; sx = e.clientX; sy = e.clientY; t0 = performance.now();
+    };
+    const onMove = (e: PointerEvent) => {
+      if (!down) return;
+      const mx = e.clientX - sx, my = e.clientY - sy;
+      if (!axis && Math.hypot(mx, my) > 10) axis = Math.abs(mx) > Math.abs(my) ? "x" : "y";
+      if (axis !== "x") return;
+      dx = mx;
+      const w = viewport.offsetWidth || 1;
+      let t = -dx / w;
+      const a = activeRef.current;
+      if ((a === 0 && t < 0)) t *= 0.25; // rubber-band at the first stage
+      paintStory(a + Math.max(-1, Math.min(1, t)), false);
+    };
+    const onUp = (e: PointerEvent) => {
+      if (!down) return;
+      down = false;
+      const w = viewport.offsetWidth || 1;
+      if (axis === "x") {
+        const fast = Math.abs(dx) / Math.max(1, performance.now() - t0) > 0.4;
+        if (Math.abs(dx) > w * 0.2 || (fast && Math.abs(dx) > 30)) go(dx < 0 ? 1 : -1);
+        else paintStory(activeRef.current, true);
+        return;
+      }
+      if (axis === null && !interactive(e.target)) go(e.clientX < w * 0.3 ? -1 : 1);
+    };
+    const onCancel = () => { if (down) { down = false; paintStory(activeRef.current, true); } };
+    const onJump = (e: Event) => {
+      const d = (e as CustomEvent<{ id: string; index: number; animate?: boolean }>).detail;
+      if (d?.id !== id) return;
+      setActive(Math.max(0, Math.min(n - 1, d.index)));
+      glideTo(window.scrollY + el.getBoundingClientRect().top, !d.animate);
+    };
+    viewport.addEventListener("pointerdown", onDown);
+    viewport.addEventListener("pointermove", onMove, { passive: true });
+    viewport.addEventListener("pointerup", onUp);
+    viewport.addEventListener("pointercancel", onCancel);
+    window.addEventListener("journey:jump", onJump);
+    return () => {
+      viewport.removeEventListener("pointerdown", onDown);
+      viewport.removeEventListener("pointermove", onMove);
+      viewport.removeEventListener("pointerup", onUp);
+      viewport.removeEventListener("pointercancel", onCancel);
+      window.removeEventListener("journey:jump", onJump);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [story, stages, id]);
+
   const { zoomed, reset } = useStageZoom({ viewportRef, target: () => layerRefs.current[active]?.querySelector<HTMLElement>(".journey-zoom") ?? null, resetKey: active });
   const metar = useMetar();
   const liveTraffic = useLiveTraffic();
@@ -265,8 +362,13 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const s = stages[active] ?? stages[0];
   if (!s) return null;
   return (
-    <section ref={sectionRef} data-journey-section="" id={id} aria-label={label} className="journey-section relative bg-ink text-background" style={{ height: `calc(${stages.length - 1 + JOURNEY_TAIL} * var(--journey-stage) + 100dvh)`, "--journey-count": stages.length } as React.CSSProperties}>
-      <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className="journey-viewport sticky top-0 h-dvh overflow-hidden">
+    <section ref={sectionRef} data-journey-section="" id={id} aria-label={label} className="journey-section relative bg-ink text-background" data-story={story ? "" : undefined} style={{ height: story ? "100dvh" : `calc(${stages.length - 1 + JOURNEY_TAIL} * var(--journey-stage) + 100dvh)`, "--journey-count": stages.length } as React.CSSProperties}>
+      <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className="journey-viewport sticky top-0 h-dvh overflow-hidden" style={story ? { perspective: "1200px", touchAction: "pan-y pinch-zoom" } : undefined}>
+        {story && (
+          <div aria-hidden className="pointer-events-none absolute inset-x-3 top-[calc(env(safe-area-inset-top)+4.25rem)] z-30 flex gap-1">
+            {stages.map((st, i) => <span key={st.code} className="h-0.5 flex-1 overflow-hidden bg-background/30"><span className="block h-full origin-left bg-background transition-transform duration-300" style={{ transform: `scaleX(${i <= active ? 1 : 0})` }} /></span>)}
+          </div>
+        )}
         {stages.map((st, i) => (
           <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className="journey-layer absolute inset-0 bg-ink backface-hidden" data-active={i === active ? "" : undefined} style={{ zIndex: stages.length - i }}>
             <div className="journey-zoom absolute inset-0 origin-top-left">
@@ -301,7 +403,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
 
         {/* HUD */}
         <div className="journey-hud absolute left-5 sm:left-[max(var(--gutter),calc((100%-1720px)/2))] top-24 z-20 font-mono text-xs uppercase tracking-[0.2em] text-background/70 lg:text-[13px]">
-          {mode === "alt" ? <p>Alt <span ref={hudRef} className="tabular-nums text-background">0</span> ft</p> : <><p className="text-background">{s.hud}</p>{s.traffic && <div className="wx-hud-slot">{(() => { const o = ops[active]; if (!o?.obs) return null; const w = o.obs; return (<>
+          {mode === "alt" && story ? <p className="tabular-nums">Stage {s.code} / 0{stages.length}</p> : mode === "alt" ? <p>Alt <span ref={hudRef} className="tabular-nums text-background">0</span> ft</p> : <><p className="text-background">{s.hud}</p>{s.traffic && <div className="wx-hud-slot">{(() => { const o = ops[active]; if (!o?.obs) return null; const w = o.obs; return (<>
             <button type="button" onClick={() => setWxOpen((v) => !v)} aria-expanded={wxOpen} className="pointer-events-auto flex min-h-11 items-center gap-1.5 text-left uppercase tracking-[inherit] text-background sm:pointer-events-none sm:cursor-default" data-wind aria-label={`Wind at ${w.station}: ${w.dir === null ? (w.kt ? "variable" : "calm") : `${w.dir} degrees`} ${w.kt} knots${w.gust ? ` gusting ${w.gust}` : ""}. Active runway ${o.rwy.runway}. ${wxOpen ? "Hide" : "Show"} full METAR`}>
               {w.dir !== null && w.kt > 0 && <svg viewBox="0 0 12 12" className="size-3 text-[color:var(--radar)]" style={{ transform: `rotate(${w.dir + 180}deg)` }} aria-hidden><path d="M6 1v10M2.5 4.5 6 1l3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>}
               <span>Wind {w.kt === 0 ? "calm" : `${w.dir === null ? "VRB" : String(w.dir).padStart(3, "0") + "°"} ${w.kt}${w.gust ? `G${w.gust}` : ""}KT`}</span>
@@ -315,7 +417,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         </div>
 
         {/* Stage rail */}
-        <nav aria-label={`${label} stages`} className="absolute right-4 sm:right-[max(var(--gutter),calc((100%-1720px)/2))] top-1/2 z-30 flex -translate-y-1/2 items-stretch gap-4">
+        <nav aria-label={`${label} stages`} className={`${story ? "sr-only " : ""}absolute right-4 sm:right-[max(var(--gutter),calc((100%-1720px)/2))] top-1/2 z-30 flex -translate-y-1/2 items-stretch gap-4`}>
           <div className="journey-stage-rail relative w-px overflow-hidden bg-background/20">
             <div ref={barRef} className="absolute inset-0 origin-top bg-primary" style={{ transform: "scaleY(0)" }} />
             <span aria-hidden="true" className="landing-scroll-stroke absolute inset-x-0 top-0 h-8 bg-background" />
@@ -336,7 +438,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
           <button type="button" onClick={reset} aria-label="Reset zoom" className="absolute right-4 top-24 z-30 inline-flex min-h-11 min-w-11 items-center gap-1.5 border border-background/40 bg-ink/70 px-3 font-mono text-xs font-bold uppercase tracking-[0.14em] text-background backdrop-blur-sm">✕ Reset</button>
         )}
         {/* Copy */}
-        <div className="site-container journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 z-20 pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-lg:!pr-14 sm:pb-24 md:pb-12 lg:pb-16">
+        <div className={`site-container journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 z-20 pb-[calc(1.5rem+env(safe-area-inset-bottom))] ${story ? "" : "max-lg:!pr-14 "}sm:pb-24 md:pb-12 lg:pb-16`}>
           <div ref={copyRef} className="journey-copy max-w-2xl">
             <StageCopy s={s} wx={klxl} wxLoading={metar === undefined} />
           </div>

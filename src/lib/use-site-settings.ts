@@ -1,3 +1,4 @@
+import { parseMobileJourneyMode, type MobileJourneyMode } from "./story-nav";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -19,5 +20,22 @@ function loadPatternMode() {
 export function useTrafficPatternMode() {
   const [mode, setMode] = useState<TrafficPatternMode>("off");
   useEffect(() => { let live = true; void loadPatternMode().then((v) => { if (live) setMode(v); }); return () => { live = false; }; }, []);
+  return mode;
+}
+
+let cachedJourney: Promise<MobileJourneyMode> | null = null;
+function loadJourneyMode() {
+  cachedJourney ??= (async () => {
+    const { data } = await supabase.from("site_settings").select("mobile_journey_mode").eq("id", "brand").maybeSingle();
+    return parseMobileJourneyMode((data as { mobile_journey_mode?: string } | null)?.mobile_journey_mode);
+  })().catch(() => "scroll" as const);
+  return cachedJourney;
+}
+/** Owner setting for phone home sections; 'scroll' until loaded on the client (prerender-safe). */
+export function useMobileJourneyMode() {
+  const [mode, setMode] = useState<MobileJourneyMode>("scroll");
+  useEffect(() => {
+    if (import.meta.env.DEV && new URLSearchParams(window.location.search).has("story")) { setMode("story"); return; }
+    let live = true; void loadJourneyMode().then((v) => { if (live) setMode(v); }); return () => { live = false; }; }, []);
   return mode;
 }

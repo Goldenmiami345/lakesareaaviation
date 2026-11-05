@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           accent_theme: string
           id: string
+          mobile_journey_mode: string
           show_traffic_pattern: boolean
           traffic_pattern_mode: string
           updated_at: string
@@ -26,6 +27,7 @@ export type Database = {
         Insert: {
           accent_theme?: string
           id: string
+          mobile_journey_mode?: string
           show_traffic_pattern?: boolean
           traffic_pattern_mode?: string
           updated_at?: string
@@ -34,6 +36,7 @@ export type Database = {
         Update: {
           accent_theme?: string
           id?: string
+          mobile_journey_mode?: string
           show_traffic_pattern?: boolean
           traffic_pattern_mode?: string
           updated_at?: string
