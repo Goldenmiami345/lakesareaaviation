@@ -42,7 +42,7 @@ function HomePage() {
           <HeroCta />
           <nav aria-label="Training locations" className="hero-step mt-2.5 flex flex-nowrap items-center gap-1 text-[10px] max-[360px]:gap-0.5 max-[360px]:text-[9px] sm:text-[11px] lg:mt-3.5 font-medium uppercase text-background/75 sm:gap-2" style={{ ["--d" as string]: "360ms" }}>
             <MapPin aria-hidden className="size-3 shrink-0 text-background/55" />
-            {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} aria-label={`${a.label}, ${a.code}`} className="group/chip inline-flex min-h-11 uppercase shrink-0 items-center whitespace-nowrap"><span className="rounded-full border border-background/25 px-1 py-1 transition-colors max-[360px]:px-0.5 group-hover/chip:border-primary group-hover/chip:bg-primary group-hover/chip:text-primary-foreground sm:px-2">{a.label}<span className="sm:inline">, {a.code}</span></span></button>)}
+            {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} aria-label={`${a.label}, ${a.code}`} className="group/chip inline-flex min-h-11 uppercase shrink-0 items-center whitespace-nowrap"><span className="rounded-full border border-background/25 px-1 py-1 transition-colors max-[360px]:px-0.5 group-hover/chip:border-primary group-hover/chip:bg-primary group-hover/chip:text-primary-foreground sm:px-2">{a.label}<span className="text-primary-text sm:inline">, {a.code}</span></span></button>)}
           </nav>
           <ScrollCue targetId="flight-path" />
         </div>
