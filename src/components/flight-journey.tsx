@@ -252,7 +252,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
 
   const jump = (i: number) => jumpToJourney(id, i);
 
-  // ---- Story mode: sideways stages with a box-turn; vertical scrolling stays native (touch-action: pan-y).
+  // ---- Story mode: sideways stages with a box-turn; vertical swipes are handled here (locked screen).
   const paintStory = (pos: number, animate: boolean) => {
     const reduce = reducedMotion();
     layerRefs.current.forEach((layer, i) => {
@@ -267,6 +267,11 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       layer.style.transformOrigin = rel >= 0 ? "left center" : "right center";
       layer.style.transform = `translate3d(${(rel * 100).toFixed(3)}%,0,0) rotateY(${(rel * 90).toFixed(3)}deg)`;
     });
+    // Altitude follows the finger between stages, like the scroll version's climb.
+    if (hudRef.current) {
+      const n = stages.length, p = Math.max(0, Math.min(n - 1, pos)), a = Math.floor(p);
+      hudRef.current.textContent = journeyAltitude({ stage: a, next: Math.min(n - 1, a + 1), transition: p - a }, n).toLocaleString("en-US");
+    }
   };
   useEffect(() => {
     if (!story) {
@@ -289,32 +294,54 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       if (next === activeRef.current) { paintStory(next, true); return; }
       setActive(next);
     };
-    let sx = 0, sy = 0, t0 = 0, axis: "x" | "y" | null = null, down = false, dx = 0;
+    let sx = 0, sy = 0, axis: "x" | "y" | null = null, down = false, dx = 0, dy = 0, vx = 0, vy = 0, lx = 0, ly = 0, lt = 0;
     const interactive = (t: EventTarget | null) => t instanceof Element && !!t.closest("a,button,input,select,textarea,[role=button],[data-interactive],.journey-hud,nav,svg [tabindex]");
     const onDown = (e: PointerEvent) => {
       if (!e.isPrimary || document.documentElement.classList.contains("journey-zoomed")) return;
-      down = true; axis = null; dx = 0; sx = e.clientX; sy = e.clientY; t0 = performance.now();
+      down = true; axis = null; dx = 0; dy = 0; vx = 0; vy = 0; sx = lx = e.clientX; sy = ly = e.clientY; lt = performance.now();
     };
     const onMove = (e: PointerEvent) => {
       if (!down) return;
+      if (document.documentElement.classList.contains("journey-zoomed") || !e.isPrimary) { down = false; return; }
+      const now = performance.now(), dt = Math.max(1, now - lt);
+      // Smoothed release velocity (px/ms) from the latest movement only, so a drag that reverses follows the last direction.
+      vx = vx * 0.4 + ((e.clientX - lx) / dt) * 0.6; vy = vy * 0.4 + ((e.clientY - ly) / dt) * 0.6;
+      lx = e.clientX; ly = e.clientY; lt = now;
       const mx = e.clientX - sx, my = e.clientY - sy;
-      if (!axis && Math.hypot(mx, my) > 10) axis = Math.abs(mx) > Math.abs(my) ? "x" : "y";
+      if (!axis && Math.hypot(mx, my) > 8) {
+        axis = Math.abs(mx) > Math.abs(my) ? "x" : "y";
+        if (axis === "x") try { viewport.setPointerCapture(e.pointerId); } catch { /* ignore */ }
+      }
+      dy = my;
       if (axis !== "x") return;
       dx = mx;
       const w = viewport.offsetWidth || 1;
       let t = -dx / w;
       const a = activeRef.current;
-      if ((a === 0 && t < 0)) t *= 0.25; // rubber-band at the first stage
+      if (a === 0 && t < 0) t *= 0.25; // rubber-band at the first stage
       paintStory(a + Math.max(-1, Math.min(1, t)), false);
     };
     const onUp = (e: PointerEvent) => {
       if (!down) return;
       down = false;
       const w = viewport.offsetWidth || 1;
+      const stale = performance.now() - lt > 90; // finger held still before lifting = no flick
       if (axis === "x") {
-        const fast = Math.abs(dx) / Math.max(1, performance.now() - t0) > 0.4;
-        if (Math.abs(dx) > w * 0.2 || (fast && Math.abs(dx) > 30)) go(dx < 0 ? 1 : -1);
-        else paintStory(activeRef.current, true);
+        const v = stale ? 0 : vx;
+        // Like Stories: a flick commits in the flick's direction; otherwise past halfway commits, else springs back.
+        let dir = 0;
+        if (Math.abs(v) > 0.35) dir = v < 0 && dx < 0 ? 1 : v > 0 && dx > 0 ? -1 : 0;
+        else if (Math.abs(dx) > w * 0.5) dir = dx < 0 ? 1 : -1;
+        if (dir) go(dir as 1 | -1); else paintStory(activeRef.current, true);
+        return;
+      }
+      if (axis === "y") {
+        // Screen is locked: a vertical swipe moves exactly one section (or re-aligns this one), never a free fling.
+        const v = stale ? 0 : vy;
+        if (Math.abs(dy) < 40 && Math.abs(v) < 0.3) return;
+        const top = el.getBoundingClientRect().top, here = window.scrollY + top;
+        if (dy < 0) { if (top > 2) glideTo(here); else exitSection(); }
+        else { if (top < -2) glideTo(here); else glideTo(Math.max(0, here - window.innerHeight)); }
         return;
       }
       if (axis === null && !interactive(e.target)) go(e.clientX < w * 0.3 ? -1 : 1);
@@ -326,12 +353,15 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       setActive(Math.max(0, Math.min(n - 1, d.index)));
       glideTo(window.scrollY + el.getBoundingClientRect().top, !d.animate);
     };
+    const noDrag = (e: Event) => e.preventDefault(); // native image drag would steal the pointer mid-swipe
+    viewport.addEventListener("dragstart", noDrag);
     viewport.addEventListener("pointerdown", onDown);
     viewport.addEventListener("pointermove", onMove, { passive: true });
     viewport.addEventListener("pointerup", onUp);
     viewport.addEventListener("pointercancel", onCancel);
     window.addEventListener("journey:jump", onJump);
     return () => {
+      viewport.removeEventListener("dragstart", noDrag);
       viewport.removeEventListener("pointerdown", onDown);
       viewport.removeEventListener("pointermove", onMove);
       viewport.removeEventListener("pointerup", onUp);
@@ -363,7 +393,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   if (!s) return null;
   return (
     <section ref={sectionRef} data-journey-section="" id={id} aria-label={label} className="journey-section relative bg-ink text-background" data-story={story ? "" : undefined} style={{ height: story ? "100dvh" : `calc(${stages.length - 1 + JOURNEY_TAIL} * var(--journey-stage) + 100dvh)`, "--journey-count": stages.length } as React.CSSProperties}>
-      <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className="journey-viewport sticky top-0 h-dvh overflow-hidden" style={story ? { perspective: "1200px", touchAction: "pan-y pinch-zoom" } : undefined}>
+      <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className="journey-viewport sticky top-0 h-dvh overflow-hidden" style={story ? { perspective: "1200px", touchAction: "none", overscrollBehavior: "none" } : undefined}>
         {story && (
           <div aria-hidden className="pointer-events-none absolute inset-x-3 top-[calc(env(safe-area-inset-top)+4.25rem)] z-30 flex gap-1">
             {stages.map((st, i) => <span key={st.code} className="h-0.5 flex-1 overflow-hidden bg-background/30"><span className="block h-full origin-left bg-background transition-transform duration-300" style={{ transform: `scaleX(${i <= active ? 1 : 0})` }} /></span>)}
@@ -403,7 +433,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
 
         {/* HUD */}
         <div className="journey-hud absolute left-5 sm:left-[max(var(--gutter),calc((100%-1720px)/2))] top-24 z-20 font-mono text-xs uppercase tracking-[0.2em] text-background/70 lg:text-[13px]">
-          {mode === "alt" && story ? <p className="tabular-nums">Stage {s.code} / 0{stages.length}</p> : mode === "alt" ? <p>Alt <span ref={hudRef} className="tabular-nums text-background">0</span> ft</p> : <><p className="text-background">{s.hud}</p>{s.traffic && <div className="wx-hud-slot">{(() => { const o = ops[active]; if (!o?.obs) return null; const w = o.obs; return (<>
+          {mode === "alt" ? <p>Alt <span ref={hudRef} className="tabular-nums text-background">0</span> ft</p> : <><p className="text-background">{s.hud}</p>{s.traffic && <div className="wx-hud-slot">{(() => { const o = ops[active]; if (!o?.obs) return null; const w = o.obs; return (<>
             <button type="button" onClick={() => setWxOpen((v) => !v)} aria-expanded={wxOpen} className="pointer-events-auto flex min-h-11 items-center gap-1.5 text-left uppercase tracking-[inherit] text-background sm:pointer-events-none sm:cursor-default" data-wind aria-label={`Wind at ${w.station}: ${w.dir === null ? (w.kt ? "variable" : "calm") : `${w.dir} degrees`} ${w.kt} knots${w.gust ? ` gusting ${w.gust}` : ""}. Active runway ${o.rwy.runway}. ${wxOpen ? "Hide" : "Show"} full METAR`}>
               {w.dir !== null && w.kt > 0 && <svg viewBox="0 0 12 12" className="size-3 text-[color:var(--radar)]" style={{ transform: `rotate(${w.dir + 180}deg)` }} aria-hidden><path d="M6 1v10M2.5 4.5 6 1l3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>}
               <span>Wind {w.kt === 0 ? "calm" : `${w.dir === null ? "VRB" : String(w.dir).padStart(3, "0") + "°"} ${w.kt}${w.gust ? `G${w.gust}` : ""}KT`}</span>
