@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { startTransition, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { srcSetFor } from "@/lib/responsive-image";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, ChevronLeft, ChevronRight, Pause, Phone, Play } from "lucide-react";
@@ -118,6 +118,38 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const autoOn = story && playing && inView && !holding;
   const activeRef = useRef(0);
   activeRef.current = active;
+  const storyRef = useRef(story);
+  storyRef.current = story;
+
+  // Offstage = scrolled away, or (Story mode) fully covered by the next section sliding over it.
+  // Marked with an attribute (no React render): traffic loops, videos and CSS animations idle there,
+  // so the section on screen gets the whole frame budget while sections slide in and out.
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    let seen = false, full = false, covered = false, lastOff: boolean | null = null, lastIn: boolean | null = null;
+    const apply = () => {
+      const off = !seen || covered;
+      if (off !== lastOff) {
+        lastOff = off;
+        el.toggleAttribute("data-offstage", off);
+        const reduce = reducedMotion();
+        videoRefs.current.forEach((v, i) => {
+          if (!v) return;
+          if (off || reduce || i !== activeRef.current) v.pause(); else void v.play().catch(() => undefined);
+        });
+      }
+      const inV = full && !covered;
+      if (storyRef.current && inV !== lastIn) { lastIn = inV; startTransition(() => setInView(inV)); }
+    };
+    const io = new IntersectionObserver(([en]) => { seen = !!en?.isIntersecting; full = seen && (en?.intersectionRatio ?? 0) > 0.9; apply(); }, { threshold: [0, 0.9] });
+    io.observe(el);
+    const next = el.nextElementSibling;
+    // The next sibling spanning the top edge of the screen means it has slid completely over this section.
+    const cover = next ? new IntersectionObserver(([en]) => { covered = !!en?.isIntersecting; apply(); }, { rootMargin: "0px 0px -99% 0px" }) : null;
+    if (next) cover?.observe(next);
+    return () => { io.disconnect(); cover?.disconnect(); el.removeAttribute("data-offstage"); };
+  }, [story]);
 
   useEffect(() => {
     const el = sectionRef.current, viewport = viewportRef.current;
@@ -246,9 +278,10 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
 
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const off = !!sectionRef.current?.hasAttribute("data-offstage");
     videoRefs.current.forEach((video, videoIndex) => {
       if (!video) return;
-      if (videoIndex === active && !reduce) void video.play().catch(() => undefined);
+      if (videoIndex === active && !reduce && !off) void video.play().catch(() => undefined);
       else video.pause();
     });
     // Decode the next/previous stage images before they can become visible.
@@ -477,9 +510,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     if (!story) return;
     const vp = viewportRef.current;
     if (!vp) return;
-    const io = new IntersectionObserver(([en]) => setInView(!!en?.isIntersecting && en.intersectionRatio > 0.9), { threshold: [0.9] });
-    io.observe(vp);
-    if (!carousel) { if (reducedMotion()) setPlaying(false); return () => io.disconnect(); }
+    // inView (autoplay) comes from the offstage observer above, which also knows when a section is covered.
+    if (!carousel) { if (reducedMotion()) setPlaying(false); return; }
     if (reducedMotion()) setPlaying(false);
     const n = stages.length;
     const step = (dir: 1 | -1) => setActive((a) => (a + dir + n) % n);
@@ -502,7 +534,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     };
     window.addEventListener("keydown", onKey);
     vp.addEventListener("wheel", onWheel, { passive: false });
-    return () => { io.disconnect(); window.removeEventListener("keydown", onKey); vp.removeEventListener("wheel", onWheel); };
+    return () => { window.removeEventListener("keydown", onKey); vp.removeEventListener("wheel", onWheel); };
   }, [story, carousel, stages.length]);
   useEffect(() => {
     if (!autoOn) return;
