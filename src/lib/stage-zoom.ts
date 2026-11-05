@@ -122,7 +122,9 @@ export function useStageZoom({ viewportRef, target, resetKey }: Opts) {
       if (now - lastTap.t < 320 && Math.hypot(at.x - lastTap.x, at.y - lastTap.y) < 40) {
         lastTap.t = 0;
         const { w, h } = size();
-        apply(view.current.s > 1.001 ? IDENTITY : zoomAt(view.current, DOUBLE_TAP_ZOOM, at.x, at.y, w, h), true);
+        // Double-tap only resets an existing zoom; zooming in is two-finger pinch only (no accidental zoom).
+        void w; void h;
+        if (view.current.s > 1.001) apply(IDENTITY, true);
       } else lastTap = { t: now, ...at };
     };
     const onEnd = (e: TouchEvent) => {
