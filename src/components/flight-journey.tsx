@@ -274,6 +274,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       return;
     }
     paintStory(active, true);
+    if (copyRef.current) { copyRef.current.style.opacity = "1"; copyRef.current.style.transform = "none"; }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [story, active]);
   useEffect(() => {
