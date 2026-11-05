@@ -290,12 +290,13 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const vp = viewportRef.current;
     if (!vp) return () => root.classList.remove("story-mode");
     // Coach mark: fades in after a short idle while this section fills the screen; any touch hides it and restarts the wait.
-    let inView = false, timer = 0;
-    const arm = () => { window.clearTimeout(timer); setHint(false); if (inView) timer = window.setTimeout(() => setHint(true), 1800); };
+    // Shown once per section per visit, for 3s at most.
+    let inView = false, timer = 0, shown = false, hide = 0;
+    const arm = () => { window.clearTimeout(timer); setHint(false); if (inView && !shown) timer = window.setTimeout(() => { shown = true; setHint(true); hide = window.setTimeout(() => setHint(false), 3000); }, 1200); };
     const io = new IntersectionObserver(([en]) => { inView = !!en?.isIntersecting && en.intersectionRatio > 0.85; arm(); }, { threshold: [0.85] });
     io.observe(vp);
     vp.addEventListener("pointerdown", arm);
-    return () => { root.classList.remove("story-mode"); io.disconnect(); window.clearTimeout(timer); vp.removeEventListener("pointerdown", arm); };
+    return () => { root.classList.remove("story-mode"); io.disconnect(); window.clearTimeout(timer); window.clearTimeout(hide); vp.removeEventListener("pointerdown", arm); };
   }, [story]);
   useEffect(() => {
     if (!story) return;
@@ -422,8 +423,17 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
           </div>
         )}
         {story && hint && (
-          <div aria-hidden className="story-hint pointer-events-none absolute inset-x-0 top-1/2 z-30 flex -translate-y-1/2 justify-center">
-            <span className="flex items-center gap-2 rounded-full bg-ink/55 px-3.5 py-2 text-[11px] font-bold uppercase tracking-wide text-background/90 backdrop-blur-sm"><Hand className="story-hint-hand size-4" />Tap or swipe</span>
+          <div aria-hidden className="story-hint pointer-events-none absolute inset-0 z-30">
+            {/* Tap: a pulse where tapping advances (right side). */}
+            <div className="story-hint-tap absolute right-[14%] top-[42%] flex flex-col items-center gap-2">
+              <span className="story-hint-ring block size-12 rounded-full border-2 border-background/80 bg-background/15" />
+              <span className="rounded-full bg-ink/55 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-background/90 backdrop-blur-sm">Tap</span>
+            </div>
+            {/* Swipe: a fingertip dot that drags right to left with a trail. */}
+            <div className="story-hint-swipe absolute inset-x-0 top-[42%] flex flex-col items-center gap-2">
+              <span className="relative block h-12 w-40"><span className="story-hint-dot absolute right-0 top-1/2 block size-10 -translate-y-1/2 rounded-full bg-background/70" /><span className="story-hint-trail absolute right-5 top-1/2 block h-1 -translate-y-1/2 rounded-full bg-background/50" /></span>
+              <span className="rounded-full bg-ink/55 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-background/90 backdrop-blur-sm">Swipe</span>
+            </div>
           </div>
         )}
         {stages.map((st, i) => (
