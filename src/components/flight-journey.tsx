@@ -404,7 +404,6 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     // close), and every pointerdown re-assigns it, so it is never stale.
     const cardTap = { open: false };
     const onDownCapture = () => { cardTap.open = trafficCardIsOpen(); };
-    window.addEventListener("touchstart", onDownCapture, { capture: true, passive: true });
     const onDown = (e: PointerEvent) => {
       if (!e.isPrimary || document.documentElement.classList.contains("journey-zoomed")) return;
       down = true; axis = null; dx = 0; vx = 0; sx = lx = e.clientX; sy = ly = e.clientY; lt = performance.now(); if (!carousel) startTransition(() => { setHolding(true); setInteracted(true); });
@@ -475,7 +474,6 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       viewport.removeEventListener("dragstart", noDrag);
       viewport.removeEventListener("pointerdown", onDown);
       window.removeEventListener("pointerdown", onDownCapture, true);
-      window.removeEventListener("touchstart", onDownCapture, true);
       viewport.removeEventListener("pointermove", onMove);
       viewport.removeEventListener("pointerup", onUp);
       viewport.removeEventListener("pointercancel", onCancel);
