@@ -16,6 +16,7 @@ import { useStageZoom } from "../lib/stage-zoom";
 import { useDesktopJourneyMode, useMobileJourneyMode } from "../lib/use-site-settings";
 import { storyStep } from "../lib/story-nav";
 import { useStorySnap } from "../lib/story-snap";
+import { trafficCardIsOpen, useTrafficCardOpen } from "../lib/traffic-card-open";
 import { TrafficPattern } from "./traffic-pattern";
 import { AirportScene } from './airport-scene';
 import { TrafficPerspective } from "./traffic-perspective";
@@ -118,7 +119,9 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   // Every 5s, looping back to the first stage after the last (owner request); finger down holds, computers can pause.
   // Auto-advance is only for visitors who haven't touched the stories yet; once they interact they stay as long as they like.
   const [interacted, setInteracted] = useState(false);
-  const autoOn = story && playing && inView && !holding && !interacted;
+  // Reading an airplane's card holds the stage: nothing moves on while it is up.
+  const cardOpen = useTrafficCardOpen();
+  const autoOn = story && playing && inView && !holding && !interacted && !cardOpen;
   const activeRef = useRef(0);
   activeRef.current = active;
   const storyRef = useRef(story);
@@ -370,7 +373,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     // Coach mark: fades in after a short idle while this section fills the screen; any touch hides it and restarts the wait.
     // Shown once per section per visit, for 3s at most.
     let inView = false, timer = 0, shown = false, hide = 0;
-    const arm = () => { window.clearTimeout(timer); setHint(false); if (inView && !shown) timer = window.setTimeout(() => { shown = true; setHint(true); hide = window.setTimeout(() => setHint(false), 3000); }, 1200); };
+    const arm = () => { window.clearTimeout(timer); setHint(false); if (inView && !shown) timer = window.setTimeout(() => { if (trafficCardIsOpen()) return; shown = true; setHint(true); hide = window.setTimeout(() => setHint(false), 3000); }, 1200); };
     const io = new IntersectionObserver(([en]) => { inView = !!en?.isIntersecting && en.intersectionRatio > 0.85; arm(); }, { threshold: [0.85] });
     io.observe(vp);
     vp.addEventListener("pointerdown", arm);
@@ -396,6 +399,11 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     };
     let sx = 0, sy = 0, axis: "x" | "y" | null = null, down = false, dx = 0, vx = 0, lx = 0, ly = 0, lt = 0;
     const interactive = (t: EventTarget | null) => t instanceof Element && !!t.closest("a,button,input,select,textarea,[role=button],[data-interactive],.journey-hud,nav,svg [tabindex]");
+    // A tap that only puts an airplane's info card away must never flip the stage. The flag is read
+    // at the very start of the gesture (window capture runs before the card's own document-capture
+    // close), and every pointerdown re-assigns it, so it is never stale.
+    const cardTap = { open: false };
+    const onDownCapture = () => { cardTap.open = trafficCardIsOpen(); };
     const onDown = (e: PointerEvent) => {
       if (!e.isPrimary || document.documentElement.classList.contains("journey-zoomed")) return;
       down = true; axis = null; dx = 0; vx = 0; sx = lx = e.clientX; sy = ly = e.clientY; lt = performance.now(); if (!carousel) startTransition(() => { setHolding(true); setInteracted(true); });
@@ -439,6 +447,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         return;
       }
       if (axis === null && !interactive(e.target)) {
+        // This tap only closed an airplane's card: it must not also move the stage.
+        if (cardTap.open) { cardTap.open = false; return; }
         // Tapping while caught between two sections first snaps this one into place.
         const top = box().top;
         if (Math.abs(top) > 2) { glideTo(window.scrollY + top); return; }
@@ -455,6 +465,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const noDrag = (e: Event) => e.preventDefault(); // native image drag would steal the pointer mid-swipe
     viewport.addEventListener("dragstart", noDrag);
     viewport.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointerdown", onDownCapture, true);
     viewport.addEventListener("pointermove", onMove, { passive: true });
     viewport.addEventListener("pointerup", onUp);
     viewport.addEventListener("pointercancel", onCancel);
@@ -462,6 +473,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     return () => {
       viewport.removeEventListener("dragstart", noDrag);
       viewport.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointerdown", onDownCapture, true);
       viewport.removeEventListener("pointermove", onMove);
       viewport.removeEventListener("pointerup", onUp);
       viewport.removeEventListener("pointercancel", onCancel);
