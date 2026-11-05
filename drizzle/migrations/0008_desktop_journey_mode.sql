@@ -1,0 +1,1 @@
+ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS desktop_journey_mode text NOT NULL DEFAULT 'scroll' CHECK (desktop_journey_mode IN ('scroll','carousel'));
