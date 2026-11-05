@@ -48,9 +48,11 @@ function HomePage() {
         </div>
       </section>
 
-      <div className="relative z-10"><FlightJourney /></div>
+      <div className="relative z-10">
+        <div><FlightJourney /></div>
+        <div className="relative z-20"><FlightJourney stages={airportStages} id="airports" label="Three airports to train from" mode="code" fadeBottom="background" /></div>
       </div>
-      <FlightJourney stages={airportStages} id="airports" label="Three airports to train from" mode="code" fadeBottom="background" />
+      </div>
 
       <section className="bg-background py-20 sm:py-28" data-scroll-reveal>
         <div className="site-container">
