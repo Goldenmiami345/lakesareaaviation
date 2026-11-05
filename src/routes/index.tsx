@@ -52,10 +52,6 @@ function HomePage() {
 
       <section className="bg-background py-20 sm:py-28" data-scroll-reveal>
         <div className="site-container">
-          <div className="grid gap-10 border-b border-border pb-10 lg:grid-cols-[.75fr_1.25fr] lg:items-end">
-            <div><p className="eyebrow text-primary-text">More ways to train</p><h2 className="mt-4 max-w-[12ch] font-display text-4xl sm:text-6xl">Add the privilege. Sharpen the skill.</h2></div>
-            <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">Build beyond the core ratings with focused multi-engine training, instructor privileges, endorsements, and recurrent proficiency work.</p>
-          </div>
           <div className="stagger-grid grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-3" data-scroll-reveal>
             <ServiceLink eyebrow="3–4 days" title="Commercial multi" text="Add commercial multi-engine privileges in the Piper Apache." to="/programs/$slug" slug="commercial-multi-engine" />
             <ServiceLink eyebrow="3–4 days" title="MEI" text="Add multi-engine instructor privileges through a concentrated course." to="/programs/$slug" slug="mei" />
