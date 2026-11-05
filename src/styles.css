@@ -309,9 +309,9 @@ input.date-field::-webkit-date-and-time-value { text-align: left; margin: 0; }
 .journey-layer[data-active] .journey-drift { animation: journey-drift 14s ease-in-out infinite alternate; }
 @media (prefers-reduced-motion: reduce) { .journey-layer[data-active] .journey-drift { animation: none; } }
 /* Phones: instrument photo shown ~15% wider (zoomed out), anchored to the copy; the top fades into ink under the header. */
-@keyframes journey-drift-phone { from { transform: scale(.85); } to { transform: scale(.9) translate3d(-1%, 0, 0); } }
+@keyframes journey-drift-phone { from { transform: scale(1); } to { transform: scale(1.05) translate3d(-1%, 0, 0); } }
 @media (max-width: 639px) {
-  .journey-drift { transform: scale(.85); transform-origin: 55% 100%; -webkit-mask-image: linear-gradient(to bottom, transparent, black 14%); mask-image: linear-gradient(to bottom, transparent, black 14%); }
+  .journey-drift { position: absolute; left: 0; bottom: 0; height: 85% !important; transform-origin: 55% 100%; -webkit-mask-image: linear-gradient(to bottom, transparent, black 14%); mask-image: linear-gradient(to bottom, transparent, black 14%); }
   .journey-layer[data-active] .journey-drift { animation-name: journey-drift-phone; }
 }
 
