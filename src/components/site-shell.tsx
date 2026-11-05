@@ -35,7 +35,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
         <div className="flex items-center gap-1.5 lg:hidden">
         <a href={SCHOOL_PHONE_TEL} aria-label={`Call Lakes Area Aviation at ${SCHOOL_PHONE}`} className="inline-flex h-11 items-center gap-1.5 rounded-full bg-primary px-3 text-primary-foreground shadow-sm transition-[background-color,scale] duration-300 hover:bg-primary/90 active:scale-[0.97]">
           <Phone className="size-4 shrink-0" aria-hidden="true" />
-          <span className="hidden min-[380px]:inline text-[11px] font-bold tabular-nums tracking-[0.02em]">{SCHOOL_PHONE}</span>
+          <span className="hidden min-[360px]:inline text-[11px] font-bold tabular-nums tracking-[0.02em]">{SCHOOL_PHONE}</span>
         </a>
         <Dialog.Trigger aria-label="Open menu" className="grid size-11 place-items-center"><Menu className="size-5" /></Dialog.Trigger>
       </div>
