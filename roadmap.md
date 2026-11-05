@@ -92,3 +92,5 @@
 
 - [x] Scroll-up unlock: after any upward scroll, downward paging and snapping stay off until the end of the locations journey; 164 tests pass.
 - [x] Hero title: "BECOME A PROFESSIONAL PILOT", CTA and location chips centered as one group on phone and desktop; verified with screenshots.
+
+- [x] Journey stages cut to one text line (bigger headline only, small subtext removed); instrument stage line swapped per owner red line; 149 tests, build OK, phone story all six stages + desktop + airport section checked.
