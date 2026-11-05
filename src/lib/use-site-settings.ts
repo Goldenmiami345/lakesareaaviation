@@ -1,5 +1,5 @@
 import { parseMobileJourneyMode, type MobileJourneyMode } from "./story-nav";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export type TrafficPatternMode = "off" | "pulse" | "always";
@@ -48,8 +48,13 @@ function loadJourneyMode() {
 /** Owner setting for phone home sections; 'scroll' until loaded on the client (prerender-safe). */
 export function useMobileJourneyMode() {
   const [mode, setMode] = useState<MobileJourneyMode>("scroll");
-  useEffect(() => {
+  // Last known mode is remembered so a return visit never flashes the other format while the setting loads.
+  useLayoutEffect(() => {
     if (import.meta.env.DEV && new URLSearchParams(window.location.search).has("story")) { setMode("story"); return; }
-    let live = true; void loadJourneyMode().then((v) => { if (live) setMode(v); }); return () => { live = false; }; }, []);
+    try { setMode(parseMobileJourneyMode(localStorage.getItem("journey-mode") ?? undefined)); } catch { /* ignore */ }
+    let live = true;
+    void loadJourneyMode().then((v) => { if (!live) return; setMode(v); try { localStorage.setItem("journey-mode", v); } catch { /* ignore */ } });
+    return () => { live = false; };
+  }, []);
   return mode;
 }
