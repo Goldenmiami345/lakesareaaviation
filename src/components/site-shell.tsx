@@ -32,7 +32,13 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
         <Link to="/contact" className={`group inline-flex items-center gap-2 rounded-full border py-1.5 pl-4 pr-1.5 text-xs font-semibold tracking-[0.04em] backdrop-blur transition-[border-color,background-color,scale] duration-300 hover:border-primary ${overlay ? "border-white/30 bg-white/10" : "border-border bg-background"}`}>Build my training plan<span className="grid size-7 place-items-center rounded-full bg-primary text-primary-foreground transition-transform duration-300 group-hover:rotate-45"><ArrowUpRight className="size-3.5" /></span></Link>
       </nav>
       <Dialog.Root open={open} onOpenChange={setOpen}>
-        <Dialog.Trigger aria-label="Open menu" className="grid size-11 place-items-center lg:hidden"><Menu className="size-5" /></Dialog.Trigger>
+        <div className="flex items-center gap-1.5 lg:hidden">
+        <a href={SCHOOL_PHONE_TEL} aria-label={`Call Lakes Area Aviation at ${SCHOOL_PHONE}`} className="inline-flex h-11 items-center gap-1.5 rounded-full bg-primary px-3 text-primary-foreground shadow-sm transition-[background-color,scale] duration-300 hover:bg-primary/90 active:scale-[0.97]">
+          <Phone className="size-4 shrink-0" aria-hidden="true" />
+          <span className="hidden min-[360px]:inline text-[11px] font-bold tabular-nums tracking-[0.02em]">{SCHOOL_PHONE}</span>
+        </a>
+        <Dialog.Trigger aria-label="Open menu" className="grid size-11 place-items-center"><Menu className="size-5" /></Dialog.Trigger>
+      </div>
         <Dialog.Portal>
           {/* Full-height sheet: Radix traps focus, locks body scroll, closes on Esc and returns focus to the trigger. */}
           <Dialog.Content aria-modal="true" aria-describedby={undefined} className="fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-background text-foreground lg:hidden">
