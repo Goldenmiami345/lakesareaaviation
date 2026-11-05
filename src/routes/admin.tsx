@@ -79,6 +79,7 @@ function AdminPage() {
     if (!user || !isAdmin) return;
     setBusy(true); setMessage("");
     const { error } = await supabase.from("site_settings").update({ mobile_journey_mode: next, updated_at: new Date().toISOString(), updated_by: user.id }).eq("id", "brand");
+    if (!error) try { localStorage.setItem("journey-mode", next); } catch { /* ignore */ }
     if (error) setMessage(error.message);
     else { setJourney(next); setMessage(`Phones now show ${next === "story" ? "Story mode" : "Fading scroll"} on the home page.`); }
     setBusy(false);
