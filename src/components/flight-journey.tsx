@@ -302,6 +302,10 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const reduce = reducedMotion();
     window.clearTimeout(flatTimer.current);
     const settled = Number.isInteger(pos);
+    // 3D (perspective + hidden backfaces) exists only while the box is actually turning;
+    // at rest every layer is a plain flat picture, so vertical slides composite cheaply.
+    const turning = !(reduce || fade) && (animate || !settled);
+    if (turning && viewportRef.current) viewportRef.current.style.perspective = "1200px";
     layerRefs.current.forEach((layer, i) => {
       if (!layer) return;
       const rel = i - pos;
@@ -320,6 +324,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         return;
       }
       layer.style.zIndex = "";
+      layer.style.backfaceVisibility = vis ? "hidden" : "";
       layer.style.transition = animate ? "transform 360ms cubic-bezier(0.2,0,0,1)" : "none";
       layer.style.visibility = vis || cur ? "visible" : "hidden";
       layer.style.opacity = vis ? "1" : "0";
@@ -329,10 +334,12 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     // At rest, drop all 3D so vertical scrolling composites one flat layer (3D layers flickered black while sliding).
     if (settled) {
       flatTimer.current = window.setTimeout(() => {
+        if (viewportRef.current) viewportRef.current.style.perspective = "";
         layerRefs.current.forEach((layer, i) => {
           if (!layer) return;
           layer.style.transition = "none";
           layer.style.transform = "none";
+          layer.style.backfaceVisibility = "";
           layer.style.zIndex = "";
           layer.style.opacity = i === pos ? "1" : "0";
           layer.style.visibility = i === pos ? "visible" : "hidden";
