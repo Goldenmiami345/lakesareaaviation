@@ -315,6 +315,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const box = () => (el.parentElement ?? el).getBoundingClientRect();
     const exitSection = () => glideTo(window.scrollY + box().top + el.offsetHeight);
     const go = (dir: 1 | -1) => {
+      if (carousel) { setPlaying(false); setActive((a) => (a + dir + n) % n); return; }
       const next = storyStep(activeRef.current, n, dir);
       if (next === "exit") { paintStory(activeRef.current, true); exitSection(); return; }
       if (next === activeRef.current) { paintStory(next, true); return; }
@@ -340,6 +341,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       }
       dy = my;
       // Vertical: the page follows the finger 1:1 (natural), the lock only helps on release.
+      if (axis === "y" && carousel) return; // mouse/trackpad: page scrolls natively
       if (axis === "y") { window.scrollTo({ top: Math.max(0, sScroll - my), behavior: "instant" }); return; }
       if (axis !== "x") return;
       dx = mx;
@@ -363,7 +365,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         if (dir) go(dir as 1 | -1); else paintStory(activeRef.current, true);
         return;
       }
-      if (axis === "y") {
+      if (axis === "y" && !carousel) {
         // The finger already moved the page; on release ease into the nearest resting place:
         // a deliberate pull (flick or past ~30% of the screen) carries on to the next section, otherwise it settles back.
         const v = stale ? 0 : vy, h = window.innerHeight;
@@ -403,7 +405,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       window.removeEventListener("journey:jump", onJump);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [story, stages, id]);
+  }, [story, carousel, stages, id]);
 
   useEffect(() => {
     if (!carousel) return;
