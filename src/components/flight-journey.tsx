@@ -290,7 +290,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       setActive(next);
     };
     let sx = 0, sy = 0, t0 = 0, axis: "x" | "y" | null = null, down = false, dx = 0;
-    const interactive = (t: EventTarget | null) => t instanceof Element && !!t.closest("a,button,input,select,textarea,[role=button],[data-interactive],[tabindex],.journey-hud,nav");
+    const interactive = (t: EventTarget | null) => t instanceof Element && !!t.closest("a,button,input,select,textarea,[role=button],[data-interactive],.journey-hud,nav,svg [tabindex]");
     const onDown = (e: PointerEvent) => {
       if (!e.isPrimary || document.documentElement.classList.contains("journey-zoomed")) return;
       down = true; axis = null; dx = 0; sx = e.clientX; sy = e.clientY; t0 = performance.now();
