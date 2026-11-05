@@ -393,3 +393,6 @@ html.hero-enter .hero-mask > span { animation: hero-mask-in .55s var(--d, 0ms) c
 @media (prefers-reduced-motion: reduce) { .traffic-live-dot { animation:none; } }
 
 @media (pointer: fine) and (min-width: 1024px) { :root { --journey-stage: 75vh; } }
+
+/* Sections scrolled away or covered by the next one idle their CSS animations (drift, pings, trails). */
+[data-offstage] *, [data-offstage] *::before, [data-offstage] *::after { animation-play-state: paused !important; }
