@@ -313,16 +313,21 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     if (!story || carousel) return;
     const el = sectionRef.current;
     if (!el) return;
-    let limit: number | null = null;
+    let limit: number | null = null, easing = false;
     const begin = () => {
       if (document.documentElement.classList.contains("journey-zoomed")) { limit = null; return; }
       const base = window.scrollY + (el.parentElement ?? el).getBoundingClientRect().top;
       limit = storySwipeLimit(window.scrollY, base, el.offsetHeight);
+      easing = false;
       // Cancel any previous glide before a fresh gesture takes ownership.
       window.scrollTo({ top: window.scrollY, behavior: "instant" });
     };
     const bound = () => {
-      if (limit !== null && window.scrollY > limit) window.scrollTo({ top: limit, behavior: "instant" });
+      // Ease into the boundary instead of snapping: a smooth scroll cancels the leftover
+      // momentum and glides the last stretch, so the stop feels like a landing, not a jolt.
+      if (limit === null || easing || window.scrollY <= limit) return;
+      easing = true;
+      window.scrollTo({ top: limit, behavior: reducedMotion() ? "instant" : "smooth" });
     };
     const bypass = () => { limit = null; }; // Explicit links and section glides are intentional navigation.
     window.addEventListener("touchstart", begin, { passive: true });
