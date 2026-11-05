@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 /**
  * Phone Story mode: vertical movement between the homepage's full-screen sections is 100% native
- * scrolling (compositor thread) locked by CSS scroll snap (`html.story-snap`, mandatory, every
+ * scrolling (compositor thread) locked by CSS scroll snap (`html.story-snapping`, mandatory, every
  * `.story-snap` anchor has scroll-snap-stop: always), so one swipe moves exactly one section with
  * Safari's own physics. JavaScript never moves the page per finger frame; it only switches snapping
  * off below the last anchor (normal reading content) and finishes a rare rest between anchors.
@@ -35,7 +35,7 @@ function start(): () => void {
       .sort((a, b) => a - b);
     end = points.length ? points[points.length - 1]! : Infinity;
   };
-  const set = (v: boolean) => { if (v !== on) { on = v; root.classList.toggle("story-snap", v); } };
+  const set = (v: boolean) => { if (v !== on) { on = v; root.classList.toggle("story-snapping", v); } };
   const zoomed = () => root.classList.contains("journey-zoomed");
   const reduce = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -86,7 +86,7 @@ function start(): () => void {
     window.removeEventListener("touchend", onEnd);
     window.removeEventListener("touchcancel", onEnd);
     window.removeEventListener("scroll", onScroll);
-    root.classList.remove("story-snap", "story-phone");
+    root.classList.remove("story-snapping", "story-phone");
   };
 }
 

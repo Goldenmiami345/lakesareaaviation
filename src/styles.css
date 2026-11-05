@@ -125,7 +125,7 @@ html.story-mode .scroll-progress { display: none; }
 @media (prefers-reduced-motion: reduce) { .story-hint-ring, .story-hint-dot, .story-hint-trail { animation: none; } .story-hint-swipe { animation-duration: 1.6s; } }
 .hero-parallax { transform: translate3d(0, var(--hero-shift, 0px), 0) scale(1.04); will-change: transform; }
 /* Phone Story mode: native, snap-locked section slides (story-snap.ts). No script-driven motion rides along. */
-html.story-snap { scroll-snap-type: y mandatory; }
+html.story-snapping { scroll-snap-type: y mandatory; }
 .story-snap { scroll-snap-align: start; scroll-snap-stop: always; pointer-events: none; }
 html.story-phone .hero-parallax { transform: scale(1.04); }
 /* Hidden states apply only after hydration (MotionExperience adds html.reveal-ready), so prerendered/no-JS content is always visible. */
