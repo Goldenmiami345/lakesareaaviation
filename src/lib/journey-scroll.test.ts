@@ -74,6 +74,8 @@ describe("settleTarget", () => {
     assert.equal(settleTarget(g, at(g.count - 1)), null);
     assert.equal(settleTarget(g, at(g.count - 1 + JOURNEY_TAIL / 2)), null);
     assert.equal(settleTarget(g, at(g.count + 3)), null);
+    // Leaving a section either way is never pulled back in.
+    for (const d of [1, 40, 300]) { assert.equal(settleTarget(g, g.base - d), null); assert.equal(settleTarget(g, at(g.count - 1 + JOURNEY_TAIL) + d), null); }
   });
   it("finishes a crossfade toward its nearer edge", () => {
     const w = 1 - JOURNEY_HOLD;

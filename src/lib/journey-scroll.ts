@@ -14,7 +14,7 @@ const smoothstep = (t: number) => { const x = clamp(t); return x * x * (3 - 2 * 
 /** Fraction of each stage's scroll length that shows the stage unchanged before its crossfade. */
 export const JOURNEY_HOLD = 0.72;
 /** Extra hold after the last stage (in stage lengths) before the section unpins and the next one slides in. */
-export const JOURNEY_TAIL = 0.35;
+export const JOURNEY_TAIL = 0.5;
 
 /** `base`: document y where the section's viewport pins. `stage`: scroll px per stage. */
 export type JourneyGeometry = { base: number; stage: number; count: number };
