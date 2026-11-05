@@ -146,9 +146,11 @@ export const TrafficCard = forwardRef<HTMLDivElement, { plane: TrafficPlaneInfo;
           {plane.nickname && <span className="block truncate text-xs leading-tight text-background">“{plane.nickname}”</span>}
           <span className="block truncate text-xs leading-tight text-background/65">{plane.type}</span>
         </span>
-      <span className="mt-1.5 flex items-center justify-between gap-2 font-mono text-xs tabular-nums">
-        <span data-k="alt" /><span data-k="kt" /><span data-k="phase" className="truncate font-bold uppercase tracking-[0.08em] text-[color:var(--radar)]" />
+      <span className="mt-1.5 flex items-center justify-between gap-2 whitespace-nowrap font-mono text-xs tabular-nums">
+        <span data-k="alt" /><span data-k="kt" />
       </span>
+      {/* Phase gets its own full-width line so long names ("Touch-and-go") never cut off. */}
+      <span data-k="phase" className="mt-1 block font-mono text-xs font-bold uppercase leading-tight tracking-[0.08em] text-[color:var(--radar)]" />
       <span className="sr-only">Runway {runway}</span>
       <Button variant="ghost" onClick={onOpen} className="mt-1 flex min-h-11 w-full justify-start px-0 text-left text-xs font-bold uppercase tracking-[0.16em] text-[color:var(--radar)]">View in fleet →</Button>
     </div>,

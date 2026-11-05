@@ -1,0 +1,1 @@
+ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS fleet_show_models boolean NOT NULL DEFAULT false;

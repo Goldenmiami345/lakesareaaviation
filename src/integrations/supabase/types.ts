@@ -17,6 +17,7 @@ export type Database = {
       site_settings: {
         Row: {
           accent_theme: string
+          fleet_show_models: boolean
           id: string
           mobile_journey_mode: string
           show_traffic_pattern: boolean
@@ -26,6 +27,7 @@ export type Database = {
         }
         Insert: {
           accent_theme?: string
+          fleet_show_models?: boolean
           id: string
           mobile_journey_mode?: string
           show_traffic_pattern?: boolean
@@ -35,6 +37,7 @@ export type Database = {
         }
         Update: {
           accent_theme?: string
+          fleet_show_models?: boolean
           id?: string
           mobile_journey_mode?: string
           show_traffic_pattern?: boolean
