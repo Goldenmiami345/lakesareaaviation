@@ -4,7 +4,7 @@ import n6641fCutout from "../assets/fleet/cutouts/n6641f.webp.asset.json";
 import n96150Cutout from "../assets/fleet/cutouts/n96150.webp.asset.json";
 import n11059Cutout from "../assets/fleet/cutouts/n11059.webp.asset.json";
 import n7108gCutout from "../assets/fleet/cutouts/n7108g.webp.asset.json";
-import n4383pCutout from "../assets/fleet/cutouts/n4383p.webp.asset.json";
+import n4383pCutout from "../assets/fleet/cutouts/n4383p-side.webp.asset.json";
 import n46201Cutout from "../assets/fleet/cutouts/n46201.webp.asset.json";
 import n6641fPanel from "../assets/fleet/n6641f-panel.png.asset.json";
 import n6717aPanel from "../assets/fleet/n6717a-panel.png.asset.json";
