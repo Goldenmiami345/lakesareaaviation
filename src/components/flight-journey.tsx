@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { srcSetFor } from "@/lib/responsive-image";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Phone } from "lucide-react";
+import { ArrowRight, Hand, Phone } from "lucide-react";
 import { Button } from "./ui/button";
 import { journeyFrame, journeyAltitude, settleTarget, stageLanding, stageLengthFrom, JOURNEY_TAIL, type JourneyGeometry } from "../lib/journey-scroll";
 import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
@@ -282,12 +282,30 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     if (copyRef.current) { copyRef.current.style.opacity = "1"; copyRef.current.style.transform = "none"; }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [story, active]);
+  const [hint, setHint] = useState(false);
+  useEffect(() => {
+    if (!story) return;
+    const root = document.documentElement;
+    root.classList.add("story-mode"); // hides the page-progress bar; the trail shows progress instead
+    let seen = false;
+    try { seen = localStorage.getItem("story-hint-seen") === "1"; } catch { /* ignore */ }
+    const vp = viewportRef.current;
+    if (seen || !vp) return () => root.classList.remove("story-mode");
+    // Like Stories' first-run coach mark: shown until the first touch, then never again.
+    const io = new IntersectionObserver(([en]) => { if (en?.isIntersecting && en.intersectionRatio > 0.6) setHint(true); }, { threshold: [0.6] });
+    io.observe(vp);
+    const dismiss = () => { setHint(false); io.disconnect(); try { localStorage.setItem("story-hint-seen", "1"); } catch { /* ignore */ } };
+    vp.addEventListener("pointerdown", dismiss, { once: true });
+    return () => { root.classList.remove("story-mode"); io.disconnect(); vp.removeEventListener("pointerdown", dismiss); };
+  }, [story]);
   useEffect(() => {
     if (!story) return;
     const el = sectionRef.current, viewport = viewportRef.current;
     if (!el || !viewport) return;
     const n = stages.length;
-    const exitSection = () => glideTo(window.scrollY + el.getBoundingClientRect().bottom);
+    // Story sections are sticky so the next one slides up over them; measure from the in-flow wrapper.
+    const box = () => (el.parentElement ?? el).getBoundingClientRect();
+    const exitSection = () => glideTo(window.scrollY + box().top + el.offsetHeight);
     const go = (dir: 1 | -1) => {
       const next = storyStep(activeRef.current, n, dir);
       if (next === "exit") { paintStory(activeRef.current, true); exitSection(); return; }
@@ -339,19 +357,24 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         // Screen is locked: a vertical swipe moves exactly one section (or re-aligns this one), never a free fling.
         const v = stale ? 0 : vy;
         if (Math.abs(dy) < 40 && Math.abs(v) < 0.3) return;
-        const top = el.getBoundingClientRect().top, here = window.scrollY + top;
+        const top = box().top, here = window.scrollY + top;
         if (dy < 0) { if (top > 2) glideTo(here); else exitSection(); }
         else { if (top < -2) glideTo(here); else glideTo(Math.max(0, here - window.innerHeight)); }
         return;
       }
-      if (axis === null && !interactive(e.target)) go(e.clientX < w * 0.3 ? -1 : 1);
+      if (axis === null && !interactive(e.target)) {
+        // Tapping while caught between two sections first snaps this one into place.
+        const top = box().top;
+        if (Math.abs(top) > 2) { glideTo(window.scrollY + top); return; }
+        go(e.clientX < w * 0.3 ? -1 : 1);
+      }
     };
     const onCancel = () => { if (down) { down = false; paintStory(activeRef.current, true); } };
     const onJump = (e: Event) => {
       const d = (e as CustomEvent<{ id: string; index: number; animate?: boolean }>).detail;
       if (d?.id !== id) return;
       setActive(Math.max(0, Math.min(n - 1, d.index)));
-      glideTo(window.scrollY + el.getBoundingClientRect().top, !d.animate);
+      glideTo(window.scrollY + box().top, !d.animate);
     };
     const noDrag = (e: Event) => e.preventDefault(); // native image drag would steal the pointer mid-swipe
     viewport.addEventListener("dragstart", noDrag);
@@ -392,11 +415,16 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const s = stages[active] ?? stages[0];
   if (!s) return null;
   return (
-    <section ref={sectionRef} data-journey-section="" id={id} aria-label={label} className="journey-section relative bg-ink text-background" data-story={story ? "" : undefined} style={{ height: story ? "100dvh" : `calc(${stages.length - 1 + JOURNEY_TAIL} * var(--journey-stage) + 100dvh)`, "--journey-count": stages.length } as React.CSSProperties}>
+    <section ref={sectionRef} data-journey-section="" id={id} aria-label={label} className={`journey-section ${story ? "sticky top-0" : "relative"} bg-ink text-background`} data-story={story ? "" : undefined} style={{ height: story ? "100dvh" : `calc(${stages.length - 1 + JOURNEY_TAIL} * var(--journey-stage) + 100dvh)`, "--journey-count": stages.length } as React.CSSProperties}>
       <div ref={viewportRef} data-zoomed={zoomed ? "" : undefined} className="journey-viewport sticky top-0 h-dvh overflow-hidden" style={story ? { perspective: "1200px", touchAction: "none", overscrollBehavior: "none" } : undefined}>
         {story && (
-          <div aria-hidden className="pointer-events-none absolute inset-x-3 top-[calc(env(safe-area-inset-top)+4.25rem)] z-30 flex gap-1">
-            {stages.map((st, i) => <span key={st.code} className="h-0.5 flex-1 overflow-hidden bg-background/30"><span className="block h-full origin-left bg-background transition-transform duration-300" style={{ transform: `scaleX(${i <= active ? 1 : 0})` }} /></span>)}
+          <div className="absolute inset-x-3 top-[calc(env(safe-area-inset-top)+3.6rem)] z-30 flex gap-1">
+            {stages.map((st, i) => <button key={st.code} type="button" aria-label={`Show ${st.label}`} onClick={() => { setActive(i); const top = (sectionRef.current?.parentElement ?? sectionRef.current)?.getBoundingClientRect().top ?? 0; if (Math.abs(top) > 2) glideTo(window.scrollY + top); }} className="flex h-6 flex-1 items-center"><span className="block h-[3px] w-full overflow-hidden rounded-full bg-background/30"><span className="block h-full origin-left bg-primary transition-transform duration-300" style={{ transform: `scaleX(${i <= active ? 1 : 0})` }} /></span></button>)}
+          </div>
+        )}
+        {story && hint && (
+          <div aria-hidden className="story-hint pointer-events-none absolute inset-x-0 top-1/2 z-30 flex -translate-y-1/2 justify-center">
+            <span className="flex items-center gap-2 rounded-full bg-ink/55 px-3.5 py-2 text-[11px] font-bold uppercase tracking-wide text-background/90 backdrop-blur-sm"><Hand className="story-hint-hand size-4" />Tap or swipe</span>
           </div>
         )}
         {stages.map((st, i) => (

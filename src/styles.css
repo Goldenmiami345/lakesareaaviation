@@ -109,6 +109,12 @@
 .reveal-delay { animation: reveal .8s .18s cubic-bezier(.2,.65,.3,1) both; }
 .runway-line { transform-origin: left; animation: runway 1.2s .35s cubic-bezier(.2,.65,.3,1) both; }
 .scroll-progress { position: fixed; inset: 0 auto auto 0; z-index: 80; width: 100%; height: 3px; background: var(--primary); transform: scaleX(var(--scroll-progress, 0)); transform-origin: left; pointer-events: none; }
+html.story-mode .scroll-progress { display: none; }
+.story-hint { animation: story-hint-in .5s .4s both; }
+.story-hint-hand { animation: story-hint-swipe 1.6s ease-in-out infinite; }
+@keyframes story-hint-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes story-hint-swipe { 0%, 100% { transform: translateX(3px); } 50% { transform: translateX(-4px) rotate(-8deg); } }
+@media (prefers-reduced-motion: reduce) { .story-hint-hand { animation: none; } }
 .hero-parallax { transform: translate3d(0, var(--hero-shift, 0px), 0) scale(1.04); will-change: transform; }
 /* Hidden states apply only after hydration (MotionExperience adds html.reveal-ready), so prerendered/no-JS content is always visible. */
 html.reveal-ready [data-scroll-reveal] { opacity: 0; transform: translateY(42px); transition: opacity .8s cubic-bezier(.2,.65,.3,1), transform .8s cubic-bezier(.2,.65,.3,1); }
