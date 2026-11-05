@@ -21,3 +21,20 @@ export function useTrafficPatternMode() {
   useEffect(() => { let live = true; void loadPatternMode().then((v) => { if (live) setMode(v); }); return () => { live = false; }; }, []);
   return mode;
 }
+
+export type MobileJourneyMode = "scroll" | "story";
+export const parseMobileJourneyMode = (v: unknown): MobileJourneyMode => (v === "story" ? "story" : "scroll");
+let cachedJourney: Promise<MobileJourneyMode> | null = null;
+function loadJourneyMode() {
+  cachedJourney ??= (async () => {
+    const { data } = await supabase.from("site_settings").select("mobile_journey_mode").eq("id", "brand").maybeSingle();
+    return parseMobileJourneyMode((data as { mobile_journey_mode?: string } | null)?.mobile_journey_mode);
+  })().catch(() => "scroll" as const);
+  return cachedJourney;
+}
+/** Owner setting for phone home sections; 'scroll' until loaded on the client (prerender-safe). */
+export function useMobileJourneyMode() {
+  const [mode, setMode] = useState<MobileJourneyMode>("scroll");
+  useEffect(() => { let live = true; void loadJourneyMode().then((v) => { if (live) setMode(v); }); return () => { live = false; }; }, []);
+  return mode;
+}
