@@ -82,6 +82,15 @@
   /* Home is dark end to end: no cream body showing through while the page fades in. */
   body:has(#flight-path) { background: var(--ink); }
   button, a, input, select, textarea { letter-spacing: 0; }
+  /* Interface polish (make-interfaces-feel-better): crisp text, balanced headings, no orphans, steady numbers, tactile presses. */
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  h1, h2, h3, h4 { text-wrap: balance; }
+  p, li, blockquote, dd { text-wrap: pretty; }
+  time, [data-live], .tabular { font-variant-numeric: tabular-nums; }
+  main img:not([data-aircraft] img):not([class*="cutout"]) { outline: 1px solid oklch(0 0 0 / 0.1); outline-offset: -1px; }
+  .bg-ink img, .text-background img { outline-color: oklch(1 0 0 / 0.1); }
+  :where(button, [role="button"], a[class*="rounded"]):not(:disabled) { transition-property: color, background-color, border-color, box-shadow, opacity, scale; transition-duration: 150ms; transition-timing-function: cubic-bezier(0.2, 0, 0, 1); }
+  @media (hover: hover) and (pointer: fine), (pointer: coarse) { :where(button, [role="button"], a[class*="rounded"]):not(:disabled):not([data-static]):active { scale: 0.96; } }
   ::selection { background: color-mix(in oklab, var(--primary) 35%, transparent); }
 }
 
