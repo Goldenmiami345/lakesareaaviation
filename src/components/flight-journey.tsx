@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { srcSetFor } from "@/lib/responsive-image";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Hand, Phone } from "lucide-react";
+import { ArrowRight, Phone } from "lucide-react";
 import { Button } from "./ui/button";
 import { journeyFrame, journeyAltitude, settleTarget, stageLanding, stageLengthFrom, JOURNEY_TAIL, type JourneyGeometry } from "../lib/journey-scroll";
 import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
