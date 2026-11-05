@@ -40,9 +40,9 @@ function HomePage() {
             <h1 className="font-display text-[min(3rem,calc(65vw/16.6))] leading-[1.02] whitespace-nowrap"><span className="line-mask hero-mask"><span style={{ ["--d" as string]: "60ms" }}><span>BECOME A PROFESSIONAL PILOT</span></span></span></h1>
           </div>
           <HeroCta />
-          <nav aria-label="Training locations" className="hero-step mt-2.5 flex flex-nowrap items-center gap-1 text-[10px] sm:text-[11px] lg:mt-3.5 font-medium uppercase text-background/75 sm:gap-2" style={{ ["--d" as string]: "360ms" }}>
-            <MapPin aria-hidden className="size-3 shrink-0 text-background/55" />
-            {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} aria-label={`${a.label}, ${a.code}`} className="group/chip inline-flex min-h-11 uppercase shrink-0 items-center whitespace-nowrap"><span className="rounded-full border border-background/25 px-1 py-1 transition-colors group-hover/chip:border-primary group-hover/chip:bg-primary group-hover/chip:text-primary-foreground sm:px-2">{a.label}<span className="hidden sm:inline">, {a.code}</span></span></button>)}
+          <nav aria-label="Training locations" className="hero-step mt-3 inline-flex w-fit max-w-full flex-nowrap items-center rounded-full border border-background/15 bg-ink/35 pl-3 pr-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-background/80 backdrop-blur-xl backdrop-saturate-150 sm:text-[11px]" style={{ ["--d" as string]: "360ms" }}>
+            <MapPin aria-hidden className="mr-1 size-3 shrink-0 text-background/55" />
+            {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} aria-label={`${a.label}, ${a.code}`} className="group/chip inline-flex min-h-11 shrink-0 items-center whitespace-nowrap">{i > 0 && <span aria-hidden className="h-3 w-px bg-background/20" />}<span className="rounded-full px-2 py-1 transition-colors group-hover/chip:bg-background/15 group-hover/chip:text-background">{a.label}<span className="hidden sm:inline">, {a.code}</span></span></button>)}
           </nav>
           <ScrollCue targetId="flight-path" />
         </div>
@@ -107,5 +107,5 @@ function HeroCta() {
     el.addEventListener("animationend", end);
     return () => { leave(); window.clearInterval(timer); io.disconnect(); };
   }, []);
-  return <div className="hero-step mt-1" style={{ ["--d" as string]: "270ms" }}><Link ref={ref} to="/contact" className="interactive-arrow group inline-flex min-h-12 items-center gap-4 border-b border-background/45 pb-1 text-sm sm:text-[clamp(0.875rem,0.5rem+0.6vw,1.3rem)] font-bold uppercase text-background transition-colors hover:border-primary">Build my training plan <span className="cta-orb grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><ArrowRight className="cta-arrow size-4" /></span></Link></div>;
+  return <div className="hero-step mt-4" style={{ ["--d" as string]: "270ms" }}><Link ref={ref} to="/contact" className="interactive-arrow group inline-flex min-h-11 items-center gap-1.5 rounded-full bg-primary pl-5 pr-4 text-[15px] font-semibold tracking-[-0.01em] text-primary-foreground shadow-[0_8px_24px_-8px_color-mix(in_oklab,var(--primary)_70%,transparent)] transition-[background-color,transform] hover:bg-primary/90 active:scale-[0.96] sm:min-h-12 sm:text-[17px]">Build my training plan <ArrowRight className="cta-arrow size-4 transition-transform group-hover:translate-x-0.5" /></Link></Link></div>;
 }
