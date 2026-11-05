@@ -67,7 +67,7 @@ function MapLivePlanes({list,svgRef,toPx,airport}:{list:LiveAircraft[];svgRef:Re
           const {x,y}=toPx(pos.lat,pos.lon);
           const altFt=Math.max(airport.elevation,a.altFt+(a.vs??0)*Math.min(30,Math.max(0,dt))/60);
           const lift=Math.min(1.5,Math.max(0,(altFt-airport.elevation)/airport.tpaAgl));
-          const top=hasTopRender(a.id),w=trafficSpanFeet(a.id,top)/fpp*trafficModelScale(a.id,top),hdg=(a.track??0)-90;
+          const top=hasTopRender(a.id),w=trafficSpanFeet(a.id,top)/fpp*trafficModelScale(a.id,top),hdg=a.track??0;
           planeRefs.current[a.id]?.setAttribute('transform',`translate(${x} ${y}) rotate(${hdg}) scale(${w*(1+lift*.12)})`);
           shadowRefs.current[a.id]?.setAttribute('transform',`translate(${x+2+lift*10} ${y+2.5+lift*12}) rotate(${hdg}) scale(${w})`);
           const tag=tagRefs.current[a.id];setTagPosition(tag,m,x,y);

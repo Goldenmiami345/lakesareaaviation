@@ -43,3 +43,17 @@ describe("Private Pilot live traffic", () => {
     assert.equal(spriteFrame(0, 10), 35);
   });
 });
+
+import { mapPixel as _mapPixel, visibleOnMap as _visibleOnMap } from "./live-traffic";
+describe("live traffic on airport maps", () => {
+  it("puts a plane 1 nm north of the field straight up the north-up map", () => {
+    const p = _mapPixel({ lat: 45, lon: -94 }, { x: 750, y: 750 }, 10, 45 + 1852 / 110_540, -94);
+    assert.ok(Math.abs(p.x - 750) < 0.01);
+    assert.ok(Math.abs(p.y - (750 - 607.6)) < 1);
+  });
+  it("only switches on for aircraft inside the visible map", () => {
+    const toPx = (lat: number) => ({ x: 750, y: lat });
+    const a = (id: string, lat: number) => ({ id, altFt: 2000, kt: 90, distNm: 1, bearing: 0, lat, lon: 0 });
+    assert.deepEqual(_visibleOnMap([a("IN", 500), a("OUT", 1600)], toPx, [0, 0, 1500, 1500]).map((x) => x.id), ["IN"]);
+  });
+});
