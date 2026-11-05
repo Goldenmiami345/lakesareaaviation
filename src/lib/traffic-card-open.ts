@@ -8,6 +8,7 @@ import { useSyncExternalStore } from "react";
  * also flip the visitor to the next stage.
  */
 let openCards = 0;
+let closedAt = -Infinity;
 const listeners = new Set<() => void>();
 
 const sync = () => {
@@ -20,6 +21,7 @@ export function openTrafficCard() {
   sync();
   return () => {
     openCards = Math.max(0, openCards - 1);
+    if (openCards === 0) closedAt = Date.now();
     sync();
   };
 }
@@ -39,4 +41,9 @@ export function subscribeTrafficCard(cb: () => void) {
 /** React view of the same state (false on the server, so prerendered HTML never depends on it). */
 export function useTrafficCardOpen() {
   return useSyncExternalStore(subscribeTrafficCard, trafficCardIsOpen, () => false);
+}
+
+/** True while a card is open or was put away within the last `ms` (covers the dismissing tap on any browser). */
+export function trafficCardRecentlyOpen(ms = 700) {
+  return openCards > 0 || Date.now() - closedAt < ms;
 }

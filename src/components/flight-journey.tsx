@@ -16,7 +16,7 @@ import { useStageZoom } from "../lib/stage-zoom";
 import { useDesktopJourneyMode, useMobileJourneyMode } from "../lib/use-site-settings";
 import { storyStep } from "../lib/story-nav";
 import { useStorySnap } from "../lib/story-snap";
-import { trafficCardIsOpen, useTrafficCardOpen } from "../lib/traffic-card-open";
+import { trafficCardIsOpen, trafficCardRecentlyOpen, useTrafficCardOpen } from "../lib/traffic-card-open";
 import { TrafficPattern } from "./traffic-pattern";
 import { AirportScene } from './airport-scene';
 import { TrafficPerspective } from "./traffic-perspective";
@@ -404,6 +404,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     // close), and every pointerdown re-assigns it, so it is never stale.
     const cardTap = { open: false };
     const onDownCapture = () => { cardTap.open = trafficCardIsOpen(); };
+    window.addEventListener("touchstart", onDownCapture, { capture: true, passive: true });
     const onDown = (e: PointerEvent) => {
       if (!e.isPrimary || document.documentElement.classList.contains("journey-zoomed")) return;
       down = true; axis = null; dx = 0; vx = 0; sx = lx = e.clientX; sy = ly = e.clientY; lt = performance.now(); if (!carousel) startTransition(() => { setHolding(true); setInteracted(true); });
@@ -448,7 +449,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       }
       if (axis === null && !interactive(e.target)) {
         // This tap only closed an airplane's card: it must not also move the stage.
-        if (cardTap.open) { cardTap.open = false; return; }
+        if (cardTap.open || trafficCardRecentlyOpen()) { cardTap.open = false; return; }
         // Tapping while caught between two sections first snaps this one into place.
         const top = box().top;
         if (Math.abs(top) > 2) { glideTo(window.scrollY + top); return; }
@@ -474,6 +475,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       viewport.removeEventListener("dragstart", noDrag);
       viewport.removeEventListener("pointerdown", onDown);
       window.removeEventListener("pointerdown", onDownCapture, true);
+      window.removeEventListener("touchstart", onDownCapture, true);
       viewport.removeEventListener("pointermove", onMove);
       viewport.removeEventListener("pointerup", onUp);
       viewport.removeEventListener("pointercancel", onCancel);
