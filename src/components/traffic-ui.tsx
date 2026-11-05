@@ -7,6 +7,7 @@ import { AircraftMedia } from './aircraft-media';
 import { fleet } from '../lib/site-data';
 import { callSideCandidates, callSideFits, type CallSide } from '../lib/traffic-call-placement';
 import { shouldCloseTrafficHover } from '../lib/traffic-hover';
+import { openTrafficCard } from '../lib/traffic-card-open';
 
 export type TrafficPlaneInfo = { reg: string; type: string; nickname?: string };
 /** Fleet and traffic always share the exact same alpha cutout. */
@@ -46,6 +47,8 @@ export function useTrafficSelection(active: boolean) {
   }, [navigate]);
 
   useEffect(() => { if (!active) setSelected(null); }, [active]);
+  // Tell the journeys a card is up: their auto-advance pauses and the tap that closes it is swallowed.
+  useEffect(() => { if (selected === null) return; return openTrafficCard(); }, [selected]);
   useEffect(() => {
     if (selected === null) return;
     const close = (e: PointerEvent) => {

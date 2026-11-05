@@ -14,6 +14,7 @@ import { OBLIQUE_SPRITES, OBLIQUE_PLANE_BOOST, SPRITE_FRAME, spriteFrame, frameV
 import { useLiveTraffic } from '../lib/use-live-traffic';
 import { patternTraffic, deadReckon, trackerUrl, compass, type LiveAircraft } from '../lib/live-traffic';
 import { AircraftMedia } from './aircraft-media';
+import { openTrafficCard } from '../lib/traffic-card-open';
 import { useNavigate } from '@tanstack/react-router';
 
 const OFFSETS=[.08,.68,.95] as const;
@@ -118,6 +119,7 @@ function LivePlanes({list,svgRef}:{list:LiveAircraft[];svgRef:React.RefObject<SV
   const listRef=useRef(list);listRef.current=list;
   useEffect(()=>{if(sel&&!list.some(x=>x.id===sel))setSel(null);},[list,sel]);
   useEffect(()=>{if(!sel)return;const close=(e:PointerEvent)=>{if((e.target as Element|null)?.closest?.('[data-traffic-hit],[data-traffic-card]'))return;setSel(null);};document.addEventListener('pointerdown',close,true);return()=>document.removeEventListener('pointerdown',close,true);},[sel]);
+  useEffect(()=>{if(!sel)return;return openTrafficCard();},[sel]);
   useEffect(()=>{
     let raf=0;const placed=new Set<string>();
     const host=svgRef.current?.closest('[data-journey-section]');

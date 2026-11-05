@@ -9,6 +9,7 @@ import { LiveCard, LiveChip } from './traffic-perspective';
 import { trafficSpanFeet, trafficModelScale, TrafficVector, hasTopRender } from './traffic-vector';
 import { useTrafficPatternMode } from '../lib/use-site-settings';
 import { useTrafficAnimation } from './use-traffic-animation';
+import { openTrafficCard } from '../lib/traffic-card-open';
 import { TrafficPath } from './traffic-path';
 import { visibleApproach, type TrafficConditions } from '../lib/wx-conditions';
 
@@ -55,6 +56,7 @@ function MapLivePlanes({list,svgRef,toPx,airport}:{list:LiveAircraft[];svgRef:Re
   const listRef=useRef(list);listRef.current=list;
   useEffect(()=>{if(sel&&!list.some(x=>x.id===sel))setSel(null);},[list,sel]);
   useEffect(()=>{if(!sel)return;const close=(e:PointerEvent)=>{if((e.target as Element|null)?.closest?.('[data-traffic-hit],[data-traffic-card]'))return;setSel(null);};document.addEventListener('pointerdown',close,true);return()=>document.removeEventListener('pointerdown',close,true);},[sel]);
+  useEffect(()=>{if(!sel)return;return openTrafficCard();},[sel]);
   useEffect(()=>{
     let raf=0;const placed=new Set<string>();const fpp=feetPerPixel(airport);
     const host=svgRef.current?.closest('[data-journey-section]');
