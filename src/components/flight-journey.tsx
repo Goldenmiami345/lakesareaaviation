@@ -116,7 +116,9 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const AUTO_MS = 5000; // Instagram's photo-story timer
   const [holding, setHolding] = useState(false);
   // Every 5s, looping back to the first stage after the last (owner request); finger down holds, computers can pause.
-  const autoOn = story && playing && inView && !holding;
+  // Auto-advance is only for visitors who haven't touched the stories yet; once they interact they stay as long as they like.
+  const [interacted, setInteracted] = useState(false);
+  const autoOn = story && playing && inView && !holding && !interacted;
   const activeRef = useRef(0);
   activeRef.current = active;
   const storyRef = useRef(story);
@@ -305,8 +307,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const settled = Number.isInteger(pos);
     // 3D (perspective + hidden backfaces) exists only while the box is actually turning;
     // at rest every layer is a plain flat picture, so vertical slides composite cheaply.
-    const turning = !(reduce || fade) && (animate || !settled);
-    if (turning && viewportRef.current) viewportRef.current.style.perspective = "1200px";
+    // Flat 2D slide (no 3D): turning full stages with text, maps and video in 3D stuttered on iPhone.
     layerRefs.current.forEach((layer, i) => {
       if (!layer) return;
       const rel = i - pos;
@@ -325,22 +326,18 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         return;
       }
       layer.style.zIndex = "";
-      layer.style.backfaceVisibility = vis ? "hidden" : "";
-      layer.style.transition = animate ? "transform 360ms cubic-bezier(0.2,0,0,1)" : "none";
+      layer.style.transition = animate ? "transform 320ms cubic-bezier(0.2,0,0,1)" : "none";
       layer.style.visibility = vis || cur ? "visible" : "hidden";
       layer.style.opacity = vis ? "1" : "0";
-      layer.style.transformOrigin = rel >= 0 ? "left center" : "right center";
-      layer.style.transform = `translate3d(${(rel * 100).toFixed(3)}%,0,0) rotateY(${(rel * 90).toFixed(3)}deg)`;
+      layer.style.transform = `translate3d(${(rel * 100).toFixed(3)}%,0,0)`;
     });
     // At rest, drop all 3D so vertical scrolling composites one flat layer (3D layers flickered black while sliding).
     if (settled) {
       flatTimer.current = window.setTimeout(() => {
-        if (viewportRef.current) viewportRef.current.style.perspective = "";
         layerRefs.current.forEach((layer, i) => {
           if (!layer) return;
           layer.style.transition = "none";
           layer.style.transform = "none";
-          layer.style.backfaceVisibility = "";
           layer.style.zIndex = "";
           layer.style.opacity = i === pos ? "1" : "0";
           layer.style.visibility = i === pos ? "visible" : "hidden";
@@ -388,7 +385,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const n = stages.length;
     // Story sections are sticky so the next one slides up over them; measure from the in-flow wrapper.
     const box = () => (el.parentElement ?? el).getBoundingClientRect();
-    const exitSection = () => glideTo(window.scrollY + box().top + el.offsetHeight);
+    // Next section starts where this sticky wrapper ends (its snap anchor).
+    const exitSection = () => glideTo(window.scrollY + box().bottom);
     const go = (dir: 1 | -1) => {
       if (carousel) { setPlaying(false); setActive((a) => (a + dir + n) % n); return; }
       const next = storyStep(activeRef.current, n, dir);
@@ -400,7 +398,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const interactive = (t: EventTarget | null) => t instanceof Element && !!t.closest("a,button,input,select,textarea,[role=button],[data-interactive],.journey-hud,nav,svg [tabindex]");
     const onDown = (e: PointerEvent) => {
       if (!e.isPrimary || document.documentElement.classList.contains("journey-zoomed")) return;
-      down = true; axis = null; dx = 0; vx = 0; sx = lx = e.clientX; sy = ly = e.clientY; lt = performance.now(); if (!carousel) startTransition(() => setHolding(true));
+      down = true; axis = null; dx = 0; vx = 0; sx = lx = e.clientX; sy = ly = e.clientY; lt = performance.now(); if (!carousel) startTransition(() => { setHolding(true); setInteracted(true); });
     };
     const onMove = (e: PointerEvent) => {
       if (!down) return;
@@ -422,6 +420,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       let t = -dx / w;
       const a = activeRef.current;
       if (a === 0 && t < 0) t *= 0.25; // rubber-band at the first stage
+      if (a === n - 1 && t > 0) t *= 0.25; // and at the last (a forward swipe there moves on to the next section)
       paintStory(a + Math.max(-1, Math.min(1, t)), false);
     };
     const onUp = (e: PointerEvent) => {
