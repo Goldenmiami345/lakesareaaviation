@@ -396,18 +396,18 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       if (next === activeRef.current) { swipeRef.current = false; paintStory(next, true); return; }
       setActive(next);
     };
-    let sx = 0, sy = 0, axis: "x" | "y" | null = null, down = false, dx = 0, dy = 0, vx = 0, vy = 0, lx = 0, ly = 0, lt = 0;
+    let sx = 0, sy = 0, axis: "x" | "y" | null = null, down = false, dx = 0, vx = 0, lx = 0, ly = 0, lt = 0;
     const interactive = (t: EventTarget | null) => t instanceof Element && !!t.closest("a,button,input,select,textarea,[role=button],[data-interactive],.journey-hud,nav,svg [tabindex]");
     const onDown = (e: PointerEvent) => {
       if (!e.isPrimary || document.documentElement.classList.contains("journey-zoomed")) return;
-      down = true; axis = null; dx = 0; dy = 0; vx = 0; vy = 0; sx = lx = e.clientX; sy = ly = e.clientY; lt = performance.now(); if (!carousel) startTransition(() => setHolding(true));
+      down = true; axis = null; dx = 0; vx = 0; sx = lx = e.clientX; sy = ly = e.clientY; lt = performance.now(); if (!carousel) startTransition(() => setHolding(true));
     };
     const onMove = (e: PointerEvent) => {
       if (!down) return;
       if (document.documentElement.classList.contains("journey-zoomed") || !e.isPrimary) { down = false; return; }
       const now = performance.now(), dt = Math.max(1, now - lt);
-      // Smoothed release velocity (px/ms) from the latest movement only, so a drag that reverses follows the last direction.
-      vx = vx * 0.4 + ((e.clientX - lx) / dt) * 0.6; vy = vy * 0.4 + ((e.clientY - ly) / dt) * 0.6;
+      // Smoothed horizontal release velocity (px/ms) from the latest movement only, so a drag that reverses follows the last direction.
+      vx = vx * 0.4 + ((e.clientX - lx) / dt) * 0.6;
       lx = e.clientX; ly = e.clientY; lt = now;
       const mx = e.clientX - sx, my = e.clientY - sy;
       if (!axis && Math.hypot(mx, my) > 8) {

@@ -31,6 +31,7 @@ function HomePage() {
   return <SiteLayout overlayHeader>
     <div>
       <div className="relative">
+      <div aria-hidden className="story-snap h-px -mb-px" />
       <section className="sticky top-0 z-0 min-h-[100lvh] overflow-hidden bg-ink text-background">
         <div className="hero-parallax absolute inset-0"><picture className="absolute inset-0 block"><source media="(max-aspect-ratio: 3/2)" srcSet={srcSetFor(heroTallImage.url)} sizes="100vw" /><img src={heroImage.url} srcSet={srcSetFor(heroImage.url)} sizes="100vw" decoding="sync" alt="Lakes Area Aviation Cessna N6717A and Piper Apache on the ramp at sunset" width={1584} height={672} fetchPriority="high" className="hero-kenburns h-[112%] w-full object-cover object-[35%_center]" /></picture></div>
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/25 to-ink/5 lg:bg-gradient-to-r lg:from-ink lg:via-ink/60 lg:to-transparent" />
@@ -49,10 +50,12 @@ function HomePage() {
       </section>
 
       <div className="relative z-10">
+        <div aria-hidden className="story-snap h-px -mb-px" />
         <FlightJourney />
-        <div className="relative z-20"><FlightJourney stages={airportStages} id="airports" label="Three airports to train from" mode="code" fadeBottom="background" /></div>
+        <div className="relative z-20"><div aria-hidden className="story-snap h-px -mb-px" /><FlightJourney stages={airportStages} id="airports" label="Three airports to train from" mode="code" fadeBottom="background" /></div>
       </div>
       </div>
+      <div aria-hidden className="story-snap h-px -mb-px" />
 
       <section className="bg-background py-20 sm:py-28" data-scroll-reveal>
         <div className="site-container">
