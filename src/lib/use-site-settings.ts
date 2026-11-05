@@ -34,6 +34,8 @@ function loadJourneyMode() {
 /** Owner setting for phone home sections; 'scroll' until loaded on the client (prerender-safe). */
 export function useMobileJourneyMode() {
   const [mode, setMode] = useState<MobileJourneyMode>("scroll");
-  useEffect(() => { let live = true; void loadJourneyMode().then((v) => { if (live) setMode(v); }); return () => { live = false; }; }, []);
+  useEffect(() => {
+    if (import.meta.env.DEV && new URLSearchParams(window.location.search).has("story")) { setMode("story"); return; }
+    let live = true; void loadJourneyMode().then((v) => { if (live) setMode(v); }); return () => { live = false; }; }, []);
   return mode;
 }
