@@ -312,11 +312,11 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       if (next === activeRef.current) { paintStory(next, true); return; }
       setActive(next);
     };
-    let sx = 0, sy = 0, axis: "x" | "y" | null = null, down = false, dx = 0, dy = 0, vx = 0, vy = 0, lx = 0, ly = 0, lt = 0;
+    let sx = 0, sy = 0, axis: "x" | "y" | null = null, down = false, dx = 0, dy = 0, vx = 0, vy = 0, lx = 0, ly = 0, lt = 0, sScroll = 0, sTop = 0;
     const interactive = (t: EventTarget | null) => t instanceof Element && !!t.closest("a,button,input,select,textarea,[role=button],[data-interactive],.journey-hud,nav,svg [tabindex]");
     const onDown = (e: PointerEvent) => {
       if (!e.isPrimary || document.documentElement.classList.contains("journey-zoomed")) return;
-      down = true; axis = null; dx = 0; dy = 0; vx = 0; vy = 0; sx = lx = e.clientX; sy = ly = e.clientY; lt = performance.now();
+      down = true; axis = null; dx = 0; dy = 0; vx = 0; vy = 0; sx = lx = e.clientX; sy = ly = e.clientY; lt = performance.now(); sScroll = window.scrollY; sTop = box().top;
     };
     const onMove = (e: PointerEvent) => {
       if (!down) return;
@@ -328,9 +328,11 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const mx = e.clientX - sx, my = e.clientY - sy;
       if (!axis && Math.hypot(mx, my) > 8) {
         axis = Math.abs(mx) > Math.abs(my) ? "x" : "y";
-        if (axis === "x") try { viewport.setPointerCapture(e.pointerId); } catch { /* ignore */ }
+        try { viewport.setPointerCapture(e.pointerId); } catch { /* ignore */ }
       }
       dy = my;
+      // Vertical: the page follows the finger 1:1 (natural), the lock only helps on release.
+      if (axis === "y") { window.scrollTo({ top: Math.max(0, sScroll - my), behavior: "instant" }); return; }
       if (axis !== "x") return;
       dx = mx;
       const w = viewport.offsetWidth || 1;
@@ -354,12 +356,13 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         return;
       }
       if (axis === "y") {
-        // Screen is locked: a vertical swipe moves exactly one section (or re-aligns this one), never a free fling.
-        const v = stale ? 0 : vy;
-        if (Math.abs(dy) < 40 && Math.abs(v) < 0.3) return;
-        const top = box().top, here = window.scrollY + top;
-        if (dy < 0) { if (top > 2) glideTo(here); else exitSection(); }
-        else { if (top < -2) glideTo(here); else glideTo(Math.max(0, here - window.innerHeight)); }
+        // The finger already moved the page; on release ease into the nearest resting place:
+        // a deliberate pull (flick or past ~30% of the screen) carries on to the next section, otherwise it settles back.
+        const v = stale ? 0 : vy, h = window.innerHeight;
+        const here = sScroll + sTop;
+        const commit = (Math.abs(v) > 0.45 && Math.sign(v) === Math.sign(dy)) || Math.abs(dy) > h * 0.3;
+        if (Math.abs(sTop) > 2 || !commit) { glideTo(here); return; }
+        if (dy < 0) glideTo(here + el.offsetHeight); else glideTo(Math.max(0, here - h));
         return;
       }
       if (axis === null && !interactive(e.target)) {
