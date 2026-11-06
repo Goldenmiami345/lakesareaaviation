@@ -402,7 +402,42 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     // Story sections are sticky so the next one slides up over them; measure from the in-flow wrapper.
     const box = () => (el.parentElement ?? el).getBoundingClientRect();
     // Next section starts where this sticky wrapper ends (its snap anchor).
-    const exitSection = () => glideTo(window.scrollY + box().bottom);
+    // Forward past the last stage = the next story: this page turns away like a cube face, then the
+    // next section is placed instantly (no vertical smooth scroll fighting snap, which glitched on iOS)
+    // and turns in from the right. Up/down/back swipes there behave as on any section.
+    const exitSection = () => {
+      const target = window.scrollY + box().bottom;
+      const reduce = reducedMotion();
+      if (!reduce) paintStory(n, true);
+      window.setTimeout(() => {
+        window.scrollTo({ top: target, behavior: "instant" });
+        window.dispatchEvent(new CustomEvent("journey-target", { detail: target }));
+        if (!reduce) window.dispatchEvent(new CustomEvent("story:enter", { detail: target }));
+        window.setTimeout(() => paintStory(activeRef.current, false), 60);
+      }, reduce ? 0 : 340);
+    };
+    const onEnter = (e: Event) => {
+      const top = (e as CustomEvent<number>).detail;
+      if (Math.abs(window.scrollY + box().top - top) > 4) return;
+      const a = activeRef.current;
+      window.clearTimeout(flatTimer.current);
+      const b = layerRefs.current[0]?.parentElement;
+      if (b) { b.style.perspective = `${Math.round(Math.max(800, b.clientWidth * 2.2))}px`; b.style.perspectiveOrigin = "50% 50%"; }
+      layerRefs.current.forEach((layer, i) => {
+        if (!layer) return;
+        layer.style.transition = "none";
+        layer.style.visibility = i === a ? "visible" : "hidden";
+        layer.style.opacity = i === a ? "1" : "0";
+        if (i !== a) return;
+        layer.style.backfaceVisibility = "hidden";
+        layer.style.willChange = "transform";
+        layer.style.transformOrigin = "0% 50%";
+        layer.style.transform = "translate3d(100%,0,0) rotateY(90deg)";
+      });
+      void layerRefs.current[a]?.offsetWidth;
+      paintStory(a, true);
+    };
+    window.addEventListener("story:enter", onEnter);
     const go = (dir: 1 | -1) => {
       if (carousel) { setPlaying(false); setActive((a) => (a + dir + n) % n); return; }
       const next = storyStep(activeRef.current, n, dir);
@@ -441,7 +476,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       let t = -dx / w;
       const a = activeRef.current;
       if (a === 0 && t < 0) t *= 0.25; // rubber-band at the first stage
-      if (a === n - 1 && t > 0) t *= 0.25; // and at the last (a forward swipe there moves on to the next section)
+      // At the last stage a forward drag turns this whole page away toward the next section.
       paintStory(a + Math.max(-1, Math.min(1, t)), false);
     };
     const onUp = (e: PointerEvent) => {
