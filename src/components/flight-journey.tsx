@@ -406,7 +406,10 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     // next section is placed instantly (no vertical smooth scroll fighting snap, which glitched on iOS)
     // and turns in from the right. Up/down/back swipes there behave as on any section.
     const exitSection = () => {
-      const target = window.scrollY + box().bottom;
+      // The next snap anchor below this section (the wrapper's bottom can sit past the next section).
+      const here = window.scrollY + box().top;
+      const anchors = Array.from(document.querySelectorAll(".story-snap")).map((a) => window.scrollY + a.getBoundingClientRect().top);
+      const target = anchors.filter((y) => y > here + 4).sort((a, b) => a - b)[0] ?? window.scrollY + box().bottom;
       const reduce = reducedMotion();
       if (!reduce) paintStory(n - 0.001, true);
       window.setTimeout(() => {
