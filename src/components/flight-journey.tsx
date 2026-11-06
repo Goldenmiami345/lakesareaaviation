@@ -526,6 +526,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       viewport.removeEventListener("pointerup", onUp);
       viewport.removeEventListener("pointercancel", onCancel);
       window.removeEventListener("journey:jump", onJump);
+      window.removeEventListener("story:enter", onEnter);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [story, carousel, stages, id]);
