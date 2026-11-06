@@ -11,7 +11,7 @@ import { CONTINGENCY_RATE, formatPhone, leadSchema, RATING_PREREQUISITES, withPr
 import { PageIntro, SiteLayout } from "../components/site-shell";
 import { locations, SCHOOL_PHONE, SCHOOL_PHONE_TEL , fleet } from "../lib/site-data";
 
-type Rating = { id: string; name: string; days: number; cost: number; prerequisite?: string };
+type Rating = { id: string; name: string; days: number; cost: number; prerequisite?: string | undefined };
 const ratings: Rating[] = [
   { id: "private", name: "Private Pilot", days: 21, cost: 9600 },
   { id: "instrument", name: "Instrument Rating", days: 10, cost: 8300, prerequisite: RATING_PREREQUISITES["instrument"] },
