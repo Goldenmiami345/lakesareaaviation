@@ -1,0 +1,2 @@
+ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS show_3d_models boolean NOT NULL DEFAULT false;
+COMMENT ON COLUMN public.site_settings.show_3d_models IS 'Global admin-controlled gate for all 3D viewers and model library/GLB loads; disabled by default.';
