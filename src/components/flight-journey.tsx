@@ -408,7 +408,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const exitSection = () => {
       const target = window.scrollY + box().bottom;
       const reduce = reducedMotion();
-      if (!reduce) paintStory(n, true);
+      if (!reduce) paintStory(n - 0.001, true);
       window.setTimeout(() => {
         window.scrollTo({ top: target, behavior: "instant" });
         window.dispatchEvent(new CustomEvent("journey-target", { detail: target }));
