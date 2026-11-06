@@ -7,19 +7,19 @@ import { Car, Check, House, PlaneLanding } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useServerFn } from "@tanstack/react-start";
 import { submitTrainingLead } from "../lib/leads.functions";
-import { CONTINGENCY_RATE, formatPhone, leadSchema } from "../lib/lead-schema";
+import { CONTINGENCY_RATE, formatPhone, leadSchema, RATING_PREREQUISITES, withPrerequisites } from "../lib/lead-schema";
 import { PageIntro, SiteLayout } from "../components/site-shell";
 import { locations, SCHOOL_PHONE, SCHOOL_PHONE_TEL , fleet } from "../lib/site-data";
 
 type Rating = { id: string; name: string; days: number; cost: number; prerequisite?: string };
 const ratings: Rating[] = [
   { id: "private", name: "Private Pilot", days: 21, cost: 9600 },
-  { id: "instrument", name: "Instrument Rating", days: 10, cost: 8300, prerequisite: "private" },
-  { id: "commercial-single", name: "Commercial Single-Engine", days: 5, cost: 4625, prerequisite: "instrument" },
-  { id: "commercial-multi", name: "Commercial Multi-Engine", days: 3, cost: 5300, prerequisite: "private" },
-  { id: "cfi", name: "Certified Flight Instructor", days: 7, cost: 5125, prerequisite: "commercial-single" },
-  { id: "cfii", name: "CFI–Instrument", days: 5, cost: 3150, prerequisite: "cfi" },
-  { id: "mei", name: "Multi-Engine Instructor", days: 3, cost: 4475, prerequisite: "commercial-multi" },
+  { id: "instrument", name: "Instrument Rating", days: 10, cost: 8300, prerequisite: RATING_PREREQUISITES["instrument"] },
+  { id: "commercial-single", name: "Commercial Single-Engine", days: 5, cost: 4625, prerequisite: RATING_PREREQUISITES["commercial-single"] },
+  { id: "commercial-multi", name: "Commercial Multi-Engine", days: 3, cost: 5300, prerequisite: RATING_PREREQUISITES["commercial-multi"] },
+  { id: "cfi", name: "Certified Flight Instructor", days: 7, cost: 5125, prerequisite: RATING_PREREQUISITES["cfi"] },
+  { id: "cfii", name: "CFI–Instrument", days: 5, cost: 3150, prerequisite: RATING_PREREQUISITES["cfii"] },
+  { id: "mei", name: "Multi-Engine Instructor", days: 3, cost: 4475, prerequisite: RATING_PREREQUISITES["mei"] },
 ];
 
 export const Route = createFileRoute("/contact")({
