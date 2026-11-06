@@ -1,6 +1,6 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { formatPhone, leadSchema, normalizePhone } from "./lead-schema";
+import { formatPhone, leadSchema, normalizePhone, withPrerequisites } from "./lead-schema";
 
 const base = {
   firstName: "Jane", lastName: "Doe", email: "jane@example.com", phone: "318-347-9004",
@@ -27,4 +27,17 @@ describe("phone normalization", () => {
   test("rejects 16 digits", () => assert.equal(phoneOf("+1234567890123456"), null));
   test("normalize keeps only leading +", () => assert.equal(normalizePhone("1+2+3"), "123"));
   test("formats US numbers", () => { assert.equal(formatPhone("3084556336"), "(308) 455-6336"); assert.equal(formatPhone("+13084556336"), "(308) 455-6336"); });
+});
+
+describe("withPrerequisites", () => {
+  test("commercial single-engine includes instrument and private", () =>
+    assert.deepEqual(withPrerequisites(["commercial-single"], []), ["private", "instrument", "commercial-single"]));
+  test("commercial multi-engine includes private", () =>
+    assert.deepEqual(withPrerequisites(["commercial-multi"], []), ["private", "commercial-multi"]));
+  test("cfi pulls the whole chain", () =>
+    assert.deepEqual(withPrerequisites(["cfi"], []), ["private", "instrument", "commercial-single", "cfi"]));
+  test("earned ratings are not re-added", () =>
+    assert.deepEqual(withPrerequisites(["commercial-multi"], ["private"]), ["commercial-multi"]));
+  test("ratings without prerequisites pass through", () =>
+    assert.deepEqual(withPrerequisites(["private"], []), ["private"]));
 });
