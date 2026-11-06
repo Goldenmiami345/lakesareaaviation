@@ -19,6 +19,34 @@ export function formatPhone(normalized: string): string {
 /** Contingency buffer applied to training + housing + car. */
 export const CONTINGENCY_RATE = 0.2;
 
+/** Each rating's direct prerequisite (the rating a student must hold first). */
+export const RATING_PREREQUISITES: Record<string, string> = {
+  instrument: "private",
+  "commercial-single": "instrument",
+  "commercial-multi": "private",
+  cfi: "commercial-single",
+  cfii: "cfi",
+  mei: "commercial-multi",
+};
+
+/**
+ * Add the full prerequisite chain of every planned rating, ordered before the
+ * rating that needs it. Ratings already earned are not re-added. Choosing
+ * Commercial therefore always brings Private (and Instrument) along.
+ */
+export function withPrerequisites(planned: string[], earned: string[]): string[] {
+  const out = [...planned];
+  const queue = [...planned];
+  while (queue.length) {
+    const pre = RATING_PREREQUISITES[queue.pop()!];
+    if (pre && !out.includes(pre) && !earned.includes(pre)) {
+      out.unshift(pre);
+      queue.push(pre);
+    }
+  }
+  return out;
+}
+
 export const leadSchema = z.object({
   firstName: str(60).min(1, "First name is required"),
   lastName: str(60).min(1, "Last name is required"),
