@@ -46,7 +46,9 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
           <Dialog.Content aria-modal="true" aria-describedby={undefined} className="menu-roll fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-background text-foreground lg:hidden">
             <Dialog.Title className="sr-only">Site menu</Dialog.Title>
             <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-5 sm:h-20">
-              <img src={logoAsset.url} alt="" className="h-10 w-auto max-w-[190px] object-contain sm:h-12" />
+              <Link to="/" onClick={(e) => { setOpen(false); onHome(e); }} className="flex min-h-11 min-w-0 items-center" aria-label="Lakes Area Aviation home">
+                <img src={logoAsset.url} alt="" className="h-10 w-auto max-w-[190px] object-contain sm:h-12" />
+              </Link>
               <Dialog.Close aria-label="Close menu" className="grid size-11 place-items-center transition-transform duration-200 active:scale-90"><X className="size-5" /></Dialog.Close>
             </div>
             <nav className="px-5 py-5" aria-label="Mobile navigation">
@@ -64,9 +66,11 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
 }
 
 export function Footer() {
+  const pathname = useLocation({ select: location => sitePath(location.pathname) });
+  const onHome = (e: MouseEvent) => { if (pathname !== "/") return; e.preventDefault(); jumpToPageTop(); };
   return <footer data-no-float className="edge-fade-t bg-ink pb-[calc(6rem+env(safe-area-inset-bottom))] pt-28 text-background md:pb-12">
     <div className="site-container grid gap-12 md:grid-cols-[1.3fr_2fr]">
-      <div><img src={logoAsset.url} alt="Lakes Area Aviation" loading="lazy" className="h-16 w-auto max-w-full brightness-0 invert" /><p className="mt-5 max-w-sm text-sm text-background/65">Flight instruction, accelerated ratings, commercial pilot services, aircraft management, and specialized training.</p></div>
+      <div><Link to="/" onClick={onHome} className="inline-flex min-h-11 items-center" aria-label="Lakes Area Aviation home"><img src={logoAsset.url} alt="Lakes Area Aviation" loading="lazy" className="h-16 w-auto max-w-full brightness-0 invert" /></Link><p className="mt-5 max-w-sm text-sm text-background/65">Flight instruction, accelerated ratings, commercial pilot services, aircraft management, and specialized training.</p></div>
       <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
         <FooterGroup title="Train" links={[["Accelerated", "/accelerated-training"], ["CFI & CFII", "/programs/cfi-cfii"], ["All programs", "/programs"], ["Local training", "/local-training"], ["Specialized", "/specialized-training"], ["Rates", "/rates"]]} />
         <FooterGroup title="Explore" links={[["Fleet", "/fleet"], ["Team", "/team"], ["Success", "/student-success"], ["About", "/about"]]} />
