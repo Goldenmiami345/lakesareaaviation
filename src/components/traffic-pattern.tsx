@@ -20,8 +20,8 @@ export function TrafficPattern({airport,active,viewBox='0 0 1500 1500',wind=null
   // Real ADS-B traffic in this field's pattern (and on this map) replaces the simulated airplanes.
   const toPx=useMemo(()=>{const f=WX_FIELDS[airport.ident as keyof typeof WX_FIELDS];if(!f)return null;const mid={x:(airport.threshold.x+airport.end.x)/2,y:(airport.threshold.y+airport.end.y)/2},fpp=feetPerPixel(airport);return (lat:number,lon:number)=>mapPixel(f,mid,fpp,lat,lon);},[airport]);
   const liveFields=useLiveTraffic(10_000,active&&!!toPx);
-  const live=useMemo(()=>{if(!toPx)return [];const box=viewBox.split(/[ ,]+/).map(Number) as [number,number,number,number];return visibleOnMap(patternTraffic(liveFields?.[airport.ident],airport.elevation),toPx,box);},[liveFields,airport,toPx,viewBox]);
-  const isLive=active&&live.length>0;
+  const live=useMemo(()=>{if(!toPx)return [];const box=viewBox.split(/[ ,]+/).map(Number) as [number,number,number,number];return visibleOnMap(liveFields?.[airport.ident]??[],toPx,box);},[liveFields,airport,toPx,viewBox]);
+  const isLive=active&&patternTraffic(live,airport.elevation).length>0;
   const {selected,selectedRef,open,hitProps}=useTrafficSelection(active&&!isLive);
   const patternMode=useTrafficPatternMode();
   // IFR straight-in starts/ends at the visible map edge so the aircraft is always on screen.
@@ -43,7 +43,7 @@ export function TrafficPattern({airport,active,viewBox='0 0 1500 1500',wind=null
     {planes.map((p,i)=><g key={p.reg} data-aircraft={p.reg} ref={el=>{planeRefs.current[i]=el;}} className="pointer-events-none" aria-hidden><TrafficVector reg={p.reg} topRender/></g>)}
     {active&&!isLive&&planes.map((p,i)=><RadarTag key={`t-${p.reg}`} reg={p.reg} index={i} seed={0} label={`${p.reg}, ${p.type}. Show details`} tabIndex={0} hit={hitProps(i,p.reg)} tagRef={el=>{tagRefs.current[i]=el;}} textRef={el=>{textRefs.current[i]=el;}}/>)}
     </g>
-    {isLive&&toPx&&<MapLivePlanes list={live} svgRef={svgRef} toPx={toPx} airport={airport}/>}
+    {active&&live.length>0&&toPx&&<MapLivePlanes list={live} svgRef={svgRef} toPx={toPx} airport={airport}/>}
   </svg>{isLive&&<LiveChip svgRef={svgRef}/>}{info&&<TrafficCard key={info.reg} ref={cardRef} plane={info} runway={airport.runway} onOpen={()=>open(info.reg)}/>}</div>;
 }
 
