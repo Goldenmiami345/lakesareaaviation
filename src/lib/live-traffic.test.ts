@@ -10,7 +10,8 @@ describe("live traffic", () => {
     assert.deepEqual(visibleOnMap([overflight], () => ({ x: 200, y: 300 }), [0, 0, 1500, 1500]), [overflight]);
     assert.deepEqual(patternTraffic([overflight], 5000), []);
     assert.deepEqual(visibleOnMap([overflight], () => ({ x: 1600, y: 300 }), [0, 0, 1500, 1500]), []);
-    assert.deepEqual(visibleOnMap([{ ...overflight, lat: undefined }], () => ({ x: 200, y: 300 }), [0, 0, 1500, 1500]), []);
+    const { lat, ...withoutPosition } = overflight;
+    assert.deepEqual(visibleOnMap([withoutPosition], () => ({ x: 200, y: 300 }), [0, 0, 1500, 1500]), []);
   });
   test("keeps only airborne aircraft within 10 nm and below 6,000 ft AGL", () => {
     const rows = [
