@@ -28,3 +28,16 @@ describe("phone normalization", () => {
   test("normalize keeps only leading +", () => assert.equal(normalizePhone("1+2+3"), "123"));
   test("formats US numbers", () => { assert.equal(formatPhone("3084556336"), "(308) 455-6336"); assert.equal(formatPhone("+13084556336"), "(308) 455-6336"); });
 });
+
+describe("withPrerequisites", () => {
+  test("commercial single-engine includes instrument and private", () =>
+    assert.deepEqual(withPrerequisites(["commercial-single"], []), ["private", "instrument", "commercial-single"]));
+  test("commercial multi-engine includes private", () =>
+    assert.deepEqual(withPrerequisites(["commercial-multi"], []), ["private", "commercial-multi"]));
+  test("cfi pulls the whole chain", () =>
+    assert.deepEqual(withPrerequisites(["cfi"], []), ["private", "instrument", "commercial-single", "cfi"]));
+  test("earned ratings are not re-added", () =>
+    assert.deepEqual(withPrerequisites(["commercial-multi"], ["private"]), ["commercial-multi"]));
+  test("ratings without prerequisites pass through", () =>
+    assert.deepEqual(withPrerequisites(["private"], []), ["private"]));
+});
