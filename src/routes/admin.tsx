@@ -38,13 +38,13 @@ function AdminPage() {
       const { data: auth } = await supabase.auth.getUser();
       setUser(auth.user ?? null);
       const [{ data: setting }, { data: role }] = await Promise.all([
-        supabase.from("site_settings").select("accent_theme, mobile_journey_mode, desktop_journey_mode, fleet_show_models").eq("id", "brand").single(),
+        supabase.from("site_settings").select("accent_theme, mobile_journey_mode, desktop_journey_mode, show_3d_models").eq("id", "brand").single(),
         auth.user ? supabase.from("user_roles").select("id").eq("user_id", auth.user.id).eq("role", "admin").maybeSingle() : Promise.resolve({ data: null }),
       ]);
       if (setting?.accent_theme === "blue" || setting?.accent_theme === "orange") setTheme(setting.accent_theme);
       setJourney(parseMobileJourneyMode(setting?.mobile_journey_mode));
       setDesktopJourney(parseDesktopJourneyMode(setting?.desktop_journey_mode));
-      setFleetModels(Boolean(setting?.fleet_show_models));
+      setFleetModels(setting?.show_3d_models === true);
       setIsAdmin(Boolean(role));
     };
     void refresh();
@@ -101,9 +101,9 @@ function AdminPage() {
   async function changeFleetModels(next: boolean) {
     if (!user || !isAdmin) return;
     setBusy(true); setMessage("");
-    const { error } = await supabase.from("site_settings").update({ fleet_show_models: next, updated_at: new Date().toISOString(), updated_by: user.id }).eq("id", "brand");
+    const { error } = await supabase.from("site_settings").update({ show_3d_models: next, fleet_show_models: next, updated_at: new Date().toISOString(), updated_by: user.id }).eq("id", "brand");
     if (error) setMessage(error.message);
-    else { setFleetModels(next); setMessage(next ? "The fleet page now shows 3D models first." : "The fleet page now shows photos only."); }
+    else { setFleetModels(next); setMessage(next ? "3D aircraft models are enabled. Reload the site to see the change." : "3D is off. All pages show photos only after reload."); }
     setBusy(false);
   }
 
@@ -138,10 +138,10 @@ function AdminPage() {
             <div className="mt-3 grid grid-cols-2 gap-3">
               {(["scroll", "carousel"] as const).map(option => <Button key={option} disabled={busy} variant={desktopJourney === option ? "default" : "outline"} className="h-auto min-h-16 rounded-none p-4" onClick={() => changeDesktopJourney(option)}>{option === "scroll" ? "Fading scroll" : "Carousel"}{desktopJourney === option && <Check />}</Button>)}
             </div>
-            <h2 className="mt-8 font-display text-xl">Fleet page airplanes</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Traffic cards always show 3D models when available.</p>
+            <h2 className="mt-8 font-display text-xl">3D aircraft models</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Controls every page, including fleet, traffic cards and model review.</p>
             <div className="mt-3 grid grid-cols-2 gap-3">
-              {([false, true] as const).map(option => <Button key={String(option)} disabled={busy} variant={fleetModels === option ? "default" : "outline"} className="h-auto min-h-16 rounded-none p-4" onClick={() => changeFleetModels(option)}>{option ? "3D models first" : "Photos only"}{fleetModels === option && <Check />}</Button>)}
+              {([false, true] as const).map(option => <Button key={String(option)} disabled={busy} variant={fleetModels === option ? "default" : "outline"} className="h-auto min-h-16 rounded-none p-4" onClick={() => changeFleetModels(option)}>{option ? "Enable 3D" : "3D off"}{fleetModels === option && <Check />}</Button>)}
             </div>
           </div>}
         </>}

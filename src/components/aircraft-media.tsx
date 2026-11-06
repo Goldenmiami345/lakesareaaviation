@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { aircraftModelUrl } from '../lib/aircraft-models';
+import { useShow3DModels } from '../lib/use-site-settings';
 
 const AircraftModel = lazy(() => import('./aircraft-model'));
 
@@ -21,24 +22,25 @@ function pageIdle() {
 let chain: Promise<void> = Promise.resolve();
 /** Queue a model start; the returned release() lets the next model begin. */
 function queueModel(start: () => void) {
-  let release!: () => void;
+  let release: () => void = () => {};
   const finished = new Promise<void>(r => { release = r; });
   chain = chain.then(() => pageIdle()).then(() => { start(); return Promise.race([finished, new Promise<void>(r => window.setTimeout(r, 8000))]); });
   return () => release();
 }
 /** A stable photo slot. Available models hydrate only once this slot is opened/visible. */
-export function AircraftMedia({ reg, photo, preview = false }: { reg: string; photo: string; preview?: boolean }) {
-  const model = aircraftModelUrl(reg, preview);
+export function AircraftMedia({ reg, photo }: { reg: string; photo: string }) {
+  const enabled = useShow3DModels();
+  const model = aircraftModelUrl(reg, enabled);
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const release = useRef<() => void>(() => {});
   useEffect(() => {
-    const el=ref.current;if(!el)return;
+    const el=ref.current;if(!model||!el)return;
     const wheel=(e:WheelEvent)=>{e.preventDefault();e.stopPropagation();};
     el.addEventListener('wheel',wheel,{passive:false});
     return()=>el.removeEventListener('wheel',wheel);
-  },[]);
+  },[model]);
   useEffect(() => {
     if (!model || !ref.current) return;
     let cancelled = false;
@@ -50,6 +52,7 @@ export function AircraftMedia({ reg, photo, preview = false }: { reg: string; ph
     observer.observe(ref.current);
     return () => { cancelled = true; observer.disconnect(); release.current(); };
   }, [model]);
+  if (!model) return <div data-aircraft-media="" className="relative h-full w-full overflow-hidden"><img src={photo} alt={`${reg}, the real airplane`} className="h-full w-full object-contain" /></div>;
   return <div ref={ref} data-aircraft-media="" data-model-gesture="" className="relative h-full w-full touch-none overflow-hidden"
     onPointerDown={e => { e.stopPropagation(); }}
     onPointerMove={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()} onTouchMove={e => e.stopPropagation()} onWheel={e => e.stopPropagation()}>

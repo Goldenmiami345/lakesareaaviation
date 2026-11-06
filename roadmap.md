@@ -1,5 +1,8 @@
 # Roadmap
 
+- [ ] Disable all visitor 3D via a default-off admin setting and verify no GLB/library requests.
+- [ ] Audit all eight cutouts on beige; re-cut failed masks from originals with Replicate and provide before/after composites. Blocker: Replicate connection required.
+
 - [x] Stop mobile Story swipes and incoming momentum at one section boundary; 27 tests pass, phone preview holds the incoming swipe at flight-path and a fresh swipe reaches airports. Physical Safari momentum remains unverified.
 
 - [x] Round L: supplied scroll engine and 18 tests, paging/snap/controller/scripts removed, zoom fast-path and oblique projection corrected. 144 tests, automatic build, model guard, fresh-preview 27-page HTML gate and native drag/wheel checks at 390×844/1440×900 passed. Production-output gate cannot be confirmed: dist/client is not provided by the automatic preview build; physical Safari not available.

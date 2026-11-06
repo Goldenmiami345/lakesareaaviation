@@ -1,6 +1,22 @@
 import { parseMobileJourneyMode, type MobileJourneyMode } from "./story-nav";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { modelsEnabled } from './model-visibility';
+
+let cachedModels: Promise<boolean> | null = null;
+export function useShow3DModels() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    cachedModels ??= (async () => {
+      const { data, error } = await supabase.from('site_settings').select('show_3d_models').eq('id', 'brand').maybeSingle();
+      return !error && modelsEnabled(data?.show_3d_models);
+    })().catch(() => false);
+    let live = true;
+    void cachedModels.then(value => { if (live) setShow(value); });
+    return () => { live = false; };
+  }, []);
+  return show;
+}
 
 export type TrafficPatternMode = "off" | "pulse" | "always";
 const MODES: readonly TrafficPatternMode[] = ["off", "pulse", "always"];
@@ -26,6 +42,7 @@ export function useTrafficPatternMode() {
 let cachedFleet: Promise<boolean> | null = null;
 /** Owner setting site_settings.fleet_show_models; false (photos) until loaded on the client, so prerender shows photos. */
 export function useFleetShowModels() {
+  const enabled = useShow3DModels();
   const [show, setShow] = useState(false);
   useEffect(() => {
     cachedFleet ??= (async () => {
@@ -34,7 +51,7 @@ export function useFleetShowModels() {
     })().catch(() => false);
     let live = true; void cachedFleet.then((v) => { if (live) setShow(v); }); return () => { live = false; };
   }, []);
-  return show;
+  return enabled && show;
 }
 
 let cachedJourney: Promise<MobileJourneyMode> | null = null;
