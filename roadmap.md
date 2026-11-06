@@ -1,7 +1,7 @@
 # Roadmap
 
-- [ ] Disable all visitor 3D via a default-off admin setting and verify no GLB/library requests.
-- [ ] Audit all eight cutouts on beige; re-cut failed masks from originals with Replicate and provide before/after composites. Blocker: Replicate connection required.
+- [x] Disable visitor 3D via default-off show_3d_models. Database false verified; fleet photo viewer, model review and airport traffic card have no GLB, decoder or 3D-library requests; seven targeted tests and automatic build pass.
+- [ ] Re-cut failed aircraft masks from originals with Replicate, correct wheel-ground shadows and provide before/after beige composites. All eight audited: Cardinal/Taylorcraft window holes; Blue/Elliott/Hawk/Citabria background remnants; Phoenix gear edge artifacts. Apache has no obvious window holes or fringe. Cardinal original located in n46201-photos.zip, n46201-06.jpg. Blocker: user must connect Replicate.
 
 - [x] Stop mobile Story swipes and incoming momentum at one section boundary; 27 tests pass, phone preview holds the incoming swipe at flight-path and a fresh swipe reaches airports. Physical Safari momentum remains unverified.
 
