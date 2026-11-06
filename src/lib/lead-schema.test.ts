@@ -1,6 +1,6 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { formatPhone, leadSchema, normalizePhone } from "./lead-schema";
+import { formatPhone, leadSchema, normalizePhone, withPrerequisites } from "./lead-schema";
 
 const base = {
   firstName: "Jane", lastName: "Doe", email: "jane@example.com", phone: "318-347-9004",
