@@ -261,7 +261,11 @@ export function fitTagSide(g: SVGGElement | null | undefined, pts: { x: number; 
   if (!text || !pill || !line) return false;
   obstacleCache = null;
   const { list, safe } = obstacles(g);
-  const W = Math.ceil(Math.max(...Array.from(text.querySelectorAll('tspan')).map(t=>t.getComputedTextLength()), 60)) + 14;
+  // Safari's getComputedTextLength ignores CSS letter-spacing (.05em), so the pill came up
+  // short and long calls spilled out. Add the spacing back and floor at a monospace char width.
+  const W = Math.ceil(Math.max(...Array.from(text.querySelectorAll('tspan')).map(t=>{
+    const n=(t.textContent??'').length;return Math.max(t.getComputedTextLength()+n*0.6,n*7.9);
+  }), 60)) + 14;
   for (const side of callSideCandidates(W, window.innerWidth, outside)) {
     const { ox, oy, tx, ty } = side;
     if (!fits(side, pts, [...list,...occupied], safe)) continue;
