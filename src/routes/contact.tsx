@@ -84,6 +84,10 @@ function ContactPage() {
   function toggle(list: string[], setList: (value: string[]) => void, id: string) {
     setList(list.includes(id) ? list.filter(value => value !== id) : [...list, id]);
   }
+  // Checking a planned rating also checks every rating it builds on (Commercial brings Private, etc.).
+  function togglePlanned(id: string) {
+    setPlanned(planned.includes(id) ? planned.filter(value => value !== id) : withPrerequisites([...planned, id], earned));
+  }
   function markEarned(id: string) {
     toggle(earned, setEarned, id);
     if (!earned.includes(id)) setPlanned(planned.filter(value => value !== id));
@@ -128,7 +132,7 @@ function ContactPage() {
             <div className="grid grid-cols-2 gap-2">{ratings.map(r => <Choice key={r.id} checked={earned.includes(r.id)} onChange={() => markEarned(r.id)} label={r.name} detail="Completed" />)}</div>
           </PlannerStep>
           <PlannerStep number="02" title="Ratings you plan to earn">
-            {earned.length > 0 && <p className="-mt-2 mb-3 text-xs text-muted-foreground">Ratings you already hold are greyed out.</p>}<div className="grid grid-cols-2 gap-2">{ratings.map(r => <Choice key={r.id} checked={planned.includes(r.id) && !earned.includes(r.id)} disabled={earned.includes(r.id)} onChange={() => toggle(planned, setPlanned, r.id)} label={r.name} detail={earned.includes(r.id) ? "Already completed" : `${r.days}+ days · ${money(r.cost)}`} />)}</div>
+            {earned.length > 0 && <p className="-mt-2 mb-3 text-xs text-muted-foreground">Ratings you already hold are greyed out.</p>}<div className="grid grid-cols-2 gap-2">{ratings.map(r => <Choice key={r.id} checked={planned.includes(r.id) && !earned.includes(r.id)} disabled={earned.includes(r.id)} onChange={() => togglePlanned(r.id)} label={r.name} detail={earned.includes(r.id) ? "Already completed" : `${r.days}+ days · ${money(r.cost)}`} />)}</div>
           </PlannerStep>
           <PlannerStep number="03" title="Travel support">
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
