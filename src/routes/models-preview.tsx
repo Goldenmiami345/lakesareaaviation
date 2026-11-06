@@ -24,7 +24,7 @@ function ModelsPreview() {
       if (!plane) return null;
       return <section key={reg} aria-label={`${reg} model`} className="border-b border-border">
         <div className="px-5 py-4"><h2 className="font-display text-2xl">{reg}{plane.nickname ? ` · ${plane.nickname}` : ''}</h2><p className="text-sm text-muted-foreground">{plane.name}</p></div>
-        <div className="h-[75svh] min-h-96 w-full"><AircraftMedia reg={reg} photo={plane.image} preview /></div>
+        <div className="h-[75svh] min-h-96 w-full"><AircraftMedia reg={reg} photo={plane.image} /></div>
       </section>;
     })}
   </main>;

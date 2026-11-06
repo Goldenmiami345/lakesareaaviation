@@ -1,5 +1,6 @@
 import { createElement, useEffect, useRef, useState } from 'react';
 import { MODEL_SETTINGS, MODEL_RESUME_MS, modelOrbitRadius } from '../lib/model-settings';
+import { useShow3DModels } from '../lib/use-site-settings';
 
 type Viewer = HTMLElement & {
   loaded: boolean;
@@ -11,6 +12,7 @@ type Viewer = HTMLElement & {
 };
 
 export default function AircraftModel({ src, label, poster, autoRotate = true, onLoad }: { src: string; label: string; poster?: string; autoRotate?: boolean; onLoad?: () => void }) {
+  const enabled = useShow3DModels();
   const [ready, setReady] = useState(false);
   const ref = useRef<HTMLElement | null>(null);
   const loadCallback=useRef(onLoad);
@@ -67,10 +69,11 @@ export default function AircraftModel({ src, label, poster, autoRotate = true, o
     // production bundler merged model-viewer (top-level `class extends HTMLElement`) into a
     // shared chunk with the `performance` polyfill used by the site layout, so every
     // SiteShell page threw "HTMLElement is not defined" during server rendering.
-    if (import.meta.env.SSR) return;
+    if (import.meta.env.SSR || !enabled) return;
     let alive = true;
     void import('@google/model-viewer')
       .then(async ({ ModelViewerElement }) => {
+        if (!alive) return;
         // public/models/*.glb are meshopt-compressed (gltfpack -cc) and model-viewer ships no
         // decoder, so every load failed with "THREE.GLTFLoader: setMeshoptDecoder must be
         // called before loading compressed files". The decoder is self-hosted (no CDN).
@@ -86,6 +89,6 @@ export default function AircraftModel({ src, label, poster, autoRotate = true, o
       })
       .catch(() => { if (alive) setReady(true); });
     return () => { alive = false; };
-  }, []);
-  return ready ? createElement('model-viewer', { ...MODEL_SETTINGS, ref, src, alt: label, poster,  className: 'aircraft-model relative h-full w-full' }) : null;
+  }, [enabled]);
+  return enabled && ready ? createElement('model-viewer', { ...MODEL_SETTINGS, ref, src, alt: label, poster,  className: 'aircraft-model relative h-full w-full' }) : null;
 }

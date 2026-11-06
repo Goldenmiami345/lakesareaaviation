@@ -21,6 +21,7 @@ export type Database = {
           fleet_show_models: boolean
           id: string
           mobile_journey_mode: string
+          show_3d_models: boolean
           show_traffic_pattern: boolean
           traffic_pattern_mode: string
           updated_at: string
@@ -32,6 +33,7 @@ export type Database = {
           fleet_show_models?: boolean
           id: string
           mobile_journey_mode?: string
+          show_3d_models?: boolean
           show_traffic_pattern?: boolean
           traffic_pattern_mode?: string
           updated_at?: string
@@ -43,6 +45,7 @@ export type Database = {
           fleet_show_models?: boolean
           id?: string
           mobile_journey_mode?: string
+          show_3d_models?: boolean
           show_traffic_pattern?: boolean
           traffic_pattern_mode?: string
           updated_at?: string

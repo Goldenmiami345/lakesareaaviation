@@ -11,7 +11,7 @@ import n6717aPanel from "../assets/fleet/n6717a-panel.png.asset.json";
 import n7018gPanel from "../assets/fleet/n7018g-panel.png.asset.json";
 import n8570bPanel from "../assets/fleet/n8570b-panel.png.asset.json";
 
-// Keep visitor models and model-rendered map sprites hidden until photo-textured approval.
+// Legacy baked-image presentation only. Runtime 3D is controlled exclusively by site_settings.show_3d_models.
 export const SHOW_3D_MODELS: boolean = true;
 // Aerial traffic views draw N4383P/N8570B/N46201 from top-down renders of the real
 // airplanes (true wingspan); independent of SHOW_3D_MODELS, which still hides 3D viewers.

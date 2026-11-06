@@ -5,6 +5,7 @@ import { TransformWrapper, TransformComponent, type ReactZoomPanPinchRef } from 
 import { Button } from './ui/button';
 import type { fleet } from "../lib/site-data";
 import { aircraftModelUrl } from '../lib/aircraft-models';
+import { useShow3DModels } from '../lib/use-site-settings';
 
 const AircraftModel = lazy(() => import('./aircraft-model'));
 type Plane = (typeof fleet)[number];
@@ -12,7 +13,8 @@ export default function AircraftViewer({ plane, initialIndex = 0, onClose }: { p
   const photos = [{ src: plane.image, small: plane.image, label: 'Exterior' }];
   const [index, setIndex] = useState(initialIndex);
   const [mode, setMode] = useState<'photos' | 'panel' | 'model'>('photos');
-  const model = aircraftModelUrl(plane.registration);
+  const enabled = useShow3DModels();
+  const model = aircraftModelUrl(plane.registration, enabled);
   const zoom = useRef<ReactZoomPanPinchRef>(null);
   const photo = photos[index];
   const step = (d: number) => { setIndex(i => (i + d + photos.length) % photos.length); zoom.current?.resetTransform(0); };
