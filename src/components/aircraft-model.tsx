@@ -73,6 +73,7 @@ export default function AircraftModel({ src, label, poster, autoRotate = true, o
     let alive = true;
     void import('@google/model-viewer')
       .then(async ({ ModelViewerElement }) => {
+        if (!alive) return;
         // public/models/*.glb are meshopt-compressed (gltfpack -cc) and model-viewer ships no
         // decoder, so every load failed with "THREE.GLTFLoader: setMeshoptDecoder must be
         // called before loading compressed files". The decoder is self-hosted (no CDN).

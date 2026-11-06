@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { MODEL_SETTINGS, MODEL_WINGSPANS_M, trafficPresentationScale, modelOrbitRadius } from './model-settings';
 import { SHOW_3D_MODELS } from './site-data';
-test('owner approved public model release', () => {
+test('baked airplane presentation remains independent of runtime 3D availability', () => {
   assert.equal(SHOW_3D_MODELS, true);
 });
 test('supplied aircraft use exact meter wingspans', () => {
