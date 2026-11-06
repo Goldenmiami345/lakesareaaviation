@@ -1,10 +1,17 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { localTraffic, livePerformance, compass } from "./live-traffic";
+import { localTraffic, livePerformance, compass, visibleOnMap, patternTraffic, type LiveAircraft } from "./live-traffic";
 
 const field = { lat: 45.9497, lon: -94.3473, elevation: 1123 };
 
 describe("live traffic", () => {
+  test("plots visible overflights without treating them as pattern traffic", () => {
+    const overflight: LiveAircraft = { id: 'N461AS', altFt: 9800, kt: 115, distNm: 3.3, bearing: 0, lat: 40.1, lon: -104.7 };
+    assert.deepEqual(visibleOnMap([overflight], () => ({ x: 200, y: 300 }), [0, 0, 1500, 1500]), [overflight]);
+    assert.deepEqual(patternTraffic([overflight], 5000), []);
+    assert.deepEqual(visibleOnMap([overflight], () => ({ x: 1600, y: 300 }), [0, 0, 1500, 1500]), []);
+    assert.deepEqual(visibleOnMap([{ ...overflight, lat: undefined }], () => ({ x: 200, y: 300 }), [0, 0, 1500, 1500]), []);
+  });
   test("keeps only airborne aircraft within 10 nm and below 6,000 ft AGL", () => {
     const rows = [
       { r: "N123AB", alt_baro: 2100, gs: 95, lat: 45.98, lon: -94.35 },

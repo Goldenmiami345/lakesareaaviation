@@ -78,8 +78,12 @@ export function mapPixel(field: { lat: number; lon: number }, mid: { x: number; 
   const northFt = ((lat - field.lat) * 110_540) / 0.3048;
   return { x: mid.x + eastFt / feetPerPx, y: mid.y - northFt / feetPerPx };
 }
-/** Pattern traffic that actually lands inside the visible map rectangle. */
+/** Geolocated live aircraft inside the map. Pattern eligibility is a separate simulation-switch rule. */
 export function visibleOnMap(list: readonly LiveAircraft[], toPx: (lat: number, lon: number) => { x: number; y: number }, box: readonly [number, number, number, number]) {
   const [bx, by, bw, bh] = box;
-  return list.filter((a) => { const p = toPx(a.lat!, a.lon!); return p.x >= bx && p.x <= bx + bw && p.y >= by && p.y <= by + bh; });
+  return list.filter((a) => {
+    if (typeof a.lat !== 'number' || typeof a.lon !== 'number') return false;
+    const p = toPx(a.lat, a.lon);
+    return p.x >= bx && p.x <= bx + bw && p.y >= by && p.y <= by + bh;
+  });
 }

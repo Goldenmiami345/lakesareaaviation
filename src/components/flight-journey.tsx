@@ -7,8 +7,6 @@ import { journeyFrame, journeyAltitude, settleTarget, stageLanding, stageLengthF
 import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
 import { patternFor, pickRunway, type PatternField } from "../lib/traffic-pattern";
 import { useMetar } from "../lib/use-metar";
-import { useLiveTraffic } from "../lib/use-live-traffic";
-import { compass, type LiveAircraft } from "../lib/live-traffic";
 import { profileAirport, trafficConditions, NO_CONDITIONS, type Metar } from "../lib/wx-conditions";
 import { WX_FIELDS } from "../lib/wx-stations";
 import { MetarLine, InstrumentConditions } from "./live-wx";
@@ -534,7 +532,6 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   }, [autoOn, active, stages.length]);
   const { zoomed, reset } = useStageZoom({ viewportRef, target: () => layerRefs.current[active]?.querySelector<HTMLElement>(".journey-zoom") ?? null, resetKey: active });
   const metar = useMetar();
-  const liveTraffic = useLiveTraffic();
   // Active runway per airport stage from live wind; calm-wind runway (and no readout) without weather.
   const ops = useMemo(() => stages.map((st) => {
     if (!st.traffic) return null;
@@ -637,7 +634,6 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
             </button>
             <p className={`mt-1 max-w-[min(34rem,calc(100vw-6rem))] ${wxOpen ? "" : "max-sm:hidden"}`}><MetarLine obs={w} /></p>
           </>); })()}</div>}{s.traffic && <p className="mt-1 hidden sm:block">RWY {ops[active]?.rwy.runway ?? s.traffic.runway} · {ops[active]?.rwy.side ?? s.traffic.side} traffic · TPA {(s.traffic.elevation + (ops[active]?.pattern.tpaAgl ?? s.traffic.tpaAgl)).toLocaleString("en-US")} MSL</p>}</>}
-          {(s.traffic || s.perspective) && <LiveOps ident={s.traffic?.ident ?? "KLXL"} elevation={s.traffic?.elevation ?? 1123} obs={s.traffic ? ops[active]?.obs ?? null : klxl} traffic={liveTraffic} />}
           <p className="mt-1 hidden sm:block">Stage {s.code} / 0{stages.length}</p>
         </div>
 
@@ -694,17 +690,3 @@ function StageCopy({ s, wx, wxLoading }: { s: Stage; wx: Metar | null; wxLoading
   );
 }
 
-// Hybrid live-ops readout: real ADS-B traffic near the field when any is broadcasting, otherwise
-// the simulated school pattern is labelled as such; live density altitude/climb from METAR. Client-only data.
-function LiveOps({ ident, elevation, obs, traffic }: { ident: string; elevation: number; obs: Metar | null; traffic: Record<string, LiveAircraft[]> | null | undefined }) {
-  // Only real, currently-reporting aircraft are shown; no performance numbers, no "quiet" placeholder.
-  void obs; void elevation;
-  const list = traffic?.[ident];
-  const near = list?.[0];
-  if (!near) return null;
-  return (
-    <div className="mt-1" data-live-ops>
-      <p className="text-background" aria-live="polite">Live · {near.id} {near.altFt.toLocaleString("en-US")} FT {near.distNm} NM {compass(near.bearing)}{list.length > 1 ? ` · +${list.length - 1}` : ""}</p>
-    </div>
-  );
-}

@@ -20,6 +20,7 @@
 - Scroll management is explicit in src/router.tsx (instant top-of-page reset on real navigations via onBeforeRouteMount, so the old page never glides or flashes); never re-enable TanStack's built-in scrollRestoration — its reset can fire from a late hydration settle and yank a scrolling visitor to the top.
 
 - Airport geometry remains in USGS pixel space from FAA data; traffic-flight.ts integrates per-type, wind-corrected real-time speed separately, so map movement and card ground speed agree without changing pattern corners.
+- Airport maps plot all geolocated live reports within the existing viewBox; only visible pattern-qualified reports replace simulated traffic, so overflights remain visible without being mistaken for pattern traffic. Do not duplicate aircraft in a journey HUD summary.
 - Both traffic views share traffic-vector: supplied top renders use literal meter wingspans, other SVGs retain legacy scale; oblique axes use its calibrated camera.
 - Traffic airplanes (aerial and oblique views) share selection, radar tags and the info card from src/components/traffic-ui.tsx so tap/hover behaviour stays identical everywhere.
 - Stage zoom keeps single-finger scrolling passive; arm non-passive touchmove only for pinch/zoomed panning so native scrolling stays on the compositor fast path.
