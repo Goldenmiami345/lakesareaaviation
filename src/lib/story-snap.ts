@@ -22,6 +22,11 @@ export function nearestSnap(y: number, points: number[]): number | null {
   return best;
 }
 
+/** Opening gate: section locking turns on only after fonts are ready and page height held still for 2 frames. */
+export function storyOpeningSettled(quietFrames: number, fontsReady: boolean): boolean {
+  return fontsReady && quietFrames >= 2;
+}
+
 let owners = 0;
 let firstStartDone = false;
 let stop: (() => void) | null = null;
@@ -83,12 +88,32 @@ function start(): () => void {
   const fresh = !window.location.hash;
   firstStartDone = true;
   try { window.history.scrollRestoration = "manual"; } catch { /* ignore */ }
+  // Single owner of the opening position: snapping stays OFF while the layout is still settling
+  // (no timer fights snap), then one instant move to the top and snapping turns on.
+  set(false);
+  let lastH = -1, quiet = 0, armed = false, raf = 0;
+  const arm = () => {
+    if (armed) return;
+    armed = true;
+    cancelAnimationFrame(raf);
+    measure();
+    if (fresh && !touched) window.scrollTo({ top: 0, behavior: "instant" });
+    set(storySnapWanted(window.scrollY, end, false));
+  };
   if (fresh) window.scrollTo({ top: 0, behavior: "instant" });
-  set(storySnapWanted(window.scrollY, end, false));
-  // Late restores/layout settles in the first moments (before any touch) are pulled back to the top too.
-  const keepTop = fresh ? window.setInterval(() => { if (!touched && window.scrollY > 0) window.scrollTo({ top: 0, behavior: "instant" }); }, 100) : 0;
-  const stopKeep = window.setTimeout(() => window.clearInterval(keepTop), 3000);
-  const markTouched = () => { touched = true; window.clearInterval(keepTop); };
+  const watch = () => {
+    const h = document.documentElement.scrollHeight;
+    quiet = h === lastH ? quiet + 1 : 0;
+    lastH = h;
+    if (storyOpeningSettled(quiet, fontsReady)) arm(); else raf = requestAnimationFrame(watch);
+  };
+  let fontsReady = false;
+  document.fonts?.ready.then(() => { fontsReady = true; }).catch(() => { fontsReady = true; });
+  if (!document.fonts) fontsReady = true;
+  raf = requestAnimationFrame(watch);
+  const stopKeep = window.setTimeout(arm, 2500); // never leave sections unlocked
+  const keepTop = 0;
+  const markTouched = () => { touched = true; arm(); };
   window.addEventListener("touchstart", markTouched, { passive: true, once: true });
   window.addEventListener("wheel", markTouched, { passive: true, once: true });
   const ro = new ResizeObserver(measure);
