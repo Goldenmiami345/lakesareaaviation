@@ -770,7 +770,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
               {phoneStory && trail(i)}
               {phoneStory && mode === "alt" && <p aria-hidden={i !== active || undefined} className="absolute left-5 top-24 z-20 font-mono text-xs uppercase tracking-[0.2em] text-background/70">Alt <span className="tabular-nums text-background">{journeyAltitude({ stage: i, next: i, transition: 0 }, stages.length).toLocaleString("en-US")}</span> ft</p>}
               <div className="journey-shade pointer-events-none absolute inset-0 transition-opacity duration-300" />
-              <div inert={i !== active || undefined} className="site-container journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 pb-[calc(2.75rem+env(safe-area-inset-bottom)+100lvh-100dvh)] sm:pb-24 md:pb-12 lg:pb-16">
+              <div inert={i !== active || undefined} className="site-container journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 pb-[calc(.75rem+env(safe-area-inset-bottom)+100lvh-100dvh)] sm:pb-24 md:pb-12 lg:pb-16">
                 <div className="journey-copy max-w-2xl"><StageCopy s={st} wx={klxl} wxLoading={metar === undefined} /></div>
               </div>
             </>}
