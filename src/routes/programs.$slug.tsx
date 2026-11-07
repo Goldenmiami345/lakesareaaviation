@@ -5,7 +5,7 @@ import { programs, testimonials } from "../lib/site-data";
 import clouds from "../assets/journey/01-clouds.webp";
 import runway from "../assets/journey/02-runway.webp";
 import instrument from "../assets/journey/03-instrument.webp";
-import instructor from "../assets/journey/04-instructor.webp";
+import instructor from "../assets/journey/05-cfi-teaching.webp";
 import airline from "../assets/journey/05-airline.webp";
 import n6717a from "../assets/fleet/n6717a.webp";
 import apachePhoto from "../assets/fleet/walkaround/n4383p-03-1600.webp.asset.json";
