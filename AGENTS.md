@@ -50,3 +50,5 @@
 - ALT readout: journeyAltitude; wind: nearest METAR (wx-stations.ts), wxStation fallback.
 - Phone Story section boundaries are native CSS scroll snap (story-snap.ts, phone Story mode only, the one scroll-snap exception); never drive vertical story movement from script, because it made slides uneven on iPhone.
 - Story coachmarks share timing constants in story-nav.ts and stay pointer-transparent; each journey owns its first-arrival state so hints cannot block gestures or repeat on stage changes.
+
+- Netlify hosting: netlify.toml plus a NETLIFY=true-only nitro "netlify" preset in vite.config.ts; Lovable hosting stays on its default, so keep both paths working.

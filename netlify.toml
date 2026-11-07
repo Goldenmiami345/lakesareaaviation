@@ -1,5 +1,7 @@
+# Netlify build: vite.config.ts switches the server to Netlify when NETLIFY=true.
+# Netlify's output puts pages in dist/ (not dist/client) and the server in .netlify/.
 [build]
-  command = "npm run build"
+  command = "npx vite build && node scripts/check-models.mjs && node scripts/check-prerender-dist.mjs dist"
   publish = "dist"
 
 [build.environment]
