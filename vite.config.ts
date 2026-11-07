@@ -6,10 +6,12 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { verifyPrerender } from './scripts/verify-prerender';
+import { netlifyPrerenderShim } from './scripts/netlify-prerender-shim';
 
 export default defineConfig({
   // Netlify builds (NETLIFY=true) emit Netlify functions; Lovable hosting keeps its default.
-  ...(process.env["NETLIFY"] === "true" ? { nitro: { preset: "netlify" } } : {}),
+  // netlifyPrerenderShim points the prerender preview at nitro's Netlify handler (Lovable's shim only knows index.mjs).
+  ...(process.env["NETLIFY"] === "true" ? { nitro: { preset: "netlify" }, plugins: netlifyPrerenderShim() } : {}),
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
@@ -20,6 +22,8 @@ export default defineConfig({
       "/specialized-training", "/student-success", "/team", "/services", "/students",
       ...["private-pilot", "instrument-rating", "commercial-single-engine", "commercial-multi-engine", "cfi-cfii", "mei", "zero-to-hero"].map((s) => `/programs/${s}`),
     ].map((path) => ({ path })),
-    prerender: { enabled: true, autoStaticPathsDiscovery: false, autoSubfolderIndex: false, failOnError: true, onSuccess: verifyPrerender },
+    // crawlLinks off + autoSubfolderIndex on mirror what the Lovable build pins, so Netlify builds
+    // prerender only the pages list and write <route>/index.html (what check-prerender-dist expects).
+    prerender: { enabled: true, autoStaticPathsDiscovery: false, crawlLinks: false, autoSubfolderIndex: true, failOnError: true, onSuccess: verifyPrerender },
   },
 });

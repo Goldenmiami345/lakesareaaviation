@@ -51,4 +51,4 @@
 - Phone Story section boundaries are native CSS scroll snap (story-snap.ts, phone Story mode only, the one scroll-snap exception); never drive vertical story movement from script, because it made slides uneven on iPhone.
 - Story coachmarks share timing constants in story-nav.ts and stay pointer-transparent; each journey owns its first-arrival state so hints cannot block gestures or repeat on stage changes.
 
-- Netlify: netlify.toml + NETLIFY-only nitro preset in vite.config.ts; keep Lovable default intact.
+- Netlify: netlify.toml + NETLIFY-only nitro preset in vite.config.ts; keep Lovable default intact. scripts/netlify-prerender-shim.ts bridges prerender to the Netlify main.mjs handler (Lovable's shim only finds index.mjs).
