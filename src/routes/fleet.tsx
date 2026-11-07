@@ -84,8 +84,9 @@ function Page() {
         eyebrow="Aircraft"
         title="The airplanes you’ll actually fly."
         text="Real photos, real tail numbers and the published rates for every airplane in the Lakes Area Aviation fleet."
+        compact
       />
-      <div className="site-container pb-20 pt-8 lg:pt-12 max-sm:!px-4">
+      <div className="site-container pb-20 pt-8 lg:pt-12 max-sm:!px-4 max-sm:pt-5">
         <div role="group" aria-label="Filter by role" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
           {ROLES.map((r) => {
             const count = r.id === "all" ? fleet.length : fleet.filter((f) => f.role === r.id).length;
@@ -99,7 +100,7 @@ function Page() {
           })}
         </div>
 
-        <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3 max-sm:mt-4 max-sm:gap-4">
           {shown.map((f) => (
             <PlaneCard key={f.registration} f={f} open={hashId === f.registration.toLowerCase()}
               onView={(btn, index = 0) => { opener.current = btn; setViewIndex(index); setViewer(f); }} />
@@ -121,29 +122,54 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
   const specs = Object.entries(f.specs ?? {});
   const equipment = specs.filter(([k]) => ["GPS", "Equipment", "IFR/VFR", "Coms"].includes(k));
   const endorsements = ENDORSEMENTS[f.role];
+  // Phones show the airplane first: details stay folded behind one toggle (larger screens always show them).
+  const [more, setMore] = useState(false);
+  const details = `${id}-details`;
+  const label = `${f.name} ${f.registration}${f.nickname ? ` “${f.nickname}”` : ""}`;
   return (
     <article id={id} className="scroll-mt-20 overflow-hidden border border-border bg-background target:border-primary">
-      <div className="relative aspect-[4/3] overflow-hidden bg-background">
+      <div className="relative aspect-[4/3] overflow-hidden bg-background max-sm:aspect-[11/5]">
         {/* Fleet is photos only: no 3D models on this page, whatever the 3D setting is. */}
-        <img src={f.image} srcSet={srcSetFor(f.image)} sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw" alt={`${f.name} ${f.registration}${f.nickname ? ` “${f.nickname}”` : ""}`} width={1200} height={900} loading="lazy" decoding="async" className="fleet-cutout h-full w-full object-contain p-5" />
-        <Button variant="secondary" onClick={(e) => onView(e.currentTarget)} className="absolute bottom-3 right-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-ink/80 px-4 text-xs font-bold uppercase tracking-[0.14em] text-background backdrop-blur-md hover:bg-primary">
+        <img src={f.image} srcSet={srcSetFor(f.image)} sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw" alt={label} width={1200} height={900} loading="lazy" decoding="async" className="fleet-cutout h-full w-full object-contain p-5 max-sm:px-3 max-sm:pb-5 max-sm:pt-2" />
+        {/* On phones the whole photo opens the viewer, so no pill sits on top of the airplane. */}
+        <button type="button" onClick={(e) => onView(e.currentTarget)} aria-label={`View photos of ${label}`} className="absolute inset-0 sm:hidden" />
+        <Button variant="secondary" onClick={(e) => onView(e.currentTarget)} className="absolute bottom-3 right-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-ink/80 px-4 text-xs font-bold uppercase tracking-[0.14em] text-background backdrop-blur-md hover:bg-primary max-sm:hidden">
           <Maximize className="size-4" /> View photo
         </Button>
       </div>
-      <div className="p-5 sm:p-6">
-        <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-primary-text"><span className="h-px w-5 bg-primary" />{f.registration}</p>
-        <h2 className="mt-2 font-display text-2xl leading-tight sm:text-3xl">{f.name}</h2>
-        {f.nickname && <p className="font-display text-base text-muted-foreground">“{f.nickname}”</p>}
-        <dl className="mt-4 flex flex-wrap gap-2">
+      <div className="p-5 sm:p-6 max-sm:px-4 max-sm:pb-3 max-sm:pt-1">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+          <div className="min-w-0">
+            <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-primary-text"><span className="h-px w-5 shrink-0 bg-primary" />{f.registration}
+              {f.nickname && <span className="truncate font-display text-sm font-normal normal-case tracking-normal text-muted-foreground sm:hidden">“{f.nickname}”</span>}
+            </p>
+            <h2 className="mt-2 font-display text-2xl leading-tight sm:text-3xl max-sm:mt-1 max-sm:text-xl">{f.name}</h2>
+            {f.nickname && <p className="font-display text-base text-muted-foreground max-sm:hidden">“{f.nickname}”</p>}
+          </div>
+          <button type="button" onClick={(e) => onView(e.currentTarget)} aria-label={`View photos of ${label}`} className="-mr-2 grid size-11 place-items-center rounded-full text-muted-foreground transition-colors active:bg-muted sm:hidden">
+            <Maximize className="size-4" />
+          </button>
+        </div>
+        <dl className="mt-4 flex flex-wrap gap-2 max-sm:mt-2 max-sm:gap-x-3 max-sm:gap-y-0.5">
           {keyStats(f).map((s) => (
-            <div key={s.k} className="rounded-full border border-border px-3 py-1.5 text-xs">
+            <div key={s.k} className="text-xs sm:rounded-full sm:border sm:border-border sm:px-3 sm:py-1.5">
               <dt className="sr-only">{s.k}</dt>
               <dd><span className="text-muted-foreground">{s.k} </span><span className="font-semibold">{s.v}</span></dd>
             </div>
           ))}
         </dl>
 
-        <div className="mt-4 divide-y divide-border border-y border-border">
+        <div className="mt-2 flex items-center justify-between gap-3 border-t border-border sm:hidden">
+          <button type="button" aria-expanded={more || open} aria-controls={details} onClick={() => setMore((v) => !v)}
+            className="group/more inline-flex min-h-11 items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em]">
+            {more || open ? "Less" : "Details"}<ChevronDown className={`size-4 transition-transform ${more || open ? "rotate-180" : ""}`} />
+          </button>
+          <Link to="/contact" search={{ aircraft: f.registration }} className="inline-flex min-h-11 items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-primary-text">
+            Build my training plan <ArrowRight className="size-4 shrink-0" />
+          </Link>
+        </div>
+
+        <div id={details} className={`mt-4 divide-y divide-border border-y border-border max-sm:mt-0 max-sm:border-b-0 ${more || open ? "" : "max-sm:hidden"}`}>
           {specs.length > 0 && (
             <Section title="Full specs" open={open}>
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
@@ -171,7 +197,7 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
           )}
         </div>
 
-        <Link to="/contact" search={{ aircraft: f.registration }} className="mt-5 inline-flex min-h-11 w-full items-center justify-between gap-3 bg-primary px-5 text-xs font-bold uppercase tracking-[0.14em] text-primary-foreground">
+        <Link to="/contact" search={{ aircraft: f.registration }} className="mt-5 inline-flex min-h-11 w-full items-center justify-between gap-3 bg-primary px-5 text-xs font-bold uppercase tracking-[0.14em] text-primary-foreground max-sm:hidden">
           Build my training plan <ArrowRight className="size-4" />
         </Link>
       </div>
