@@ -146,6 +146,7 @@ describe("desktop crossfade", () => {
     const d = { base: 0, stage: 1000, count: 3 };
     assert.equal(journeyFrame(d, 490, 0.5).transition, 0);
     assert.ok(Math.abs(journeyFrame(d, 750, 0.5).transition - 0.5) < 1e-6);
-    assert.equal(journeyFrame(d, 750).transition, 0);
+    assert.equal(journeyFrame(d, 700).transition, 0);
+    assert.ok(journeyFrame(d, 700, 0.5).transition > 0.3);
   });
 });
