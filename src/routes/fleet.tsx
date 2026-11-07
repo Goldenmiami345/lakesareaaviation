@@ -128,7 +128,7 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
   const label = `${f.name} ${f.registration}${f.nickname ? ` “${f.nickname}”` : ""}`;
   return (
     <article id={id} className="scroll-mt-20 overflow-hidden border border-border bg-background target:border-primary">
-      <div className="relative aspect-[4/3] overflow-hidden bg-background max-sm:aspect-[2/1]">
+      <div className="relative aspect-[4/3] overflow-hidden bg-background max-sm:aspect-[11/5]">
         {/* Fleet is photos only: no 3D models on this page, whatever the 3D setting is. */}
         <img src={f.image} srcSet={srcSetFor(f.image)} sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw" alt={label} width={1200} height={900} loading="lazy" decoding="async" className="fleet-cutout h-full w-full object-contain p-5 max-sm:px-3 max-sm:pb-5 max-sm:pt-2" />
         {/* On phones the whole photo opens the viewer, so no pill sits on top of the airplane. */}
