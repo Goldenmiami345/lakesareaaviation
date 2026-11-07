@@ -141,10 +141,11 @@ describe("altitude", () => {
     assert.ok(mid < 14000);
   });
 });
-import { journeyFrame as jf, DESKTOP_JOURNEY_HOLD } from "./journey-scroll";
-test("desktop crossfade starts at half the stage", () => {
-  const g = { base: 0, stage: 1000, count: 3 };
-  expect(jf(g, 490, DESKTOP_JOURNEY_HOLD).transition).toBe(0);
-  expect(jf(g, 750, DESKTOP_JOURNEY_HOLD).transition).toBeCloseTo(0.5, 5);
-  expect(jf(g, 750).transition).toBe(0);
+describe("desktop crossfade", () => {
+  it("starts at half the stage instead of 72%", () => {
+    const d = { base: 0, stage: 1000, count: 3 };
+    assert.equal(journeyFrame(d, 490, 0.5).transition, 0);
+    assert.ok(Math.abs(journeyFrame(d, 750, 0.5).transition - 0.5) < 1e-6);
+    assert.equal(journeyFrame(d, 750).transition, 0);
+  });
 });
