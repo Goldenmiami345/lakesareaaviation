@@ -303,6 +303,14 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   // Taps and auto-advance crossfade; only a finger swipe turns the box.
   const swipeRef = useRef(false);
   const flatTimer = useRef(0);
+  // Neighbour face: a static copy of the adjacent story's page placed beside this one, so crossing
+  // sections turns one continuous cube instead of turning away to an empty screen first.
+  const ghostRef = useRef<{ el: HTMLElement; at: number } | null>(null);
+  const dropGhost = () => { ghostRef.current?.el.remove(); ghostRef.current = null; };
+  const faceTransform = (rel: number) => {
+    const r = Math.max(-1, Math.min(1, rel));
+    return `translate3d(${(r * 100).toFixed(3)}%,0,0) rotateY(${(r * 90).toFixed(3)}deg)`;
+  };
   const paintStory = (pos: number, animate: boolean, fade = false) => {
     const reduce = reducedMotion();
     window.clearTimeout(flatTimer.current);
@@ -335,9 +343,17 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       layer.style.backfaceVisibility = "hidden";
       layer.style.willChange = settled ? "" : "transform";
       layer.style.transformOrigin = rel < 0 ? "100% 50%" : "0% 50%";
-      const r = Math.max(-1, Math.min(1, rel));
-      layer.style.transform = `translate3d(${(r * 100).toFixed(3)}%,0,0) rotateY(${(r * 90).toFixed(3)}deg)`;
+      layer.style.transform = faceTransform(rel);
     });
+    const g = ghostRef.current;
+    if (g && (reduce || fade)) dropGhost();
+    else if (g) {
+      const rel = g.at - pos;
+      g.el.style.transition = animate ? "transform 360ms cubic-bezier(0.22,0.61,0.36,1)" : "none";
+      g.el.style.visibility = Math.abs(rel) < 1 ? "visible" : "hidden";
+      g.el.style.transformOrigin = rel < 0 ? "100% 50%" : "0% 50%";
+      g.el.style.transform = faceTransform(rel);
+    }
     const box = layerRefs.current[0]?.parentElement;
     if (box && !reduce && !fade) {
       box.style.perspective = `${Math.round(Math.max(800, box.clientWidth * 2.2))}px`;
@@ -346,6 +362,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     // At rest, drop all 3D so vertical scrolling composites one flat layer (3D layers flickered black while sliding).
     if (settled) {
       flatTimer.current = window.setTimeout(() => {
+        if (pos >= 0 && pos <= stages.length - 1) dropGhost();
         const b = layerRefs.current[0]?.parentElement;
         if (b) b.style.perspective = "";
         layerRefs.current.forEach((layer, i) => {
