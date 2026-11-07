@@ -163,7 +163,7 @@ html.reveal-ready .stagger-grid > * { opacity: 0; transform: translateY(24px); }
 /* Phones: lift the hero photo and settle at no zoom so the airplanes clear the headline. */
 @keyframes kenburns-phone { from { transform: scale(1.08); } to { transform: scale(1); } }
 @media (max-aspect-ratio: 3/2) {
-  .hero-kenburns { margin-top: -9%; animation-name: kenburns-phone; }
+  .hero-kenburns { margin-top: -9%; animation-name: kenburns-phone; object-position: 30% center; }
 }
 
 @keyframes line-up { from { transform: translateY(112%); } to { transform: translateY(0); } }
