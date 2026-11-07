@@ -10,7 +10,10 @@ const outDir = process.argv[2] ?? 'dist/client';
 const failures = [];
 
 for (const path of Object.keys(contracts)) {
-  const file = path === '/' ? join(outDir, 'index.html') : join(outDir, path.slice(1), 'index.html');
+  // Lovable writes /about/index.html; Netlify's plugin writes /about.html. Accept either.
+  const nested = path === '/' ? join(outDir, 'index.html') : join(outDir, path.slice(1), 'index.html');
+  const flat = join(outDir, `${path.slice(1)}.html`);
+  const file = existsSync(nested) || path === '/' ? nested : flat;
   if (!existsSync(file)) {
     failures.push(`${path}: prerendered file missing (${file})`);
     continue;
