@@ -231,7 +231,7 @@ html.first-view .page-enter { animation: none; }
 @keyframes tap-scroll { 0% { opacity: 0; transform: scale(1.6); } 14% { opacity: 1; transform: scale(1); } 24% { transform: scale(.82); box-shadow: 0 0 0 0 color-mix(in oklab, var(--background) 50%, transparent); } 34% { transform: scale(.82) translateY(0); box-shadow: 0 0 0 10px transparent; } 72% { opacity: .9; transform: scale(.82) translateY(-64px); } 88%, 100% { opacity: 0; transform: scale(.6) translateY(-84px); } }
 .tap-scroll-dot { opacity: 0; box-shadow: 0 0 14px color-mix(in oklab, var(--background) 45%, transparent); animation: tap-scroll 1.9s cubic-bezier(.45,0,.2,1) 1 both; }
 @media (prefers-reduced-motion: reduce) { .tap-scroll-dot { animation: none; opacity: .7; } }
-@media (prefers-reduced-motion: reduce) { .landing-scroll-stroke { animation: none; opacity: .7; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .landing-scroll-stroke { animation: none; opacity: .7; transform: none; } .scroll-arrow { animation: none; } }
 
 
 /* Airport traffic pattern overlay */

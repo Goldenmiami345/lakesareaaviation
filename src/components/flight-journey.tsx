@@ -1,7 +1,7 @@
 import { startTransition, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { srcSetFor } from "@/lib/responsive-image";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, ChevronLeft, ChevronRight, Pause, Phone, Play } from "lucide-react";
+import { ArrowDown, ArrowRight, ChevronLeft, ChevronRight, MapPin, Pause, Phone, Play } from "lucide-react";
 import { Button } from "./ui/button";
 import { journeyFrame, journeyAltitude, settleTarget, stageLanding, stageLengthFrom, JOURNEY_TAIL, JOURNEY_HOLD, DESKTOP_JOURNEY_HOLD, type JourneyGeometry } from "../lib/journey-scroll";
 import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
@@ -835,6 +835,7 @@ function StageCopy({ s, wx, wxLoading }: { s: Stage; wx: Metar | null; wxLoading
       <p className="mt-2 hidden font-display text-5xl leading-none sm:block">{s.time}</p>
       <h2 className="mt-1.5 font-display text-lg leading-[1.1] min-[380px]:text-xl sm:mt-2 sm:text-2xl">{s.title}</h2>
       {s.text && <p className="mt-1 max-w-lg text-pretty text-sm leading-snug text-background/80 sm:mt-2 sm:text-base">{s.text}</p>}
+      {s.code === "01" && !s.location && <DiscoveryLocations />}
       {s.liveWx && <InstrumentConditions obs={wx} loading={wxLoading} />}
       <div className="flex flex-nowrap items-end gap-2">
       {s.location
@@ -844,7 +845,41 @@ function StageCopy({ s, wx, wxLoading }: { s: Stage; wx: Metar | null; wxLoading
         : <Link to={s.to ?? "/contact"} className="interactive-arrow btn-shine pointer-events-auto mt-2.5 inline-flex min-h-11 items-center gap-2 whitespace-nowrap bg-primary px-3 text-xs max-sm:tracking-[0.06em] sm:gap-3 sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>}
       <a href={SCHOOL_PHONE_TEL} aria-label="Call Lakes Area Aviation" className="pointer-events-auto mt-2.5 inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap border border-background/50 px-3 text-xs font-bold uppercase tracking-[0.06em] text-background backdrop-blur-sm sm:hidden"><Phone className="size-4" /> Call</a>
       </div>
+      {!s.location && s.code !== "01" && <LocationsSkip end={s.code === "06"} />}
     </>
+  );
+}
+
+const TRAINING_STATES = [["Minnesota", "MN"], ["Colorado", "CO"], ["Arizona", "AZ"]] as const;
+
+/** Skip ahead to the airport section (smooth glide; index = airportStages order). */
+const toAirport = (index: number) => jumpToJourney("airports", index, true);
+
+/** Discovery stage: names the three places a first flight can happen, each one a shortcut to its airport. */
+function DiscoveryLocations() {
+  return (
+    <p className="mt-1 flex flex-wrap items-center text-xs leading-snug text-background/80 sm:mt-2 sm:text-sm">
+      <span className="mr-1"><span className="max-sm:hidden">Take a discovery flight at one of our three locations:</span><span className="sm:hidden">At our 3 locations:</span></span>
+      {TRAINING_STATES.map(([state, code], i) => (
+        <span key={code} className="inline-flex items-center">
+          {i > 0 && <span aria-hidden className="px-1 text-background/40">·</span>}
+          <button type="button" onClick={() => toAirport(i)} aria-label={`See our ${state} location`} className="pointer-events-auto -my-2 inline-flex min-h-10 items-center font-semibold text-background underline decoration-background/30 underline-offset-4 transition-colors hover:text-primary-text hover:decoration-current">
+            <span className="sm:hidden">{code}</span><span className="max-sm:hidden">{state}</span>
+          </button>
+        </span>
+      ))}
+    </p>
+  );
+}
+
+/** Quiet shortcut to the airports on every later stage; the final stage points down to them. */
+function LocationsSkip({ end }: { end: boolean }) {
+  return (
+    <button type="button" onClick={() => toAirport(0)} className="pointer-events-auto -mb-2 mt-0.5 inline-flex min-h-10 items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-background/70 transition-colors hover:text-background sm:mt-1.5 sm:text-[11px]">
+      {end
+        ? <>Scroll to see our locations <ArrowDown aria-hidden className="scroll-arrow size-3.5" /></>
+        : <><MapPin aria-hidden className="size-3 text-background/55" /> Our locations · MN · CO · AZ</>}
+    </button>
   );
 }
 
