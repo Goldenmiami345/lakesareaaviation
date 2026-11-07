@@ -118,7 +118,7 @@ function LivePlanes({list,svgRef}:{list:LiveAircraft[];svgRef:React.RefObject<SV
   const selRef=useRef(sel);selRef.current=sel;
   const listRef=useRef(list);listRef.current=list;
   useEffect(()=>{if(sel&&!list.some(x=>x.id===sel))setSel(null);},[list,sel]);
-  useEffect(()=>{if(!sel)return;const close=(e:PointerEvent)=>{if((e.target as Element|null)?.closest?.('[data-traffic-hit],[data-traffic-card]'))return;setSel(null);};document.addEventListener('pointerdown',close,true);return()=>document.removeEventListener('pointerdown',close,true);},[sel]);
+  useEffect(()=>{if(!sel)return;const close=(e:PointerEvent)=>{if((e.target as Element|null)?.closest?.('[data-traffic-hit],[data-traffic-card]'))return;setSel(null);};const key=(e:KeyboardEvent)=>{if(e.key==='Escape')setSel(null);};document.addEventListener('pointerdown',close,true);document.addEventListener('keydown',key);return()=>{document.removeEventListener('pointerdown',close,true);document.removeEventListener('keydown',key);};},[sel]);
   useEffect(()=>{if(!sel)return;return openTrafficCard();},[sel]);
   useEffect(()=>{
     let raf=0;const placed=new Set<string>();
@@ -158,7 +158,7 @@ function LivePlanes({list,svgRef}:{list:LiveAircraft[];svgRef:React.RefObject<SV
     {list.map(a=><g key={`ls-${a.id}`} ref={el=>{shadowRefs.current[a.id]=el;}} className="pointer-events-none traffic-ground-shadow" opacity={.3} aria-hidden><TrafficVector reg={a.id} shadow/></g>)}
     {list.map(a=><g key={`l-${a.id}`} data-aircraft={a.id} data-live-aircraft="" ref={el=>{planeRefs.current[a.id]=el;}} className="pointer-events-none" aria-hidden><PlaneArt reg={a.id} load/></g>)}
     {list.map((a,i)=><g key={`lt-${a.id}`} className="traffic-live-tag-wrap"><RadarTag reg={a.callsign&&a.callsign!==a.id?a.callsign:a.id} index={i} seed={0} label={`${a.id}, live aircraft. Show flight details`} tabIndex={0}
-      hit={{'data-traffic-hit':'',onClick:()=>setSel(s=>s===a.id?null:a.id),onKeyDown:(e:React.KeyboardEvent)=>{if(e.key==='Enter')setSel(a.id);if(e.key==='Escape')setSel(null);}}}
+      hit={{'data-traffic-hit':'',onClick:()=>setSel(a.id),onKeyDown:(e:React.KeyboardEvent)=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setSel(a.id);}if(e.key==='Escape')setSel(null);}}}
       tagRef={el=>{tagRefs.current[a.id]=el;el?.classList.add('is-live-tag');}} textRef={el=>{textRefs.current[a.id]=el;}}/></g>)}
     {info&&<LiveCard key={info.id} ref={cardRef} a={info}/>}
   </>;
@@ -169,7 +169,7 @@ export const LiveCard=({a,ref}:{a:LiveAircraft;ref:React.RefObject<HTMLDivElemen
   const navigate=useNavigate();
   const vs=a.vs??0;
   return createPortal(<div ref={ref} data-traffic-card="" className="traffic-card pointer-events-auto fixed left-0 top-0 z-[70] w-[min(64vw,16rem)]" role="dialog" aria-label={`${a.id} live flight details`}>
-    {ours&&CARD_PHOTOS[a.id]&&<div data-card-media="" className="traffic-card-media relative mb-2 h-20 w-full"><AircraftMedia reg={a.id} photo={CARD_PHOTOS[a.id]!}/></div>}
+    {ours&&CARD_PHOTOS[a.id]&&<div data-card-media="" className="traffic-card-media relative mb-2 h-28 w-full"><AircraftMedia reg={a.id} photo={CARD_PHOTOS[a.id]!} priority/></div>}
     <span className="flex items-center gap-2 font-mono text-[12px] uppercase tracking-[0.16em] text-[color:var(--radar)]"><span aria-hidden className="traffic-live-dot"/>Live ADS-B</span>
     <span className="mt-1 block font-mono text-sm font-bold tracking-wider">{a.id}{a.callsign&&a.callsign!==a.id?` · ${a.callsign}`:''}</span>
     {ours?<span className="block truncate text-xs leading-tight text-background">{ours.nickname?`“${ours.nickname}” · `:''}{ours.name}</span>

@@ -6,8 +6,7 @@ import { AircraftMedia } from './aircraft-media';
 
 import { fleet } from '../lib/site-data';
 import { callSideCandidates, callSideFits, type CallSide } from '../lib/traffic-call-placement';
-import { shouldCloseTrafficHover } from '../lib/traffic-hover';
-import { openTrafficCard } from '../lib/traffic-card-open';
+import { openTrafficCard, trafficSelectionOnClick } from '../lib/traffic-card-open';
 
 export type TrafficPlaneInfo = { reg: string; type: string; nickname?: string };
 /** Fleet and traffic always share the exact same alpha cutout. */
@@ -28,18 +27,15 @@ export function radarAltitude(msl: number) {
 }
 
 /**
- * Selection for traffic airplanes.
- * Mouse: hover shows the card, click opens the airplane in Fleet.
- * Touch/pen: first tap shows the card, second tap on the same airplane opens Fleet.
- * Tapping anywhere else closes the card.
+ * Selection for traffic airplanes, identical for mouse, touch and pen:
+ * one click/tap shows the card and it stays up until the visitor clicks outside it
+ * (or presses Escape). Nothing navigates on its own; the card's "View in fleet" button does.
  */
 export function useTrafficSelection(active: boolean) {
   const [selected, setSelected] = useState<number | null>(null);
   const selectedRef = useRef<number | null>(null);
   selectedRef.current = selected;
-  const pointerType = useRef<string>("mouse");
   const lastDown = useRef(0);
-  const hover = useRef<{ x: number; y: number; panel: Element } | null>(null);
   const navigate = useNavigate();
   const open = useCallback((reg: string) => {
     setSelected(null);
@@ -56,37 +52,18 @@ export function useTrafficSelection(active: boolean) {
       if (t?.closest?.("[data-traffic-hit],[data-traffic-card]")) return;
       setSelected(null);
     };
-    const move = (e: PointerEvent) => {
-      const h = hover.current;
-      if (!h || e.pointerType !== 'mouse') return;
-      const r = h.panel.getBoundingClientRect();
-      const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
-      const over = !!(e.target as Element | null)?.closest?.('[data-traffic-hit],[data-traffic-card]');
-      if (shouldCloseTrafficHover(h, {x:e.clientX,y:e.clientY}, inside, over)) { hover.current = null; setSelected(null); }
-    };
-    const leave = () => { hover.current = null; setSelected(null); };
-    const panel = hover.current?.panel;
+    const key = (e: KeyboardEvent) => { if (e.key === "Escape") setSelected(null); };
     document.addEventListener("pointerdown", close, true);
-    document.addEventListener('pointermove', move, true);
-    panel?.addEventListener('pointerleave', leave);
-    return () => { document.removeEventListener("pointerdown", close, true); document.removeEventListener('pointermove', move, true); panel?.removeEventListener('pointerleave', leave); };
+    document.addEventListener("keydown", key);
+    return () => { document.removeEventListener("pointerdown", close, true); document.removeEventListener("keydown", key); };
   }, [selected]);
 
-  const hitProps = (i: number, reg: string) => ({
+  const hitProps = (i: number, _reg: string) => ({
     "data-traffic-hit": "",
-    onPointerDown: (e: React.PointerEvent) => { pointerType.current = e.pointerType; if(e.pointerType !== 'mouse') hover.current = null; lastDown.current = performance.now(); },
-    onPointerEnter: (e: React.PointerEvent) => {
-      if (e.pointerType !== 'mouse' || selectedRef.current !== null) return;
-      const panel = e.currentTarget.closest('.journey-viewport') ?? e.currentTarget.closest('svg');
-      if (panel) hover.current = {x:e.clientX,y:e.clientY,panel};
-      setSelected(i);
-    },
-    onClick: () => {
-      if (pointerType.current === "mouse" || selectedRef.current === i) open(reg);
-      else setSelected(i);
-    },
-    onKeyDown: (e: React.KeyboardEvent) => { if (e.key === "Enter") open(reg); },
-    // Keyboard focus shows the card; a tap's own focus must not count as the first tap.
+    onPointerDown: () => { lastDown.current = performance.now(); },
+    onClick: () => setSelected(s => trafficSelectionOnClick(s, i)),
+    onKeyDown: (e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelected(i); } },
+    // Keyboard focus shows the card; a tap's own focus is handled by its click.
     onFocus: () => { if (performance.now() - lastDown.current > 600) setSelected(i); },
   });
 
@@ -141,8 +118,8 @@ export const TrafficCard = forwardRef<HTMLDivElement, { plane: TrafficPlaneInfo;
   return createPortal(
     <div ref={ref} data-traffic-card="" className="traffic-card pointer-events-auto fixed left-0 top-0 z-[70] w-[min(60vw,15rem)]" role="dialog" aria-label={`${plane.reg} details`}>
       {/* Stable full-width media slot also reserves space for a future accurate model or spin. */}
-        <div data-card-media="" className="traffic-card-media relative mb-2 h-20 w-full">
-          {photo && <AircraftMedia reg={plane.reg} photo={photo} />}
+        <div data-card-media="" className="traffic-card-media relative mb-2 h-28 w-full">
+          {photo && <AircraftMedia reg={plane.reg} photo={photo} priority />}
         </div>
         <span className="block min-w-0">
           <span className="block font-mono text-sm font-bold tracking-wider">{plane.reg}</span>

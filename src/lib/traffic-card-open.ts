@@ -43,6 +43,15 @@ export function useTrafficCardOpen() {
   return useSyncExternalStore(subscribeTrafficCard, trafficCardIsOpen, () => false);
 }
 
+/**
+ * What one click on airplane `index` selects: always that airplane. A single click opens its
+ * card on every device, and clicking the same airplane again keeps it open (never toggles it
+ * shut or navigates away); only a click outside the card closes it.
+ */
+export function trafficSelectionOnClick(_current: number | null, index: number) {
+  return index;
+}
+
 /** True while a card is open or was put away within the last `ms` (covers the dismissing tap on any browser). */
 export function trafficCardRecentlyOpen(ms = 700) {
   return openCards > 0 || Date.now() - closedAt < ms;

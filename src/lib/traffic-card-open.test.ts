@@ -46,3 +46,10 @@ it("a card put away just now still counts, so the dismissing tap never flips the
   assert.equal(trafficCardRecentlyOpen(700), true);
   assert.equal(trafficCardRecentlyOpen(-1), false);
 });
+
+import { trafficSelectionOnClick } from "./traffic-card-open";
+it("one click opens an airplane's card, and clicking it again keeps it open", () => {
+  assert.equal(trafficSelectionOnClick(null, 2), 2);
+  assert.equal(trafficSelectionOnClick(2, 2), 2);
+  assert.equal(trafficSelectionOnClick(0, 1), 1);
+});
