@@ -101,9 +101,9 @@ function AdminPage() {
   async function changeFleetModels(next: boolean) {
     if (!user || !isAdmin) return;
     setBusy(true); setMessage("");
-    const { error } = await supabase.from("site_settings").update({ show_3d_models: next, fleet_show_models: next, updated_at: new Date().toISOString(), updated_by: user.id }).eq("id", "brand");
+    const { error } = await supabase.from("site_settings").update({ show_3d_models: next, updated_at: new Date().toISOString(), updated_by: user.id }).eq("id", "brand");
     if (error) setMessage(error.message);
-    else { setFleetModels(next); setMessage(next ? "3D aircraft models are enabled. Reload the site to see the change." : "3D is off. All pages show photos only after reload."); }
+    else { setFleetModels(next); setMessage(next ? "Airplane info cards on the maps now show 3D models. Reload the site to see the change." : "3D is off. Airplane info cards show photos after reload."); }
     setBusy(false);
   }
 
@@ -139,7 +139,7 @@ function AdminPage() {
               {(["scroll", "carousel"] as const).map(option => <Button key={option} disabled={busy} variant={desktopJourney === option ? "default" : "outline"} className="h-auto min-h-16 rounded-none p-4" onClick={() => changeDesktopJourney(option)}>{option === "scroll" ? "Fading scroll" : "Carousel"}{desktopJourney === option && <Check />}</Button>)}
             </div>
             <h2 className="mt-8 font-display text-xl">3D aircraft models</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Controls every page, including fleet, traffic cards and model review.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Shows 3D airplanes in the info cards on the traffic maps. The fleet page always shows photos.</p>
             <div className="mt-3 grid grid-cols-2 gap-3">
               {([false, true] as const).map(option => <Button key={String(option)} disabled={busy} variant={fleetModels === option ? "default" : "outline"} className="h-auto min-h-16 rounded-none p-4" onClick={() => changeFleetModels(option)}>{option ? "Enable 3D" : "3D off"}{fleetModels === option && <Check />}</Button>)}
             </div>

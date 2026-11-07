@@ -39,20 +39,6 @@ export function useTrafficPatternMode() {
   return mode;
 }
 
-let cachedFleet: Promise<boolean> | null = null;
-/** Owner setting site_settings.fleet_show_models; false (photos) until loaded on the client, so prerender shows photos. */
-export function useFleetShowModels() {
-  const enabled = useShow3DModels();
-  const [show, setShow] = useState(false);
-  useEffect(() => {
-    cachedFleet ??= (async () => {
-      const { data } = await supabase.from("site_settings").select("fleet_show_models").eq("id", "brand").maybeSingle();
-      return Boolean((data as { fleet_show_models?: boolean } | null)?.fleet_show_models);
-    })().catch(() => false);
-    let live = true; void cachedFleet.then((v) => { if (live) setShow(v); }); return () => { live = false; };
-  }, []);
-  return enabled && show;
-}
 
 let cachedJourney: Promise<MobileJourneyMode> | null = null;
 function loadJourneyMode() {
