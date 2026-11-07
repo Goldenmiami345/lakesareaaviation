@@ -426,15 +426,53 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     // Forward past the last stage = the next story: this page turns away like a cube face, then the
     // next section is placed instantly (no vertical smooth scroll fighting snap, which glitched on iOS)
     // and turns in from the right. Up/down/back swipes there behave as on any section.
+    // The adjacent snap anchor (forward: next below; back: previous above) and its element.
+    const neighbour = (dir: 1 | -1) => {
+      const here = window.scrollY + box().top;
+      const anchors = Array.from(document.querySelectorAll<HTMLElement>(".story-snap")).map((a) => ({ a, y: window.scrollY + a.getBoundingClientRect().top }));
+      return dir > 0
+        ? anchors.filter((x) => x.y > here + 4).sort((p, q) => p.y - q.y)[0]
+        : anchors.filter((x) => x.y < here - 4).sort((p, q) => q.y - p.y)[0];
+    };
+    // Copy the neighbouring story's facing page in beside this one (forward: its current page; back: its last).
+    const makeGhost = (dir: 1 | -1) => {
+      const at = dir > 0 ? n : -1;
+      if (ghostRef.current?.at === at) return true;
+      dropGhost();
+      if (reducedMotion()) return false;
+      const sec = neighbour(dir)?.a.nextElementSibling;
+      if (!(sec instanceof HTMLElement) || !sec.matches("section[data-story]")) return false;
+      const faces = sec.querySelectorAll<HTMLElement>(".journey-viewport > .journey-layer");
+      const src = dir > 0 ? (sec.querySelector<HTMLElement>(".journey-viewport > .journey-layer[data-active]") ?? faces[0]) : faces[faces.length - 1];
+      const last = layerRefs.current[n - 1];
+      if (!src || !last) return false;
+      const el = src.cloneNode(true) as HTMLElement;
+      el.removeAttribute("data-active");
+      el.setAttribute("aria-hidden", "true");
+      el.inert = true;
+      el.querySelectorAll("[id]").forEach((x) => x.removeAttribute("id"));
+      el.style.cssText = "";
+      el.style.pointerEvents = "none";
+      el.style.backfaceVisibility = "hidden";
+      el.style.willChange = "transform";
+      el.style.transition = "none";
+      el.style.transformOrigin = dir > 0 ? "0% 50%" : "100% 50%";
+      el.style.transform = faceTransform(dir);
+      el.style.visibility = "hidden";
+      last.after(el);
+      void el.offsetWidth;
+      ghostRef.current = { el, at };
+      return true;
+    };
     const exitSection = () => {
       // The next snap anchor below this section (the wrapper's bottom can sit past the next section).
-      const here = window.scrollY + box().top;
-      const anchors = Array.from(document.querySelectorAll(".story-snap")).map((a) => window.scrollY + a.getBoundingClientRect().top);
-      const target = anchors.filter((y) => y > here + 4).sort((a, b) => a - b)[0] ?? window.scrollY + box().bottom;
+      const target = neighbour(1)?.y ?? window.scrollY + box().bottom;
       const reduce = reducedMotion();
+      const ghost = makeGhost(1);
       if (!reduce) paintStory(n - 0.001, true);
       window.clearTimeout(exitTimer);
-      exitTimer = window.setTimeout(() => { jumpTo(target, "story:enter", reduce); }, reduce ? 0 : 340);
+      // With the neighbour face turned fully in, the page swap underneath is invisible: no second turn.
+      exitTimer = window.setTimeout(() => { jumpTo(target, "story:enter", reduce || ghost); }, reduce ? 0 : ghost ? 380 : 340);
     };
     // Place the page instantly with snapping paused for the jump, so snap can't pull it elsewhere mid-move.
     const jumpTo = (target: number, enterEvent: string, reduce: boolean) => {
@@ -453,16 +491,15 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     };
     // Backward before the first stage = the previous story (if the section above is one), entering at its last stage.
     const backSection = () => {
-      const here = window.scrollY + box().top;
-      const anchors = Array.from(document.querySelectorAll(".story-snap")).map((a) => window.scrollY + a.getBoundingClientRect().top);
-      const target = anchors.filter((y) => y < here - 4).sort((a, b) => b - a)[0];
+      const target = neighbour(-1)?.y;
       const claim = { top: target, claimed: false };
       if (target !== undefined) window.dispatchEvent(new CustomEvent("story:claim", { detail: claim }));
-      if (!claim.claimed) { paintStory(activeRef.current, true); return false; }
+      if (!claim.claimed) { dropGhost(); paintStory(activeRef.current, true); return false; }
       const reduce = reducedMotion();
+      const ghost = makeGhost(-1);
       if (!reduce) paintStory(-0.999, true);
       window.clearTimeout(exitTimer);
-      exitTimer = window.setTimeout(() => jumpTo(target as number, "story:enter-back", reduce), reduce ? 0 : 340);
+      exitTimer = window.setTimeout(() => jumpTo(target as number, "story:enter-back", reduce || ghost), reduce ? 0 : ghost ? 380 : 340);
       return true;
     };
     const onClaim = (e: Event) => {
@@ -474,7 +511,12 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const { top, animate } = (e as CustomEvent<{ top: number; animate: boolean }>).detail;
       if (Math.abs(window.scrollY + box().top - top) > 4) return;
       const back = e.type === "story:enter-back";
-      if (back) { activeRef.current = n - 1; setActive(n - 1); }
+      if (back) {
+        activeRef.current = n - 1;
+        // Arriving under a finished cube turn: show the last page flat at once (no crossfade from the old one).
+        if (!animate) { swipeRef.current = true; paintStory(n - 1, false); }
+        setActive(n - 1);
+      }
       if (!animate) return;
       const a = activeRef.current;
       window.clearTimeout(flatTimer.current);
@@ -535,8 +577,11 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       let t = -dx / w;
       const a = activeRef.current;
       // Backward at the first stage turns toward the previous section (rubber-band if there is none above).
-      // At the last stage a forward drag turns this whole page away toward the next section.
-      paintStory(a + Math.max(-1, Math.min(1, t)), false);
+      // At the last stage a forward drag turns this page away while the next section's page turns in beside it.
+      const p = a + Math.max(-1, Math.min(1, t));
+      if (p > n - 1) makeGhost(1);
+      else if (p < 0) makeGhost(-1);
+      paintStory(p, false);
     };
     const onUp = (e: PointerEvent) => {
       startTransition(() => setHolding(false));
