@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowDown, ArrowRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { programs } from "../lib/site-data";
 
@@ -79,9 +79,13 @@ export function ScrollCue({ targetId }: { targetId: string }) {
     <>
     <TapScrollHint />
     <div className="absolute inset-x-0 bottom-5 z-20 hidden justify-center sm:flex">
-      <button type="button" aria-label="Continue to the flight path" onClick={() => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" })} className="landing-scroll-cue relative h-10 w-5 text-background/70 hover:text-background">
-        <span className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 overflow-hidden bg-background/25" aria-hidden="true">
-          <span className="landing-scroll-stroke absolute inset-x-0 top-0 h-4 bg-primary" />
+      <button type="button" aria-label="Scroll to see the professional pilot program" onClick={() => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" })} className="landing-scroll-cue group/cue relative flex flex-col items-center gap-2 text-background/70 transition-colors hover:text-background">
+        <span aria-hidden className="hidden text-[10px] font-semibold uppercase tracking-[0.22em] lg:block">Scroll to see the professional pilot program</span>
+        <span className="relative h-10 w-5" aria-hidden="true">
+          <span className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 overflow-hidden bg-background/25">
+            <span className="landing-scroll-stroke absolute inset-x-0 top-0 h-4 bg-primary" />
+          </span>
+          <ArrowDown className="absolute -bottom-1 left-1/2 hidden size-3 -translate-x-1/2 lg:block" />
         </span>
       </button>
     </div>
