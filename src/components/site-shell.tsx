@@ -1,7 +1,7 @@
 import { Link, useLocation, useMatch } from "@tanstack/react-router";
 import { srcSetFor } from "@/lib/responsive-image";
 import { ArrowUp, ArrowUpRight, Menu, Phone, X } from "lucide-react";
-import { useEffect, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import logoAsset from "../assets/lakes-logo-transparent.png.asset.json";
 import { MotionExperience } from "./motion-experience";
 import { jumpToPageTop } from "./flight-journey";
@@ -20,6 +20,7 @@ const nav = [
 
 export function Header({ overlay = false }: { overlay?: boolean }) {
   const [open, setOpen] = useState(false);
+  const pendingHome = useRef(false);
   const pathname = useLocation({ select: location => sitePath(location.pathname) });
   const onHome = (e: MouseEvent) => { if (pathname !== "/") return; e.preventDefault(); setOpen(false); jumpToPageTop(); };
   return <header className={`fixed inset-x-0 top-0 z-50 border-b transition-colors ${overlay ? "border-white/15 bg-ink/25 text-white backdrop-blur-md" : "border-border bg-background/95 text-foreground backdrop-blur-md"}`}>
@@ -43,10 +44,10 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
       </div>
         <Dialog.Portal>
           {/* Full-height sheet: Radix traps focus, locks body scroll, closes on Esc and returns focus to the trigger. */}
-          <Dialog.Content aria-modal="true" aria-describedby={undefined} className="menu-roll fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-background text-foreground lg:hidden">
+          <Dialog.Content aria-modal="true" aria-describedby={undefined} onCloseAutoFocus={(e) => { if (!pendingHome.current) return; e.preventDefault(); pendingHome.current = false; requestAnimationFrame(() => jumpToPageTop()); }} className="menu-roll fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-background text-foreground lg:hidden">
             <Dialog.Title className="sr-only">Site menu</Dialog.Title>
             <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-5 sm:h-20">
-              <Link to="/" onClick={(e) => { setOpen(false); onHome(e); }} className="flex min-h-11 min-w-0 items-center" aria-label="Lakes Area Aviation home">
+              <Link to="/" onClick={(e) => { if (pathname === "/") { e.preventDefault(); pendingHome.current = true; } setOpen(false); }} className="flex min-h-11 min-w-0 items-center" aria-label="Lakes Area Aviation home">
                 <img src={logoAsset.url} alt="" className="h-10 w-auto max-w-[190px] object-contain sm:h-12" />
               </Link>
               <Dialog.Close aria-label="Close menu" className="grid size-11 place-items-center transition-transform duration-200 active:scale-90"><X className="size-5" /></Dialog.Close>
