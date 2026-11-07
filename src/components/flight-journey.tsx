@@ -624,6 +624,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     window.addEventListener("journey:jump", onJump);
     return () => {
       window.clearTimeout(exitTimer);
+      dropGhost();
       window.removeEventListener(PAGE_RETURN_START, cancelExit);
       viewport.removeEventListener("dragstart", noDrag);
       viewport.removeEventListener("pointerdown", onDown);
