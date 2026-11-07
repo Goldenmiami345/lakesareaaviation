@@ -49,3 +49,4 @@
 - Layout width uses site-container/site-wrap and --gutter (styles.css), never max-w-7xl, so header, sections and journey HUD/rail share one edge.
 - ALT readout: journeyAltitude; wind: nearest METAR (wx-stations.ts), wxStation fallback.
 - Phone Story section boundaries are native CSS scroll snap (story-snap.ts, phone Story mode only, the one scroll-snap exception); never drive vertical story movement from script, because it made slides uneven on iPhone.
+- Story coachmarks share timing constants in story-nav.ts and stay pointer-transparent; each journey owns its first-arrival state so hints cannot block gestures or repeat on stage changes.

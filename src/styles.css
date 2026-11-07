@@ -112,17 +112,15 @@
 html.story-mode .scroll-progress { display: none; }
 .carousel-fill { animation: carousel-fill linear both; }
 @keyframes carousel-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-.story-hint-tap { opacity: 0; animation: sh-tap 1.4s ease-out both; }
-.story-hint-ring { animation: sh-ring .7s ease-out 2 both; }
-.story-hint-swipe { opacity: 0; animation: sh-swipe 1.6s 1.4s ease-in-out both; }
-.story-hint-dot { animation: sh-dot 1.1s 1.6s cubic-bezier(.4,0,.2,1) both; }
-.story-hint-trail { width: 0; animation: sh-trail 1.1s 1.6s cubic-bezier(.4,0,.2,1) both; }
+.story-hint-tap { opacity: 0; animation: sh-tap var(--hint-tap) var(--hint-swipe) ease-out both; }
+.story-hint-ring { animation: sh-ring var(--hint-tap) var(--hint-swipe) ease-out both; }
+.story-hint-swipe { opacity: 0; animation: sh-swipe var(--hint-swipe) ease-in-out both; }
+.story-hint-chevrons { animation: sh-chevron var(--hint-swipe) ease-in-out both; }
 @keyframes sh-tap { 0% { opacity: 0; } 12%, 85% { opacity: 1; } 100% { opacity: 0; } }
-@keyframes sh-ring { 0% { transform: scale(.6); opacity: 0; } 30% { opacity: 1; } 100% { transform: scale(1.25); opacity: 0; } }
+@keyframes sh-ring { 0% { transform: scale(.6); opacity: 0; } 30% { opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
 @keyframes sh-swipe { 0% { opacity: 0; } 12%, 85% { opacity: 1; } 100% { opacity: 0; } }
-@keyframes sh-dot { 0% { transform: translate(0,-50%) scale(.85); } 15% { transform: translate(0,-50%) scale(1); } 100% { transform: translate(-7.5rem,-50%); opacity: .2; } }
-@keyframes sh-trail { 0%, 15% { width: 0; opacity: .6; } 100% { width: 7.5rem; opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .story-hint-ring, .story-hint-dot, .story-hint-trail { animation: none; } .story-hint-swipe { animation-duration: 1.6s; } }
+@keyframes sh-chevron { 0%, 20% { transform: translateX(3px); } 75%, 100% { transform: translateX(-3px); } }
+@media (prefers-reduced-motion: reduce) { .story-hint-ring, .story-hint-chevrons { animation: none; } }
 .hero-parallax { transform: translate3d(0, var(--hero-shift, 0px), 0) scale(1.04); will-change: transform; }
 /* Phone Story mode: native, snap-locked section slides (story-snap.ts). No script-driven motion rides along. */
 html.story-snapping { scroll-snap-type: y mandatory; }

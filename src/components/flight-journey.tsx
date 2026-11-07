@@ -12,7 +12,7 @@ import { WX_FIELDS } from "../lib/wx-stations";
 import { MetarLine, InstrumentConditions } from "./live-wx";
 import { useStageZoom } from "../lib/stage-zoom";
 import { useDesktopJourneyMode, useMobileJourneyMode } from "../lib/use-site-settings";
-import { storyStep } from "../lib/story-nav";
+import { storyStep, STORY_HINT_TOTAL_MS, STORY_SWIPE_HINT_MS, STORY_TAP_HINT_MS } from "../lib/story-nav";
 import { useStorySnap } from "../lib/story-snap";
 import { trafficCardIsOpen, trafficCardRecentlyOpen, useTrafficCardOpen } from "../lib/traffic-card-open";
 import { TrafficPattern } from "./traffic-pattern";
@@ -383,10 +383,10 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     root.classList.add("story-mode"); // hides the page-progress bar; the trail shows progress instead
     const vp = viewportRef.current;
     if (!vp) return () => root.classList.remove("story-mode");
-    // Coach mark: fades in after a short idle while this section fills the screen; any touch hides it and restarts the wait.
-    // Shown once per section per visit, for 3s at most.
+    // Brief, separate swipe and tap cues on first arrival. Any touch dismisses them.
+    // Each section owns its once-per-visit flag; neither cue intercepts gestures.
     let inView = false, timer = 0, shown = false, hide = 0;
-    const arm = () => { window.clearTimeout(timer); setHint(false); if (inView && !shown) timer = window.setTimeout(() => { if (trafficCardIsOpen()) return; shown = true; setHint(true); hide = window.setTimeout(() => setHint(false), 3000); }, 1200); };
+    const arm = () => { window.clearTimeout(timer); window.clearTimeout(hide); setHint(false); if (inView && !shown) timer = window.setTimeout(() => { if (trafficCardIsOpen()) return; shown = true; setHint(true); hide = window.setTimeout(() => setHint(false), STORY_HINT_TOTAL_MS); }, 600); };
     const io = new IntersectionObserver(([en]) => { inView = !!en?.isIntersecting && en.intersectionRatio > 0.85; arm(); }, { threshold: [0.85] });
     io.observe(vp);
     vp.addEventListener("pointerdown", arm);
@@ -609,16 +609,14 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         {/* Safari tints its toolbar from the pixels at the screen's bottom edge; keep that edge plain dark ink so buttons never bleed a hard blue line into it. */}
         <div aria-hidden className="journey-edge-ink pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[calc(4.5rem+env(safe-area-inset-bottom)+100lvh-100dvh)] bg-gradient-to-t from-ink via-ink/80 to-transparent sm:hidden" />
         {story && !carousel && hint && (
-          <div aria-hidden className="story-hint pointer-events-none absolute inset-0 z-30">
-            {/* Tap: a pulse where tapping advances (right side). */}
-            <div className="story-hint-tap absolute right-[14%] top-[42%] flex flex-col items-center gap-2">
-              <span className="story-hint-ring block size-12 rounded-full border-2 border-background/80 bg-background/15" />
-              <span className="rounded-full bg-ink/55 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-background/90 backdrop-blur-sm">Tap</span>
+          <div aria-hidden className="story-hint pointer-events-none absolute right-3 top-[36%] z-30 h-14 w-11 text-background" style={{ "--hint-swipe": `${STORY_SWIPE_HINT_MS}ms`, "--hint-tap": `${STORY_TAP_HINT_MS}ms` } as React.CSSProperties}>
+            <div className="story-hint-swipe absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-md bg-ink/65">
+              <span className="story-hint-chevrons flex items-center"><ChevronLeft className="size-4" strokeWidth={2} /><ChevronLeft className="-ml-2 size-4" strokeWidth={2} /></span>
+              <span className="text-[9px] font-semibold uppercase">Swipe</span>
             </div>
-            {/* Swipe: a fingertip dot that drags right to left with a trail. */}
-            <div className="story-hint-swipe absolute inset-x-0 top-[42%] flex flex-col items-center gap-2">
-              <span className="relative block h-12 w-40"><span className="story-hint-dot absolute right-0 top-1/2 block size-10 -translate-y-1/2 rounded-full bg-background/70" /><span className="story-hint-trail absolute right-5 top-1/2 block h-1 -translate-y-1/2 rounded-full bg-background/50" /></span>
-              <span className="rounded-full bg-ink/55 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-background/90 backdrop-blur-sm">Swipe</span>
+            <div className="story-hint-tap absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-md bg-ink/65">
+              <span className="relative grid size-6 place-items-center"><span className="story-hint-ring absolute inset-0 rounded-full border border-background/80" /><span className="size-1.5 rounded-full bg-background" /></span>
+              <span className="text-[9px] font-semibold uppercase">Tap</span>
             </div>
           </div>
         )}
