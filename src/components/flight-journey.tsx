@@ -28,14 +28,14 @@ import airline from "../assets/journey/05-airline.webp";
 import lf from "../assets/journey/loc-little-falls.webp";
 import fl from "../assets/journey/loc-fort-lupton.webp";
 import cw from "../assets/journey/loc-cottonwood.webp";
-import commercial from "../assets/photos/sunset-ramp.webp";
+import cfiTeaching from "../assets/journey/05-cfi-teaching.webp";
 // Phone-only portrait variants: photos extended with AI fill around untouched original pixels;
 // airport aerials widened with more real USGS NAIP imagery at the same scale and centre.
 import cloudsPhone from "../assets/journey/01-clouds-phone.webp";
 import runwayPhone from "../assets/journey/02-runway-corrected-phone.webp";
 import instrumentPhone from "../assets/journey/instrument-imc-cockpit-phone.webp";
 import instructorPhone from "../assets/journey/04-instructor-phone.webp";
-import commercialPhone from "../assets/photos/sunset-ramp-phone.webp";
+import cfiTeachingPhone from "../assets/journey/05-cfi-teaching-phone.webp";
 import lfPhone from "../assets/journey/loc-little-falls-phone.webp";
 import flPhone from "../assets/journey/loc-fort-lupton-phone.webp";
 import cwPhone from "../assets/journey/loc-cottonwood-phone.webp";
@@ -54,11 +54,11 @@ const AERIAL_PHONE_VIEW = "265 -300 970 2100";
 type Stage = { code: string; label: string; time: string; title: string; text?: string; img: string; alt: string; cta: string; slug?: string; location?: string; to?: "/introductory-flights" | "/contact" | "/locations"; hud?: string; zoom?: number; zoomIn?: number; w?: number; h?: number; video?: string; position?: string; traffic?: PatternField; perspective?: boolean; liveWx?: boolean; phoneImg?: string; phoneView?: string; drift?: boolean };
 
 const journeyStages: Stage[] = [
-  { code: "01", label: "Discovery flight", time: "$100", title: "Take the controls on day one.", img: clouds, phoneImg: cloudsPhone, alt: "Sunrise above a sea of clouds", cta: "Book an intro flight", to: "/introductory-flights" },
+  { code: "01", label: "Discovery flight", time: "$100", title: "Take the controls on day one.", img: instructor, phoneImg: instructorPhone, alt: "Instructor walking a new student through the preflight beside a training airplane", cta: "Book an intro flight", position: "center", to: "/introductory-flights" },
   { code: "02", label: "Private pilot", time: "~21 days", title: "Your first certificate.", img: runway, phoneImg: runwayPhone, phoneView: "0 -700 1376 1468", alt: "Oblique view of Little Falls (KLXL): runway 13/31 with the full-length runway 18/36 crossing near the runway 13 end", cta: "Private pilot details", slug: "private-pilot", perspective: true, w: 1376, h: 768 },
   { code: "03", label: "Instrument rating", time: "10–14 days", title: "Fly by reference to instruments.", img: instrument, phoneImg: instrumentPhone, alt: "Real Lakes Area Aviation instrument panel flying through instrument conditions", cta: "Instrument details", slug: "instrument-rating", position: "center", zoom: 0.2, zoomIn: 0.03, drift: true },
-  { code: "04", label: "Commercial pilot", time: "5–7 days", title: "Fly professionally.", img: commercial, phoneImg: commercialPhone, alt: "Lakes Area Aviation airplanes on the ramp at sunset", cta: "Commercial details", slug: "commercial-single-engine" },
-  { code: "05", label: "CFI & CFII", time: "4–6 weeks", title: "Become the instructor. One hour oral, one hour flight.", img: instructor, phoneImg: instructorPhone, alt: "Instructor and student inspecting a training airplane before flight", cta: "CFI & CFII track", slug: "cfi-cfii", position: "center" },
+  { code: "04", label: "Commercial pilot", time: "5–7 days", title: "Fly professionally.", img: clouds, phoneImg: cloudsPhone, alt: "Wing and strut of a training airplane above a sea of clouds at sunrise", cta: "Commercial details", slug: "commercial-single-engine" },
+  { code: "05", label: "CFI & CFII", time: "4–6 weeks", title: "Become the instructor. One hour oral, one hour flight.", img: cfiTeaching, phoneImg: cfiTeachingPhone, alt: "Flight instructor in the right seat pointing to the attitude indicator while a student flies", cta: "CFI & CFII track", slug: "cfi-cfii", position: "center" },
   { code: "06", label: "The right seat", time: "Your goal", title: "Build toward the airline flight deck.", img: airline, alt: "Airline flight deck at night on final approach over city lights", cta: "Build my training plan", to: "/contact", video: airlineVideo.url, zoom: 0.2, zoomIn: 0.03 },
 ];
 
