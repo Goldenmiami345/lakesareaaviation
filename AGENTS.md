@@ -45,10 +45,10 @@
 - Accent TEXT uses text-primary-text (--primary-text on light, --primary-text-dark inside bg-ink/text-background, per accent theme); fills/buttons keep --primary, because the brand blue fails AA as text on beige and ink.
 
 - Every link to the contact/training-plan form is labelled "Build my training plan" (sticky bar: "Build my plan"); distinct actions keep their own labels, so one name always means one destination.
-- Seams between navy, blue and beige are clean edges (edge-fade no-ops): navy/beige blends go grey.
-- Layout width uses site-container/site-wrap and --gutter (styles.css), never max-w-7xl, so header, sections and journey HUD/rail share one edge.
+- Navy/blue/beige seams are clean edges (edge-fade no-ops); blends go grey.
+- Layout width: site-container/site-wrap + --gutter (styles.css), never max-w-7xl, so header, sections and HUD share one edge.
 - ALT readout: journeyAltitude; wind: nearest METAR (wx-stations.ts), wxStation fallback.
 - Phone Story section boundaries are native CSS scroll snap (story-snap.ts, phone Story mode only, the one scroll-snap exception); never drive vertical story movement from script, because it made slides uneven on iPhone.
 - Story coachmarks share timing constants in story-nav.ts and stay pointer-transparent; each journey owns its first-arrival state so hints cannot block gestures or repeat on stage changes.
 
-- Netlify: netlify.toml + NETLIFY-only nitro preset in vite.config.ts; keep Lovable default intact.
+- Netlify: NETLIFY-only @netlify/vite-plugin-tanstack-start, nitro off (its netlify preset breaks prerender); Lovable default untouched.

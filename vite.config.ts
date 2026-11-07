@@ -7,9 +7,15 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { verifyPrerender } from './scripts/verify-prerender';
 
+// Netlify builds (NETLIFY=true) use Netlify's own TanStack Start plugin instead of nitro, because
+// nitro's netlify preset has no fetch entry the prerender step can load. Lovable hosting keeps its default.
+const onNetlify = process.env["NETLIFY"] === "true";
+const netlifyPlugins = onNetlify
+  ? [(await import("@netlify/vite-plugin-tanstack-start")).default()]
+  : [];
+
 export default defineConfig({
-  // Netlify builds (NETLIFY=true) emit Netlify functions; Lovable hosting keeps its default.
-  ...(process.env["NETLIFY"] === "true" ? { nitro: { preset: "netlify" } } : {}),
+  ...(onNetlify ? { nitro: false as const, vite: { plugins: netlifyPlugins } } : {}),
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
@@ -20,6 +26,6 @@ export default defineConfig({
       "/specialized-training", "/student-success", "/team", "/services", "/students",
       ...["private-pilot", "instrument-rating", "commercial-single-engine", "commercial-multi-engine", "cfi-cfii", "mei", "zero-to-hero"].map((s) => `/programs/${s}`),
     ].map((path) => ({ path })),
-    prerender: { enabled: true, autoStaticPathsDiscovery: false, autoSubfolderIndex: false, failOnError: true, onSuccess: verifyPrerender },
+    prerender: { enabled: true, autoStaticPathsDiscovery: false, crawlLinks: false, autoSubfolderIndex: false, failOnError: true, onSuccess: verifyPrerender },
   },
 });
