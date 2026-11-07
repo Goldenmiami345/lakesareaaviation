@@ -445,7 +445,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const reduce = reducedMotion();
       if (!reduce) paintStory(-0.999, true);
       window.clearTimeout(exitTimer);
-      exitTimer = window.setTimeout(() => jumpTo(target, "story:enter-back", reduce), reduce ? 0 : 340);
+      exitTimer = window.setTimeout(() => jumpTo(target as number, "story:enter-back", reduce), reduce ? 0 : 340);
       return true;
     };
     const onClaim = (e: Event) => {
