@@ -17,10 +17,12 @@ export const Route = createFileRoute("/")({
     { rel: "preload", as: "image", href: heroTallImage.url, imageSrcSet: srcSetFor(heroTallImage.url), imageSizes: "100vw", media: "(max-aspect-ratio: 3/2)", fetchpriority: "high" },
     { rel: "preload", as: "image", href: heroImage.url, imageSrcSet: srcSetFor(heroImage.url), imageSizes: "100vw", media: "(min-aspect-ratio: 3/2)", fetchpriority: "high" },
   ], meta: [
-    { title: "Zero to Hero Flight Training | Lakes Area Aviation" },
-    { name: "description", content: "From your first flight to commercial pilot and instructor. Explore Lakes Area Aviation’s accelerated zero-to-hero training path and build your personal plan." },
-    { property: "og:title", content: "Zero to Hero Flight Training | Lakes Area Aviation" },
-    { property: "og:description", content: "From your first flight to commercial pilot and instructor, build a training plan around your starting point." },
+    { title: "Take Flight | Zero to CFI in Six Months. Under $50K | Lakes Area Aviation" },
+    { name: "description", content: "Become a professional pilot. Zero to CFI in six months. Under $50K. Build your training plan with Lakes Area Aviation." },
+    { property: "og:title", content: "Take Flight | Zero to CFI in Six Months. Under $50K" },
+    { property: "og:description", content: "Become a professional pilot with Lakes Area Aviation. Zero to CFI in six months. Under $50K." },
+    { name: "twitter:title", content: "Take Flight | Zero to CFI in Six Months. Under $50K" },
+    { name: "twitter:description", content: "Become a professional pilot with Lakes Area Aviation. Zero to CFI in six months. Under $50K." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
   ] }), component: HomePage,
 });
@@ -39,6 +41,7 @@ function HomePage() {
         <div className="relative flex min-h-[100dvh] w-full px-[var(--gutter)] flex-col justify-end pb-3 pt-24 sm:pb-[4.5rem] sm:pt-32">
           <div className="max-w-4xl lg:max-w-[76vw]">
             <h1 className="font-display text-[min(3.45rem,calc(74.75vw/16.6))] leading-[1.02] whitespace-nowrap"><span className="line-mask hero-mask"><span style={{ ["--d" as string]: "60ms" }}><span>BECOME A PROFESSIONAL PILOT</span></span></span></h1>
+            <p className="hero-step mt-2 text-xs leading-relaxed text-background/80 sm:text-sm" style={{ ["--d" as string]: "180ms" }}>Zero to CFI in six months. <span className="whitespace-nowrap font-semibold text-background">Under $50K</span></p>
           </div>
           <HeroCta />
           <nav aria-label="Training locations" className="hero-step mt-2.5 flex flex-nowrap items-center gap-1 text-[10px] max-[360px]:gap-0.5 max-[360px]:text-[9px] sm:text-[11px] lg:mt-3.5 font-medium uppercase text-background/75 sm:gap-2" style={{ ["--d" as string]: "360ms" }}>
