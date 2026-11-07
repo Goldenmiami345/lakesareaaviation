@@ -141,3 +141,12 @@ describe("altitude", () => {
     assert.ok(mid < 14000);
   });
 });
+describe("desktop crossfade", () => {
+  it("starts at half the stage instead of 72%", () => {
+    const d = { base: 0, stage: 1000, count: 3 };
+    assert.equal(journeyFrame(d, 490, 0.5).transition, 0);
+    assert.ok(Math.abs(journeyFrame(d, 750, 0.5).transition - 0.5) < 1e-6);
+    assert.equal(journeyFrame(d, 700).transition, 0);
+    assert.ok(journeyFrame(d, 700, 0.5).transition > 0.3);
+  });
+});

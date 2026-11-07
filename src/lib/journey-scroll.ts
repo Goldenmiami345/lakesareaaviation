@@ -10,9 +10,13 @@
 
 const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 const smoothstep = (t: number) => { const x = clamp(t); return x * x * (3 - 2 * x); };
+/** Gentler ease (zero velocity and acceleration at both ends) for crossfades. */
+const smootherstep = (t: number) => { const x = clamp(t); return x * x * x * (x * (x * 6 - 15) + 10); };
 
 /** Fraction of each stage's scroll length that shows the stage unchanged before its crossfade. */
 export const JOURNEY_HOLD = 0.72;
+/** Desktop (fine pointer) hold: a longer, more gradual crossfade window. */
+export const DESKTOP_JOURNEY_HOLD = 0.5;
 /** Extra hold after the last stage (in stage lengths) before the section unpins and the next one slides in. */
 export const JOURNEY_TAIL = 0.5;
 
@@ -36,22 +40,22 @@ export function stagePosition(g: JourneyGeometry, y: number) {
 
 export type JourneyFrame = { stage: number; next: number; transition: number; active: number; copyOpacity: number; progress: number };
 
-export function journeyFrame(g: JourneyGeometry, y: number): JourneyFrame {
+export function journeyFrame(g: JourneyGeometry, y: number, hold = JOURNEY_HOLD): JourneyFrame {
   const n = Math.max(1, g.count);
   const pos = stagePosition(g, y);
   const stage = Math.min(n - 1, Math.floor(pos));
   const local = pos - stage;
-  const linear = stage < n - 1 ? clamp((local - JOURNEY_HOLD) / (1 - JOURNEY_HOLD)) : 0;
+  const linear = stage < n - 1 ? clamp((local - hold) / (1 - hold)) : 0;
   // Within a pixel of a window edge the frame is exactly the resting frame: no 0.1% ghost of the
   // other stage after a settle lands on a whole pixel.
-  const px = 1 / (Math.max(1, g.stage) * (1 - JOURNEY_HOLD));
-  const transition = linear <= px ? 0 : linear >= 1 - px ? 1 : smoothstep(linear);
+  const px = 1 / (Math.max(1, g.stage) * (1 - hold));
+  const transition = linear <= px ? 0 : linear >= 1 - px ? 1 : smootherstep(linear);
   return {
     stage,
     next: Math.min(n - 1, stage + 1),
     transition,
     active: transition < 0.5 ? stage : Math.min(n - 1, stage + 1),
-    copyOpacity: Math.abs(1 - 2 * transition),
+    copyOpacity: smoothstep(Math.abs(1 - 2 * transition)),
     progress: n > 1 ? clamp(pos / (n - 1)) : 1,
   };
 }
@@ -60,7 +64,7 @@ export function journeyFrame(g: JourneyGeometry, y: number): JourneyFrame {
  * Where a scroll that came to rest at `y` should finish, or null to leave it alone.
  * Only a rest position inside a crossfade window is moved, and only to that window's nearer edge.
  */
-export function settleTarget(g: JourneyGeometry, y: number): number | null {
+export function settleTarget(g: JourneyGeometry, y: number, hold = JOURNEY_HOLD): number | null {
   const n = Math.max(1, g.count);
   const pos = (y - g.base) / Math.max(1, g.stage);
   if (!(pos > 0) || pos >= n - 1) return null;
@@ -69,22 +73,22 @@ export function settleTarget(g: JourneyGeometry, y: number): number | null {
   // One pixel of tolerance: a position already on a window edge (including one this function
   // produced, rounded to a whole pixel) is at rest.
   const edge = 1 / Math.max(1, g.stage);
-  if (local <= JOURNEY_HOLD + edge || local >= 1 - edge) return null;
-  const midpoint = JOURNEY_HOLD + (1 - JOURNEY_HOLD) / 2;
-  const target = local < midpoint ? stage + JOURNEY_HOLD : stage + 1;
+  if (local <= hold + edge || local >= 1 - edge) return null;
+  const midpoint = hold + (1 - hold) / 2;
+  const target = local < midpoint ? stage + hold : stage + 1;
   return Math.round(g.base + target * g.stage);
 }
 
 /** Longest distance `settleTarget` can ever move the page. */
-export function maxSettleDistance(stage: number) {
-  return ((1 - JOURNEY_HOLD) / 2) * stage;
+export function maxSettleDistance(stage: number, hold = JOURNEY_HOLD) {
+  return ((1 - hold) / 2) * stage;
 }
 
 /** Resting scroll position that shows stage `k` fully, with room to scroll either way before anything changes. */
-export function stageLanding(g: JourneyGeometry, k: number) {
+export function stageLanding(g: JourneyGeometry, k: number, hold = JOURNEY_HOLD) {
   const n = Math.max(1, g.count);
   const i = clamp(Math.round(k), 0, n - 1);
-  const inset = i < n - 1 ? JOURNEY_HOLD / 2 : JOURNEY_TAIL / 2;
+  const inset = i < n - 1 ? hold / 2 : JOURNEY_TAIL / 2;
   return Math.round(g.base + (i + inset) * g.stage);
 }
 

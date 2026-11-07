@@ -3,7 +3,7 @@ import { srcSetFor } from "@/lib/responsive-image";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, ChevronLeft, ChevronRight, Pause, Phone, Play } from "lucide-react";
 import { Button } from "./ui/button";
-import { journeyFrame, journeyAltitude, settleTarget, stageLanding, stageLengthFrom, JOURNEY_TAIL, type JourneyGeometry } from "../lib/journey-scroll";
+import { journeyFrame, journeyAltitude, settleTarget, stageLanding, stageLengthFrom, JOURNEY_TAIL, JOURNEY_HOLD, DESKTOP_JOURNEY_HOLD, type JourneyGeometry } from "../lib/journey-scroll";
 import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
 import { patternFor, pickRunway, type PatternField } from "../lib/traffic-pattern";
 import { useMetar } from "../lib/use-metar";
@@ -164,6 +164,10 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const fine = window.matchMedia("(pointer: fine)").matches;
     const n = stages.length;
     let mx = 0, my = 0, frame = 0, last = -1;
+    // Desktop: longer crossfade window and a short eased follow of scrollY so wheel notches blend.
+    const hold = fine && !reduce ? DESKTOP_JOURNEY_HOLD : JOURNEY_HOLD;
+    const ease = fine && !reduce;
+    let shown = window.scrollY, lastT = 0;
 
     // Geometry (document offset of the section, px per stage, viewport height) is cached and
     // recomputed only on resize, so a frame never reads layout.
@@ -189,7 +193,17 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     // the picture always sits exactly where the visitor's finger or wheel put it.
     const render = () => {
       const g = geo ?? measure();
-      const fr = journeyFrame(g, window.scrollY);
+      const target = window.scrollY;
+      let more = false;
+      if (ease) {
+        const now = performance.now(), dt = lastT ? Math.min(64, now - lastT) : 16;
+        lastT = now;
+        // Ease toward the real scroll (~180ms); jumps larger than a screen land instantly.
+        if (Math.abs(target - shown) > window.innerHeight * 1.5) shown = target;
+        else shown += (target - shown) * (1 - Math.exp(-dt / 60));
+        if (Math.abs(target - shown) < 0.5) { shown = target; lastT = 0; } else more = true;
+      } else shown = target;
+      const fr = journeyFrame(g, shown, hold);
       if (hudRef.current) hudRef.current.textContent = journeyAltitude(fr, n).toLocaleString("en-US");
       if (barRef.current) barRef.current.style.transform = `scaleY(${fr.progress})`;
       layerRefs.current.forEach((layer, i) => {
@@ -213,6 +227,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         copyRef.current.style.transform = reduce ? "none" : `translate3d(0, ${((1 - fr.copyOpacity) * 8).toFixed(2)}px, 0)`;
       }
       showActive(fr.active);
+      if (more) frame = requestAnimationFrame(render);
     };
     const renderScroll = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(render); };
 
@@ -226,7 +241,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       window.clearTimeout(idle);
       if (pageReturnActive() || fingers > 0 || document.documentElement.classList.contains("journey-zoomed")) return;
       if (performance.now() - lastInputAt < INPUT_QUIET_MS) { scheduleSettle(); return; }
-      const target = settleTarget(geo ?? measure(), window.scrollY);
+      const target = settleTarget(geo ?? measure(), window.scrollY, hold);
       if (target === null) { settling = null; return; }
       if (settling === target) return; // already on its way there
       settling = target;
@@ -249,7 +264,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const onJump = (e: Event) => {
       const d = (e as CustomEvent<{ id: string; index: number; animate?: boolean }>).detail;
       if (d?.id !== id) return;
-      const y = stageLanding(measure(), d.index);
+      const y = stageLanding(measure(), d.index, hold);
       settling = null;
       glideTo(y, !d.animate);
     };
