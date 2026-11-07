@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Rename project Take Flight and update the homepage supporting line and shared-link wording to zero to CFI in six months, under $50K; verify phone/desktop and page metadata.
+- [x] Rename project Take Flight and update the homepage supporting line and shared-link wording to zero to CFI in six months, under $50K; phone 320/402px and desktop verified, metadata confirmed, automatic build OK.
 
 - [x] Add brief right-edge swipe chevrons and relocate the tap cue in both phone Story sections; six tests pass, phone screenshots confirm unobstructed placement, hints disappear after two seconds and do not repeat; desktop unchanged.
 
