@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { Car, Check, House, PlaneLanding } from "lucide-react";
+import { Car, Check, House, PlaneTakeoff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useServerFn } from "@tanstack/react-start";
 import { submitTrainingLead } from "../lib/leads.functions";
@@ -138,7 +138,7 @@ function ContactPage() {
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
               <ServiceChoice checked={housing} onChange={() => setHousing(!housing)} icon={<House />} title="Housing" detail="$30 / night" />
               <ServiceChoice checked={car} onChange={() => setCar(!car)} icon={<Car />} title="Student car" detail="$20 / day" />
-              <ServiceChoice checked={pickup} onChange={() => setPickup(!pickup)} icon={<PlaneLanding />} title="Airport pickup" detail="Confirm with team" />
+              <ServiceChoice checked={pickup} onChange={() => setPickup(!pickup)} icon={<PlaneTakeoff />} title="Airport pickup" detail="MSP · $125" />
             </div>
           </PlannerStep>
         </div>
@@ -153,7 +153,7 @@ function ContactPage() {
             <Line label="Training" value={money(totals.training)} />
             {housing && <Line label={`Housing · ${totals.days} nights`} value={money(totals.lodging)} />}
             {car && <Line label={`Car · ${totals.days} days`} value={money(totals.transportation)} />}
-            {pickup && <Line label="Airport pickup" value="To confirm" />}
+            {pickup && <Line label="Airport pickup (MSP)" value="$125" />}
             <Line label="Contingency (20%)" value={money(totals.contingency)} />
             <div className="border-t border-background/20 pt-3"><Line label="Estimated total" value={money(totals.buffered)} /></div>
           </div>
