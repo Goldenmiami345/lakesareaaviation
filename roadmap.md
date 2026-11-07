@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Add brief right-edge swipe chevrons and relocate the tap cue in both phone Story sections; verify timing and unobstructed placement.
+- [x] Add brief right-edge swipe chevrons and relocate the tap cue in both phone Story sections; six tests pass, phone screenshots confirm unobstructed placement, hints disappear after two seconds and do not repeat; desktop unchanged.
 
 - [x] Disable visitor 3D via default-off show_3d_models. Database false verified; fleet photo viewer, model review and airport traffic card have no GLB, decoder or 3D-library requests; seven targeted tests and automatic build pass.
 - [ ] Re-cut failed aircraft masks from originals with Replicate, correct wheel-ground shadows and provide before/after beige composites. All eight audited: Cardinal/Taylorcraft window holes; Blue/Elliott/Hawk/Citabria background remnants; Phoenix gear edge artifacts. Apache has no obvious window holes or fringe. Cardinal original located in n46201-photos.zip, n46201-06.jpg. Blocker: user must connect Replicate.
