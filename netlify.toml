@@ -1,8 +1,8 @@
-# Netlify build: vite.config.ts switches the server to Netlify when NETLIFY=true.
-# Netlify's output puts pages in dist/ (not dist/client) and the server in .netlify/.
+# Netlify build: vite.config.ts swaps in Netlify's TanStack Start plugin when NETLIFY=true.
+# Pages are written to dist/client; the server becomes a Netlify function automatically.
 [build]
-  command = "npx vite build && node scripts/check-models.mjs && node scripts/check-prerender-dist.mjs dist"
-  publish = "dist"
+  command = "npx vite build && node scripts/check-models.mjs && node scripts/check-prerender-dist.mjs dist/client"
+  publish = "dist/client"
 
 [build.environment]
   NODE_VERSION = "22"
