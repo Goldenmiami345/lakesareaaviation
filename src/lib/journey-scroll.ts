@@ -40,7 +40,7 @@ export function stagePosition(g: JourneyGeometry, y: number) {
 
 export type JourneyFrame = { stage: number; next: number; transition: number; active: number; copyOpacity: number; progress: number };
 
-export function journeyFrame(g: JourneyGeometry, y: number, hold = hold): JourneyFrame {
+export function journeyFrame(g: JourneyGeometry, y: number, hold = JOURNEY_HOLD): JourneyFrame {
   const n = Math.max(1, g.count);
   const pos = stagePosition(g, y);
   const stage = Math.min(n - 1, Math.floor(pos));
@@ -64,7 +64,7 @@ export function journeyFrame(g: JourneyGeometry, y: number, hold = hold): Journe
  * Where a scroll that came to rest at `y` should finish, or null to leave it alone.
  * Only a rest position inside a crossfade window is moved, and only to that window's nearer edge.
  */
-export function settleTarget(g: JourneyGeometry, y: number, hold = hold): number | null {
+export function settleTarget(g: JourneyGeometry, y: number, hold = JOURNEY_HOLD): number | null {
   const n = Math.max(1, g.count);
   const pos = (y - g.base) / Math.max(1, g.stage);
   if (!(pos > 0) || pos >= n - 1) return null;
@@ -80,12 +80,12 @@ export function settleTarget(g: JourneyGeometry, y: number, hold = hold): number
 }
 
 /** Longest distance `settleTarget` can ever move the page. */
-export function maxSettleDistance(stage: number, hold = hold) {
+export function maxSettleDistance(stage: number, hold = JOURNEY_HOLD) {
   return ((1 - hold) / 2) * stage;
 }
 
 /** Resting scroll position that shows stage `k` fully, with room to scroll either way before anything changes. */
-export function stageLanding(g: JourneyGeometry, k: number, hold = hold) {
+export function stageLanding(g: JourneyGeometry, k: number, hold = JOURNEY_HOLD) {
   const n = Math.max(1, g.count);
   const i = clamp(Math.round(k), 0, n - 1);
   const inset = i < n - 1 ? hold / 2 : JOURNEY_TAIL / 2;
