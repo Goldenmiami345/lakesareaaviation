@@ -27,8 +27,10 @@ function queueModel(start: () => void) {
   chain = chain.then(() => pageIdle()).then(() => { start(); return Promise.race([finished, new Promise<void>(r => window.setTimeout(r, 8000))]); });
   return () => release();
 }
-/** A stable photo slot. Available models hydrate only once this slot is opened/visible. */
-export function AircraftMedia({ reg, photo }: { reg: string; photo: string }) {
+/** A stable photo slot. Available models hydrate only once this slot is opened/visible.
+ * `priority` (airplane info cards): the visitor asked for this airplane, so its model
+ * starts at once instead of waiting for page idle and the one-at-a-time queue. */
+export function AircraftMedia({ reg, photo, priority = false }: { reg: string; photo: string; priority?: boolean }) {
   const enabled = useShow3DModels();
   const model = aircraftModelUrl(reg, enabled);
   const ref = useRef<HTMLDivElement>(null);
@@ -43,6 +45,7 @@ export function AircraftMedia({ reg, photo }: { reg: string; photo: string }) {
   },[model]);
   useEffect(() => {
     if (!model || !ref.current) return;
+    if (priority) { setVisible(true); return; }
     let cancelled = false;
     const observer = new IntersectionObserver(entries => {
       if (!entries.some(e => e.intersectionRatio >= 0.5)) return;
@@ -51,12 +54,13 @@ export function AircraftMedia({ reg, photo }: { reg: string; photo: string }) {
     }, { threshold: 0.5 });
     observer.observe(ref.current);
     return () => { cancelled = true; observer.disconnect(); release.current(); };
-  }, [model]);
+  }, [model, priority]);
   if (!model) return <div data-aircraft-media="" className="relative h-full w-full overflow-hidden"><img src={photo} alt={`${reg}, the real airplane`} className="h-full w-full object-contain" /></div>;
   return <div ref={ref} data-aircraft-media="" data-model-gesture="" className="relative h-full w-full touch-none overflow-hidden"
     onPointerDown={e => { e.stopPropagation(); }}
     onPointerMove={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()} onTouchMove={e => e.stopPropagation()} onWheel={e => e.stopPropagation()}>
     <img src={photo} alt={`${reg}, the real airplane`} className={`absolute inset-0 h-full w-full object-contain ${loaded ? 'invisible' : ''}`} />
     {model && visible && <Suspense fallback={null}><AircraftModel src={model} label={reg} poster={photo} autoRotate onLoad={() => { setLoaded(true); release.current(); }} /></Suspense>}
+    {priority && loaded && <span aria-hidden className="pointer-events-none absolute bottom-0.5 right-1 font-mono text-[10px] uppercase tracking-[0.14em] text-background/55">Drag to turn</span>}
   </div>;
 }
