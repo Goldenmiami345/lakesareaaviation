@@ -14,6 +14,7 @@ import { useStageZoom } from "../lib/stage-zoom";
 import { useDesktopJourneyMode, useMobileJourneyMode } from "../lib/use-site-settings";
 import { storyStep, STORY_HINT_TOTAL_MS, STORY_SWIPE_HINT_MS, STORY_TAP_HINT_MS } from "../lib/story-nav";
 import { useStorySnap } from "../lib/story-snap";
+import { PAGE_RETURN_START, pageReturnActive, returnToPageTop } from "../lib/page-return";
 import { trafficCardIsOpen, trafficCardRecentlyOpen, useTrafficCardOpen } from "../lib/traffic-card-open";
 import { TrafficPattern } from "./traffic-pattern";
 import { AirportScene } from './airport-scene';
@@ -81,9 +82,9 @@ export function glideTo(top: number, instant = false) {
   window.scrollTo({ top, behavior: reducedMotion() || instant ? "instant" : "smooth" });
 }
 
-/** Instant jump to the very top (logo / Home tapped while already on "/"). */
+/** Explicit Home action owns its smooth return, isolated from section locking. */
 export function jumpToPageTop() {
-  window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  returnToPageTop();
 }
 
 export function jumpToJourney(id: string, index: number, animate = false) {
@@ -223,7 +224,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     let idle = 0, fingers = 0, settling: number | null = null, lastInputAt = -Infinity;
     const settle = () => {
       window.clearTimeout(idle);
-      if (fingers > 0 || document.documentElement.classList.contains("journey-zoomed")) return;
+      if (pageReturnActive() || fingers > 0 || document.documentElement.classList.contains("journey-zoomed")) return;
       if (performance.now() - lastInputAt < INPUT_QUIET_MS) { scheduleSettle(); return; }
       const target = settleTarget(geo ?? measure(), window.scrollY);
       if (target === null) { settling = null; return; }
@@ -401,6 +402,9 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const n = stages.length;
     // Story sections are sticky so the next one slides up over them; measure from the in-flow wrapper.
     const box = () => (el.parentElement ?? el).getBoundingClientRect();
+    let exitTimer = 0;
+    const cancelExit = () => { window.clearTimeout(exitTimer); paintStory(activeRef.current, false); };
+    window.addEventListener(PAGE_RETURN_START, cancelExit);
     // Next section starts where this sticky wrapper ends (its snap anchor).
     // Forward past the last stage = the next story: this page turns away like a cube face, then the
     // next section is placed instantly (no vertical smooth scroll fighting snap, which glitched on iOS)
@@ -412,7 +416,9 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const target = anchors.filter((y) => y > here + 4).sort((a, b) => a - b)[0] ?? window.scrollY + box().bottom;
       const reduce = reducedMotion();
       if (!reduce) paintStory(n - 0.001, true);
-      window.setTimeout(() => {
+      window.clearTimeout(exitTimer);
+      exitTimer = window.setTimeout(() => {
+        if (pageReturnActive()) return;
         window.scrollTo({ top: target, behavior: "instant" });
         window.dispatchEvent(new CustomEvent("journey-target", { detail: target }));
         if (!reduce) window.dispatchEvent(new CustomEvent("story:enter", { detail: target }));
@@ -522,6 +528,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     viewport.addEventListener("pointercancel", onCancel);
     window.addEventListener("journey:jump", onJump);
     return () => {
+      window.clearTimeout(exitTimer);
+      window.removeEventListener(PAGE_RETURN_START, cancelExit);
       viewport.removeEventListener("dragstart", noDrag);
       viewport.removeEventListener("pointerdown", onDown);
       window.removeEventListener("pointerdown", onDownCapture, true);

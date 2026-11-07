@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { PAGE_RETURN_START, pageReturnActive } from "./page-return";
 
 /**
  * Phone Story mode: vertical movement between the homepage's full-screen sections is 100% native
@@ -39,9 +40,9 @@ function start(): () => void {
     points = Array.from(document.querySelectorAll<HTMLElement>(".story-snap"))
       .map((el) => Math.round(el.getBoundingClientRect().top + window.scrollY))
       .sort((a, b) => a - b);
-    end = points.length ? points[points.length - 1]! : Infinity;
+    end = points.at(-1) ?? Infinity;
   };
-  const set = (v: boolean) => { if (v !== on) { on = v; root.classList.toggle("story-snapping", v); } };
+  const set = (v: boolean) => { if (pageReturnActive()) return; on = v; root.classList.toggle("story-snapping", v); };
   const zoomed = () => root.classList.contains("journey-zoomed");
   const reduce = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -63,7 +64,7 @@ function start(): () => void {
   // A rest between anchors (Safari can stop a snap when a finger taps mid-glide, or free momentum
   // from the content lands inside the sections) glides to the nearest anchor, then locks again.
   const settle = () => {
-    if (fingers > 0 || zoomed()) return;
+    if (pageReturnActive() || fingers > 0 || zoomed()) return;
     const y = window.scrollY;
     if (y >= end - 2) return;
     const p = nearestSnap(y, points);
@@ -72,9 +73,9 @@ function start(): () => void {
     window.scrollTo({ top: p, behavior: reduce() ? "instant" : "smooth" });
   };
   const onEnd = (e: TouchEvent) => { fingers = e.touches.length; if (!fingers) schedule(); };
-  const schedule = () => { window.clearTimeout(idle); idle = window.setTimeout(settle, 180); };
+  const schedule = () => { window.clearTimeout(idle); if (!pageReturnActive()) idle = window.setTimeout(settle, 180); };
   const onScroll = () => {
-    if (fingers) return;
+    if (pageReturnActive() || fingers) return;
     // Free momentum from the content crossing back into the sections: lock so it stops at the first section it meets.
     if (on === false && !zoomed() && window.scrollY < end - 1) set(true);
     schedule();
@@ -117,7 +118,9 @@ function start(): () => void {
   window.addEventListener("touchstart", markTouched, { passive: true, once: true });
   window.addEventListener("wheel", markTouched, { passive: true, once: true });
   const ro = new ResizeObserver(measure);
+  const onReturn = () => window.clearTimeout(idle);
   ro.observe(document.body);
+  window.addEventListener(PAGE_RETURN_START, onReturn);
   window.addEventListener("touchstart", onStart, { passive: true });
   window.addEventListener("touchmove", onMove, { passive: true });
   window.addEventListener("touchend", onEnd, { passive: true });
@@ -125,6 +128,7 @@ function start(): () => void {
   window.addEventListener("scroll", onScroll, { passive: true });
   return () => {
     ro.disconnect();
+    window.removeEventListener(PAGE_RETURN_START, onReturn);
     window.clearTimeout(idle);
     window.clearInterval(keepTop);
     window.clearTimeout(stopKeep);
