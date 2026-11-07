@@ -160,6 +160,11 @@ html.reveal-ready .stagger-grid > * { opacity: 0; transform: translateY(24px); }
 /* --- Portfolio-tier motion layer --- */
 @keyframes kenburns { from { transform: scale(1.14); } to { transform: scale(1.02); } }
 .hero-kenburns { animation: kenburns 9s cubic-bezier(.2,.6,.3,1) both; will-change: transform; }
+/* Phones: lift the hero photo and settle at no zoom so the airplanes clear the headline. */
+@keyframes kenburns-phone { from { transform: scale(1.08); } to { transform: scale(1); } }
+@media (max-aspect-ratio: 3/2) {
+  .hero-kenburns { margin-top: -9%; animation-name: kenburns-phone; }
+}
 
 @keyframes line-up { from { transform: translateY(112%); } to { transform: translateY(0); } }
 .line-mask { display: block; overflow: hidden; padding-bottom: .08em; }
