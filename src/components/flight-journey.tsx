@@ -417,17 +417,48 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const reduce = reducedMotion();
       if (!reduce) paintStory(n - 0.001, true);
       window.clearTimeout(exitTimer);
-      exitTimer = window.setTimeout(() => {
-        if (pageReturnActive()) return;
-        window.scrollTo({ top: target, behavior: "instant" });
-        window.dispatchEvent(new CustomEvent("journey-target", { detail: target }));
-        if (!reduce) window.dispatchEvent(new CustomEvent("story:enter", { detail: target }));
-        window.setTimeout(() => paintStory(activeRef.current, false), 60);
-      }, reduce ? 0 : 340);
+      exitTimer = window.setTimeout(() => { jumpTo(target, "story:enter", reduce); }, reduce ? 0 : 340);
     };
+    // Place the page instantly with snapping paused for the jump, so snap can't pull it elsewhere mid-move.
+    const jumpTo = (target: number, enterEvent: string, reduce: boolean) => {
+      if (pageReturnActive()) return;
+      const root = document.documentElement;
+      const snapped = root.classList.contains("story-snapping");
+      root.classList.remove("story-snapping");
+      window.scrollTo({ top: target, behavior: "instant" });
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (snapped && root.classList.contains("story-phone")) root.classList.add("story-snapping");
+        if (Math.abs(window.scrollY - target) > 2) window.scrollTo({ top: target, behavior: "instant" });
+      }));
+      window.dispatchEvent(new CustomEvent("journey-target", { detail: target }));
+      window.dispatchEvent(new CustomEvent(enterEvent, { detail: { top: target, animate: !reduce } }));
+      window.setTimeout(() => paintStory(activeRef.current, false), 60);
+    };
+    // Backward before the first stage = the previous story (if the section above is one), entering at its last stage.
+    const backSection = () => {
+      const here = window.scrollY + box().top;
+      const anchors = Array.from(document.querySelectorAll(".story-snap")).map((a) => window.scrollY + a.getBoundingClientRect().top);
+      const target = anchors.filter((y) => y < here - 4).sort((a, b) => b - a)[0];
+      const claim = { top: target, claimed: false };
+      if (target !== undefined) window.dispatchEvent(new CustomEvent("story:claim", { detail: claim }));
+      if (!claim.claimed) { paintStory(activeRef.current, true); return false; }
+      const reduce = reducedMotion();
+      if (!reduce) paintStory(-0.999, true);
+      window.clearTimeout(exitTimer);
+      exitTimer = window.setTimeout(() => jumpTo(target, "story:enter-back", reduce), reduce ? 0 : 340);
+      return true;
+    };
+    const onClaim = (e: Event) => {
+      const d = (e as CustomEvent<{ top: number; claimed: boolean }>).detail;
+      if (Math.abs(window.scrollY + box().top - d.top) <= 4) d.claimed = true;
+    };
+    window.addEventListener("story:claim", onClaim);
     const onEnter = (e: Event) => {
-      const top = (e as CustomEvent<number>).detail;
+      const { top, animate } = (e as CustomEvent<{ top: number; animate: boolean }>).detail;
       if (Math.abs(window.scrollY + box().top - top) > 4) return;
+      const back = e.type === "story:enter-back";
+      if (back) { activeRef.current = n - 1; setActive(n - 1); }
+      if (!animate) return;
       const a = activeRef.current;
       window.clearTimeout(flatTimer.current);
       const b = layerRefs.current[0]?.parentElement;
@@ -440,17 +471,19 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         if (i !== a) return;
         layer.style.backfaceVisibility = "hidden";
         layer.style.willChange = "transform";
-        layer.style.transformOrigin = "0% 50%";
-        layer.style.transform = "translate3d(100%,0,0) rotateY(90deg)";
+        layer.style.transformOrigin = back ? "100% 50%" : "0% 50%";
+        layer.style.transform = back ? "translate3d(-100%,0,0) rotateY(-90deg)" : "translate3d(100%,0,0) rotateY(90deg)";
       });
       void layerRefs.current[a]?.offsetWidth;
       paintStory(a, true);
     };
     window.addEventListener("story:enter", onEnter);
+    window.addEventListener("story:enter-back", onEnter);
     const go = (dir: 1 | -1) => {
       if (carousel) { setPlaying(false); setActive((a) => (a + dir + n) % n); return; }
       const next = storyStep(activeRef.current, n, dir);
       if (next === "exit") { swipeRef.current = false; paintStory(activeRef.current, true); exitSection(); return; }
+      if (next === "back") { swipeRef.current = false; backSection(); return; }
       if (next === activeRef.current) { swipeRef.current = false; paintStory(next, true); return; }
       setActive(next);
     };
@@ -484,7 +517,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const w = viewport.offsetWidth || 1;
       let t = -dx / w;
       const a = activeRef.current;
-      if (a === 0 && t < 0) t *= 0.25; // rubber-band at the first stage
+      // Backward at the first stage turns toward the previous section (rubber-band if there is none above).
       // At the last stage a forward drag turns this whole page away toward the next section.
       paintStory(a + Math.max(-1, Math.min(1, t)), false);
     };
@@ -538,6 +571,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       viewport.removeEventListener("pointercancel", onCancel);
       window.removeEventListener("journey:jump", onJump);
       window.removeEventListener("story:enter", onEnter);
+      window.removeEventListener("story:enter-back", onEnter);
+      window.removeEventListener("story:claim", onClaim);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [story, carousel, stages, id]);

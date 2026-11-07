@@ -7,6 +7,7 @@ describe("story mode", () => {
   it("keeps both first-arrival hints under three seconds", () => { assert.equal(STORY_TAP_HINT_MS, 1000); assert.equal(STORY_HINT_TOTAL_MS, 2000); });
   it("forward moves one stage", () => assert.equal(storyStep(0, 6, 1), 1));
   it("forward on the last stage exits to the next section", () => assert.equal(storyStep(5, 6, 1), "exit"));
-  it("back on the first stage stays", () => assert.equal(storyStep(0, 6, -1), 0));
+  it("back on the first stage returns to the previous section", () => assert.equal(storyStep(0, 6, -1), "back"));
+  it("back moves one stage", () => assert.equal(storyStep(3, 6, -1), 2));
   it("unknown setting defaults to the scroll version", () => { assert.equal(parseMobileJourneyMode(undefined), "scroll"); assert.equal(parseMobileJourneyMode("story"), "story"); });
 });
