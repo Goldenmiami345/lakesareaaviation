@@ -733,7 +733,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
           </div>
         )}
         {/* Safari tints its toolbar from the pixels at the screen's bottom edge; keep that edge plain dark ink so buttons never bleed a hard blue line into it. */}
-        <div aria-hidden className="journey-edge-ink pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[calc(4.5rem+env(safe-area-inset-bottom)+100lvh-100dvh)] bg-gradient-to-t from-ink via-ink/80 to-transparent sm:hidden" />
+        {/* Story copy lives inside each layer, so there the strip is drawn per layer beneath the copy (a z-10 strip here covered the buttons). */}
+        {!story && <div aria-hidden className="journey-edge-ink pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[calc(4.5rem+env(safe-area-inset-bottom)+100lvh-100dvh)] bg-gradient-to-t from-ink via-ink/80 to-transparent sm:hidden" />}
         {story && !carousel && hint && (
           <div aria-hidden className="story-hint pointer-events-none absolute right-3 top-[36%] z-30 h-14 w-11 text-background" style={{ "--hint-swipe": `${STORY_SWIPE_HINT_MS}ms`, "--hint-tap": `${STORY_TAP_HINT_MS}ms` } as React.CSSProperties}>
             <div className="story-hint-swipe absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-md bg-ink/65">
@@ -775,6 +776,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
               {phoneStory && trail(i)}
               {phoneStory && mode === "alt" && <p aria-hidden={i !== active || undefined} className="absolute left-5 top-24 z-20 font-mono text-xs uppercase tracking-[0.2em] text-background/70">Alt <span className="tabular-nums text-background">{journeyAltitude({ stage: i, next: i, transition: 0 }, stages.length).toLocaleString("en-US")}</span> ft</p>}
               <div className="journey-shade pointer-events-none absolute inset-0 transition-opacity duration-300" />
+              <div aria-hidden className="journey-edge-ink pointer-events-none absolute inset-x-0 bottom-0 h-[calc(4.5rem+env(safe-area-inset-bottom)+100lvh-100dvh)] bg-gradient-to-t from-ink via-ink/80 to-transparent sm:hidden" />
               <div inert={i !== active || undefined} className="site-container journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 pb-[calc(.75rem+env(safe-area-inset-bottom)+100lvh-100dvh)] sm:pb-24 md:pb-12 lg:pb-16">
                 <div className="journey-copy max-w-2xl"><StageCopy s={st} wx={klxl} wxLoading={metar === undefined} /></div>
               </div>
