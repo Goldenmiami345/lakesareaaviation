@@ -627,7 +627,12 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const d = (e as CustomEvent<{ id: string; index: number; animate?: boolean }>).detail;
       if (d?.id !== id) return;
       setActive(Math.max(0, Math.min(n - 1, d.index)));
-      glideTo(window.scrollY + box().top, !d.animate);
+      // Location shortcuts (hero chips, "Our locations"): place the section the same way section exits do,
+      // with snapping paused for the move. A smooth or snapped programmatic scroll across several
+      // snap-stop anchors is cancelled or caught by iPhone Safari, so the buttons appeared dead there.
+      const target = window.scrollY + box().top;
+      if (Math.abs(box().top) <= 2) return;
+      jumpTo(target, "story:enter", true);
     };
     const noDrag = (e: Event) => e.preventDefault(); // native image drag would steal the pointer mid-swipe
     viewport.addEventListener("dragstart", noDrag);
