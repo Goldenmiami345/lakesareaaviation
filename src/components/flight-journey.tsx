@@ -505,7 +505,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       if (reducedMotion()) { dropGhost(); return false; }
       const sec = neighbour(dir)?.a.nextElementSibling;
       if (!(sec instanceof HTMLElement) || !sec.matches("section[data-story]")) { dropGhost(); return false; }
-      const faces = sec.querySelectorAll<HTMLElement>(".journey-viewport > .journey-layer:not([aria-hidden=true][data-ghost])");
+      const faces = sec.querySelectorAll<HTMLElement>(".journey-viewport > .journey-layer:not([data-ghost])");
       const src = dir > 0 ? (sec.querySelector<HTMLElement>(".journey-viewport > .journey-layer[data-active]") ?? faces[0]) : faces[faces.length - 1];
       if (ghostRef.current?.at === at && ghostRef.current.src === src) return true;
       dropGhost();
@@ -625,7 +625,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       if (!e.isPrimary || document.documentElement.classList.contains("journey-zoomed")) return;
       // A neighbour-section copy made earlier may be stale if that section has moved on since.
       const g = ghostRef.current;
-      if (g) { const warm = g.el.hasAttribute("data-warm"); makeGhost(g.at > 0 ? 1 : -1, true); if (warm && ghostRef.current && ghostRef.current.el !== g.el) ghostRef.current.el.style.visibility = "hidden"; }
+      if (g) makeGhost(g.at > 0 ? 1 : -1, true);
       down = true; axis = null; dx = 0; vx = 0; sx = lx = e.clientX; sy = ly = e.clientY; lt = performance.now(); if (!carousel) startTransition(() => { setHolding(true); setInteracted(true); });
     };
     const onMove = (e: PointerEvent) => {
@@ -805,7 +805,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
           </div>
         )}
         {stages.map((st, i) => (
-          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className={`journey-layer absolute inset-0 bg-ink${story ? "" : " backface-hidden"}`} data-active={i === active ? "" : undefined} aria-hidden={story && i !== active ? true : undefined} style={{ zIndex: stages.length - i }}>
+          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className={`journey-layer absolute inset-0 bg-ink${story ? "" : " backface-hidden"}`} data-active={i === active ? "" : undefined} inert={(story && i !== active) || undefined} style={{ zIndex: stages.length - i }}>
             <div className="journey-zoom absolute inset-0 origin-top-left">
             {st.traffic && st.phoneImg ? <AirportScene airport={ops[i]?.pattern ?? st.traffic} active={i===active} photo={st.phoneImg} original={st.img} wind={ops[i]?.obs ?? null} runwayHeading={ops[i]?.rwy.trueHdg ?? Number(st.traffic.runway)*10} conditions={ops[i]?.conditions ?? NO_CONDITIONS} /> : st.video ? (
               <video
