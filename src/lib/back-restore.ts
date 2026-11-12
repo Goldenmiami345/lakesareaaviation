@@ -60,6 +60,7 @@ const anchors = () => Array.from(document.querySelectorAll<HTMLElement>(".story-
 /** Record the page's current position under its own history entry. */
 function save() {
   window.clearTimeout(saveTimer);
+  currentKey ??= keyOf(window.history.state);
   if (frozen || !currentKey || pending) return;
   const y = Math.round(window.scrollY);
   const s = load();
@@ -86,6 +87,7 @@ const frame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
 
 async function restore(snap: BackSnapshot) {
   const mine = ++token;
+  if (import.meta.env.DEV) (window as unknown as { __backRestore?: unknown[] }).__backRestore = [...((window as unknown as { __backRestore?: unknown[] }).__backRestore ?? []), snap];
   const root = document.documentElement;
   const t0 = performance.now();
   const home = snap.i >= 0 || Object.keys(snap.j).length > 0;
@@ -135,12 +137,19 @@ export function installBackRestore() {
   if (installed || typeof window === "undefined") return;
   installed = true;
   try { window.history.scrollRestoration = "manual"; } catch { /* ignore */ }
+  // The first page starts recording right away (the router does not report a resolve on hydration).
+  currentKey = keyOf(window.history.state);
+  frozen = false;
   // A full page load from the back/forward buttons (no bfcache) restores too; reloads open at the top.
   const nav = performance.getEntriesByType?.("navigation")[0] as PerformanceNavigationTiming | undefined;
   if (nav?.type === "back_forward") {
     const k = keyOf(window.history.state);
     const snap = k ? load()[k] : undefined;
-    if (snap && snap.path === window.location.pathname) { pending = snap; document.documentElement.classList.add("page-restoring"); }
+    if (snap && snap.path === window.location.pathname) {
+      pending = snap;
+      document.documentElement.classList.add("page-restoring");
+      window.setTimeout(() => { if (pending === snap) runRestore(snap); }, 0);
+    }
   }
   window.addEventListener("scroll", scheduleSave, { passive: true });
   window.addEventListener("pagehide", save);
@@ -148,6 +157,7 @@ export function installBackRestore() {
 
 /** History change (router.history.subscribe): only BACK/FORWARD/GO returns restore. */
 export function backRestoreHistory(state: unknown, pathname: string, action: string) {
+  if (action === "REPLACE") return; // router housekeeping on the same entry
   token++;
   if (action !== "BACK" && action !== "FORWARD" && action !== "GO") { pending = null; return; }
   const k = keyOf(state);
@@ -164,8 +174,10 @@ export function backRestoreResolved(state: unknown) {
   currentKey = keyOf(state) ?? keyOf(window.history.state);
   journeys = {};
   frozen = false;
-  const snap = pending;
-  if (!snap) return;
+  if (pending) runRestore(pending);
+}
+
+function runRestore(snap: BackSnapshot) {
   void restore(snap);
   // Never leave the page hidden if something goes wrong.
   window.setTimeout(() => { if (pending === snap) { pending = null; document.documentElement.classList.remove("page-restoring"); } }, GATE_MAX_MS + 800);
