@@ -75,7 +75,7 @@ function Page() {
   );
 }
 
-function TableTitle({ title, unit }: { title: string; unit?: string }) {
+function TableTitle({ title, unit }: { title: string; unit?: string | undefined }) {
   return <div className="mb-1 flex items-baseline justify-between gap-3"><h2 className="font-display text-2xl leading-tight sm:text-3xl">{title}</h2>{unit && <p className="shrink-0 text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/70">{unit}</p>}</div>;
 }
 
