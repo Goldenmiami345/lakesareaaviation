@@ -40,9 +40,6 @@ function loadModel(reg: string) {
       // Models are nose +Z, up +Y. Map world: camera looks down -Z, +Y is north (screen up).
       const orient = new THREE.Group(); orient.rotation.x = Math.PI / 2; orient.add(model);
       const holder = new THREE.Group(); holder.rotation.z = Math.PI; holder.add(orient);
-      const box = new THREE.Box3().setFromObject(holder);
-      const c = box.getCenter(new THREE.Vector3());
-      model.position.sub(new THREE.Vector3(c.x, c.z, -c.y).applyAxisAngle(new THREE.Vector3(0, 0, 1), 0)); // recentred below
       const box2 = new THREE.Box3().setFromObject(holder), c2 = box2.getCenter(new THREE.Vector3());
       holder.position.set(-c2.x, -c2.y, -c2.z);
       const root = new THREE.Group(); root.add(holder);
