@@ -32,7 +32,7 @@
 - Journey stages zoom in-stage (stage-zoom.ts transforms .journey-zoom, overlays included); touch-action owns pinch/panning and journey-zoomed pauses settling so gestures stay isolated.
 - Light surfaces (cards, popovers/menus) read the single --surface-light token in src/styles.css (beige color trial, see docs/color-trial-beige-2026-10-31.md for values and the one-line revert), so the trial is reversible in one place.
 - Page changes have one animation: CSS page-enter in SiteLayout keyed on the resolved leaf match id (pathname keying replayed the fade on the old page); no view transitions; links preload on viewport.
-- Browser-only libs (model-viewer) load only behind import.meta.env.SSR guards, never in the server bundle (a shared chunk once blanked all SiteShell pages); never import.meta.glob public/ files. `build` runs scripts/check-prerender-dist.mjs to fail on pages missing heading/copy (Lovable forces failOnError off).
+- Browser-only libs load only behind import.meta.env.SSR guards (a shared chunk once blanked all pages); never import.meta.glob public/. `build` runs scripts/check-prerender-dist.mjs (Lovable forces failOnError off).
 - GLBs (public/models, uppercase regs, _headers, versioned ?v=) are meshopt+WebP, error-capped simplify, ≤900KB; shared model-settings owns camera/light/span and mesh-sphere/aspect fitting for fleet/traffic slots; load/resize fit the rotation envelope and reset restores it. Keep walk-around pointers/CDN objects; Apache banner stays unchanged.
 - Hero comparisons stay separate, noindex, sitemap-excluded, without floating controls. Home uses Pixel Perfect Snapshot sunset assets: tall below 3:2 viewport aspect, wide otherwise, avoiding AI-redrawn planes.
 - Normalize pathnames with sitePath before shell visibility decisions: prerender URLs carry a trailing slash, and differing trees broke hydration.
@@ -41,7 +41,7 @@
 - Airport imagery mounts within 1.5 viewports or on a "journey-target" glide event, phone or desktop aerial only (first-load weight). Models spin only when visible.
 
 - Subdirectories have their own AGENTS.md (src/components) to read before changing files there.- Canonical/og:url are emitted only by the root head from src/lib/site-url.ts (SITE_URL + leaf fullPath, sitemap routes only; sitemap uses the same constant), so leaf routes never add their own and the domain switch is one line.
-- Scroll-reveal hidden states apply only under html.reveal-ready (added by MotionExperience after hydration, in-view targets marked visible first), so prerendered/no-JS HTML is always fully visible. SiteLayout owns the single <main id="main">; routes use plain divs inside it.
+- Scroll-reveal hides only under html.reveal-ready (set after hydration), so prerendered/no-JS HTML stays visible. SiteLayout owns the single <main id="main">.
 - Accent TEXT uses text-primary-text (--primary-text on light, --primary-text-dark inside bg-ink/text-background, per accent theme); fills/buttons keep --primary, because the brand blue fails AA as text on beige and ink.
 
 - Every link to the contact/training-plan form is labelled "Build my training plan" (sticky bar: "Build my plan"); distinct actions keep their own labels, so one name always means one destination.
