@@ -619,6 +619,9 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       if (next === "exit") { swipeRef.current = false; paintStory(activeRef.current, true); exitSection(); return; }
       if (next === "back") { swipeRef.current = false; backSection(); return; }
       if (next === activeRef.current) { swipeRef.current = false; paintStory(next, true); return; }
+      // A released swipe starts finishing its turn this frame, not after React re-renders the stages
+      // (that wait froze the page under the finger for a moment). The effect repaints the same target.
+      if (swipeRef.current) paintStory(next, true);
       setActive(next);
     };
     let sx = 0, sy = 0, axis: "x" | "y" | null = null, down = false, dx = 0, vx = 0, lx = 0, ly = 0, lt = 0;
