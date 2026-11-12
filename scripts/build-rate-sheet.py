@@ -44,9 +44,10 @@ def money(text):
     """$7,000 -> $7,000.00 and $175/hr -> $175.00/hr, the originals' price style."""
     return re.sub(r"\$(\d{1,3}(?:,\d{3})+|\d+)(?![\d.])", lambda m: f"${m.group(1)}.00", text)
 
-def para(c, text, x, y, w, size=11.5, font="Sans", color=INK, align=TA_LEFT, leading=None):
-    st = ParagraphStyle("p", fontName=font, fontSize=size, leading=leading or size * 1.32, textColor=color, alignment=align)
-    p = Paragraph(text, st)
+def para(c, text, x, y, w, size=11.5, font="Sans", color=INK, align=TA_LEFT, leading=None, bullet=False):
+    st = ParagraphStyle("p", fontName=font, fontSize=size, leading=leading or size * 1.32, textColor=color, alignment=align,
+                        leftIndent=size * 1.2 if bullet else 0, bulletIndent=0, bulletFontName=font, bulletFontSize=size)
+    p = Paragraph(text, st, bulletText="•" if bullet else None)
     _, h = p.wrap(w, 1000)
     p.drawOn(c, x, y - h)
     return y - h
@@ -83,7 +84,7 @@ def title(c, top, text):
     return top - 58
 
 def contact_box(c):
-    bw, bh = 252, 62
+    bw, bh = 268, 62
     x, y = W - M - bw - 10, M + 10
     c.setFillColor(white)
     c.rect(x, y, bw, bh, stroke=0, fill=1)
@@ -161,7 +162,7 @@ n = D["RATE_NOTES"]
 # Notes sit beside the contact box, left-aligned, so the whole sheet fits one page.
 ny = M + 82
 for t in [n["wet"], n["prepay"]]:
-    ny = para(c, f"*** {t}", M + 34, ny, W - 2 * M - 34 - 280, size=8.6, color=INK) - 3
+    ny = para(c, f"*** {t}", M + 34, ny, W - 2 * M - 34 - 296, size=8.6, color=INK) - 3
 assert y > M + 84, f"rate table overflows into the notes ({y})"
 contact_box(c)
 c.showPage()
@@ -182,7 +183,7 @@ for p in D["programs"]:
         y = title(c, top, f"{YEAR} {label} Estimated Rates") - 8
         for item in o["lineItems"]:
             line = re.sub(r": (\$[\d,.]+)$", r" = \1", money(item))
-            y = para(c, f"•&nbsp;&nbsp;{line}", M + 64, y, W - 2 * M - 128, size=14, leading=19) - 13
+            y = para(c, line, M + 64, y, W - 2 * M - 128, size=14, leading=19, bullet=True) - 13
         y -= 6
         cost = money(o["estimatedCost"]).replace("As low as ", "")
         y = para(c, f"As low as <font name='Sans-Bold'>{cost}</font> for {RATING[label]}!", M + 30, y, W - 2 * M - 60, size=17, align=TA_CENTER, font="Sans-Semi") - 6
