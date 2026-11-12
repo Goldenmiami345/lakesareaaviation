@@ -10,11 +10,13 @@ test("Apache rents for $395 regular and $375 prepay", () => {
   expect(rentalRates.find((r) => r.aircraft.startsWith("Piper Apache"))).toMatchObject({ regular: "$395", prepay: "$375" });
 });
 test("every fleet airplane with a rate matches the published rate sheet", () => {
+  // Which rate-sheet row each airplane bills under (the sheet groups 172s by nickname).
+  const row: Record<string, string> = { N8570B: "Cessna 172", N6717A: "Cessna 172", N46201: "Cessna 172I / 172K", N7108G: "Cessna 172I / 172K", N4383P: "Piper Apache PA-23-160", N6641F: "Cessna 150", N96150: "Taylorcraft BC-12D" };
   for (const p of fleet.filter((p) => p.rate)) {
-    const row = rentalRates.find((r) => p.name.includes(r.aircraft.split(" / ")[0]!.replace(/^Piper /, "")) || r.names.includes(p.nickname ?? "~"));
-    expect(row, p.registration).toBeDefined();
-    expect(`${row!.regular}/hr`).toBe(p.rate!);
-    expect(`${row!.prepay}/hr`).toBe(p.prepay!);
+    const r = rentalRates.find((x) => x.aircraft === row[p.registration]);
+    expect(r, p.registration).toBeDefined();
+    expect(`${r!.regular}/hr`).toBe(p.rate!);
+    expect(`${r!.prepay}/hr`).toBe(p.prepay!);
   }
 });
 test("multi-engine instruction is $75/hr, other instruction $60 or $70", () => {

@@ -36,7 +36,12 @@ photo = Image.open(photo_path).convert("RGB")
 pw, ph = photo.size
 cw = int(ph * W / H)
 x0 = min(pw - cw, int(pw * 0.36))
-bg = ImageReader(photo.crop((x0, 0, x0 + cw, ph)).resize((int(W * 2), int(H * 2))))
+# Embed as JPEG (a PIL image would be stored losslessly and triple the file size).
+import io
+_buf = io.BytesIO()
+photo.crop((x0, 0, x0 + cw, ph)).resize((int(W * 1.6), int(H * 1.6))).save(_buf, "JPEG", quality=72)
+_buf.seek(0)
+bg = ImageReader(_buf)
 logo = ImageReader(logo_path)
 lw, lh = Image.open(logo_path).size
 
