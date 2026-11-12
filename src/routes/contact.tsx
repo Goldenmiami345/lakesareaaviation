@@ -158,7 +158,7 @@ function ContactPage() {
             {housing && <Line label={`Housing · ${totals.days} nights`} value={money(totals.lodging)} />}
             {car && <Line label={`Car · ${totals.days} days`} value={money(totals.transportation)} />}
             {pickup && <Line label="Airport pickup (MSP)" value="$125" />}
-            <Line label="Contingency (20%)" value={money(totals.contingency)} />
+            <Line label="Overestimate buffer (20%)" value={money(totals.contingency)} />
             <div className="border-t border-background/20 pt-3"><Line label="Estimated total" value={money(totals.buffered)} /></div>
           </div>
           <p className="mt-5 text-xs leading-relaxed text-background/60">All prices are estimates, based on published minimum course days and prices, plus a 20% buffer. Weather, proficiency, examiner fees, tax, aircraft availability, prerequisites, and time-building can change the final schedule and cost.</p>
