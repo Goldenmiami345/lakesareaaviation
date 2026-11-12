@@ -4,8 +4,11 @@
 
 const AVAILABLE_MODELS = new Set(['N4383P', 'N8570B', 'N46201']);
 
+/** True when this registration has a model (independent of the visitor 3D switch). */
+export const hasAircraftModel = (reg: string) => AVAILABLE_MODELS.has(reg.toUpperCase());
+
 export function aircraftModelUrl(reg: string, enabled = false): string | null {
   if (!enabled) return null;
   const key = reg.toUpperCase();
-  return AVAILABLE_MODELS.has(key) ? `/models/${key}.glb?v=20261104b` : null;
+  return AVAILABLE_MODELS.has(key) ? `/models/${key}.glb?v=20261112` : null;
 }

@@ -5,19 +5,27 @@ import { modelsEnabled } from './model-visibility';
 import { mapModelRegs } from './map-models';
 
 let cachedModels: Promise<boolean> | null = null;
-export function useShow3DModels() {
-  const [show, setShow] = useState(false);
+let resolvedModels: boolean | null = null;
+/** The visitor 3D switch (site_settings.show_3d_models), fetched once per page load; fails closed. */
+export function loadShow3DModels() {
+  cachedModels ??= (async () => {
+    const { data, error } = await supabase.from('site_settings').select('show_3d_models').eq('id', 'brand').maybeSingle();
+    return !error && modelsEnabled(data?.show_3d_models);
+  })().catch(() => false).then(v => { resolvedModels = v; return v; });
+  return cachedModels;
+}
+/** null until the switch has loaded (first render always null, so prerendered HTML never depends on it). */
+export function useShow3DModelsState() {
+  const [show, setShow] = useState<boolean | null>(null);
   useEffect(() => {
-    cachedModels ??= (async () => {
-      const { data, error } = await supabase.from('site_settings').select('show_3d_models').eq('id', 'brand').maybeSingle();
-      return !error && modelsEnabled(data?.show_3d_models);
-    })().catch(() => false);
+    if (resolvedModels !== null) { setShow(resolvedModels); return; }
     let live = true;
-    void cachedModels.then(value => { if (live) setShow(value); });
+    void loadShow3DModels().then(value => { if (live) setShow(value); });
     return () => { live = false; };
   }, []);
   return show;
 }
+export function useShow3DModels() { return useShow3DModelsState() === true; }
 
 export type TrafficPatternMode = "off" | "pulse" | "always";
 const MODES: readonly TrafficPatternMode[] = ["off", "pulse", "always"];
