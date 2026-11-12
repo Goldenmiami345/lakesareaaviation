@@ -72,7 +72,7 @@ export default function AircraftModel({ src, label, autoRotate = true, onLoad, o
   const onErrorRef=useRef(onError);
   useEffect(()=>{loadCallback.current=onLoad;onErrorRef.current=onError;},[onLoad,onError]);
   useEffect(() => {
-    const node=ref.current;if(!ready||!node)return;
+    const node=ref.current;if(!enabled||!ready||!node)return;
     const el=node as Viewer;
     let resumeTimer=0, down=false, lastTap=0;
     let sphere=0, homeOrbit=MODEL_SETTINGS['camera-orbit'] as string;
@@ -118,7 +118,9 @@ export default function AircraftModel({ src, label, autoRotate = true, onLoad, o
     el.addEventListener('pointerdown',start);el.addEventListener('pointerup',tap);window.addEventListener('pointerup',end);window.addEventListener('pointercancel',end);
     el.addEventListener('camera-change',change);el.addEventListener('dblclick',reset);
     return()=>{resize.disconnect();view.disconnect();document.removeEventListener('visibilitychange',sync);window.clearTimeout(resumeTimer);el.removeEventListener('load',loaded);el.removeEventListener('error',failed);el.removeEventListener('pointerdown',start);el.removeEventListener('pointerup',tap);window.removeEventListener('pointerup',end);window.removeEventListener('pointercancel',end);el.removeEventListener('camera-change',change);el.removeEventListener('dblclick',reset);};
-  },[ready,autoRotate]);
+  // `enabled` matters: with a warmed viewer `ready` starts true, and the element only
+  // mounts once the 3D switch resolves, so listeners must attach on that render.
+  },[enabled,ready,autoRotate]);
   useEffect(() => {
     if (import.meta.env.SSR || !enabled) return;
     if (viewerReady) { setReady(true); return; }
