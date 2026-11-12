@@ -1,8 +1,21 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { aircraftModelUrl } from '../lib/aircraft-models';
-import { useShow3DModels } from '../lib/use-site-settings';
+import { aircraftModelUrl, hasAircraftModel } from '../lib/aircraft-models';
+import { loadShow3DModels, useShow3DModelsState } from '../lib/use-site-settings';
 
-const AircraftModel = lazy(() => import('./aircraft-model'));
+const loadModelModule = () => import('./aircraft-model');
+const AircraftModel = lazy(loadModelModule);
+
+/** When the visitor 3D switch is on, start the viewer and decode these airplanes' models
+ * after the page is idle, so tapping an airplane shows its 3D model straight away. */
+export function warmAircraftModels(regs: readonly string[]) {
+  if (import.meta.env.SSR) return;
+  const urls = regs.map(r => aircraftModelUrl(r, true)).filter((u): u is string => !!u);
+  if (!urls.length) return;
+  void loadShow3DModels().then(on => {
+    if (!on) return;
+    return pageIdle().then(loadModelModule).then(m => m.warmModels(urls));
+  }).catch(() => {});
+}
 
 // Model-viewer parsing is heavy main-thread work: wait for an idle page (or 1.5s after
 // load, whichever is first), then start one model at a time in reveal order.
@@ -31,8 +44,10 @@ function queueModel(start: () => void) {
  * `priority` (airplane info cards): the visitor asked for this airplane, so its model
  * starts at once instead of waiting for page idle and the one-at-a-time queue. */
 export function AircraftMedia({ reg, photo, priority = false }: { reg: string; photo: string; priority?: boolean }) {
-  const enabled = useShow3DModels();
-  const model = aircraftModelUrl(reg, enabled);
+  const setting = useShow3DModelsState();
+  const modeled = hasAircraftModel(reg);
+  const [failed, setFailed] = useState(false);
+  const model = failed ? null : aircraftModelUrl(reg, setting === true);
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -55,12 +70,22 @@ export function AircraftMedia({ reg, photo, priority = false }: { reg: string; p
     observer.observe(ref.current);
     return () => { cancelled = true; observer.disconnect(); release.current(); };
   }, [model, priority]);
-  if (!model) return <div data-aircraft-media="" className="relative h-full w-full overflow-hidden"><img src={photo} alt={`${reg}, the real airplane`} className="h-full w-full object-contain" /></div>;
+  // A model that never arrives (no WebGL, blocked download) falls back to the photo.
+  useEffect(() => {
+    if (!model || !visible || loaded) return;
+    const t = window.setTimeout(() => setFailed(true), 15000);
+    return () => window.clearTimeout(t);
+  }, [model, visible, loaded]);
+  const photoOnly = <div data-aircraft-media="" className="relative h-full w-full overflow-hidden"><img src={photo} alt={`${reg}, the real airplane`} className="h-full w-full object-contain" /></div>;
+  // 3D on: the model is the only thing shown, never the photo first. While the switch is
+  // still loading, a modeled airplane's slot stays empty rather than flashing the photo.
+  if (modeled && setting === null && !failed) return <div data-aircraft-media="" className="relative h-full w-full" />;
+  if (!model) return photoOnly;
   return <div ref={ref} data-aircraft-media="" data-model-gesture="" className="relative h-full w-full touch-none overflow-hidden"
     onPointerDown={e => { e.stopPropagation(); }}
     onPointerMove={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()} onTouchMove={e => e.stopPropagation()} onWheel={e => e.stopPropagation()}>
-    <img src={photo} alt={`${reg}, the real airplane`} className={`absolute inset-0 h-full w-full object-contain ${loaded ? 'invisible' : ''}`} />
-    {model && visible && <Suspense fallback={null}><AircraftModel src={model} label={reg} poster={photo} autoRotate onLoad={() => { setLoaded(true); release.current(); }} /></Suspense>}
+    {!loaded && <span aria-hidden className="pointer-events-none absolute inset-x-[30%] bottom-3 h-0.5 animate-pulse rounded-full bg-current opacity-20" />}
+    {visible && <Suspense fallback={null}><AircraftModel src={model} label={reg} autoRotate onLoad={() => { setLoaded(true); release.current(); }} onError={() => { setFailed(true); release.current(); }} /></Suspense>}
     {priority && loaded && <span aria-hidden className="pointer-events-none absolute bottom-0.5 right-1 font-mono text-[10px] uppercase tracking-[0.14em] text-background/55">Drag to turn</span>}
   </div>;
 }
