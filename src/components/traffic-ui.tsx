@@ -2,7 +2,7 @@ import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from './ui/button';
-import { AircraftMedia } from './aircraft-media';
+import { AircraftMedia, warmAircraftModels } from './aircraft-media';
 
 import { fleet } from '../lib/site-data';
 import { callSideCandidates, callSideFits, type CallSide } from '../lib/traffic-call-placement';
@@ -12,12 +12,14 @@ export type TrafficPlaneInfo = { reg: string; type: string; nickname?: string };
 /** Fleet and traffic always share the exact same alpha cutout. */
 export const CARD_PHOTOS: Record<string, string> = Object.fromEntries(fleet.map(p => [p.registration, p.image]));
 
-/** Warm the cache for a stage's airplanes as soon as it becomes active, so the card photo is instant. */
+/** Warm the cache for a stage's airplanes as soon as it becomes active, so the card photo (or 3D model) is instant. */
 export function usePreloadCardPhotos(regs: readonly string[], active: boolean) {
   const key = regs.join(",");
   useEffect(() => {
     if (!active) return;
     key.split(",").forEach((r) => { const src = CARD_PHOTOS[r]; if (src) { const im = new Image(); im.decoding = "async"; im.src = src; } });
+    // With the visitor 3D switch on, the card's model is decoded ahead of the tap too.
+    warmAircraftModels(key.split(","));
   }, [active, key]);
 }
 

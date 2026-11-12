@@ -14,6 +14,9 @@ import n6717a1280 from "../assets/fleet/cutouts/n6717a-w1280.webp.asset.json";
 import n96150 from "../assets/fleet/cutouts/n96150.webp.asset.json";
 import n96150800 from "../assets/fleet/cutouts/n96150-w800.webp.asset.json";
 import n961501280 from "../assets/fleet/cutouts/n96150-w1280.webp.asset.json";
+import n46201 from "../assets/fleet/cutouts/n46201.webp.asset.json";
+import n46201800 from "../assets/fleet/cutouts/n46201-w800.webp.asset.json";
+import n462011280 from "../assets/fleet/cutouts/n46201-w1280.webp.asset.json";
 import heroWide from "../assets/photos/sunset-ramp-crisp.webp.asset.json";
 import heroWide1280 from "../assets/photos/sunset-ramp-crisp-w1280.webp.asset.json";
 import heroTall from "../assets/photos/sunset-ramp-tall.webp.asset.json";
@@ -33,6 +36,7 @@ const CDN: Record<string, string> = {
   [n7108g.url]: `${n7108g800.url} 800w, ${n7108g1280.url} 1280w, ${n7108g.url} 2141w`,
   [n6717a.url]: `${n6717a800.url} 800w, ${n6717a1280.url} 1280w, ${n6717a.url} 2262w`,
   [n96150.url]: `${n96150800.url} 800w, ${n961501280.url} 1280w, ${n96150.url} 1439w`,
+  [n46201.url]: `${n46201800.url} 800w, ${n462011280.url} 1280w, ${n46201.url} 2380w`,
   [heroWide.url]: `${heroWide1280.url} 1280w, ${heroWide.url} 1584w`,
   [heroTall.url]: `${heroTall780.url} 780w, ${heroTall1170.url} 1170w, ${heroTall.url} 1280w`,
 };

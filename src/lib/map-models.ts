@@ -12,7 +12,7 @@ export function mapModelRegs(enabled: unknown, regs: unknown): ReadonlySet<strin
   return new Set(regs.filter((r): r is string => typeof r === 'string' && KNOWN.includes(r)));
 }
 /** Lightweight map copies (simplified, 512px paint), packed from models-src. */
-export const mapModelUrl = (reg: string) => (KNOWN.includes(reg) ? `/models/map/${reg}.glb?v=1` : null);
+export const mapModelUrl = (reg: string) => (KNOWN.includes(reg) ? `/models/map/${reg}.glb?v=2` : null);
 /** Bank angle (radians) for a coordinated turn at `turnDegPerSec`, exaggerated slightly so it reads at map size. */
 export function bankFor(turnDegPerSec: number, speedMs = 46) {
   const w = (turnDegPerSec * Math.PI) / 180;
