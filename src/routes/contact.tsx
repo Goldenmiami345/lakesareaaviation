@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useServerFn } from "@tanstack/react-start";
 import { submitTrainingLead } from "../lib/leads.functions";
 import { CONTINGENCY_RATE, formatPhone, leadSchema, RATING_PREREQUISITES, withPrerequisites } from "../lib/lead-schema";
-import { PageIntro, SiteLayout } from "../components/site-shell";
+import { SiteLayout } from "../components/site-shell";
 import { locations, SCHOOL_PHONE, SCHOOL_PHONE_TEL , fleet } from "../lib/site-data";
 
 type Rating = { id: string; name: string; days: number; cost: number; prerequisite?: string | undefined };
@@ -124,8 +124,12 @@ function ContactPage() {
   }
 
   return <SiteLayout>
-    <PageIntro eyebrow="Training plan estimator" title="Build your training plan." text="Check what you already hold, choose what comes next, and see the published commitment before you call. All prices are estimates." />
-    <div className="site-container py-14 lg:py-20">
+    {/* Slim header: visitors land on "Ratings you already have" on the first screen (owner request). */}
+    <div className="site-container pb-14 pt-20 sm:pt-28 lg:pb-20">
+      <div className="mb-6 sm:mb-10">
+        <h1 className="font-display text-3xl leading-tight sm:text-5xl">Build your training plan.</h1>
+        <p className="mt-1.5 text-sm text-foreground/75 sm:text-base">Tap what you have and what's next. Prices are estimates.</p>
+      </div>
       <div className="grid gap-10 lg:grid-cols-[1.25fr_.75fr]">
         <div ref={plannerRef}>
           <PlannerStep number="01" title="Ratings you already have">
