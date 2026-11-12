@@ -415,3 +415,6 @@ html.hero-enter .hero-mask > span { animation: hero-mask-in .55s var(--d, 0ms) c
   html.ios-glass .hero-glass-skirt { display: block; height: 5rem; }
   html.ios-glass .hero-content { min-height: min(100svh, 100lvh); padding-bottom: .25rem; }
 }
+
+/* Back/forward return: the page stays hidden for the moment it takes to land on the saved spot (back-restore.ts). */
+html.page-restoring main#main { visibility: hidden !important; }

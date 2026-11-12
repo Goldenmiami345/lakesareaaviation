@@ -14,6 +14,7 @@ import { useStageZoom } from "../lib/stage-zoom";
 import { useDesktopJourneyMode, useMobileJourneyMode } from "../lib/use-site-settings";
 import { storyPeek, storyStep, STORY_HINT_TOTAL_MS, STORY_SWIPE_HINT_MS, STORY_TAP_HINT_MS } from "../lib/story-nav";
 import { useStorySnap } from "../lib/story-snap";
+import { JOURNEY_RESTORE, reportJourney, type JourneyMark } from "../lib/back-restore";
 import { PAGE_RETURN_START, pageReturnActive, returnToPageTop } from "../lib/page-return";
 import { trafficCardIsOpen, trafficCardRecentlyOpen, useTrafficCardOpen } from "../lib/traffic-card-open";
 import { TrafficPattern } from "./traffic-pattern";
@@ -464,6 +465,26 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     if (copyRef.current) { copyRef.current.style.opacity = "1"; copyRef.current.style.transform = "none"; }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [story, active]);
+  // Back button: remember this journey's page, and return to it (story/carousel only; scrolling restores by position).
+  const restoredRef = useRef(false);
+  useEffect(() => { reportJourney(id, active, interacted); }, [id, active, interacted]);
+  useEffect(() => {
+    const onRestore = (e: Event) => {
+      const j = (e as CustomEvent<Record<string, JourneyMark>>).detail?.[id];
+      if (!j || !storyRef.current) return;
+      restoredRef.current = true;
+      if (j.i) setInteracted(true);
+      const a = Math.max(0, Math.min(stages.length - 1, j.a));
+      if (a === activeRef.current) return;
+      activeRef.current = a;
+      swipeRef.current = true;
+      paintStory(a, false);
+      setActive(a);
+    };
+    window.addEventListener(JOURNEY_RESTORE, onRestore);
+    return () => window.removeEventListener(JOURNEY_RESTORE, onRestore);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, stages.length]);
   const [hint, setHint] = useState(false);
   useEffect(() => {
     if (!story) return;
@@ -489,7 +510,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       };
       raf = requestAnimationFrame(step);
     };
-    const arm = () => { window.clearTimeout(timer); window.clearTimeout(hide); stopPeek(); setHint(false); if (inView && !shown) timer = window.setTimeout(() => { if (trafficCardIsOpen()) return; shown = true; setHint(true); peek(); hide = window.setTimeout(() => setHint(false), STORY_HINT_TOTAL_MS); }, 600); };
+    const arm = () => { window.clearTimeout(timer); window.clearTimeout(hide); stopPeek(); setHint(false); if (inView && !shown) timer = window.setTimeout(() => { if (trafficCardIsOpen() || restoredRef.current) return; shown = true; setHint(true); peek(); hide = window.setTimeout(() => setHint(false), STORY_HINT_TOTAL_MS); }, 600); };
     const io = new IntersectionObserver(([en]) => { inView = !!en?.isIntersecting && en.intersectionRatio > 0.85; arm(); }, { threshold: [0.85] });
     io.observe(vp);
     vp.addEventListener("pointerdown", arm);

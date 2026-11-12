@@ -1,6 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
+import { backRestoreHistory, backRestoreLeave, backRestoreResolved, installBackRestore, restoringPath } from "./lib/back-restore";
 
 export const getRouter = () => {
   const queryClient = new QueryClient();
@@ -21,6 +22,13 @@ export const getRouter = () => {
   // its reset can fire from a late hydration settle and yank the page to the top
   // while the visitor is already scrolling. A new page jumps to the top instantly
   // just before it mounts, so visitors never see the old page glide or flash.
+  // Back/forward buttons return to the exact spot (homepage: same section and story page), see back-restore.ts.
+  if (typeof window !== "undefined") {
+    installBackRestore();
+    router.history.subscribe(({ location, action }) => backRestoreHistory(location.state, location.pathname, action.type));
+    router.subscribe("onBeforeNavigate", () => backRestoreLeave());
+    router.subscribe("onResolved", (event) => backRestoreResolved(event.toLocation.state));
+  }
   router.subscribe("onBeforeRouteMount", (event) => {
     if (typeof document === 'undefined') return;
     if (event.fromLocation && event.fromLocation.pathname !== event.toLocation.pathname) {
@@ -33,7 +41,7 @@ export const getRouter = () => {
   router.subscribe("onResolved", (event) => {
     if (typeof document === 'undefined') return;
     const hash = event.toLocation.hash;
-    if (!hash || event.fromLocation?.href === event.toLocation.href) return;
+    if (!hash || event.fromLocation?.href === event.toLocation.href || restoringPath(event.toLocation.pathname)) return;
     const land = () => document.getElementById(hash)?.scrollIntoView({ behavior: "instant", block: "start" });
     if (document.getElementById(hash)) land(); else requestAnimationFrame(land);
   });

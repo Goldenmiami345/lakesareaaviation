@@ -130,13 +130,8 @@ async function restore(snap: BackSnapshot) {
   save();
 }
 
-type RouterLike = {
-  history: { subscribe: (fn: (e: { location: { state: unknown; pathname: string }; action: { type: string } }) => void) => () => void };
-  subscribe: (event: "onBeforeNavigate" | "onResolved", fn: (e: { toLocation: { state: unknown; pathname: string } }) => void) => () => void;
-};
-
-/** Wire into the router once (browser only). */
-export function installBackRestore(router: RouterLike) {
+/** Browser only, once: own scroll restoration and pick up a full-page back/forward load. */
+export function installBackRestore() {
   if (installed || typeof window === "undefined") return;
   installed = true;
   try { window.history.scrollRestoration = "manual"; } catch { /* ignore */ }
@@ -145,30 +140,35 @@ export function installBackRestore(router: RouterLike) {
   if (nav?.type === "back_forward") {
     const k = keyOf(window.history.state);
     const snap = k ? load()[k] : undefined;
-    if (snap && snap.path === window.location.pathname) pending = snap;
+    if (snap && snap.path === window.location.pathname) { pending = snap; document.documentElement.classList.add("page-restoring"); }
   }
-  router.history.subscribe(({ location, action }) => {
-    if (action.type !== "BACK" && action.type !== "FORWARD" && action.type !== "GO") { pending = null; token++; return; }
-    const k = keyOf(location.state);
-    const snap = k ? load()[k] : undefined;
-    pending = snap && snap.path === location.pathname ? snap : null;
-    token++;
-    if (pending) document.documentElement.classList.add("page-restoring");
-  });
-  router.subscribe("onBeforeNavigate", () => { save(); frozen = true; });
-  router.subscribe("onResolved", ({ toLocation }) => {
-    currentKey = keyOf(toLocation.state) ?? keyOf(window.history.state);
-    journeys = {};
-    frozen = false;
-    if (pending) {
-      const snap = pending;
-      void restore(snap);
-      // Never leave the page hidden if something goes wrong.
-      window.setTimeout(() => { document.documentElement.classList.remove("page-restoring"); if (pending === snap) pending = null; }, GATE_MAX_MS + 800);
-    }
-  });
   window.addEventListener("scroll", scheduleSave, { passive: true });
   window.addEventListener("pagehide", save);
+}
+
+/** History change (router.history.subscribe): only BACK/FORWARD/GO returns restore. */
+export function backRestoreHistory(state: unknown, pathname: string, action: string) {
+  token++;
+  if (action !== "BACK" && action !== "FORWARD" && action !== "GO") { pending = null; return; }
+  const k = keyOf(state);
+  const snap = k ? load()[k] : undefined;
+  pending = snap && snap.path === pathname ? snap : null;
+  if (pending) document.documentElement.classList.add("page-restoring");
+}
+
+/** A navigation is starting: save the page being left, then stop recording until the next one resolves. */
+export function backRestoreLeave() { save(); frozen = true; }
+
+/** The new page has resolved: start recording under its entry, and run a pending return. */
+export function backRestoreResolved(state: unknown) {
+  currentKey = keyOf(state) ?? keyOf(window.history.state);
+  journeys = {};
+  frozen = false;
+  const snap = pending;
+  if (!snap) return;
+  void restore(snap);
+  // Never leave the page hidden if something goes wrong.
+  window.setTimeout(() => { if (pending === snap) { pending = null; document.documentElement.classList.remove("page-restoring"); } }, GATE_MAX_MS + 800);
 }
 
 /** Restoring a back/forward return to this path (the router skips its own top reset / #hash landing). */
