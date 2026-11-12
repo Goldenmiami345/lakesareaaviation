@@ -53,9 +53,14 @@ const persist = () => {
   store = s;
   try { sessionStorage.setItem(STORE, JSON.stringify(s)); } catch { /* ignore */ }
 };
-const anchors = () => Array.from(document.querySelectorAll<HTMLElement>(".story-snap"))
-  .map((el) => Math.round(el.getBoundingClientRect().top + window.scrollY))
-  .sort((a, b) => a - b);
+// Measured against <main>'s layout box, so the page-enter fade's slide never skews the numbers.
+const anchors = () => {
+  const main = document.getElementById("main");
+  const base = main ? main.offsetTop - main.getBoundingClientRect().top : window.scrollY;
+  return Array.from(document.querySelectorAll<HTMLElement>(".story-snap"))
+    .map((el) => Math.round(el.getBoundingClientRect().top + base))
+    .sort((a, b) => a - b);
+};
 
 /** Record the page's current position under its own history entry. */
 function save() {
@@ -105,16 +110,8 @@ async function restore(snap: BackSnapshot) {
   const mine = ++token;
   const root = document.documentElement;
   const home = snap.i >= 0 || Object.keys(snap.j).length > 0;
-  if (home) {
-    // The section format (stories or scrolling) must be known before positions mean anything
-    // (already cached after the first visit, so this resolves at once on a normal return).
-    const settings = await import("./use-site-settings");
-    await Promise.race([
-      Promise.all([settings.loadJourneyMode(), settings.loadDesktopJourneyMode()]),
-      new Promise((r) => window.setTimeout(r, GATE_MAX_MS)),
-    ]);
-  }
-  await frame(); // React has applied the format
+  // The section format comes from the visitor's last visit (stored locally), so one frame is enough.
+  await frame();
   if (mine !== token) return;
   if (home) window.dispatchEvent(new CustomEvent(JOURNEY_RESTORE, { detail: snap.j }));
   const target = place(snap);
