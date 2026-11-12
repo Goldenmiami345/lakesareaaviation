@@ -1,7 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
-import { backRestoreHistory, backRestoreLeave, backRestoreResolved, installBackRestore, restoringPath } from "./lib/back-restore";
+import { backRestoreHistory, backRestoreLeave, backRestoreMount, backRestoreResolved, installBackRestore, restoringPath } from "./lib/back-restore";
 
 export const getRouter = () => {
   const queryClient = new QueryClient();
@@ -31,6 +31,7 @@ export const getRouter = () => {
   }
   router.subscribe("onBeforeRouteMount", (event) => {
     if (typeof document === 'undefined') return;
+    backRestoreMount();
     if (event.fromLocation && event.fromLocation.pathname !== event.toLocation.pathname) {
       if (event.toLocation.hash) return;
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });

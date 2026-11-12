@@ -87,7 +87,6 @@ const frame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
 
 async function restore(snap: BackSnapshot) {
   const mine = ++token;
-  if (import.meta.env.DEV) (window as unknown as { __backRestore?: unknown[] }).__backRestore = [...((window as unknown as { __backRestore?: unknown[] }).__backRestore ?? []), snap];
   const root = document.documentElement;
   const t0 = performance.now();
   const home = snap.i >= 0 || Object.keys(snap.j).length > 0;
@@ -118,7 +117,6 @@ async function restore(snap: BackSnapshot) {
   const snapped = root.classList.contains("story-snapping");
   root.classList.remove("story-snapping");
   window.scrollTo({ top: target, behavior: "instant" });
-  if (import.meta.env.DEV) console.info("[back-restore]", JSON.stringify({ target, points, h: root.scrollHeight, t: Math.round(performance.now() - t0), y: window.scrollY }));
   await frame();
   await frame();
   if (mine !== token) return;
@@ -164,6 +162,10 @@ export function backRestoreHistory(state: unknown, pathname: string, action: str
   const k = keyOf(state);
   const snap = k ? load()[k] : undefined;
   pending = snap && snap.path === pathname ? snap : null;
+}
+
+/** The returning page is about to appear: keep it hidden until it sits on the saved spot (the old page stays visible meanwhile). */
+export function backRestoreMount() {
   if (pending) document.documentElement.classList.add("page-restoring");
 }
 
