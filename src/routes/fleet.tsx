@@ -204,12 +204,11 @@ function PlaneTile({ f, open, onToggle }: { f: Plane; open: boolean; onToggle: (
     <article id={`${id}-tile`} data-plane={id} className={`min-w-0 scroll-mt-20 border bg-background transition-colors ${open ? "border-foreground" : "border-border"}`}>
       <button type="button" onClick={onToggle} aria-expanded={open} aria-controls={`${id}-quick`} className="block w-full text-left">
         <span className="relative block aspect-[2/1] overflow-hidden bg-secondary/60">
-          <img src={f.image} srcSet={srcSetFor(f.image)} sizes="50vw" alt="" width={600} height={400} loading="lazy" decoding="async" className="fleet-cutout h-full w-full object-contain px-2 pb-1.5 pt-3.5" />
-          <span className="absolute left-2 top-1.5 text-[9px] font-bold uppercase tracking-[0.12em] text-foreground/75">{ROLE_LABEL[f.role]}</span>
+          <img src={f.image} srcSet={srcSetFor(f.image)} sizes="50vw" alt="" width={600} height={400} loading="lazy" decoding="async" className="fleet-cutout h-full w-full object-contain p-2" />
         </span>
         <span className="block px-2.5 pb-2 pt-1.5">
           <span className="flex items-baseline justify-between gap-2">
-            <span className="text-[11px] font-bold tracking-[0.06em]">{f.registration}</span>
+            <span className="min-w-0 truncate text-[11px] font-bold tracking-[0.06em]">{f.registration}<span className="ml-1.5 text-[9px] uppercase tracking-[0.12em] text-foreground/60">{ROLE_LABEL[f.role]}</span></span>
             <ChevronDown aria-hidden="true" className={`size-3.5 shrink-0 text-foreground/60 transition-transform ${open ? "rotate-180" : ""}`} />
           </span>
           <span className="block truncate font-display text-base leading-tight">{f.nickname ?? f.name.replace(/^\d{4} /, "")}</span>
