@@ -409,7 +409,7 @@ html.hero-enter .hero-mask > span { animation: hero-mask-in .55s var(--d, 0ms) c
 
 /* iOS 26 Safari (glass toolbar): on first load 100lvh stops short of the screen bottom, so the next
    section peeked out under the toolbar until the first scroll. An ink skirt below the hero covers that
-   strip, and the hero text sits 24px lower into the room the floating toolbar leaves (owner request).
+   strip, and the hero text sits just above the floating toolbar (owner tuned it: 24px lower clipped the chips).
    Hero text is pinned to svh, never dvh: dvh grows as the toolbar shrinks and made the text slide while scrolling. */
 @media (max-width: 639px) {
   html.ios-glass .hero-glass-skirt { display: block; height: 5rem; }
