@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 import { anchorPosition, restoreTarget, trimEntries } from "./back-restore";
 
 describe("back-button return position", () => {
@@ -18,7 +18,7 @@ describe("back-button return position", () => {
     for (let k = 0; k < 45; k++) s[`k${k}`] = k;
     const t = trimEntries(s);
     expect(Object.keys(t)).toHaveLength(40);
-    expect(t.k0).toBeUndefined();
-    expect(t.k44).toBe(44);
+    expect(t["k0"]).toBeUndefined();
+    expect(t["k44"]).toBe(44);
   });
 });
