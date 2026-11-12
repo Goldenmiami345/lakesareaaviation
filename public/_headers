@@ -1,3 +1,6 @@
 /models/*.glb
   Content-Type: model/gltf-binary
   Cache-Control: public, max-age=31536000, immutable
+/models/map/*.glb
+  Content-Type: model/gltf-binary
+  Cache-Control: public, max-age=31536000, immutable

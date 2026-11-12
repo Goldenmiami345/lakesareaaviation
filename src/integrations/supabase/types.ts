@@ -20,6 +20,8 @@ export type Database = {
           desktop_journey_mode: string
           fleet_show_models: boolean
           id: string
+          map_3d_aircraft: string[]
+          map_3d_models: boolean
           mobile_journey_mode: string
           show_3d_models: boolean
           show_traffic_pattern: boolean
@@ -32,6 +34,8 @@ export type Database = {
           desktop_journey_mode?: string
           fleet_show_models?: boolean
           id: string
+          map_3d_aircraft?: string[]
+          map_3d_models?: boolean
           mobile_journey_mode?: string
           show_3d_models?: boolean
           show_traffic_pattern?: boolean
@@ -44,6 +48,8 @@ export type Database = {
           desktop_journey_mode?: string
           fleet_show_models?: boolean
           id?: string
+          map_3d_aircraft?: string[]
+          map_3d_models?: boolean
           mobile_journey_mode?: string
           show_3d_models?: boolean
           show_traffic_pattern?: boolean

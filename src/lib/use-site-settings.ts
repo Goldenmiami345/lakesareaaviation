@@ -2,6 +2,7 @@ import { parseMobileJourneyMode, type MobileJourneyMode } from "./story-nav";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { modelsEnabled } from './model-visibility';
+import { mapModelRegs } from './map-models';
 
 let cachedModels: Promise<boolean> | null = null;
 export function useShow3DModels() {
@@ -80,4 +81,20 @@ export function useDesktopJourneyMode() {
     return () => { live = false; };
   }, []);
   return mode;
+}
+
+let cachedMapModels: Promise<ReadonlySet<string>> | null = null;
+/** Airplanes drawn as small 3D models on the maps (site_settings.map_3d_models/map_3d_aircraft). null until loaded after mount; failures turn it off. */
+export function useMapModelRegs() {
+  const [regs, setRegs] = useState<ReadonlySet<string> | null>(null);
+  useEffect(() => {
+    cachedMapModels ??= (async () => {
+      const { data, error } = await supabase.from('site_settings').select('map_3d_models, map_3d_aircraft').eq('id', 'brand').maybeSingle();
+      return error ? new Set<string>() : mapModelRegs(data?.map_3d_models, data?.map_3d_aircraft);
+    })().catch(() => new Set<string>());
+    let live = true;
+    void cachedMapModels.then((v) => { if (live) setRegs(v); });
+    return () => { live = false; };
+  }, []);
+  return regs;
 }

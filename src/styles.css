@@ -266,6 +266,9 @@ html.first-view .page-enter { animation: none; }
 .traffic-target-halo { fill:none; stroke:var(--ink); stroke-width:2.6; opacity:.28; pointer-events:none; }
 /* Subtle dark outline in the airplane's own units, so white airplanes separate from bright ground. */
 [data-aircraft] { filter: drop-shadow(0 0 .045px rgb(8 12 22 / .95)) drop-shadow(0 0 .12px rgb(8 12 22 / .45)); }
+/* A real-time 3D model (map-models-3d.tsx) is drawn over this airplane: hide the flat art, keep its shadow and tags. */
+[data-aircraft][data-model3d] { visibility: hidden; }
+.map-models-3d { filter: drop-shadow(0 0 1px rgb(8 12 22 / .55)); }
 /* Subtle drawn pattern: 1px dashes at ~half the former opacity, labels ~60%; it
    fades (600ms) in/out via data-shown, pulsed or permanent per traffic_pattern_mode. */
 .traffic-pattern-guide { color:var(--radar); pointer-events:none; opacity:0; transition:opacity .6s ease; }
