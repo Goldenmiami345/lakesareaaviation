@@ -343,11 +343,12 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const cur = Math.round(pos) === i;
       layer.style.pointerEvents = cur ? "auto" : "none";
       const warm = layer.hasAttribute("data-warm");
+      const shown = !warm && layer.style.visibility === "visible" && layer.style.opacity !== "0";
       layer.removeAttribute("data-warm");
       if (reduce || fade) {
         // Simple crossfade: previous layer stays underneath while the new one fades in on top.
         // Warm neighbours (painted under the page at rest) never count as the page being shown.
-        const wasVisible = !warm && layer.style.visibility === "visible" && layer.style.opacity !== "0";
+        const wasVisible = shown;
         const keepWarm = !cur && !wasVisible && !reduce && Math.abs(rel) <= 1;
         layer.style.transition = animate && !keepWarm ? "opacity 260ms ease-out" : "none";
         layer.style.transform = "none";
@@ -370,12 +371,12 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       // its shared edge with the neighbour. Only GPU transforms change per frame; no layout, no filters.
       layer.style.zIndex = "";
       layer.style.transition = animate ? "transform 360ms cubic-bezier(0.22,0.61,0.36,1)" : "none";
-      // Faces next to the turning ones stay painted but transparent (an edge-on face is still seen in
-      // perspective), so a quick second swipe never turns in a page that has not been drawn yet
-      // (that showed as a flash of dark navy).
-      const near = Math.abs(rel) < 2;
-      layer.style.visibility = vis || cur || near ? "visible" : "hidden";
-      layer.style.opacity = vis ? "1" : "0";
+      // A page that was on screen finishes its turn instead of vanishing the moment the finger lifts
+      // (it used to disappear at release, so a quick flick showed dark navy beside the incoming page).
+      const finishing = animate && shown && Math.abs(rel) <= 1;
+      const on = vis || finishing;
+      layer.style.visibility = on || cur ? "visible" : "hidden";
+      layer.style.opacity = on ? "1" : "0";
       layer.style.backfaceVisibility = "hidden";
       layer.style.willChange = settled ? "" : "transform";
       // The hinge only moves when the face is actually turned: switching it on a face that is still
@@ -387,7 +388,10 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     if (g && (reduce || fade)) dropGhost();
     else if (g) {
       const rel = g.at - pos;
-      if (g.el.hasAttribute("data-warm")) {
+      const gWarm = g.el.hasAttribute("data-warm");
+      const gShown = !gWarm && g.el.style.visibility === "visible" && g.el.style.opacity !== "0";
+      const gOn = Math.abs(rel) < 1 || (animate && gShown && Math.abs(rel) <= 1);
+      if (gWarm) {
         g.el.removeAttribute("data-warm");
         const from = Math.sign(g.at - restPos.current) || 1;
         g.el.style.transition = "none";
@@ -397,8 +401,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       }
       g.el.style.zIndex = "";
       g.el.style.transition = animate ? "transform 360ms cubic-bezier(0.22,0.61,0.36,1)" : "none";
-      g.el.style.visibility = Math.abs(rel) < 2 ? "visible" : "hidden";
-      g.el.style.opacity = Math.abs(rel) < 1 ? "1" : "0";
+      g.el.style.visibility = gOn ? "visible" : "hidden";
+      g.el.style.opacity = gOn ? "1" : "0";
       if (rel !== 0) g.el.style.transformOrigin = rel < 0 ? "100% 50%" : "0% 50%";
       g.el.style.transform = faceTransform(rel);
     }
