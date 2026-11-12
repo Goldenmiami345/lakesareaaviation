@@ -60,7 +60,7 @@ function PlanePage() {
             </div>
             {f.rate && <p className="mt-3 text-sm text-foreground/75">{RATE_NOTES.wet} <Link to="/rates" className="font-semibold underline underline-offset-2">All rates</Link></p>}
 
-            <div className="mt-6 grid gap-2 sm:grid-cols-2">
+            <div className="mt-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
               <Link to="/contact" search={{ aircraft: f.registration }} className="inline-flex min-h-12 items-center justify-between gap-3 bg-primary px-5 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">Build my training plan <ArrowRight className="size-4" /></Link>
               <a href={SCHOOL_PHONE_TEL} className="inline-flex min-h-12 items-center justify-center gap-2 border border-foreground px-5 text-xs font-bold uppercase tracking-[0.12em]"><Phone className="size-4" /> Call {SCHOOL_PHONE}</a>
             </div>

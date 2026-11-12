@@ -67,13 +67,13 @@ function Page() {
         compact
       />
       <div className="site-container pb-20 pt-8 lg:pt-12 max-sm:!px-4 max-sm:pt-5">
-        <div role="group" aria-label="Filter by role" className="flex flex-wrap gap-2 max-sm:gap-1.5">
+        <div role="group" aria-label="Filter by role" className="flex flex-wrap gap-2 max-sm:gap-1">
           {ROLES.map((r) => {
             const count = r.id === "all" ? fleet.length : fleet.filter((f) => f.role === r.id).length;
             const on = role === r.id;
             return (
               <button key={r.id} type="button" aria-pressed={on} onClick={() => setRole(r.id)}
-                className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-xs font-bold uppercase tracking-[0.14em] transition-colors max-sm:min-h-10 max-sm:gap-1.5 max-sm:px-3 max-sm:text-[11px] max-sm:tracking-[0.08em] ${on ? "border-primary bg-primary text-primary-foreground" : "border-border text-foreground hover:border-primary"}`}>
+                className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-xs font-bold uppercase tracking-[0.14em] transition-colors max-sm:min-h-10 max-sm:gap-1 max-sm:px-2.5 max-sm:text-[10px] max-sm:tracking-[0.04em] ${on ? "border-primary bg-primary text-primary-foreground" : "border-border text-foreground hover:border-primary"}`}>
                 {r.label}<span className={on ? "text-primary-foreground" : "text-muted-foreground"}>{count}</span>
               </button>
             );
@@ -203,18 +203,18 @@ function PlaneTile({ f, open, onToggle }: { f: Plane; open: boolean; onToggle: (
   return (
     <article id={`${id}-tile`} data-plane={id} className={`min-w-0 scroll-mt-20 border bg-background transition-colors ${open ? "border-foreground" : "border-border"}`}>
       <button type="button" onClick={onToggle} aria-expanded={open} aria-controls={`${id}-quick`} className="block w-full text-left">
-        <span className="relative block aspect-[3/2] overflow-hidden bg-secondary/60">
-          <img src={f.image} srcSet={srcSetFor(f.image)} sizes="50vw" alt="" width={600} height={400} loading="lazy" decoding="async" className="fleet-cutout h-full w-full object-contain px-2 pb-2 pt-4" />
-          <span className="absolute left-2 top-2 text-[10px] font-bold uppercase tracking-[0.12em] text-foreground/75">{ROLE_LABEL[f.role]}</span>
+        <span className="relative block aspect-[2/1] overflow-hidden bg-secondary/60">
+          <img src={f.image} srcSet={srcSetFor(f.image)} sizes="50vw" alt="" width={600} height={400} loading="lazy" decoding="async" className="fleet-cutout h-full w-full object-contain px-2 pb-1.5 pt-3.5" />
+          <span className="absolute left-2 top-1.5 text-[9px] font-bold uppercase tracking-[0.12em] text-foreground/75">{ROLE_LABEL[f.role]}</span>
         </span>
-        <span className="block px-2.5 pb-2.5 pt-2">
+        <span className="block px-2.5 pb-2 pt-1.5">
           <span className="flex items-baseline justify-between gap-2">
             <span className="text-[11px] font-bold tracking-[0.06em]">{f.registration}</span>
             <ChevronDown aria-hidden="true" className={`size-3.5 shrink-0 text-foreground/60 transition-transform ${open ? "rotate-180" : ""}`} />
           </span>
-          <span className="block truncate font-display text-lg leading-tight">{f.nickname ?? f.name.replace(/^\d{4} /, "")}</span>
+          <span className="block truncate font-display text-base leading-tight">{f.nickname ?? f.name.replace(/^\d{4} /, "")}</span>
           <span className="block truncate text-xs text-foreground/70">{f.name}</span>
-          <span className="mt-1 block text-xs font-bold tabular-nums">{f.rate ? <>{f.rate} <span className="font-semibold text-foreground/60">wet</span></> : <span className="font-semibold text-foreground/60">Ask for rate</span>}</span>
+          <span className="mt-0.5 block text-xs font-bold tabular-nums">{f.rate ? <>{f.rate} <span className="font-semibold text-foreground/60">wet</span></> : <span className="font-semibold text-foreground/60">Ask for rate</span>}</span>
         </span>
       </button>
     </article>
