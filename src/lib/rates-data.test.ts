@@ -5,10 +5,12 @@ import { fleet, instructionRates, otherRates, RATE_NOTES, RATE_SHEET_URL, rental
 import { findPlane, planeSlug, planeTitle } from "./fleet-info";
 
 test("Cessna 172 rents for $185 regular and $175 prepay", () => {
-  assert.partialDeepStrictEqual(rentalRates[0], { aircraft: "Cessna 172", regular: "$185", prepay: "$175" });
+  const r = rentalRates[0]!;
+  assert.deepEqual([r.aircraft, r.regular, r.prepay], ["Cessna 172", "$185", "$175"]);
 });
 test("Apache rents for $395 regular and $375 prepay", () => {
-  assert.partialDeepStrictEqual(rentalRates.find((r) => r.aircraft.startsWith("Piper Apache")), { regular: "$395", prepay: "$375" });
+  const r = rentalRates.find((x) => x.aircraft.startsWith("Piper Apache"));
+  assert.deepEqual([r?.regular, r?.prepay], ["$395", "$375"]);
 });
 test("every fleet airplane with a rate matches the published rate sheet", () => {
   // Which rate-sheet row each airplane bills under (the sheet groups 172s by nickname).
