@@ -476,14 +476,14 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     let inView = false, timer = 0, shown = false, hide = 0, raf = 0;
     // With the swipe cue, the real page turns slightly toward the next one and back, like the start of a
     // swipe (paintStory, no transitions). Skipped where the next face would be empty or motion is reduced.
-    const stopPeek = () => { if (!raf) return; cancelAnimationFrame(raf); raf = 0; paintStory(activeRef.current, false); };
+    const stopPeek = () => { if (raf) console.log("PEEKSTOP", new Error().stack); if (!raf) return; cancelAnimationFrame(raf); raf = 0; paintStory(activeRef.current, false); };
     const peek = () => {
       const a = activeRef.current, n = stages.length;
       if (carousel || reducedMotion() || (a >= n - 1 && ghostRef.current?.at !== n)) return;
       const t0 = performance.now();
       const step = (now: number) => {
         const t = (now - t0) / STORY_SWIPE_HINT_MS;
-        if (t >= 1 || activeRef.current !== a) { raf = 0; if (activeRef.current === a) paintStory(a, false); return; }
+        if (t >= 1 || activeRef.current !== a) { console.log("PEEKEND", t, activeRef.current, a); raf = 0; if (activeRef.current === a) paintStory(a, false); return; }
         paintStory(a + storyPeek(t), false);
         raf = requestAnimationFrame(step);
       };
