@@ -14,8 +14,8 @@ import { TrafficPath } from './traffic-path';
 import { visibleApproach, type TrafficConditions } from '../lib/wx-conditions';
 
 // Real-time 3D map airplanes: browser-only chunk, requested only once the owner switch is on.
-const MapModels3D=lazy(()=>import.meta.env.SSR?Promise.resolve({default:()=>null}):import('./map-models-3d'));
-class FailClosed extends Component<{children:ReactNode},{failed:boolean}>{state={failed:false};static getDerivedStateFromError(){return {failed:true};}render(){return this.state.failed?null:this.props.children;}}
+const MapModels3D=lazy(():Promise<{default:React.ComponentType<{svgRef:React.RefObject<SVGSVGElement|null>;regs:ReadonlySet<string>;active:boolean}>}>=>import.meta.env.SSR?Promise.resolve({default:()=>null}):import('./map-models-3d'));
+class FailClosed extends Component<{children:ReactNode},{failed:boolean}>{override state={failed:false};static getDerivedStateFromError(){return {failed:true};}override render(){return this.state.failed?null:this.props.children;}}
 function MapModelsLayer({svgRef,regs,active}:{svgRef:React.RefObject<SVGSVGElement|null>;regs:string;active:boolean}){
   const enabled=useMapModelRegs();
   const [armed,setArmed]=useState(false);useEffect(()=>{if(active)setArmed(true);},[active]);
