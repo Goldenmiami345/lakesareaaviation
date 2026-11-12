@@ -178,7 +178,9 @@ export function backRestoreHistory(state: unknown, pathname: string, action: str
 
 /** The returning page is about to appear: keep it hidden until it sits on the saved spot (the old page stays visible meanwhile). */
 export function backRestoreMount() {
-  if (pending) document.documentElement.classList.add("page-restoring");
+  const root = document.documentElement;
+  root.classList.toggle("page-returning", !!pending);
+  if (pending) root.classList.add("page-restoring");
 }
 
 /** A navigation is starting: save the page being left, then stop recording until the next one resolves. */
