@@ -8,7 +8,7 @@ import { KLXL_OBLIQUE, KLXL_OBLIQUE_PATTERN, PX_PER_FT_MID, obliqueProject, patt
 import { trafficSpanFeet, trafficModelScale, TrafficVector } from './traffic-vector';
 import { useTrafficAnimation } from './use-traffic-animation';
 import { usePatternPulse, OBLIQUE_PATTERN_PULSE } from './traffic-path';
-import { useTrafficPatternMode } from '../lib/use-site-settings';
+import { useTrafficPatternMode, useMapModelRegs } from '../lib/use-site-settings';
 import { profileAirport, type TrafficConditions } from '../lib/wx-conditions';
 import { OBLIQUE_SPRITES, OBLIQUE_PLANE_BOOST, SPRITE_FRAME, spriteFrame, frameViewBox } from '../lib/oblique-sprites';
 import { useLiveTraffic } from '../lib/use-live-traffic';
@@ -23,10 +23,10 @@ const cam=KLXL_OBLIQUE.camera;
 const deg=(r:number)=>((r*180/Math.PI)%360+360)%360;
 
 /** One pose through the photo camera: ground metres + height + true track. Shared by simulated and live airplanes. */
-function pose(e:number,n:number,hM:number,track:number,reg:string){
+function pose(e:number,n:number,hM:number,track:number,reg:string,useSprite=true){
   const air=projectGroundScaled(e,n,hM),g=projectGroundScaled(e,n,0);
   const t=track*Math.PI/180,fwd={e:Math.sin(t),n:Math.cos(t)},right={e:Math.cos(t),n:-Math.sin(t)};
-  const sprite=OBLIQUE_SPRITES[reg];
+  const sprite=useSprite?OBLIQUE_SPRITES[reg]:undefined;
   const spanAt=(scale:number)=>trafficSpanFeet(reg)*scale*PX_PER_FT_MID*(sprite?OBLIQUE_PLANE_BOOST:trafficModelScale(reg));
   const matrix=(h:number,at:{x:number;y:number;scale:number})=>{
     const rx=projectGroundScaled(e+right.e,n+right.n,h),ty=projectGroundScaled(e-fwd.e,n-fwd.n,h);
@@ -43,9 +43,9 @@ function pose(e:number,n:number,hM:number,track:number,reg:string){
   return {x:air.x,y:air.y,z:air.z,span,transform,shadow:matrix(0,g),apply};
 }
 
-/** Airplane art: our 3D-model heading sprites when we have them, the drawn vector otherwise. */
-function PlaneArt({reg,load}:{reg:string;load:boolean}){
-  const s=OBLIQUE_SPRITES[reg];const F=SPRITE_FRAME;
+/** Airplane art: our 3D-model heading sprites when we have them (and the owner's map 3D switch allows), the drawn vector otherwise. */
+function PlaneArt({reg,load,sprite=true}:{reg:string;load:boolean;sprite?:boolean}){
+  const s=sprite?OBLIQUE_SPRITES[reg]:undefined;const F=SPRITE_FRAME;
   if(!s)return <TrafficVector reg={reg}/>;
   return <svg data-sprite="" x={-F/2} y={-F/2} width={F} height={F} viewBox={frameViewBox(0)} overflow="hidden">{load&&<image href={s.url} width={F*6} height={F*6}/>}</svg>;
 }
@@ -68,16 +68,19 @@ export function TrafficPerspective({active,viewBox,wind=null,conditions}:{active
   const live=useMemo(()=>demo??patternTraffic(liveFields?.['KLXL'],ELEV),[liveFields,demo]);
   const isLive=active&&live.length>0;
   const {selected,selectedRef,open,hitProps}=useTrafficSelection(active&&!isLive);
+  const modelRegs=useMapModelRegs();
+  // Until the setting loads the baked model sprites stay (they are images, not runtime 3D).
+  const spriteOn=useCallback((reg:string)=>modelRegs===null||modelRegs.has(reg),[modelRegs]);
   const patternMode=useTrafficPatternMode();
   const patternShown=usePatternPulse(patternMode,active,selected!==null,OBLIQUE_PATTERN_PULSE);
   usePreloadCardPhotos(a.aircraft,active);
   const planes=useMemo(()=>a.aircraft.map(reg=>{const f=fleet.find(x=>x.registration===reg);return {reg,type:f?.name??'Training aircraft',nickname:f?.nickname??''};}),[a]);
   const project=useCallback((s:PatternSample,reg:string)=>{
     const angle=(s.heading-90)*Math.PI/180,g=patternToGround(s.x,s.y),g2=patternToGround(s.x+Math.cos(angle),s.y+Math.sin(angle));
-    const p=pose(g.e,g.n,s.agl*FT,deg(Math.atan2(g2.e-g.e,g2.n-g.n)),reg);
+    const p=pose(g.e,g.n,s.agl*FT,deg(Math.atan2(g2.e-g.e,g2.n-g.n)),reg,spriteOn(reg));
     if(p.z<150)return {...p,lift:s.agl/a.tpaAgl,transform:`matrix(0 0 0 0 ${p.x} ${p.y})`,shadow:`matrix(0 0 0 0 ${p.x} ${p.y})`};
     return {...p,lift:s.agl/a.tpaAgl};
-  },[a]);
+  },[a,spriteOn]);
   useTrafficAnimation({active:active&&!isLive,airport:a,wind,runwayHeading:rwy.trueHdg,regs:a.aircraft,svgRef,planeRefs,shadowRefs,tagRefs,textRefs,cardRef,selectedRef,project,offsets:OFFSETS,...(wx?{conditions:wx}:{})});
   const path=useMemo(()=>{
     const w=patternWaypoints(a),commands:string[]=[];
@@ -101,17 +104,17 @@ export function TrafficPerspective({active,viewBox,wind=null,conditions}:{active
     <path d={path} className="traffic-oblique-path" data-shown={patternShown&&!isLive?'':undefined} aria-hidden/>
     <g className="traffic-sim">
       {planes.map((p,i)=><g key={`s-${p.reg}`} ref={el=>{shadowRefs.current[i]=el;}} className="pointer-events-none traffic-ground-shadow" aria-hidden><TrafficVector reg={p.reg} shadow/></g>)}
-      {planes.map((p,i)=><g key={p.reg} data-aircraft={p.reg} ref={el=>{planeRefs.current[i]=el;}} className="pointer-events-none" aria-hidden><PlaneArt reg={p.reg} load={armed}/></g>)}
+      {planes.map((p,i)=><g key={p.reg} data-aircraft={p.reg} ref={el=>{planeRefs.current[i]=el;}} className="pointer-events-none" aria-hidden><PlaneArt reg={p.reg} load={armed} sprite={spriteOn(p.reg)}/></g>)}
       {active&&!isLive&&planes.map((p,i)=><RadarTag key={`t-${p.reg}`} reg={p.reg} index={i} seed={0} label={`${p.reg}, ${p.type}. Show details`} tabIndex={0} hit={hitProps(i,p.reg)} tagRef={el=>{tagRefs.current[i]=el;}} textRef={el=>{textRefs.current[i]=el;}}/>)}
     </g>
-    {isLive&&<LivePlanes list={live} svgRef={svgRef}/>}
+    {isLive&&<LivePlanes list={live} svgRef={svgRef} spriteOn={spriteOn}/>}
   </svg>
   {isLive&&<LiveChip svgRef={svgRef}/>}
   {info&&<TrafficCard key={info.reg} ref={cardRef} plane={info} runway={a.runway} onOpen={()=>open(info.reg)}/>}</div>;
 }
 
 /** Real aircraft from ADS-B, dead-reckoned between reports. */
-function LivePlanes({list,svgRef}:{list:LiveAircraft[];svgRef:React.RefObject<SVGSVGElement|null>}){
+function LivePlanes({list,svgRef,spriteOn}:{list:LiveAircraft[];svgRef:React.RefObject<SVGSVGElement|null>;spriteOn:(reg:string)=>boolean}){
   const planeRefs=useRef<Record<string,SVGGElement|null>>({}),shadowRefs=useRef<Record<string,SVGGElement|null>>({}),tagRefs=useRef<Record<string,SVGGElement|null>>({}),textRefs=useRef<Record<string,SVGTextElement|null>>({});
   const cardRef=useRef<HTMLDivElement>(null);
   const [sel,setSel]=useState<string|null>(null);
@@ -131,7 +134,7 @@ function LivePlanes({list,svgRef}:{list:LiveAircraft[];svgRef:React.RefObject<SV
         const pos=deadReckon({lat:a.lat!,lon:a.lon!,kt:a.kt,track:a.track??0},dt);
         const g=groundFromLatLon(pos.lat,pos.lon);
         const altFt=Math.max(ELEV,a.altFt+(a.vs??0)*Math.min(30,Math.max(0,dt))/60);
-        const p=pose(g.e,g.n,(altFt-ELEV)*FT,a.track??0,a.id);
+        const p=pose(g.e,g.n,(altFt-ELEV)*FT,a.track??0,a.id,spriteOn(a.id));
         // Aircraft at or behind the photo's camera cannot be drawn honestly: hide them.
         const behind=p.z<300;
         const plane=planeRefs.current[a.id];if(plane){plane.style.visibility=behind?'hidden':'';plane.setAttribute('transform',p.transform);p.apply?.(plane);}
@@ -152,11 +155,11 @@ function LivePlanes({list,svgRef}:{list:LiveAircraft[];svgRef:React.RefObject<SV
     };
     raf=requestAnimationFrame(draw);
     return()=>cancelAnimationFrame(raf);
-  },[list,svgRef]);
+  },[list,svgRef,spriteOn]);
   const info=sel?list.find(x=>x.id===sel)??null:null;
   return <>
     {list.map(a=><g key={`ls-${a.id}`} ref={el=>{shadowRefs.current[a.id]=el;}} className="pointer-events-none traffic-ground-shadow" opacity={.3} aria-hidden><TrafficVector reg={a.id} shadow/></g>)}
-    {list.map(a=><g key={`l-${a.id}`} data-aircraft={a.id} data-live-aircraft="" ref={el=>{planeRefs.current[a.id]=el;}} className="pointer-events-none" aria-hidden><PlaneArt reg={a.id} load/></g>)}
+    {list.map(a=><g key={`l-${a.id}`} data-aircraft={a.id} data-live-aircraft="" ref={el=>{planeRefs.current[a.id]=el;}} className="pointer-events-none" aria-hidden><PlaneArt reg={a.id} load sprite={spriteOn(a.id)}/></g>)}
     {list.map((a,i)=><g key={`lt-${a.id}`} className="traffic-live-tag-wrap"><RadarTag reg={a.callsign&&a.callsign!==a.id?a.callsign:a.id} index={i} seed={0} label={`${a.id}, live aircraft. Show flight details`} tabIndex={0}
       hit={{'data-traffic-hit':'',onClick:()=>setSel(a.id),onKeyDown:(e:React.KeyboardEvent)=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setSel(a.id);}if(e.key==='Escape')setSel(null);}}}
       tagRef={el=>{tagRefs.current[a.id]=el;el?.classList.add('is-live-tag');}} textRef={el=>{textRefs.current[a.id]=el;}}/></g>)}
