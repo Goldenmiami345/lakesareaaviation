@@ -67,10 +67,6 @@
     "heading": "Progress measured in ratings earned.",
     "copy": "Students come with different experience, preparation, and goals. Their stories show what focused training can make possible."
   },
-  "/team": {
-    "heading": "Reach your goals with our instructors.",
-    "copy": "A talented and dedicated team of flight instructors across airplane, instrument, multi-engine, and helicopter training."
-  },
   "/services": {
     "heading": "Every rating, endorsement, and experience.",
     "copy": "Whether you have zero flight hours or have three-hundred and are looking to finish a multi-engine commercial certificate, we are the school for you. We offer a wide variety of ratings, endorsements, and aviation experiences. All of our offerings are tailored to suit your individual needs."
@@ -106,5 +102,37 @@
   "/programs/zero-to-hero": {
     "heading": "Zero to Hero",
     "copy": "See the complete sequence Lakes Area Aviation publishes for progressing from no flight time toward professional flying."
+  },
+  "/fleet/n8570b": {
+    "heading": "N8570B Phoenix",
+    "copy": "1957 Cessna 172"
+  },
+  "/fleet/n4383p": {
+    "heading": "N4383P",
+    "copy": "1960 Piper Apache"
+  },
+  "/fleet/n46201": {
+    "heading": "N46201 Cardinal",
+    "copy": "1968 Cessna 172I"
+  },
+  "/fleet/n6717a": {
+    "heading": "N6717A Blue",
+    "copy": "1956 Cessna 172"
+  },
+  "/fleet/n6641f": {
+    "heading": "N6641F Elliott",
+    "copy": "1966 Cessna 150"
+  },
+  "/fleet/n96150": {
+    "heading": "N96150 Tweety",
+    "copy": "1946 Taylorcraft BC-12D"
+  },
+  "/fleet/n11059": {
+    "heading": "N11059 Citabria",
+    "copy": "1965 Champion 7ECA"
+  },
+  "/fleet/n7108g": {
+    "heading": "N7108G Hawk",
+    "copy": "1970 Cessna 172K"
   }
 }

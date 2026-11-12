@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getRouterInstance } from "@tanstack/react-start";
 import { isSitemapRouteIncluded, sitemapPathForLocation, sitemapStaticPaths, sitemapXML, type SitemapEntry } from "@/lib/sitemap";
-import { programs } from "@/lib/site-data";
+import { fleet, programs } from "@/lib/site-data";
 
 import { SITE_URL as BASE_URL } from "@/lib/site-url";
 
@@ -24,6 +24,21 @@ export const Route = createFileRoute("/sitemap.xml")({
               hash: "",
             });
             const path = sitemapPathForLocation(router, location, routeId);
+            if (path) entries.push({ path });
+          }
+        }
+
+        // Airplane pages, one per fleet entry (/fleet/n8570b).
+        const fleetRouteId = "/fleet_/$reg";
+        if (isSitemapRouteIncluded(router.routesById[fleetRouteId])) {
+          for (const plane of fleet) {
+            const location = router.buildLocation({
+              to: "/fleet/$reg",
+              params: { reg: plane.registration.toLowerCase() },
+              search: () => ({}),
+              hash: "",
+            });
+            const path = sitemapPathForLocation(router, location, fleetRouteId);
             if (path) entries.push({ path });
           }
         }
