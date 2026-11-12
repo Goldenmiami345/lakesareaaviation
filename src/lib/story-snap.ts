@@ -16,6 +16,15 @@ export function storySnapWanted(y: number, end: number, headingUp: boolean): boo
   return headingUp;
 }
 
+/**
+ * The final stretch runs from just past the last section's anchor down to the content anchor (inclusive).
+ * A drag that starts here decides by direction: heading down the page stays free, so a second swipe made
+ * while the glide into the content is still settling is never pulled back to the content's top.
+ */
+export function inFinalStretch(y: number, last: number, end: number): boolean {
+  return y > last + 2 && y <= end + 1;
+}
+
 /** Nearest anchor to a resting position (anchors sorted ascending). */
 export function nearestSnap(y: number, points: number[]): number | null {
   let best: number | null = null;
@@ -35,12 +44,13 @@ let stop: (() => void) | null = null;
 function start(): () => void {
   const root = document.documentElement;
   root.classList.add("story-phone");
-  let points: number[] = [], end = Infinity, fingers = 0, startY = 0, startScroll = 0, idle = 0, on: boolean | null = null;
+  let points: number[] = [], end = Infinity, last = -Infinity, lastY = 0, fingers = 0, startY = 0, startScroll = 0, idle = 0, on: boolean | null = null;
   const measure = () => {
     points = Array.from(document.querySelectorAll<HTMLElement>(".story-snap"))
       .map((el) => Math.round(el.getBoundingClientRect().top + window.scrollY))
       .sort((a, b) => a - b);
     end = points.at(-1) ?? Infinity;
+    last = points.at(-2) ?? -Infinity;
   };
   const set = (v: boolean) => { if (pageReturnActive()) return; on = v; root.classList.toggle("story-snapping", v); };
   const zoomed = () => root.classList.contains("journey-zoomed");
@@ -57,8 +67,7 @@ function start(): () => void {
   const onMove = (e: TouchEvent) => {
     if (zoomed()) return;
     const dy = (e.touches[0]?.clientY ?? startY) - startY; // finger moving down = page heading up
-    const atEnd = Math.abs(startScroll - end) <= 1;
-    if (atEnd && Math.abs(dy) > 6) set(dy > 0);
+    if (inFinalStretch(startScroll, last, end)) { if (Math.abs(dy) > 6) set(dy > 0); }
     else if (!on && window.scrollY < end - 1) set(true); // a slow drag from the content back into the sections
   };
   // A rest between anchors (Safari can stop a snap when a finger taps mid-glide, or free momentum
@@ -75,13 +84,17 @@ function start(): () => void {
   const onEnd = (e: TouchEvent) => { fingers = e.touches.length; if (!fingers) schedule(); };
   const schedule = () => { window.clearTimeout(idle); if (!pageReturnActive()) idle = window.setTimeout(settle, 180); };
   const onScroll = () => {
+    const y = window.scrollY, up = y < lastY;
+    lastY = y;
     if (pageReturnActive() || fingers) return;
-    // Free momentum from the content crossing back into the sections: lock so it stops at the first section it meets.
-    if (on === false && !zoomed() && window.scrollY < end - 1) set(true);
+    // Free momentum from the content crossing back UP into the sections: lock so it stops at the first
+    // section it meets. Downward momentum out of the final stretch stays free (relocking it caused the stick).
+    if (on === false && up && !zoomed() && y < end - 1) set(true);
     schedule();
   };
 
   measure();
+  lastY = window.scrollY;
   // Fresh page load: Safari restores the old scroll offset from the taller fading-scroll layout, and
   // mandatory snapping then lands on the nearest section (the Discovery Flight). Always open on the hero.
   let touched = false;
