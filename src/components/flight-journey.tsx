@@ -370,11 +370,12 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       // its shared edge with the neighbour. Only GPU transforms change per frame; no layout, no filters.
       layer.style.zIndex = "";
       layer.style.transition = animate ? "transform 360ms cubic-bezier(0.22,0.61,0.36,1)" : "none";
-      // Faces next to the turning ones stay painted (edge-on, out of sight) so a quick second swipe
-      // never turns in a page that has not been drawn yet (that showed as a flash of dark navy).
+      // Faces next to the turning ones stay painted but transparent (an edge-on face is still seen in
+      // perspective), so a quick second swipe never turns in a page that has not been drawn yet
+      // (that showed as a flash of dark navy).
       const near = Math.abs(rel) < 2;
       layer.style.visibility = vis || cur || near ? "visible" : "hidden";
-      layer.style.opacity = vis || near ? "1" : "0";
+      layer.style.opacity = vis ? "1" : "0";
       layer.style.backfaceVisibility = "hidden";
       layer.style.willChange = settled ? "" : "transform";
       // The hinge only moves when the face is actually turned: switching it on a face that is still
@@ -397,6 +398,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       g.el.style.zIndex = "";
       g.el.style.transition = animate ? "transform 360ms cubic-bezier(0.22,0.61,0.36,1)" : "none";
       g.el.style.visibility = Math.abs(rel) < 2 ? "visible" : "hidden";
+      g.el.style.opacity = Math.abs(rel) < 1 ? "1" : "0";
       if (rel !== 0) g.el.style.transformOrigin = rel < 0 ? "100% 50%" : "0% 50%";
       g.el.style.transform = faceTransform(rel);
     }
@@ -436,6 +438,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
           g.el.style.transform = "none";
           g.el.style.transformOrigin = "";
           g.el.style.zIndex = "1";
+          g.el.style.opacity = "1";
           g.el.style.visibility = "visible";
           g.el.setAttribute("data-warm", "");
         }
