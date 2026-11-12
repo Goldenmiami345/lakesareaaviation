@@ -105,9 +105,9 @@
 - [x] State codes added to the home location buttons on phones (were hidden below 640px); fits 320-1280 with no clipping, 44px tap areas kept, build OK.
 
 ## Inner pages round (rates, fleet, about/team)
-- [ ] Rates page: formal rate sheet (tables, bold prices, wet-rate banner, course estimates), first prices visible on phones.
-- [ ] Downloadable 2026 rate sheet PDF in the original lakesareaaviation.com format, linked from Rates.
-- [ ] Fleet phones: compact 2-column tiles (owner order, category label, filter chips) with in-place quick look + link to a page per airplane; desktop cards link to the same pages.
-- [ ] Airplane pages /fleet/<tail> (prerendered, sitemap, metadata).
-- [ ] Merge Team into About (team photos on About, /team forwards there, menus updated).
-- [ ] Phones: shorter inner-page banners and a much shorter footer.
+- [x] Rates page: formal rate sheet (tables, bold prices, wet-rate banner, course estimates), first prices visible on phones.
+- [x] Downloadable 2026 rate sheet PDF in the original lakesareaaviation.com format, linked from Rates.
+- [x] Fleet phones: compact 2-column tiles (owner order, category label, filter chips) with in-place quick look + link to a page per airplane; desktop cards link to the same pages.
+- [x] Airplane pages /fleet/<tail> (prerendered, sitemap, metadata).
+- [x] Merge Team into About (team photos on About, /team forwards there, menus updated).
+- [x] Phones: shorter inner-page banners and a much shorter footer.
