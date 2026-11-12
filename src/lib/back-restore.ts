@@ -83,6 +83,7 @@ const keyOf = (state: unknown) => {
   const st = state as { __TSR_key?: string; key?: string } | null | undefined;
   return st?.__TSR_key ?? st?.key ?? null;
 };
+const dbg = (m: string) => { if (import.meta.env.DEV) ((window as unknown as { __brlog: unknown[] }).__brlog ??= []).push([Math.round(performance.now()), m]); };
 const frame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
 
 async function restore(snap: BackSnapshot) {
@@ -90,6 +91,7 @@ async function restore(snap: BackSnapshot) {
   const root = document.documentElement;
   const t0 = performance.now();
   const home = snap.i >= 0 || Object.keys(snap.j).length > 0;
+  dbg("restore start");
   if (home) {
     // The section format (stories or scrolling) must be known before positions mean anything.
     const settings = await import("./use-site-settings");
@@ -98,6 +100,7 @@ async function restore(snap: BackSnapshot) {
       new Promise((r) => window.setTimeout(r, GATE_MAX_MS)),
     ]);
   }
+  dbg("settings");
   let fonts = !document.fonts;
   document.fonts?.ready.then(() => { fonts = true; }).catch(() => { fonts = true; });
   // Layout settles: fonts ready and page height still for 3 frames (capped so it never hangs).
@@ -111,6 +114,7 @@ async function restore(snap: BackSnapshot) {
     if (fonts && quiet >= 3) break;
   }
   if (mine !== token) return;
+  dbg("gate " + quiet + " " + fonts);
   if (home) window.dispatchEvent(new CustomEvent(JOURNEY_RESTORE, { detail: snap.j }));
   const points = anchors();
   const target = restoreTarget(snap, points, root.scrollHeight - window.innerHeight);
@@ -156,6 +160,7 @@ export function installBackRestore() {
 
 /** History change (router.history.subscribe): only BACK/FORWARD/GO returns restore. */
 export function backRestoreHistory(state: unknown, pathname: string, action: string) {
+  dbg("history " + action);
   if (action === "REPLACE") return; // router housekeeping on the same entry
   token++;
   if (action !== "BACK" && action !== "FORWARD" && action !== "GO") { pending = null; return; }
@@ -166,6 +171,7 @@ export function backRestoreHistory(state: unknown, pathname: string, action: str
 
 /** The returning page is about to appear: keep it hidden until it sits on the saved spot (the old page stays visible meanwhile). */
 export function backRestoreMount() {
+  dbg("mount " + !!pending);
   if (pending) document.documentElement.classList.add("page-restoring");
 }
 
@@ -174,6 +180,7 @@ export function backRestoreLeave() { save(); frozen = true; }
 
 /** The new page has resolved: start recording under its entry, and run a pending return. */
 export function backRestoreResolved(state: unknown) {
+  dbg("resolved " + !!pending);
   currentKey = keyOf(state) ?? keyOf(window.history.state);
   journeys = {};
   frozen = false;
