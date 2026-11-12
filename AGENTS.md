@@ -9,10 +9,10 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 - Shared navigation and layout live in src/components/site-shell.tsx so every public page stays visually consistent.
-- Static program, fleet, location, and testimonial content lives in src/lib/site-data.ts to keep route pages concise and facts consistent.
+- Program, fleet, rate, location and testimonial facts live in src/lib/site-data.ts; /rates and the rate-sheet PDF (scripts/build-rate-sheet.py, public/downloads) both read it so prices never drift.
 - Aircraft imagery must originate from Lakes Area Aviation's official site and preserve each real airplane's registration, paint, and physical details.
 
-- All 24 public pages are prerendered via the explicit `pages` list in vite.config.ts; add new static routes there (router uses trailingSlash "preserve" so prerender requests do not redirect-loop).
+- Public pages (incl. /fleet/<tail>) prerender from the explicit vite.config.ts `pages` list plus a prerender contract; add both (trailingSlash "preserve" avoids redirect loops).
 - Bundled photos: WebP, max 2560px, never above source; srcset via responsive-image.ts.
 - The global accent theme is read from the public site_settings row; only a database-verified admin role may change it.
 - Scroll-journey stages may use optimized CDN video with a real-photo poster; video plays only while its stage is active to protect mobile performance.
