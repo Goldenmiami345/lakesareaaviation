@@ -118,6 +118,7 @@ async function restore(snap: BackSnapshot) {
   const snapped = root.classList.contains("story-snapping");
   root.classList.remove("story-snapping");
   window.scrollTo({ top: target, behavior: "instant" });
+  if (import.meta.env.DEV) console.info("[back-restore]", JSON.stringify({ target, points, h: root.scrollHeight, t: Math.round(performance.now() - t0), y: window.scrollY }));
   await frame();
   await frame();
   if (mine !== token) return;
