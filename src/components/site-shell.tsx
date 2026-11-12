@@ -15,7 +15,7 @@ const nav = [
   ["Fleet", "/fleet"],
   ["Rates", "/rates"],
   ["Students", "/students"],
-  ["About", "/about"],
+  ["About & Team", "/about"],
 ] as const;
 
 export function Header({ overlay = false }: { overlay?: boolean }) {
@@ -69,21 +69,21 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
 export function Footer() {
   const pathname = useLocation({ select: location => sitePath(location.pathname) });
   const onHome = (e: MouseEvent) => { if (pathname !== "/") return; e.preventDefault(); jumpToPageTop(); };
-  return <footer data-no-float className="edge-fade-t bg-ink pb-[calc(6rem+env(safe-area-inset-bottom))] pt-28 text-background md:pb-12">
-    <div className="site-container grid gap-12 md:grid-cols-[1.3fr_2fr]">
-      <div><Link to="/" onClick={onHome} className="inline-flex min-h-11 items-center" aria-label="Lakes Area Aviation home"><img src={logoAsset.url} alt="Lakes Area Aviation" loading="lazy" className="h-16 w-auto max-w-full brightness-0 invert" /></Link><p className="mt-5 max-w-sm text-sm text-background/65">Flight instruction, accelerated ratings, commercial pilot services, aircraft management, and specialized training.</p></div>
-      <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+  return <footer data-no-float className="edge-fade-t bg-ink pb-[calc(6rem+env(safe-area-inset-bottom))] pt-14 text-background md:pb-12 md:pt-28">
+    <div className="site-container grid gap-8 md:grid-cols-[1.3fr_2fr] md:gap-12">
+      <div><Link to="/" onClick={onHome} className="inline-flex min-h-11 items-center" aria-label="Lakes Area Aviation home"><img src={logoAsset.url} alt="Lakes Area Aviation" loading="lazy" className="h-12 w-auto max-w-full brightness-0 invert md:h-16" /></Link><p className="mt-3 max-w-sm text-sm text-background/65 md:mt-5">Flight instruction, accelerated ratings, commercial pilot services, aircraft management, and specialized training.</p></div>
+      <div className="grid gap-6 sm:grid-cols-3 sm:gap-8">
         <FooterGroup title="Train" links={[["Accelerated", "/accelerated-training"], ["CFI & CFII", "/programs/cfi-cfii"], ["All programs", "/programs"], ["Local training", "/local-training"], ["Specialized", "/specialized-training"], ["Rates", "/rates"]]} />
-        <FooterGroup title="Explore" links={[["Fleet", "/fleet"], ["Team", "/team"], ["Success", "/student-success"], ["About", "/about"]]} />
+        <FooterGroup title="Explore" links={[["Fleet", "/fleet"], ["About & Team", "/about"], ["Success", "/student-success"]]} />
         <FooterGroup title="Start" links={[["Intro flight", "/introductory-flights"], ["Scenic flights", "/scenic-flights"], ["New students", "/new-students"], ["Locations", "/locations"], ["Contact", "/contact"]]} />
       </div>
     </div>
-    <div className="site-container mt-14 border-t border-background/15 pt-6 text-xs text-[color:var(--muted-on-ink)]">© 2026 Lakes Area Aviation, LLC. Training timelines vary by student readiness, weather, and examiner availability.</div>
+    <div className="site-container mt-10 border-t md:mt-14 border-background/15 pt-6 text-xs text-[color:var(--muted-on-ink)]">© 2026 Lakes Area Aviation, LLC. Training timelines vary by student readiness, weather, and examiner availability.</div>
   </footer>;
 }
 
 function FooterGroup({ title, links }: { title: string; links: [string, string][] }) {
-  return <div><p className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-primary-text">{title}</p><div className="grid md:gap-1">{links.map(([label, to]) => <Link key={to} to={to} className="flex min-h-11 items-center text-sm text-background/70 hover:text-background md:min-h-6">{label}</Link>)}</div></div>;
+  return <div><p className="mb-1 text-xs font-bold uppercase tracking-[0.16em] text-primary-text md:mb-4">{title}</p>{/* Phones: links wrap side by side (keeps 40px taps without two screens of footer). */}<div className="flex flex-wrap gap-x-5 sm:grid sm:gap-x-0 md:gap-1">{links.map(([label, to]) => <Link key={to} to={to} className="flex min-h-10 items-center text-sm text-background/75 hover:text-background md:min-h-6">{label}</Link>)}</div></div>;
 }
 
 export function MobileActions() {
@@ -124,8 +124,8 @@ export function SiteLayout({ children, overlayHeader = false }: { children: Reac
   return <><MotionExperience pageKey={pageKey} /><Header overlay={overlayHeader} /><main id="main" tabIndex={-1} key={pageKey} className="page-enter outline-none">{children}</main><Footer /><MobileActions /></>;
 }
 
-/** `compact` shortens the intro on phones only (larger screens are unchanged). */
-export function PageIntro({ eyebrow, title, text, image, imageAlt = "", compact = false }: { eyebrow: string; title: string; text: string; image?: string; imageAlt?: string; compact?: boolean }) {
+/** Phones always get a short intro so page content starts on the first screen; `compact` is kept for callers and is now the default. */
+export function PageIntro({ eyebrow, title, text, image, imageAlt = "", compact = true }: { eyebrow: string; title: string; text: string; image?: string; imageAlt?: string; compact?: boolean }) {
   return <section className={`relative isolate overflow-hidden edge-fade-b bg-ink pb-32 pt-36 text-background ${compact ? "max-sm:pb-10 max-sm:pt-28" : ""}`}>{image && <><img src={image} srcSet={srcSetFor(image)} sizes="100vw" alt={imageAlt} width={1920} height={1080} loading="eager" fetchPriority="high" decoding="async" className="hero-kenburns absolute inset-0 -z-20 h-full w-full object-cover" /><div className="absolute inset-0 -z-10 bg-gradient-to-r from-ink/90 via-ink/65 to-ink/25" /></>}<div className="site-container relative z-10" data-scroll-reveal><p className="stage-label">{eyebrow}</p><h1 className={`mt-4 max-w-4xl font-display text-5xl sm:text-7xl ${compact ? "max-sm:mt-3 max-sm:text-4xl" : ""}`}>{title}</h1><p className={`mt-6 max-w-2xl text-lg leading-relaxed text-background/80 ${compact ? "max-sm:mt-3 max-sm:text-base" : ""}`}>{text}</p></div></section>;
 }
 
