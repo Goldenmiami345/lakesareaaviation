@@ -78,6 +78,13 @@
       "when": 1793938112069,
       "tag": "0010_visitor_models_off_by_default",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794460318442,
+      "tag": "0011_map_3d_models",
+      "breakpoints": true
     }
   ]
 }
