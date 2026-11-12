@@ -97,7 +97,7 @@ function PlanePage() {
         </div>
 
         <nav aria-label="More aircraft" className="mt-14 grid grid-cols-2 gap-px border border-border bg-border">
-          {[["Previous", prev], ["Next", next] as const].map(([label, p]) => (
+          {([["Previous", prev], ["Next", next]] as const).map(([label, p]) => (
             <Link key={label} to="/fleet/$reg" params={{ reg: planeSlug(p) }} className={`flex min-h-16 flex-col justify-center bg-background px-4 py-3 ${label === "Next" ? "items-end text-right" : ""}`}>
               <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/65">{label}</span>
               <span className="font-display text-lg leading-tight">{planeTitle(p)}</span>

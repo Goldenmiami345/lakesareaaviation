@@ -30,6 +30,7 @@ import { Route as SpecializedTrainingRouteImport } from './routes/specialized-tr
 import { Route as StudentSuccessRouteImport } from './routes/student-success'
 import { Route as StudentsRouteImport } from './routes/students'
 import { Route as TeamRouteImport } from './routes/team'
+import { Route as FleetRegRouteImport } from './routes/fleet_.$reg'
 import { Route as ProgramsIndexRouteImport } from './routes/programs.index'
 import { Route as ProgramsSlugRouteImport } from './routes/programs.$slug'
 import { Route as ApiPublicLiveTrafficRouteImport } from './routes/api/public/live-traffic'
@@ -140,6 +141,11 @@ const TeamRoute = TeamRouteImport.update({
   path: '/team',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FleetRegRoute = FleetRegRouteImport.update({
+  id: '/fleet_/$reg',
+  path: '/fleet/$reg',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProgramsIndexRoute = ProgramsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -183,6 +189,7 @@ export interface FileRoutesByFullPath {
   '/student-success': typeof StudentSuccessRoute
   '/students': typeof StudentsRoute
   '/team': typeof TeamRoute
+  '/fleet/$reg': typeof FleetRegRoute
   '/programs/$slug': typeof ProgramsSlugRoute
   '/programs/': typeof ProgramsIndexRoute
   '/api/public/live-traffic': typeof ApiPublicLiveTrafficRoute
@@ -209,6 +216,7 @@ export interface FileRoutesByTo {
   '/student-success': typeof StudentSuccessRoute
   '/students': typeof StudentsRoute
   '/team': typeof TeamRoute
+  '/fleet/$reg': typeof FleetRegRoute
   '/programs/$slug': typeof ProgramsSlugRoute
   '/programs': typeof ProgramsIndexRoute
   '/api/public/live-traffic': typeof ApiPublicLiveTrafficRoute
@@ -237,6 +245,7 @@ export interface FileRoutesById {
   '/student-success': typeof StudentSuccessRoute
   '/students': typeof StudentsRoute
   '/team': typeof TeamRoute
+  '/fleet_/$reg': typeof FleetRegRoute
   '/programs/$slug': typeof ProgramsSlugRoute
   '/programs/': typeof ProgramsIndexRoute
   '/api/public/live-traffic': typeof ApiPublicLiveTrafficRoute
@@ -266,6 +275,7 @@ export interface FileRouteTypes {
     | '/student-success'
     | '/students'
     | '/team'
+    | '/fleet/$reg'
     | '/programs/$slug'
     | '/programs/'
     | '/api/public/live-traffic'
@@ -292,6 +302,7 @@ export interface FileRouteTypes {
     | '/student-success'
     | '/students'
     | '/team'
+    | '/fleet/$reg'
     | '/programs/$slug'
     | '/programs'
     | '/api/public/live-traffic'
@@ -319,6 +330,7 @@ export interface FileRouteTypes {
     | '/student-success'
     | '/students'
     | '/team'
+    | '/fleet_/$reg'
     | '/programs/$slug'
     | '/programs/'
     | '/api/public/live-traffic'
@@ -347,6 +359,7 @@ export interface RootRouteChildren {
   StudentSuccessRoute: typeof StudentSuccessRoute
   StudentsRoute: typeof StudentsRoute
   TeamRoute: typeof TeamRoute
+  FleetRegRoute: typeof FleetRegRoute
   ApiPublicLiveTrafficRoute: typeof ApiPublicLiveTrafficRoute
   ApiPublicMetarRoute: typeof ApiPublicMetarRoute
 }
@@ -500,6 +513,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fleet_/$reg': {
+      id: '/fleet_/$reg'
+      path: '/fleet/$reg'
+      fullPath: '/fleet/$reg'
+      preLoaderRoute: typeof FleetRegRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/programs/': {
       id: '/programs/'
       path: '/'
@@ -567,6 +587,7 @@ const rootRouteChildren: RootRouteChildren = {
   StudentSuccessRoute: StudentSuccessRoute,
   StudentsRoute: StudentsRoute,
   TeamRoute: TeamRoute,
+  FleetRegRoute: FleetRegRoute,
   ApiPublicLiveTrafficRoute: ApiPublicLiveTrafficRoute,
   ApiPublicMetarRoute: ApiPublicMetarRoute,
 }
