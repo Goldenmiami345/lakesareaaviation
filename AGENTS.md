@@ -42,7 +42,7 @@
 
 - Subdirectories have their own AGENTS.md (src/components) to read before changing files there.- Canonical/og:url are emitted only by the root head from src/lib/site-url.ts (SITE_URL + leaf fullPath, sitemap routes only; sitemap uses the same constant), so leaf routes never add their own and the domain switch is one line.
 - Scroll-reveal hides only under html.reveal-ready (set after hydration), so prerendered/no-JS HTML stays visible. SiteLayout owns the single <main id="main">.
-- Accent TEXT uses text-primary-text (--primary-text on light, --primary-text-dark inside bg-ink/text-background, per accent theme); fills/buttons keep --primary, because the brand blue fails AA as text on beige and ink.
+- Accent TEXT uses text-primary-text (--primary-text-dark on ink); fills keep --primary, because brand blue fails AA as text on beige and ink.
 
 - Every link to the contact/training-plan form is labelled "Build my training plan" (sticky bar: "Build my plan"); distinct actions keep their own labels, so one name always means one destination.
 - Navy/blue/beige seams are clean edges (edge-fade no-ops); blends go grey.
