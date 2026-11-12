@@ -406,3 +406,11 @@ html.hero-enter .hero-mask > span { animation: hero-mask-in .55s var(--d, 0ms) c
 
 /* Sections scrolled away or covered by the next one idle their CSS animations (drift, pings, trails). */
 [data-offstage] *, [data-offstage] *::before, [data-offstage] *::after { animation-play-state: paused !important; }
+
+/* iOS 26 Safari (glass toolbar): on first load 100lvh stops short of the screen bottom, so the next
+   section peeked out under the toolbar until the first scroll. An ink skirt below the hero covers that
+   strip, and the hero text sits 24px lower into the room the floating toolbar leaves (owner request). */
+@media (max-width: 639px) {
+  html.ios-glass .hero-glass-skirt { display: block; height: 5rem; }
+  html.ios-glass .hero-content { min-height: calc(100dvh + .75rem); padding-bottom: 0; }
+}

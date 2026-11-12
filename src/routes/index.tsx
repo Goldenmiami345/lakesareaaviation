@@ -37,8 +37,8 @@ function HomePage() {
       <section className="sticky top-0 z-0 min-h-[100lvh] overflow-hidden bg-ink text-background">
         <div className="hero-parallax absolute inset-0"><picture className="absolute inset-0 block"><source media="(max-aspect-ratio: 3/2)" srcSet={srcSetFor(heroTallImage.url)} sizes="100vw" /><img src={heroImage.url} srcSet={srcSetFor(heroImage.url)} sizes="100vw" decoding="sync" alt="Lakes Area Aviation Cessna N6717A and Piper Apache on the ramp at sunset" width={1584} height={672} fetchPriority="high" className="hero-kenburns h-[112%] w-full object-cover object-[35%_center]" /></picture></div>
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/25 to-ink/5 lg:bg-gradient-to-r lg:from-ink lg:via-ink/60 lg:to-transparent" />
-        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('hero-enter','first-view')" }} />
-        <div className="relative flex min-h-[100dvh] w-full px-[var(--gutter)] flex-col justify-end pb-3 pt-24 sm:pb-[4.5rem] sm:pt-32">
+        <script dangerouslySetInnerHTML={{ __html: "var d=document.documentElement,u=navigator.userAgent;d.classList.add('hero-enter','first-view');if(/iPhone|iPod/.test(u)&&/Version\\/(2[6-9]|[3-9]\\d)/.test(u)&&!/CriOS|FxiOS|EdgiOS|OPiOS|GSA/.test(u))d.classList.add('ios-glass')" }} />
+        <div className="hero-content relative flex min-h-[100dvh] w-full px-[var(--gutter)] flex-col justify-end pb-3 pt-24 sm:pb-[4.5rem] sm:pt-32">
           <div className="max-w-4xl lg:max-w-[76vw]">
             <h1 className="font-display text-[min(3.45rem,calc(74.75vw/16.6))] leading-[1.02] whitespace-nowrap"><span className="line-mask hero-mask"><span style={{ ["--d" as string]: "60ms" }}><span>BECOME A PROFESSIONAL PILOT</span></span></span></h1>
             <p className="hero-step mt-2 text-xs leading-relaxed text-background/80 sm:text-sm" style={{ ["--d" as string]: "180ms" }}>Zero to CFI in six months. <span className="whitespace-nowrap font-semibold text-background">Under $50K</span></p>
@@ -51,6 +51,7 @@ function HomePage() {
           <ScrollCue targetId="flight-path" />
         </div>
       </section>
+      <div aria-hidden className="hero-glass-skirt hidden bg-ink" />
 
       <div className="relative z-10">
         <div aria-hidden className="story-snap h-px -mb-px" />
