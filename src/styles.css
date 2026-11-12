@@ -412,5 +412,5 @@ html.hero-enter .hero-mask > span { animation: hero-mask-in .55s var(--d, 0ms) c
    strip, and the hero text sits 24px lower into the room the floating toolbar leaves (owner request). */
 @media (max-width: 639px) {
   html.ios-glass .hero-glass-skirt { display: block; height: 5rem; }
-  html.ios-glass .hero-content { min-height: calc(100dvh + .75rem); padding-bottom: 0; }
+  html.ios-glass .hero-content { min-height: min(calc(100dvh + .75rem), 100lvh); padding-bottom: 0; }
 }
