@@ -413,5 +413,5 @@ html.hero-enter .hero-mask > span { animation: hero-mask-in .55s var(--d, 0ms) c
    Hero text is pinned to svh, never dvh: dvh grows as the toolbar shrinks and made the text slide while scrolling. */
 @media (max-width: 639px) {
   html.ios-glass .hero-glass-skirt { display: block; height: 5rem; }
-  html.ios-glass .hero-content { min-height: min(calc(100svh + .75rem), 100lvh); padding-bottom: 0; }
+  html.ios-glass .hero-content { min-height: min(100svh, 100lvh); padding-bottom: .25rem; }
 }
