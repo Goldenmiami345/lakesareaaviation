@@ -17,7 +17,7 @@
 - The global accent theme is read from the public site_settings row; only a database-verified admin role may change it.
 - Scroll-journey stages may use optimized CDN video with a real-photo poster; video plays only while its stage is active to protect mobile performance.
 - Both homepage journeys use journey-scroll.ts: native input, scrollY-driven crossfades, cached geometry, hold-only stageLanding links and bounded crossfade-only settling; never restore paging, scroll-snap, input interception or Lenis because they ate gestures.
-- Scroll reset is explicit in src/router.tsx (instant top on real navigations via onBeforeRouteMount); never re-enable TanStack scrollRestoration, its late reset yanked scrolling visitors to the top.
+- Scroll reset is explicit in src/router.tsx (instant top on real navigations via onBeforeRouteMount); back/forward returns are restored by src/lib/back-restore.ts (per-history-entry anchor offset + story pages, one frame after resolve, plain fade); never re-enable TanStack scrollRestoration, its late reset yanked scrolling visitors to the top.
 
 - Airport geometry remains in USGS pixel space from FAA data; traffic-flight.ts integrates per-type, wind-corrected real-time speed separately, so map movement and card ground speed agree without changing pattern corners.
 - Airport maps plot all geolocated live reports within the existing viewBox; only visible pattern-qualified reports replace simulated traffic, so overflights remain visible without being mistaken for pattern traffic. Do not duplicate aircraft in a journey HUD summary.
