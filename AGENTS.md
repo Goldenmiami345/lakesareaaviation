@@ -17,7 +17,7 @@
 - The global accent theme is read from the public site_settings row; only a database-verified admin role may change it.
 - Scroll-journey stages may use optimized CDN video with a real-photo poster; video plays only while its stage is active to protect mobile performance.
 - Both homepage journeys use journey-scroll.ts: native input, scrollY-driven crossfades, cached geometry, hold-only stageLanding links and bounded crossfade-only settling; never restore paging, scroll-snap, input interception or Lenis because they ate gestures.
-- Scroll management is explicit in src/router.tsx (instant top-of-page reset on real navigations via onBeforeRouteMount, so the old page never glides or flashes); never re-enable TanStack's built-in scrollRestoration — its reset can fire from a late hydration settle and yank a scrolling visitor to the top.
+- Scroll reset is explicit in src/router.tsx (instant top on real navigations via onBeforeRouteMount); never re-enable TanStack scrollRestoration, its late reset yanked scrolling visitors to the top.
 
 - Airport geometry remains in USGS pixel space from FAA data; traffic-flight.ts integrates per-type, wind-corrected real-time speed separately, so map movement and card ground speed agree without changing pattern corners.
 - Airport maps plot all geolocated live reports within the existing viewBox; only visible pattern-qualified reports replace simulated traffic, so overflights remain visible without being mistaken for pattern traffic. Do not duplicate aircraft in a journey HUD summary.
@@ -31,11 +31,11 @@
 - Weather→traffic logic is pure in wx-conditions.ts; live METAR renders only after mount in reserved slots (no weather in prerendered HTML).
 - Journey stages zoom in-stage (stage-zoom.ts transforms .journey-zoom, overlays included); touch-action owns pinch/panning and journey-zoomed pauses settling so gestures stay isolated.
 - Light surfaces (cards, popovers/menus) read the single --surface-light token in src/styles.css (beige color trial, see docs/color-trial-beige-2026-10-31.md for values and the one-line revert), so the trial is reversible in one place.
-- Page changes have exactly one animation: the CSS page-enter in SiteLayout keyed on the resolved leaf match id (not the pathname) with no router view transition, and links preload on viewport, because pathname keying replayed the fade on the old page before the new one loaded.
+- Page changes have one animation: CSS page-enter in SiteLayout keyed on the resolved leaf match id (pathname keying replayed the fade on the old page); no view transitions; links preload on viewport.
 - Browser-only libs (model-viewer) load only behind import.meta.env.SSR guards, never in the server bundle (a shared chunk once blanked all SiteShell pages); never import.meta.glob public/ files. `build` runs scripts/check-prerender-dist.mjs to fail on pages missing heading/copy (Lovable forces failOnError off).
 - GLBs (public/models, uppercase regs, _headers, versioned ?v=) are meshopt+WebP, error-capped simplify, ≤900KB; shared model-settings owns camera/light/span and mesh-sphere/aspect fitting for fleet/traffic slots; load/resize fit the rotation envelope and reset restores it. Keep walk-around pointers/CDN objects; Apache banner stays unchanged.
 - Hero comparisons stay separate, noindex, sitemap-excluded, without floating controls. Home uses Pixel Perfect Snapshot sunset assets: tall below 3:2 viewport aspect, wide otherwise, avoiding AI-redrawn planes.
-- Normalize route pathnames with sitePath before shell visibility decisions: prerender visits slash-suffixed URLs while browser navigation often does not, and differing action-bar trees cause hydration failure.
+- Normalize pathnames with sitePath before shell visibility decisions: prerender URLs carry a trailing slash, and differing trees broke hydration.
 - The drawn pattern (TrafficPath) follows site_settings.traffic_pattern_mode (off/pulse/always), read after mount so prerendered HTML never depends on it; pulse pauses while a card is open and never runs in reduced motion.
 - USE_RENDERED_TOP_SPRITES (site-data) draws photo-derived top renders (src/assets/fleet/top, width = wingspan) for those registrations in the aerial view only, at the vectors' ~3x display scale (full 640px source) with an alpha-derived shadow; the oblique view uses model-baked heading sprites and other registrations keep SVG vectors.
 - Airport imagery mounts within 1.5 viewports or on a "journey-target" glide event, phone or desktop aerial only (first-load weight). Models spin only when visible.
