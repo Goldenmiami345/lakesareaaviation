@@ -17,7 +17,8 @@ export function loadShow3DModels() {
 /** null until the switch has loaded (first render always null, so prerendered HTML never depends on it). */
 export function useShow3DModelsState() {
   const [show, setShow] = useState<boolean | null>(null);
-  useEffect(() => {
+  // Layout effect: a card opened after the switch loaded paints its final state on the first frame.
+  useLayoutEffect(() => {
     if (resolvedModels !== null) { setShow(resolvedModels); return; }
     let live = true;
     void loadShow3DModels().then(value => { if (live) setShow(value); });
