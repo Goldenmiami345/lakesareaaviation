@@ -128,3 +128,36 @@ export const airportTraffic = {
   "18V": { ident: "18V", elevation: 4965, tpaAgl: 1000, runway: "15", runwayFt: 4100, side: "left", threshold: { x: 687, y: 506 }, end: { x: 813, y: 994 }, offset: 202, extension: 101, aircraft: ["N7108G", "N6641F", "N11059"], ends: [{ runway: "15", side: "left", trueHdg: 165 }, { runway: "33", side: "left", trueHdg: 345 }], calmRunway: "15", wxStation: "KDEN" },
   P52: { ident: "P52", elevation: 3560, tpaAgl: 800, runway: "14", runwayFt: 4250, side: "left", threshold: { x: 650, y: 529 }, end: { x: 850, y: 971 }, offset: 166, extension: 83, aircraft: ["N8570B", "N11059", "N6717A"], ends: [{ runway: "14", side: "left", trueHdg: 156 }, { runway: "32", side: "right", trueHdg: 336 }], calmRunway: "32", wxStation: "KSEZ" },
 } as const satisfies Record<string, import("./traffic-pattern").PatternField>;
+
+// Published rates: the single source for /rates and the downloadable rate sheet
+// (public/downloads, built by scripts/build-rate-sheet.py from these values).
+export const RATES_YEAR = 2026;
+export const RATE_SHEET_URL = "/downloads/lakes-area-aviation-2026-rates.pdf";
+export const instructionRates: { label: string; rate: string }[] = [
+  { label: "Primary flight & ground instruction", rate: "$60" },
+  { label: "Instrument flight & ground instruction", rate: "$60" },
+  { label: "Commercial flight & ground instruction", rate: "$60" },
+  { label: "Multi-engine flight & ground instruction", rate: "$75" },
+  { label: "Flight instruction in non-flight-school aircraft", rate: "$70" },
+];
+// Per-hour wet rental rates; prepay applies with a $500+ account balance at billing.
+export const rentalRates: { aircraft: string; names: string; regular: string; prepay: string }[] = [
+  { aircraft: "Cessna 172", names: "“Blue,” “Robin” or “Phoenix”", regular: "$185", prepay: "$175" },
+  { aircraft: "Cessna 172I / 172K", names: "“Hawk” or “Cardinal”", regular: "$185", prepay: "$175" },
+  { aircraft: "Piper Apache PA-23-160", names: "N4383P", regular: "$395", prepay: "$375" },
+  { aircraft: "Piper Comanche PA-24-250", names: "“Chief”", regular: "$265", prepay: "$245" },
+  { aircraft: "Cessna 150", names: "“Elliot”", regular: "$125", prepay: "$115" },
+  { aircraft: "Taylorcraft BC-12D", names: "“Tweety”", regular: "$135", prepay: "$125" },
+];
+export const otherRates: { label: string; rate: string }[] = [
+  { label: "Introductory flight", rate: "$100" },
+  { label: "Scenic flight (up to three people)", rate: "$129/hr" },
+  { label: "Student housing", rate: "$30/night" },
+  { label: "Student cars (housing residents)", rate: "$20/day" },
+  { label: "Airport pickup (MSP)", rate: "$125" },
+];
+export const RATE_NOTES = {
+  wet: "All aircraft rates are wet and include fuel and insurance. State tax is additional.",
+  prepay: "The prepay rate is applied automatically when a student or renter has $500 or more in their account at the time of billing.",
+  examiner: "Examiner fees are additional and subject to change. Aircraft rental is taxed.",
+};
