@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { PAGE_RETURN_START, pageReturnActive } from "./page-return";
+import { backRestorePending } from "./back-restore";
 
 /**
  * Phone Story mode: vertical movement between the homepage's full-screen sections is 100% native
@@ -98,10 +99,10 @@ function start(): () => void {
   // Fresh page load: Safari restores the old scroll offset from the taller fading-scroll layout, and
   // mandatory snapping then lands on the nearest section (the Discovery Flight). Always open on the hero.
   let touched = false;
-  // Every arrival on the homepage (reload, back button, link) opens on the hero unless a #hash asks otherwise.
-  const fresh = !window.location.hash;
+  // Every arrival on the homepage (reload, link) opens on the hero unless a #hash asks otherwise;
+  // the back/forward buttons return to the exact section and page instead (back-restore.ts owns that move).
+  const fresh = !window.location.hash && !backRestorePending();
   firstStartDone = true;
-  try { window.history.scrollRestoration = "manual"; } catch { /* ignore */ }
   // Single owner of the opening position: snapping stays OFF while the layout is still settling
   // (no timer fights snap), then one instant move to the top and snapping turns on.
   set(false);
@@ -153,7 +154,6 @@ function start(): () => void {
     window.removeEventListener("touchcancel", onEnd);
     window.removeEventListener("scroll", onScroll);
     root.classList.remove("story-snapping", "story-phone");
-    try { window.history.scrollRestoration = "auto"; } catch { /* ignore */ }
   };
 }
 

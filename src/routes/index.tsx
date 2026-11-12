@@ -65,8 +65,8 @@ function HomePage() {
         <div className="site-container">
           <div className="stagger-grid grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-3" data-scroll-reveal>
             <ServiceLink title="Multi-Engine Training" text="Earn your commercial multi, then add your MEI and learn to teach in the Piper Apache. About 3–4 days each." to="/programs/$slug" slug="commercial-multi-engine" />
-            <ServiceLink title="Advanced Kodiak 100 Training" text="Insurance-approved initial and recurrent Kodiak 100 training." to="/specialized-training" />
             <ServiceLink title="Endorsements" text="Tailwheel, complex, high-performance, high-altitude, and spin training." to="/specialized-training" />
+            <ServiceLink title="Advanced Kodiak 100 Training" text="Insurance-approved initial and recurrent Kodiak 100 training." to="/specialized-training" />
             <ServiceLink title="Specialty Courses" text="Mountain flying, light aerobatics, ski plane, and Cirrus transition." to="/specialized-training" />
             <ServiceLink title="Flight Reviews" text="Stay proficient with instruction tailored to your experience and goals." to="/local-training" wide />
           </div>
