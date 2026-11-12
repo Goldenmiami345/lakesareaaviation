@@ -83,56 +83,67 @@ const keyOf = (state: unknown) => {
   const st = state as { __TSR_key?: string; key?: string } | null | undefined;
   return st?.__TSR_key ?? st?.key ?? null;
 };
-const dbg = (m: string) => { if (import.meta.env.DEV) ((window as unknown as { __brlog: unknown[] }).__brlog ??= []).push([Math.round(performance.now()), m]); };
 const frame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
+
+/** Put the page on the saved spot right now (snapping paused for the move). */
+function place(snap: BackSnapshot): number {
+  const root = document.documentElement;
+  const points = anchors();
+  const target = restoreTarget(snap, points, root.scrollHeight - window.innerHeight);
+  const snapped = root.classList.contains("story-snapping");
+  root.classList.remove("story-snapping");
+  window.scrollTo({ top: target, behavior: "instant" });
+  // Section locking applies above the content anchor only (same rule as story-snap.ts).
+  const end = points.at(-1) ?? Infinity;
+  if (root.classList.contains("story-phone") && (snapped || target < end - 1)) {
+    requestAnimationFrame(() => root.classList.toggle("story-snapping", window.scrollY < end - 1));
+  }
+  return target;
+}
 
 async function restore(snap: BackSnapshot) {
   const mine = ++token;
   const root = document.documentElement;
-  const t0 = performance.now();
   const home = snap.i >= 0 || Object.keys(snap.j).length > 0;
-  dbg("restore start");
   if (home) {
-    // The section format (stories or scrolling) must be known before positions mean anything.
+    // The section format (stories or scrolling) must be known before positions mean anything
+    // (already cached after the first visit, so this resolves at once on a normal return).
     const settings = await import("./use-site-settings");
     await Promise.race([
       Promise.all([settings.loadJourneyMode(), settings.loadDesktopJourneyMode()]),
       new Promise((r) => window.setTimeout(r, GATE_MAX_MS)),
     ]);
   }
-  dbg("settings");
-  let fonts = !document.fonts;
-  document.fonts?.ready.then(() => { fonts = true; }).catch(() => { fonts = true; });
-  // Layout settles: fonts ready and page height still for 3 frames (capped so it never hangs).
-  let lastH = -1, quiet = 0;
-  while (performance.now() - t0 < GATE_MAX_MS) {
-    await frame();
-    if (mine !== token) return;
-    const h = root.scrollHeight;
-    quiet = h === lastH ? quiet + 1 : 0;
-    lastH = h;
-    if (fonts && quiet >= 3) break;
-  }
+  await frame(); // React has applied the format
   if (mine !== token) return;
-  dbg("gate " + quiet + " " + fonts);
   if (home) window.dispatchEvent(new CustomEvent(JOURNEY_RESTORE, { detail: snap.j }));
-  const points = anchors();
-  const target = restoreTarget(snap, points, root.scrollHeight - window.innerHeight);
-  const snapped = root.classList.contains("story-snapping");
-  root.classList.remove("story-snapping");
-  window.scrollTo({ top: target, behavior: "instant" });
-  await frame();
-  await frame();
-  if (mine !== token) return;
-  if (Math.abs(window.scrollY - target) > 2) window.scrollTo({ top: target, behavior: "instant" });
-  // Section locking applies above the content anchor only (same rule as story-snap.ts).
-  const end = points.at(-1) ?? Infinity;
-  if (root.classList.contains("story-phone") && (snapped || target < end - 1)) root.classList.toggle("story-snapping", target < end - 1);
+  const target = place(snap);
   window.dispatchEvent(new CustomEvent("journey-target", { detail: target }));
   journeys = { ...snap.j };
   pending = null;
   root.classList.remove("page-restoring");
-  save();
+  // Late layout (fonts, images) may still shift the sections a little: follow the saved spot for a
+  // short while, and stop the moment the visitor touches, scrolls with a wheel or presses a key.
+  let stopped = false;
+  const stop = () => { stopped = true; };
+  const opts = { passive: true, once: true } as const;
+  window.addEventListener("touchstart", stop, opts);
+  window.addEventListener("wheel", stop, opts);
+  window.addEventListener("keydown", stop, opts);
+  const t0 = performance.now();
+  const follow = () => {
+    if (stopped || mine !== token || performance.now() - t0 > GATE_MAX_MS) {
+      window.removeEventListener("touchstart", stop);
+      window.removeEventListener("wheel", stop);
+      window.removeEventListener("keydown", stop);
+      if (!stopped && mine === token) save();
+      return;
+    }
+    const want = restoreTarget(snap, anchors(), root.scrollHeight - window.innerHeight);
+    if (Math.abs(window.scrollY - want) > 2) place(snap);
+    window.setTimeout(follow, 120);
+  };
+  window.setTimeout(follow, 120);
 }
 
 /** Browser only, once: own scroll restoration and pick up a full-page back/forward load. */
@@ -160,7 +171,6 @@ export function installBackRestore() {
 
 /** History change (router.history.subscribe): only BACK/FORWARD/GO returns restore. */
 export function backRestoreHistory(state: unknown, pathname: string, action: string) {
-  dbg("history " + action);
   if (action === "REPLACE") return; // router housekeeping on the same entry
   token++;
   if (action !== "BACK" && action !== "FORWARD" && action !== "GO") { pending = null; return; }
@@ -171,7 +181,6 @@ export function backRestoreHistory(state: unknown, pathname: string, action: str
 
 /** The returning page is about to appear: keep it hidden until it sits on the saved spot (the old page stays visible meanwhile). */
 export function backRestoreMount() {
-  dbg("mount " + !!pending);
   if (pending) document.documentElement.classList.add("page-restoring");
 }
 
@@ -180,7 +189,6 @@ export function backRestoreLeave() { save(); frozen = true; }
 
 /** The new page has resolved: start recording under its entry, and run a pending return. */
 export function backRestoreResolved(state: unknown) {
-  dbg("resolved " + !!pending);
   currentKey = keyOf(state) ?? keyOf(window.history.state);
   journeys = {};
   frozen = false;
