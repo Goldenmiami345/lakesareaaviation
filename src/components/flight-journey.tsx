@@ -320,7 +320,11 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const flatTimer = useRef(0);
   // Neighbour face: a static copy of the adjacent story's page placed beside this one, so crossing
   // sections turns one continuous cube instead of turning away to an empty screen first.
-  const ghostRef = useRef<{ el: HTMLElement; at: number } | null>(null);
+  const ghostRef = useRef<{ el: HTMLElement; at: number; src: HTMLElement } | null>(null);
+  // Set by the gesture effect: places (or refreshes) the neighbour section's face beside this one.
+  const warmGhostRef = useRef<((dir: 1 | -1) => void) | null>(null);
+  // Stage the box last came to rest on; warm neighbours turn in from that side.
+  const restPos = useRef(0);
   const dropGhost = () => { ghostRef.current?.el.remove(); ghostRef.current = null; };
   const faceTransform = (rel: number) => {
     const r = Math.max(-1, Math.min(1, rel));
@@ -338,35 +342,62 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const vis = Math.abs(rel) < 1;
       const cur = Math.round(pos) === i;
       layer.style.pointerEvents = cur ? "auto" : "none";
+      const warm = layer.hasAttribute("data-warm");
+      layer.removeAttribute("data-warm");
       if (reduce || fade) {
         // Simple crossfade: previous layer stays underneath while the new one fades in on top.
-        const wasVisible = layer.style.visibility === "visible" && layer.style.opacity !== "0";
-        layer.style.transition = animate ? "opacity 260ms ease-out" : "none";
+        // Warm neighbours (painted under the page at rest) never count as the page being shown.
+        const wasVisible = !warm && layer.style.visibility === "visible" && layer.style.opacity !== "0";
+        const keepWarm = !cur && !wasVisible && !reduce && Math.abs(rel) <= 1;
+        layer.style.transition = animate && !keepWarm ? "opacity 260ms ease-out" : "none";
         layer.style.transform = "none";
-        layer.style.zIndex = cur ? "60" : "";
-        layer.style.visibility = cur || wasVisible ? "visible" : "hidden";
-        layer.style.opacity = cur ? "1" : wasVisible ? "1" : "0";
+        layer.style.zIndex = cur ? "60" : wasVisible ? "2" : keepWarm ? "1" : "";
+        layer.style.visibility = cur || wasVisible || keepWarm ? "visible" : "hidden";
+        layer.style.opacity = cur || wasVisible || keepWarm ? "1" : "0";
+        if (keepWarm) layer.setAttribute("data-warm", "");
         if (cur && animate && !wasVisible) { layer.style.opacity = "0"; void layer.offsetWidth; layer.style.opacity = "1"; }
         return;
+      }
+      if (warm) {
+        // A warm neighbour lies flat under the page: put it on its cube edge before it turns in.
+        const from = Math.sign(i - restPos.current) || 1;
+        layer.style.transition = "none";
+        layer.style.transformOrigin = from < 0 ? "100% 50%" : "0% 50%";
+        layer.style.transform = faceTransform(from);
+        void layer.offsetWidth;
       }
       // Instagram-style cube: each whole page (photo, copy, buttons, trail, altitude) is a face hinged on
       // its shared edge with the neighbour. Only GPU transforms change per frame; no layout, no filters.
       layer.style.zIndex = "";
       layer.style.transition = animate ? "transform 360ms cubic-bezier(0.22,0.61,0.36,1)" : "none";
-      layer.style.visibility = vis || cur ? "visible" : "hidden";
-      layer.style.opacity = vis ? "1" : "0";
+      // Faces next to the turning ones stay painted (edge-on, out of sight) so a quick second swipe
+      // never turns in a page that has not been drawn yet (that showed as a flash of dark navy).
+      const near = Math.abs(rel) < 2;
+      layer.style.visibility = vis || cur || near ? "visible" : "hidden";
+      layer.style.opacity = vis || near ? "1" : "0";
       layer.style.backfaceVisibility = "hidden";
       layer.style.willChange = settled ? "" : "transform";
-      layer.style.transformOrigin = rel < 0 ? "100% 50%" : "0% 50%";
+      // The hinge only moves when the face is actually turned: switching it on a face that is still
+      // mid-turn (spring-back, backward swipes) made the page jump sideways at release.
+      if (rel !== 0) layer.style.transformOrigin = rel < 0 ? "100% 50%" : "0% 50%";
       layer.style.transform = faceTransform(rel);
     });
     const g = ghostRef.current;
     if (g && (reduce || fade)) dropGhost();
     else if (g) {
       const rel = g.at - pos;
+      if (g.el.hasAttribute("data-warm")) {
+        g.el.removeAttribute("data-warm");
+        const from = Math.sign(g.at - restPos.current) || 1;
+        g.el.style.transition = "none";
+        g.el.style.transformOrigin = from < 0 ? "100% 50%" : "0% 50%";
+        g.el.style.transform = faceTransform(from);
+        void g.el.offsetWidth;
+      }
+      g.el.style.zIndex = "";
       g.el.style.transition = animate ? "transform 360ms cubic-bezier(0.22,0.61,0.36,1)" : "none";
-      g.el.style.visibility = Math.abs(rel) < 1 ? "visible" : "hidden";
-      g.el.style.transformOrigin = rel < 0 ? "100% 50%" : "0% 50%";
+      g.el.style.visibility = Math.abs(rel) < 2 ? "visible" : "hidden";
+      if (rel !== 0) g.el.style.transformOrigin = rel < 0 ? "100% 50%" : "0% 50%";
       g.el.style.transform = faceTransform(rel);
     }
     const box = layerRefs.current[0]?.parentElement;
@@ -377,20 +408,37 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     // At rest, drop all 3D so vertical scrolling composites one flat layer (3D layers flickered black while sliding).
     if (settled) {
       flatTimer.current = window.setTimeout(() => {
-        if (pos >= 0 && pos <= stages.length - 1) dropGhost();
+        // At rest the pages beside this one (and, on the first/last stage, the neighbouring section's
+        // facing page) lie flat and painted under it, so the next turn starts from finished pictures.
+        const n = stages.length;
+        const want = reduce ? null : pos === n - 1 ? n : pos === 0 ? -1 : null;
+        if (ghostRef.current && ghostRef.current.at !== want) dropGhost();
+        if (want !== null) warmGhostRef.current?.(want > 0 ? 1 : -1);
+        restPos.current = pos;
         const b = layerRefs.current[0]?.parentElement;
         if (b) b.style.perspective = "";
         layerRefs.current.forEach((layer, i) => {
           if (!layer) return;
+          const near = !reduce && Math.abs(i - pos) === 1;
           layer.style.transition = "none";
           layer.style.transform = "none";
           layer.style.transformOrigin = "";
           layer.style.willChange = "";
           layer.style.backfaceVisibility = "";
-          layer.style.zIndex = "";
-          layer.style.opacity = i === pos ? "1" : "0";
-          layer.style.visibility = i === pos ? "visible" : "hidden";
+          layer.style.zIndex = i === pos ? "3" : near ? "2" : "";
+          layer.style.opacity = i === pos || near ? "1" : "0";
+          layer.style.visibility = i === pos || near ? "visible" : "hidden";
+          if (near) layer.setAttribute("data-warm", ""); else layer.removeAttribute("data-warm");
         });
+        const g = ghostRef.current;
+        if (g) {
+          g.el.style.transition = "none";
+          g.el.style.transform = "none";
+          g.el.style.transformOrigin = "";
+          g.el.style.zIndex = "1";
+          g.el.style.visibility = "visible";
+          g.el.setAttribute("data-warm", "");
+        }
       }, animate ? 380 : 0);
     }
     // Altitude follows the finger between stages, like the scroll version's climb.
@@ -450,19 +498,23 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         : anchors.filter((x) => x.y < here - 4).sort((p, q) => q.y - p.y)[0];
     };
     // Copy the neighbouring story's facing page in beside this one (forward: its current page; back: its last).
-    const makeGhost = (dir: 1 | -1) => {
+    // check: re-verify an existing copy still shows the neighbour's current page (it may have moved on).
+    const makeGhost = (dir: 1 | -1, check = false) => {
       const at = dir > 0 ? n : -1;
-      if (ghostRef.current?.at === at) return true;
-      dropGhost();
-      if (reducedMotion()) return false;
+      if (ghostRef.current?.at === at && !check) return true;
+      if (reducedMotion()) { dropGhost(); return false; }
       const sec = neighbour(dir)?.a.nextElementSibling;
-      if (!(sec instanceof HTMLElement) || !sec.matches("section[data-story]")) return false;
-      const faces = sec.querySelectorAll<HTMLElement>(".journey-viewport > .journey-layer");
+      if (!(sec instanceof HTMLElement) || !sec.matches("section[data-story]")) { dropGhost(); return false; }
+      const faces = sec.querySelectorAll<HTMLElement>(".journey-viewport > .journey-layer:not([aria-hidden=true][data-ghost])");
       const src = dir > 0 ? (sec.querySelector<HTMLElement>(".journey-viewport > .journey-layer[data-active]") ?? faces[0]) : faces[faces.length - 1];
+      if (ghostRef.current?.at === at && ghostRef.current.src === src) return true;
+      dropGhost();
       const last = layerRefs.current[n - 1];
       if (!src || !last) return false;
       const el = src.cloneNode(true) as HTMLElement;
       el.removeAttribute("data-active");
+      el.removeAttribute("data-warm");
+      el.setAttribute("data-ghost", "");
       el.setAttribute("aria-hidden", "true");
       el.inert = true;
       el.querySelectorAll("[id]").forEach((x) => x.removeAttribute("id"));
@@ -476,9 +528,10 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       el.style.visibility = "hidden";
       last.after(el);
       void el.offsetWidth;
-      ghostRef.current = { el, at };
+      ghostRef.current = { el, at, src };
       return true;
     };
+    warmGhostRef.current = (dir) => { makeGhost(dir, true); };
     const exitSection = () => {
       // The next snap anchor below this section (the wrapper's bottom can sit past the next section).
       const target = neighbour(1)?.y ?? window.scrollY + box().bottom;
@@ -570,6 +623,9 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const onDownCapture = () => { cardTap.open = trafficCardIsOpen(); };
     const onDown = (e: PointerEvent) => {
       if (!e.isPrimary || document.documentElement.classList.contains("journey-zoomed")) return;
+      // A neighbour-section copy made earlier may be stale if that section has moved on since.
+      const g = ghostRef.current;
+      if (g) { const warm = g.el.hasAttribute("data-warm"); makeGhost(g.at > 0 ? 1 : -1, true); if (warm && ghostRef.current && ghostRef.current.el !== g.el) ghostRef.current.el.style.visibility = "hidden"; }
       down = true; axis = null; dx = 0; vx = 0; sx = lx = e.clientX; sy = ly = e.clientY; lt = performance.now(); if (!carousel) startTransition(() => { setHolding(true); setInteracted(true); });
     };
     const onMove = (e: PointerEvent) => {
@@ -645,6 +701,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     return () => {
       window.clearTimeout(exitTimer);
       dropGhost();
+      warmGhostRef.current = null;
       window.removeEventListener(PAGE_RETURN_START, cancelExit);
       viewport.removeEventListener("dragstart", noDrag);
       viewport.removeEventListener("pointerdown", onDown);
@@ -748,7 +805,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
           </div>
         )}
         {stages.map((st, i) => (
-          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className={`journey-layer absolute inset-0 bg-ink${story ? "" : " backface-hidden"}`} data-active={i === active ? "" : undefined} style={{ zIndex: stages.length - i }}>
+          <div key={st.code} ref={(el) => { layerRefs.current[i] = el; }} className={`journey-layer absolute inset-0 bg-ink${story ? "" : " backface-hidden"}`} data-active={i === active ? "" : undefined} aria-hidden={story && i !== active ? true : undefined} style={{ zIndex: stages.length - i }}>
             <div className="journey-zoom absolute inset-0 origin-top-left">
             {st.traffic && st.phoneImg ? <AirportScene airport={ops[i]?.pattern ?? st.traffic} active={i===active} photo={st.phoneImg} original={st.img} wind={ops[i]?.obs ?? null} runwayHeading={ops[i]?.rwy.trueHdg ?? Number(st.traffic.runway)*10} conditions={ops[i]?.conditions ?? NO_CONDITIONS} /> : st.video ? (
               <video
