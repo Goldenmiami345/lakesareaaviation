@@ -12,7 +12,7 @@ import { WX_FIELDS } from "../lib/wx-stations";
 import { MetarLine, InstrumentConditions } from "./live-wx";
 import { useStageZoom } from "../lib/stage-zoom";
 import { useDesktopJourneyMode, useMobileJourneyMode } from "../lib/use-site-settings";
-import { storyStep, STORY_HINT_TOTAL_MS, STORY_SWIPE_HINT_MS, STORY_TAP_HINT_MS } from "../lib/story-nav";
+import { storyPeek, storyStep, STORY_HINT_TOTAL_MS, STORY_SWIPE_HINT_MS, STORY_TAP_HINT_MS } from "../lib/story-nav";
 import { useStorySnap } from "../lib/story-snap";
 import { PAGE_RETURN_START, pageReturnActive, returnToPageTop } from "../lib/page-return";
 import { trafficCardIsOpen, trafficCardRecentlyOpen, useTrafficCardOpen } from "../lib/traffic-card-open";
@@ -473,12 +473,27 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     if (!vp) return () => root.classList.remove("story-mode");
     // Brief, separate swipe and tap cues on first arrival. Any touch dismisses them.
     // Each section owns its once-per-visit flag; neither cue intercepts gestures.
-    let inView = false, timer = 0, shown = false, hide = 0;
-    const arm = () => { window.clearTimeout(timer); window.clearTimeout(hide); setHint(false); if (inView && !shown) timer = window.setTimeout(() => { if (trafficCardIsOpen()) return; shown = true; setHint(true); hide = window.setTimeout(() => setHint(false), STORY_HINT_TOTAL_MS); }, 600); };
+    let inView = false, timer = 0, shown = false, hide = 0, raf = 0;
+    // With the swipe cue, the real page turns slightly toward the next one and back, like the start of a
+    // swipe (paintStory, no transitions). Skipped where the next face would be empty or motion is reduced.
+    const stopPeek = () => { if (!raf) return; cancelAnimationFrame(raf); raf = 0; paintStory(activeRef.current, false); };
+    const peek = () => {
+      const a = activeRef.current, n = stages.length;
+      if (carousel || reducedMotion() || (a >= n - 1 && ghostRef.current?.at !== n)) return;
+      const t0 = performance.now();
+      const step = (now: number) => {
+        const t = (now - t0) / STORY_SWIPE_HINT_MS;
+        if (t >= 1 || activeRef.current !== a) { raf = 0; if (activeRef.current === a) paintStory(a, false); return; }
+        paintStory(a + storyPeek(t), false);
+        raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    };
+    const arm = () => { window.clearTimeout(timer); window.clearTimeout(hide); stopPeek(); setHint(false); if (inView && !shown) timer = window.setTimeout(() => { if (trafficCardIsOpen()) return; shown = true; setHint(true); peek(); hide = window.setTimeout(() => setHint(false), STORY_HINT_TOTAL_MS); }, 600); };
     const io = new IntersectionObserver(([en]) => { inView = !!en?.isIntersecting && en.intersectionRatio > 0.85; arm(); }, { threshold: [0.85] });
     io.observe(vp);
     vp.addEventListener("pointerdown", arm);
-    return () => { root.classList.remove("story-mode"); io.disconnect(); window.clearTimeout(timer); window.clearTimeout(hide); vp.removeEventListener("pointerdown", arm); };
+    return () => { root.classList.remove("story-mode"); io.disconnect(); window.clearTimeout(timer); cancelAnimationFrame(raf); window.clearTimeout(hide); vp.removeEventListener("pointerdown", arm); };
   }, [story]);
   // Phone stories: up/down between sections is native scrolling locked by CSS scroll snap (story-snap.ts).
   useStorySnap(story && !carousel);
