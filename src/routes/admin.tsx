@@ -4,6 +4,7 @@ import { Check, LogOut, Palette } from "lucide-react";
 import { parseMobileJourneyMode, type MobileJourneyMode } from "@/lib/story-nav";
 import { parseDesktopJourneyMode, type DesktopJourneyMode } from "@/lib/use-site-settings";
 import { Button } from "@/components/ui/button";
+import { MAP_MODEL_AIRCRAFT } from "@/lib/map-models";
 import { applyAccentTheme, type AccentTheme } from "@/components/theme-sync";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,6 +31,8 @@ function AdminPage() {
   const [journey, setJourney] = useState<MobileJourneyMode>("scroll");
   const [desktopJourney, setDesktopJourney] = useState<DesktopJourneyMode>("scroll");
   const [fleetModels, setFleetModels] = useState(false);
+  const [mapModels, setMapModels] = useState(false);
+  const [mapRegs, setMapRegs] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -38,13 +41,15 @@ function AdminPage() {
       const { data: auth } = await supabase.auth.getUser();
       setUser(auth.user ?? null);
       const [{ data: setting }, { data: role }] = await Promise.all([
-        supabase.from("site_settings").select("accent_theme, mobile_journey_mode, desktop_journey_mode, show_3d_models").eq("id", "brand").single(),
+        supabase.from("site_settings").select("accent_theme, mobile_journey_mode, desktop_journey_mode, show_3d_models, map_3d_models, map_3d_aircraft").eq("id", "brand").single(),
         auth.user ? supabase.from("user_roles").select("id").eq("user_id", auth.user.id).eq("role", "admin").maybeSingle() : Promise.resolve({ data: null }),
       ]);
       if (setting?.accent_theme === "blue" || setting?.accent_theme === "orange") setTheme(setting.accent_theme);
       setJourney(parseMobileJourneyMode(setting?.mobile_journey_mode));
       setDesktopJourney(parseDesktopJourneyMode(setting?.desktop_journey_mode));
       setFleetModels(setting?.show_3d_models === true);
+      setMapModels(setting?.map_3d_models === true);
+      setMapRegs(setting?.map_3d_aircraft ?? []);
       setIsAdmin(Boolean(role));
     };
     void refresh();
@@ -107,6 +112,15 @@ function AdminPage() {
     setBusy(false);
   }
 
+  async function saveMapModels(nextOn: boolean, nextRegs: string[], done: string) {
+    if (!user || !isAdmin) return;
+    setBusy(true); setMessage("");
+    const { error } = await supabase.from("site_settings").update({ map_3d_models: nextOn, map_3d_aircraft: nextRegs, updated_at: new Date().toISOString(), updated_by: user.id }).eq("id", "brand");
+    if (error) setMessage(error.message);
+    else { setMapModels(nextOn); setMapRegs(nextRegs); setMessage(`${done} Reload the site to see the change.`); }
+    setBusy(false);
+  }
+
   return <main id="main" className="min-h-screen bg-ink px-5 py-20 text-background">
     <div className="mx-auto max-w-xl">
       <a href="/" className="text-xs font-bold uppercase text-background/70">← Back to site</a>
@@ -138,7 +152,16 @@ function AdminPage() {
             <div className="mt-3 grid grid-cols-2 gap-3">
               {(["scroll", "carousel"] as const).map(option => <Button key={option} disabled={busy} variant={desktopJourney === option ? "default" : "outline"} className="h-auto min-h-16 rounded-none p-4" onClick={() => changeDesktopJourney(option)}>{option === "scroll" ? "Fading scroll" : "Carousel"}{desktopJourney === option && <Check />}</Button>)}
             </div>
-            <h2 className="mt-8 font-display text-xl">3D aircraft models</h2>
+            <h2 className="mt-8 font-display text-xl">3D airplanes on the maps</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Small 3D airplanes fly the airport maps and bank through their turns. In the Private Pilot view they use pictures made from the same models. Separate from the info card switch below.</p>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              {([false, true] as const).map(option => <Button key={String(option)} disabled={busy} variant={mapModels === option ? "default" : "outline"} className="h-auto min-h-16 rounded-none p-4" onClick={() => saveMapModels(option, mapRegs, option ? "3D airplanes are on for the maps." : "Maps show flat airplane pictures again.")}>{option ? "3D on maps" : "Off"}{mapModels === option && <Check />}</Button>)}
+            </div>
+            <p className="mt-4 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Which airplanes</p>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {MAP_MODEL_AIRCRAFT.map(({ reg, name }) => { const on = mapRegs.includes(reg); return <Button key={reg} disabled={busy || !mapModels} aria-pressed={on} variant={on ? "default" : "outline"} className="h-auto min-h-16 flex-col gap-0.5 rounded-none p-3" onClick={() => saveMapModels(true, on ? mapRegs.filter(r => r !== reg) : [...mapRegs, reg], `${name} ${on ? "now shows as a flat picture" : "now flies in 3D"} on the maps.`)}><span>{name}</span><span className="font-mono text-[11px] opacity-80">{reg}</span>{on && <Check />}</Button>; })}
+            </div>
+            <h2 className="mt-8 font-display text-xl">3D models in info cards</h2>
             <p className="mt-1 text-sm text-muted-foreground">Shows 3D airplanes in the info cards on the traffic maps. The fleet page always shows photos.</p>
             <div className="mt-3 grid grid-cols-2 gap-3">
               {([false, true] as const).map(option => <Button key={String(option)} disabled={busy} variant={fleetModels === option ? "default" : "outline"} className="h-auto min-h-16 rounded-none p-4" onClick={() => changeFleetModels(option)}>{option ? "Enable 3D" : "3D off"}{fleetModels === option && <Check />}</Button>)}
