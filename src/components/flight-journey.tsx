@@ -359,7 +359,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         if (cur && animate && !wasVisible) { layer.style.opacity = "0"; void layer.offsetWidth; layer.style.opacity = "1"; }
         return;
       }
-      if (warm) {
+      if (warm && vis) {
         // A warm neighbour lies flat under the page: put it on its cube edge before it turns in.
         const from = Math.sign(i - restPos.current) || 1;
         layer.style.transition = "none";
@@ -391,7 +391,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const gWarm = g.el.hasAttribute("data-warm");
       const gShown = !gWarm && g.el.style.visibility === "visible" && g.el.style.opacity !== "0";
       const gOn = Math.abs(rel) < 1 || (animate && gShown && Math.abs(rel) <= 1);
-      if (gWarm) {
+      if (gWarm && gOn) {
         g.el.removeAttribute("data-warm");
         const from = Math.sign(g.at - restPos.current) || 1;
         g.el.style.transition = "none";
