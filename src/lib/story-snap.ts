@@ -18,12 +18,24 @@ export function storySnapWanted(y: number, end: number, headingUp: boolean): boo
 }
 
 /**
- * The final stretch runs from just past the last section's anchor down to the content anchor (inclusive).
- * A drag that starts here decides by direction: heading down the page stays free, so a second swipe made
- * while the glide into the content is still settling is never pulled back to the content's top.
+ * The final stretch runs from the last section's anchor (Locations) down to the content anchor (both
+ * inclusive). It is not snap-locked: mandatory snapping there pulled a gentle swipe back to where it
+ * started, so visitors had to swipe twice. Movement here is free and a rest finishes the move instead.
  */
 export function inFinalStretch(y: number, last: number, end: number): boolean {
-  return y > last + 2 && y <= end + 1;
+  return y >= last - 1 && y <= end + 1;
+}
+
+/** Moves shorter than this inside the final stretch count as accidental and return to where they began. */
+export const STRETCH_NUDGE_PX = 24;
+
+/**
+ * Where a rest inside the final stretch glides to: onward in the direction travelled (one gentle swipe is
+ * enough), or back to the nearer end for a tiny accidental nudge.
+ */
+export function stretchSettleTarget(y: number, last: number, end: number, headingDown: boolean): number {
+  if (headingDown) return y - last < STRETCH_NUDGE_PX ? last : end;
+  return end - y < STRETCH_NUDGE_PX ? end : last;
 }
 
 /** Nearest anchor to a resting position (anchors sorted ascending). */
@@ -45,7 +57,7 @@ let stop: (() => void) | null = null;
 function start(): () => void {
   const root = document.documentElement;
   root.classList.add("story-phone");
-  let points: number[] = [], end = Infinity, last = -Infinity, lastY = 0, fingers = 0, startY = 0, startScroll = 0, idle = 0, on: boolean | null = null;
+  let points: number[] = [], end = Infinity, last = -Infinity, lastY = 0, fingers = 0, startY = 0, startScroll = 0, idle = 0, on: boolean | null = null, down = true;
   const measure = () => {
     points = Array.from(document.querySelectorAll<HTMLElement>(".story-snap"))
       .map((el) => Math.round(el.getBoundingClientRect().top + window.scrollY))
@@ -63,13 +75,18 @@ function start(): () => void {
     window.clearTimeout(idle);
     startY = e.touches[0]?.clientY ?? 0;
     startScroll = window.scrollY;
-    if (!zoomed()) set(storySnapWanted(startScroll, end, false));
+    // Locked above the Locations anchor only; from Locations down to the content the page moves freely.
+    if (!zoomed()) set(storySnapWanted(startScroll, last, false));
   };
   const onMove = (e: TouchEvent) => {
     if (zoomed()) return;
     const dy = (e.touches[0]?.clientY ?? startY) - startY; // finger moving down = page heading up
-    if (inFinalStretch(startScroll, last, end)) { if (Math.abs(dy) > 6) set(dy > 0); }
-    else if (!on && window.scrollY < end - 1) set(true); // a slow drag from the content back into the sections
+    if (inFinalStretch(startScroll, last, end)) {
+      // Heading up from Locations itself (or dragged back above it): lock so it lands one section up.
+      if (dy > 6 && (startScroll <= last + 1 || window.scrollY < last - 1)) set(true);
+      else if (Math.abs(dy) > 6) set(false);
+    }
+    else if (!on && window.scrollY < last - 1) set(true); // a slow drag from the content back into the sections
   };
   // A rest between anchors (Safari can stop a snap when a finger taps mid-glide, or free momentum
   // from the content lands inside the sections) glides to the nearest anchor, then locks again.
@@ -77,6 +94,8 @@ function start(): () => void {
     if (pageReturnActive() || fingers > 0 || zoomed()) return;
     const y = window.scrollY;
     if (y >= end - 2) return;
+    // Between Locations and the content: carry on the way the visitor was going.
+    if (y > last + 2) { window.scrollTo({ top: stretchSettleTarget(y, last, end, down), behavior: reduce() ? "instant" : "smooth" }); return; }
     const p = nearestSnap(y, points);
     if (p === null) return;
     if (Math.abs(p - y) <= 2) { set(true); return; }
@@ -86,11 +105,12 @@ function start(): () => void {
   const schedule = () => { window.clearTimeout(idle); if (!pageReturnActive()) idle = window.setTimeout(settle, 180); };
   const onScroll = () => {
     const y = window.scrollY, up = y < lastY;
+    if (y !== lastY) down = y > lastY;
     lastY = y;
     if (pageReturnActive() || fingers) return;
-    // Free momentum from the content crossing back UP into the sections: lock so it stops at the first
-    // section it meets. Downward momentum out of the final stretch stays free (relocking it caused the stick).
-    if (on === false && up && !zoomed() && y < end - 1) set(true);
+    // Free momentum from the content crossing back UP past Locations: lock so it stops at the first
+    // section it meets. Momentum inside the final stretch stays free (locking it there caused the stick).
+    if (on === false && up && !zoomed() && y < last - 1) set(true);
     schedule();
   };
 
@@ -113,7 +133,7 @@ function start(): () => void {
     cancelAnimationFrame(raf);
     measure();
     if (fresh && !touched) window.scrollTo({ top: 0, behavior: "instant" });
-    set(storySnapWanted(window.scrollY, end, false));
+    set(storySnapWanted(window.scrollY, last, false));
   };
   if (fresh) window.scrollTo({ top: 0, behavior: "instant" });
   const watch = () => {
