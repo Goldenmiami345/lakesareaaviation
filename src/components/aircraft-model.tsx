@@ -61,7 +61,10 @@ export function warmModels(urls: readonly string[]) {
     warmChain = warmChain.then(() => loadViewer()).then(() => scrollQuiet()).then(() => new Promise<void>(resolve => {
       const host = document.createElement('div');
       host.setAttribute('aria-hidden', 'true');
-      host.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:2px;opacity:0;pointer-events:none;overflow:hidden;z-index:-1';
+      // Computers park the host off screen: model-viewer still downloads and parses (loading eager) but never
+      // renders it, so no WebGL draw or shader compile can land in the middle of a scroll. Phones keep the on-screen host.
+      const park = window.matchMedia('(pointer: fine)').matches ? 'left:-10000px' : 'left:0';
+      host.style.cssText = `position:fixed;${park};top:0;width:2px;height:2px;opacity:0;pointer-events:none;overflow:hidden;z-index:-1`;
       const el = document.createElement('model-viewer');
       el.setAttribute('loading', 'eager');
       el.setAttribute('src', url);
