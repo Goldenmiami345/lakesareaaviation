@@ -53,6 +53,7 @@ let warmChain: Promise<void> = Promise.resolve();
 /** Parse models into model-viewer's shared cache ahead of a click, one at a time, in a
  * hidden 2px host, so an opened card clones an already decoded model instead of waiting
  * for download + decode. The cache keeps the five most recent models. */
+const warmRetries = new Map<string, number>();
 export function warmModels(urls: readonly string[]) {
   if (import.meta.env.SSR) return;
   for (const url of urls) {
@@ -61,8 +62,7 @@ export function warmModels(urls: readonly string[]) {
     warmChain = warmChain.then(() => loadViewer()).then(() => scrollQuiet()).then(() => new Promise<void>(resolve => {
       const host = document.createElement('div');
       host.setAttribute('aria-hidden', 'true');
-      // Computers park the host off screen: model-viewer still downloads and parses (loading eager) but never
-      // renders it, so no WebGL draw or shader compile can land in the middle of a scroll. Phones keep the on-screen host.
+      // Computers park the host off screen (loading eager still downloads and parses it); phones keep the on-screen host.
       const park = window.matchMedia('(pointer: fine)').matches ? 'left:-10000px' : 'left:0';
       host.style.cssText = `position:fixed;${park};top:0;width:2px;height:2px;opacity:0;pointer-events:none;overflow:hidden;z-index:-1`;
       const el = document.createElement('model-viewer');
@@ -78,6 +78,20 @@ export function warmModels(urls: readonly string[]) {
       const finish = () => { if (done) return; done = true; if (!linger) { host.remove(); resolve(); return; } window.setTimeout(() => { host.remove(); resolve(); }, linger); };
       el.addEventListener('load', finish, { once: true });
       el.addEventListener('error', finish, { once: true });
+      // Computers: a scroll that starts mid warm-up pulls the hidden viewer out at once (the parse carries on
+      // into the shared cache) and the warm-up retries after the next pause, so its first draw never lands mid-scroll.
+      if (!linger) {
+        const abort = () => {
+          window.removeEventListener('scroll', abort);
+          if (done) return;
+          done = true; host.remove(); resolve();
+          const n = (warmRetries.get(url) ?? 0) + 1;
+          warmRetries.set(url, n);
+          if (n <= 6) { warmed.delete(url); warmModels([url]); }
+        };
+        window.addEventListener('scroll', abort, { passive: true });
+        el.addEventListener('load', () => window.removeEventListener('scroll', abort), { once: true });
+      }
       window.setTimeout(finish, 20000);
     })).catch(() => {});
   }
