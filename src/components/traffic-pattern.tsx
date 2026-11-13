@@ -14,19 +14,23 @@ import { TrafficPath } from './traffic-path';
 import { visibleApproach, type TrafficConditions } from '../lib/wx-conditions';
 
 // Real-time 3D map airplanes: browser-only chunk, requested only once the owner switch is on.
-const MapModels3D=lazy(():Promise<{default:React.ComponentType<{svgRef:React.RefObject<SVGSVGElement|null>;regs:ReadonlySet<string>;active:boolean}>}>=>import.meta.env.SSR?Promise.resolve({default:()=>null}):import('./map-models-3d'));
+const loadMapModels=()=>import('./map-models-3d');
+const MapModels3D=lazy(():Promise<{default:React.ComponentType<{svgRef:React.RefObject<SVGSVGElement|null>;regs:ReadonlySet<string>;active:boolean}>}>=>import.meta.env.SSR?Promise.resolve({default:()=>null}):loadMapModels());
 class FailClosed extends Component<{children:ReactNode},{failed:boolean}>{override state={failed:false};static getDerivedStateFromError(){return {failed:true};}override render(){return this.state.failed?null:this.props.children;}}
-function MapModelsLayer({svgRef,regs,active}:{svgRef:React.RefObject<SVGSVGElement|null>;regs:string;active:boolean}){
+// The map mounts ~1.5 viewports early: download and decode its airplanes right away, and start the
+// renderer for the active stage and its neighbours, so a stage fades in with its 3D airplanes already there.
+function MapModelsLayer({svgRef,regs,active,warm}:{svgRef:React.RefObject<SVGSVGElement|null>;regs:string;active:boolean;warm:boolean}){
   const enabled=useMapModelRegs();
-  const [armed,setArmed]=useState(false);useEffect(()=>{if(active)setArmed(true);},[active]);
+  const [armed,setArmed]=useState(false);useEffect(()=>{if(active||warm)setArmed(true);},[active,warm]);
   const mine=useMemo(()=>enabled?new Set(regs.split(' ').filter(r=>enabled.has(r))):null,[enabled,regs]);
+  useEffect(()=>{if(import.meta.env.SSR||!mine||mine.size===0)return;void loadMapModels().then(m=>m.warmMapModels(mine)).catch(()=>{});},[mine]);
   if(!armed||!mine||mine.size===0)return null;
   return <FailClosed><Suspense fallback={null}><MapModels3D svgRef={svgRef} regs={mine} active={active}/></Suspense></FailClosed>;
 }
 
 // Keep the existing threefold presentation footprint; map timing is independent
 // of this legacy visual multiplier. Never increase aircraft size for visibility.
-export function TrafficPattern({airport,active,viewBox='0 0 1500 1500',wind=null,runwayHeading=Number(airport.runway)*10,conditions}:{airport:PatternAirport;active:boolean;viewBox?:string;wind?:Wind|null;runwayHeading?:number;conditions?:TrafficConditions}){
+export function TrafficPattern({airport,active,warm=false,viewBox='0 0 1500 1500',wind=null,runwayHeading=Number(airport.runway)*10,conditions}:{airport:PatternAirport;active:boolean;warm?:boolean;viewBox?:string;wind?:Wind|null;runwayHeading?:number;conditions?:TrafficConditions}){
   const svgRef=useRef<SVGSVGElement>(null),planeRefs=useRef<(SVGGElement|null)[]>([]),shadowRefs=useRef<(SVGGElement|null)[]>([]),tagRefs=useRef<(SVGGElement|null)[]>([]),textRefs=useRef<(SVGTextElement|null)[]>([]),cardRef=useRef<HTMLDivElement>(null);
   // Real ADS-B traffic in this field's pattern (and on this map) replaces the simulated airplanes.
   const toPx=useMemo(()=>{const f=WX_FIELDS[airport.ident as keyof typeof WX_FIELDS];if(!f)return null;const mid={x:(airport.threshold.x+airport.end.x)/2,y:(airport.threshold.y+airport.end.y)/2},fpp=feetPerPixel(airport);return (lat:number,lon:number)=>mapPixel(f,mid,fpp,lat,lon);},[airport]);
@@ -57,7 +61,7 @@ export function TrafficPattern({airport,active,viewBox='0 0 1500 1500',wind=null
     {active&&!isLive&&planes.map((p,i)=><RadarTag key={`t-${p.reg}`} reg={p.reg} index={i} seed={0} label={`${p.reg}, ${p.type}. Show details`} tabIndex={0} hit={hitProps(i,p.reg)} tagRef={el=>{tagRefs.current[i]=el;}} textRef={el=>{textRefs.current[i]=el;}}/>)}
     </g>
     {active&&live.length>0&&toPx&&<MapLivePlanes list={live} svgRef={svgRef} toPx={toPx} airport={airport}/>}
-  </svg><MapModelsLayer svgRef={svgRef} regs={modelRegs} active={active}/>{isLive&&<LiveChip svgRef={svgRef}/>}{info&&<TrafficCard key={info.reg} ref={cardRef} plane={info} runway={airport.runway} onOpen={()=>open(info.reg)}/>}</div>;
+  </svg><MapModelsLayer svgRef={svgRef} regs={modelRegs} active={active} warm={warm}/>{isLive&&<LiveChip svgRef={svgRef}/>}{info&&<TrafficCard key={info.reg} ref={cardRef} plane={info} runway={airport.runway} onOpen={()=>open(info.reg)}/>}</div>;
 }
 
 /** Real aircraft on the airport map, dead-reckoned between reports. School tail numbers draw as their own airplane. */
