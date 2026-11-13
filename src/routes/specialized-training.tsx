@@ -32,11 +32,11 @@ function Page() {
         </Link>}
         <section id="endorsements" className="scroll-mt-28" data-scroll-reveal>
           <p className="eyebrow text-primary-text">Endorsements</p>
-          <div className="mt-5 grid grid-cols-2 gap-px bg-border sm:grid-cols-3 lg:grid-cols-5">{endorsements.map((c) => <CourseCard key={c.slug} c={c} />)}</div>
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">{endorsements.map((c) => <CourseCard key={c.slug} c={c} />)}</div>
         </section>
         <section id="courses" className="scroll-mt-28" data-scroll-reveal>
           <p className="eyebrow text-primary-text">Specialty courses</p>
-          <div className="mt-5 grid grid-cols-2 gap-px bg-border lg:grid-cols-4">{courses.map((c) => <CourseCard key={c.slug} c={c} />)}</div>
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">{courses.map((c) => <CourseCard key={c.slug} c={c} />)}</div>
         </section>
         <p className="text-sm text-muted-foreground">Tap any course for details. Pricing and timeline estimates come with your plan. <Link to="/contact" className="font-bold text-primary-text">Build my training plan →</Link></p>
       </div>
@@ -47,7 +47,7 @@ function Page() {
 
 function CourseCard({ c }: { c: SpecialtyCourse }) {
   const photo = SPECIALTY_PHOTOS[c.slug];
-  return <Link to="/specialized-training/$slug" params={{ slug: c.slug }} className="interactive-arrow group flex flex-col bg-background">
+  return <Link to="/specialized-training/$slug" params={{ slug: c.slug }} className="interactive-arrow group flex flex-col overflow-hidden border border-border bg-background transition-colors hover:border-foreground">
     <div className="relative aspect-[4/3] overflow-hidden bg-secondary">{photo && <img src={photo.src} srcSet={srcSetFor(photo.src)} sizes="(min-width: 1024px) 20vw, 50vw" alt={photo.alt} width={800} height={600} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.05]" />}</div>
     <div className="flex flex-1 flex-col p-4 sm:p-5">
       {c.location && <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{c.location}</p>}
