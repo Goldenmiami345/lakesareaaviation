@@ -1,6 +1,6 @@
 import { describe, test as it } from "node:test";
 import assert from "node:assert/strict";
-import { JOURNEY_HOLD, JOURNEY_TAIL, journeyFrame, journeyAltitude, maxSettleDistance, pinnedLength, settleTarget, stageLanding, stageLengthFrom, stagePosition } from "./journey-scroll";
+import { DESKTOP_JOURNEY_HOLD, DESKTOP_SETTLE_DEADZONE, desktopSettleTarget, JOURNEY_HOLD, JOURNEY_TAIL, journeyFrame, journeyAltitude, maxSettleDistance, pinnedLength, settleTarget, stageLanding, stageLengthFrom, stagePosition } from "./journey-scroll";
 
 const g = { base: 1000, stage: 800, count: 6 };
 const at = (stageUnits: number) => g.base + stageUnits * g.stage;
@@ -142,11 +142,70 @@ describe("altitude", () => {
   });
 });
 describe("desktop crossfade", () => {
-  it("starts at half the stage instead of 72%", () => {
+  it("starts after a short hold so one gentle notch reaches it", () => {
     const d = { base: 0, stage: 1000, count: 3 };
-    assert.equal(journeyFrame(d, 490, 0.5).transition, 0);
-    assert.ok(Math.abs(journeyFrame(d, 750, 0.5).transition - 0.5) < 1e-6);
-    assert.equal(journeyFrame(d, 700).transition, 0);
-    assert.ok(journeyFrame(d, 700, 0.5).transition > 0.3);
+    assert.equal(journeyFrame(d, 190, DESKTOP_JOURNEY_HOLD).transition, 0);
+    assert.ok(journeyFrame(d, 300, DESKTOP_JOURNEY_HOLD).transition > 0);
+    assert.ok(Math.abs(journeyFrame(d, 600, DESKTOP_JOURNEY_HOLD).transition - 0.5) < 1e-6);
+  });
+});
+
+describe("desktopSettleTarget", () => {
+  const h = DESKTOP_JOURNEY_HOLD;
+  const land = (k: number) => stageLanding(g, k, h);
+  it("one gentle notch down from a stage finishes on the next stage", () => {
+    for (let k = 0; k < g.count - 1; k += 1) {
+      for (const notch of [20, 40, 100]) {
+        assert.equal(desktopSettleTarget(g, land(k) + notch, land(k), 1), land(k + 1));
+      }
+    }
+  });
+  it("one gentle notch up from a stage finishes on the previous stage", () => {
+    for (let k = 1; k < g.count; k += 1) {
+      for (const notch of [20, 40, 100]) {
+        assert.equal(desktopSettleTarget(g, land(k) - notch, land(k), -1), land(k - 1));
+      }
+    }
+  });
+  it("repeated single notches walk through every stage (never pulled back)", () => {
+    let y = land(0);
+    const seen = [0];
+    for (let i = 0; i < 20 && journeyFrame(g, y, h).stage < g.count - 1; i += 1) {
+      const start = y;
+      y += 40;
+      y = desktopSettleTarget(g, y, start, 1) ?? y;
+      seen.push(journeyFrame(g, y, h).active);
+    }
+    assert.deepEqual([...new Set(seen)], [0, 1, 2, 3, 4, 5]);
+  });
+  it("ignores nudges smaller than the deadzone inside a hold", () => {
+    assert.equal(desktopSettleTarget(g, land(2) + DESKTOP_SETTLE_DEADZONE - 1, land(2), 1), null);
+    assert.equal(desktopSettleTarget(g, land(2) - DESKTOP_SETTLE_DEADZONE + 1, land(2), -1), null);
+  });
+  it("never moves against the direction of travel", () => {
+    for (let f = 0.12; f < g.count - 1; f += 0.037) {
+      const y = at(f);
+      const down = desktopSettleTarget(g, y, at(0.1) - 200, 1);
+      if (down !== null) assert.ok(down >= y);
+      const up = desktopSettleTarget(g, y, at(g.count), -1);
+      if (up !== null) assert.ok(up <= y);
+    }
+  });
+  it("a fling that stops on a fully shown stage stays there", () => {
+    const y = land(3) + 30; // inside stage 3's hold, travelled from stage 0
+    assert.equal(desktopSettleTarget(g, y, land(0), 1), null);
+  });
+  it("arriving from the hero never skips the first stage", () => {
+    assert.equal(desktopSettleTarget(g, at(0.15), 0, 1), null);
+  });
+  it("leaves the last stage and the lead-in alone", () => {
+    assert.equal(desktopSettleTarget(g, at(g.count - 1 + 0.3), land(4), 1), null);
+    assert.equal(desktopSettleTarget(g, at(0.05), 0, 1), null);
+  });
+  it("its targets are at rest", () => {
+    for (let f = 0.13; f < g.count - 1; f += 0.05) {
+      const t = desktopSettleTarget(g, at(f), at(f) - 100, 1);
+      if (t !== null) assert.equal(desktopSettleTarget(g, t, at(f) - 100, 1), null);
+    }
   });
 });

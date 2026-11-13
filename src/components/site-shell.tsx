@@ -93,7 +93,10 @@ export function MobileActions() {
     // Layout reads run at most once per frame (not on every scroll event).
     let frame = 0;
     const onScroll = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(check); };
+    const wide = window.matchMedia("(min-width: 768px)");
     const check = () => {
+      // The bar is phone/tablet only (md:hidden): computers skip these per-frame layout reads while scrolling.
+      if (wide.matches) return;
       // Hide while the inquiry band (its own CTA) or the footer reaches the bottom of the screen.
       const nearEnd = [...document.querySelectorAll("[data-no-float]")].some((el) => { const r = el.getBoundingClientRect(); return r.top < window.innerHeight - 8 && r.bottom > 0; });
       // Home journeys carry a button on every stage, so the bar stays away while one is on screen.

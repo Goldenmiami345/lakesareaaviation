@@ -15,8 +15,13 @@ const smootherstep = (t: number) => { const x = clamp(t); return x * x * x * (x 
 
 /** Fraction of each stage's scroll length that shows the stage unchanged before its crossfade. */
 export const JOURNEY_HOLD = 0.72;
-/** Desktop (fine pointer) hold: a longer, more gradual crossfade window. */
-export const DESKTOP_JOURNEY_HOLD = 0.5;
+/**
+ * Desktop (fine pointer) hold: short, so a single gentle wheel notch or trackpad nudge reaches the
+ * crossfade; `desktopSettleTarget` then finishes the move in the direction the visitor scrolled.
+ */
+export const DESKTOP_JOURNEY_HOLD = 0.2;
+/** Desktop: net movement (px) below which a rest counts as an accidental nudge, not a scroll. */
+export const DESKTOP_SETTLE_DEADZONE = 16;
 /** Extra hold after the last stage (in stage lengths) before the section unpins and the next one slides in. */
 export const JOURNEY_TAIL = 0.5;
 
@@ -77,6 +82,42 @@ export function settleTarget(g: JourneyGeometry, y: number, hold = JOURNEY_HOLD)
   const midpoint = hold + (1 - hold) / 2;
   const target = local < midpoint ? stage + hold : stage + 1;
   return Math.round(g.base + target * g.stage);
+}
+
+/**
+ * Desktop (wheel / trackpad) settle. Rest points are the stage landings (middle of each hold). A scroll
+ * that comes to rest between two rest points finishes in the direction it was travelling, so one gentle
+ * notch or nudge always shows the next stage and a scroll is never pulled back against its direction.
+ * `start`: where the previous rest (or settle target) was. `dir`: sign of the visitor's last movement.
+ * Untouched: rests on a rest point, before the first stage's rest point, past the last stage's rest point, nudges smaller than `deadzone` inside a hold, and a hold the scroll already passed into from
+ * outside (a fling that stopped on a fully shown stage stays on it).
+ */
+export function desktopSettleTarget(g: JourneyGeometry, y: number, start: number, dir: number, hold = DESKTOP_JOURNEY_HOLD, deadzone = DESKTOP_SETTLE_DEADZONE): number | null {
+  const n = Math.max(1, g.count);
+  if (n < 2) return null;
+  const S = Math.max(1, g.stage);
+  const pos = (y - g.base) / S;
+  const rest = (k: number) => k + (k < n - 1 ? hold / 2 : JOURNEY_TAIL / 2);
+  if (pos <= rest(0) || pos >= rest(n - 1)) return null;
+  let k = 0;
+  while (k < n - 2 && pos >= rest(k + 1)) k += 1;
+  const lo = rest(k), hi = rest(k + 1), edge = 1 / S;
+  if (pos - lo <= edge || hi - pos <= edge) return null;
+  const px = (u: number) => Math.round(g.base + u * S);
+  const fading = pos > k + hold && pos < k + 1;
+  if (Math.abs(y - start) < deadzone || !dir) {
+    if (!fading) return null;
+    return px(pos - lo < hi - pos ? lo : hi);
+  }
+  const startPos = (start - g.base) / S;
+  if (dir > 0) {
+    // Arrived in stage k's hold from above it: that stage is fully shown, leave it.
+    if (!fading && pos < k + 1 && startPos < lo - 2 * edge) return null;
+    return px(hi);
+  }
+  // Arrived in stage k+1's hold from below it.
+  if (!fading && pos >= k + 1 && startPos > hi + 2 * edge) return null;
+  return px(lo);
 }
 
 /** Longest distance `settleTarget` can ever move the page. */

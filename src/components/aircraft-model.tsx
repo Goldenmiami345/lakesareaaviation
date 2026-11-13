@@ -35,20 +35,36 @@ function loadViewer() {
   return viewer;
 }
 
+/** Computers: wait until scrolling has paused, so a model warm-up (heavy WebGL work) never lands
+ * in the middle of a wheel or trackpad scroll and drops its frames. Phones keep their timing. */
+function scrollQuiet(ms = 700) {
+  if (!window.matchMedia('(pointer: fine)').matches) return Promise.resolve();
+  return new Promise<void>(resolve => {
+    let t = 0;
+    const done = () => { window.removeEventListener('scroll', arm); resolve(); };
+    function arm() { window.clearTimeout(t); t = window.setTimeout(done, ms); }
+    window.addEventListener('scroll', arm, { passive: true });
+    arm();
+  });
+}
+
 const warmed = new Set<string>();
 let warmChain: Promise<void> = Promise.resolve();
 /** Parse models into model-viewer's shared cache ahead of a click, one at a time, in a
  * hidden 2px host, so an opened card clones an already decoded model instead of waiting
  * for download + decode. The cache keeps the five most recent models. */
+const warmRetries = new Map<string, number>();
 export function warmModels(urls: readonly string[]) {
   if (import.meta.env.SSR) return;
   for (const url of urls) {
     if (warmed.has(url)) continue;
     warmed.add(url);
-    warmChain = warmChain.then(() => loadViewer()).then(() => new Promise<void>(resolve => {
+    warmChain = warmChain.then(() => loadViewer()).then(() => scrollQuiet()).then(() => new Promise<void>(resolve => {
       const host = document.createElement('div');
       host.setAttribute('aria-hidden', 'true');
-      host.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:2px;opacity:0;pointer-events:none;overflow:hidden;z-index:-1';
+      // Computers park the host off screen (loading eager still downloads and parses it); phones keep the on-screen host.
+      const park = window.matchMedia('(pointer: fine)').matches ? 'left:-10000px' : 'left:0';
+      host.style.cssText = `position:fixed;${park};top:0;width:2px;height:2px;opacity:0;pointer-events:none;overflow:hidden;z-index:-1`;
       const el = document.createElement('model-viewer');
       el.setAttribute('loading', 'eager');
       el.setAttribute('src', url);
@@ -56,9 +72,26 @@ export function warmModels(urls: readonly string[]) {
       host.appendChild(el);
       document.body.appendChild(host);
       let done = false;
-      const finish = () => { if (done) return; done = true; window.setTimeout(() => { host.remove(); resolve(); }, 300); };
+      // Computers drop the host the moment the model is parsed (it stays in model-viewer's cache), before
+      // model-viewer's one-off hidden pre-render, whose shader compile and pixel copy stalled scrolling.
+      const linger = park === 'left:0' ? 300 : 0;
+      const finish = () => { if (done) return; done = true; if (!linger) { host.remove(); resolve(); return; } window.setTimeout(() => { host.remove(); resolve(); }, linger); };
       el.addEventListener('load', finish, { once: true });
       el.addEventListener('error', finish, { once: true });
+      // Computers: a scroll that starts mid warm-up pulls the hidden viewer out at once (the parse carries on
+      // into the shared cache) and the warm-up retries after the next pause, so its first draw never lands mid-scroll.
+      if (!linger) {
+        const abort = () => {
+          window.removeEventListener('scroll', abort);
+          if (done) return;
+          done = true; host.remove(); resolve();
+          const n = (warmRetries.get(url) ?? 0) + 1;
+          warmRetries.set(url, n);
+          if (n <= 6) { warmed.delete(url); warmModels([url]); }
+        };
+        window.addEventListener('scroll', abort, { passive: true });
+        el.addEventListener('load', () => window.removeEventListener('scroll', abort), { once: true });
+      }
       window.setTimeout(finish, 20000);
     })).catch(() => {});
   }

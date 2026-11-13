@@ -84,6 +84,7 @@ export default function MapModels3D({ svgRef, regs, active }: { svgRef: React.Re
     const pending = new Set<SVGGElement>();
     let dead = false, raf = 0, lost = false;
     const host = svg.closest('[data-journey-section]');
+    const fineCompile = window.matchMedia('(pointer: fine)').matches;
     const attach = (g: SVGGElement, reg: string) => {
       if (pending.has(g)) return; pending.add(g);
       void loadModel(reg).then((m) => {
@@ -93,7 +94,14 @@ export default function MapModels3D({ svgRef, regs, active }: { svgRef: React.Re
         model.traverse((o) => { const mesh = o as THREE.Mesh; if (mesh.isMesh && mesh.userData['beacon']) { const mat = (mesh.material as THREE.MeshStandardMaterial).clone(); mesh.material = mat; beacons.push(mat); } });
         const bank = new THREE.Group(); bank.add(model);
         const yaw = new THREE.Group(); yaw.add(bank); yaw.visible = false; scene.add(yaw);
-        planes.set(g, { yaw, bank, scale: 1 / m.span, lastHdg: NaN, lastT: 0, roll: 0, beacons });
+        const add = () => { if (!dead) planes.set(g, { yaw, bank, scale: 1 / m.span, lastHdg: NaN, lastT: 0, roll: 0, beacons }); };
+        // Computers: compile this airplane's shaders off the main thread first (parallel compile), so its first
+        // frame never stalls a scroll. Phones keep drawing it straight away.
+        if (!fineCompile) { add(); return; }
+        yaw.visible = true;
+        const compiled = renderer.compileAsync(yaw, camera, scene);
+        yaw.visible = false;
+        void compiled.then(add, add);
       });
     };
     const draw = (t: number) => {
