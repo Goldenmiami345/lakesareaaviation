@@ -72,7 +72,10 @@ export function warmModels(urls: readonly string[]) {
       host.appendChild(el);
       document.body.appendChild(host);
       let done = false;
-      const finish = () => { if (done) return; done = true; window.setTimeout(() => { host.remove(); resolve(); }, 300); };
+      // Computers drop the host the moment the model is parsed (it stays in model-viewer's cache), before
+      // model-viewer's one-off hidden pre-render, whose shader compile and pixel copy stalled scrolling.
+      const linger = park === 'left:0' ? 300 : 0;
+      const finish = () => { if (done) return; done = true; if (!linger) { host.remove(); resolve(); return; } window.setTimeout(() => { host.remove(); resolve(); }, linger); };
       el.addEventListener('load', finish, { once: true });
       el.addEventListener('error', finish, { once: true });
       window.setTimeout(finish, 20000);
