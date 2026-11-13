@@ -38,9 +38,9 @@ function SpecialtyPage() {
       </div>
     </section>
     <section className="site-container relative z-10 -mt-6 sm:-mt-8">
-      <div className="grid gap-px overflow-hidden border border-border bg-border shadow-2xl sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-px overflow-hidden border border-border bg-border shadow-2xl sm:grid-cols-2 lg:grid-flow-col lg:grid-cols-none lg:auto-cols-fr">
         {facts.map((f) => <div key={f.k} className="bg-background p-5 sm:p-6"><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{f.k}</p><p className="mt-2 font-display text-2xl sm:text-3xl">{f.v}</p></div>)}
-        <Link to="/contact" search={{ program: c.name }} className={`btn-shine flex min-h-16 items-center justify-between gap-3 bg-primary p-5 text-sm font-bold uppercase text-primary-foreground sm:p-6 ${facts.length % 2 === 0 ? "sm:col-span-2" : ""} ${(facts.length + 1) % 4 === 0 ? "lg:col-span-1" : facts.length % 4 === 2 ? "lg:col-span-2" : facts.length % 4 === 1 ? "lg:col-span-3" : "lg:col-span-4"}`}>Build my training plan <ArrowRight className="size-5" /></Link>
+        <Link to="/contact" search={{ program: c.name }} className={`btn-shine flex min-h-16 items-center justify-between gap-3 bg-primary p-5 text-sm font-bold uppercase text-primary-foreground sm:p-6 lg:col-span-1 ${facts.length % 2 === 0 ? "sm:col-span-2" : ""}`}>Build my training plan <ArrowRight className="size-5" /></Link>
       </div>
     </section>
     <section className="site-container grid gap-12 py-14 lg:grid-cols-2 lg:py-20">
