@@ -35,6 +35,19 @@ function loadViewer() {
   return viewer;
 }
 
+/** Computers: wait until scrolling has paused, so a model warm-up (heavy WebGL work) never lands
+ * in the middle of a wheel or trackpad scroll and drops its frames. Phones keep their timing. */
+function scrollQuiet(ms = 700) {
+  if (!window.matchMedia('(pointer: fine)').matches) return Promise.resolve();
+  return new Promise<void>(resolve => {
+    let t = 0;
+    const done = () => { window.removeEventListener('scroll', arm); resolve(); };
+    function arm() { window.clearTimeout(t); t = window.setTimeout(done, ms); }
+    window.addEventListener('scroll', arm, { passive: true });
+    arm();
+  });
+}
+
 const warmed = new Set<string>();
 let warmChain: Promise<void> = Promise.resolve();
 /** Parse models into model-viewer's shared cache ahead of a click, one at a time, in a
@@ -45,7 +58,7 @@ export function warmModels(urls: readonly string[]) {
   for (const url of urls) {
     if (warmed.has(url)) continue;
     warmed.add(url);
-    warmChain = warmChain.then(() => loadViewer()).then(() => new Promise<void>(resolve => {
+    warmChain = warmChain.then(() => loadViewer()).then(() => scrollQuiet()).then(() => new Promise<void>(resolve => {
       const host = document.createElement('div');
       host.setAttribute('aria-hidden', 'true');
       host.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:2px;opacity:0;pointer-events:none;overflow:hidden;z-index:-1';
