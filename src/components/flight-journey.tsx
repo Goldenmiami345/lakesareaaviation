@@ -165,7 +165,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const fine = window.matchMedia("(pointer: fine)").matches;
     const n = stages.length;
     let mx = 0, my = 0, frame = 0, last = -1;
-    // Desktop: longer crossfade window and a short eased follow of scrollY so wheel notches blend.
+    // Desktop: short hold (directional settle does the pacing) and a short eased follow of scrollY so wheel notches blend.
     const hold = fine && !reduce ? DESKTOP_JOURNEY_HOLD : JOURNEY_HOLD;
     const ease = fine && !reduce;
     let shown = window.scrollY, lastT = 0;
@@ -244,7 +244,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     let idle = 0, fingers = 0, settling: number | null = null, lastInputAt = -Infinity;
     let restY = window.scrollY, lastY = window.scrollY, dir = 0, glide = 0, glideY = NaN;
     const stopGlide = () => { if (glide) cancelAnimationFrame(glide); glide = 0; glideY = NaN; };
-    const glideTo = (to: number) => {
+    const settleGlide = (to: number) => {
       stopGlide();
       const from = window.scrollY, d = to - from, g = geo ?? measure();
       if (Math.abs(d) < 1) return;
@@ -273,7 +273,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       if (target === null) { settling = null; return; }
       if (settling === target) return; // already on its way there
       settling = target;
-      if (ease) glideTo(target);
+      if (ease) settleGlide(target);
       else window.scrollTo({ top: target, behavior: reduce ? "instant" : "smooth" });
     };
     const scheduleSettle = () => { window.clearTimeout(idle); idle = window.setTimeout(settle, IDLE_MS); };
@@ -316,7 +316,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     render();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("scrollend", onScrollEnd);
-    window.addEventListener("wheel", onInput, { passive: true });
+    window.addEventListener("wheel", onWheel, { passive: true });
     window.addEventListener("keydown", onInput, { passive: true });
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchend", onTouchEnd, { passive: true });
@@ -326,11 +326,12 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     if (!reduce && fine) window.addEventListener("pointermove", onMove, { passive: true });
     return () => {
       cancelAnimationFrame(frame);
+      stopGlide();
       window.clearTimeout(idle);
       ro.disconnect();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("scrollend", onScrollEnd);
-      window.removeEventListener("wheel", onInput);
+      window.removeEventListener("wheel", onWheel);
       window.removeEventListener("keydown", onInput);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchend", onTouchEnd);
