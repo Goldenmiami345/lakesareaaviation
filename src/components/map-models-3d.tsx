@@ -110,7 +110,7 @@ export default function MapModels3D({ svgRef, regs, active }: { svgRef: React.Re
         model.traverse((o) => { const mesh = o as THREE.Mesh; if (mesh.isMesh && mesh.userData['beacon']) { const mat = (mesh.material as THREE.MeshStandardMaterial).clone(); mesh.material = mat; beacons.push(mat); } });
         const bank = new THREE.Group(); bank.add(model);
         const yaw = new THREE.Group(); yaw.add(bank); yaw.visible = false; scene.add(yaw);
-        const add = () => { window.clearTimeout(giveUp); if (!dead) planes.set(g, { yaw, bank, scale: 1 / m.span, lastHdg: NaN, lastT: 0, roll: 0, beacons }); };
+        const add = () => { window.clearTimeout(giveUp); if (dead) return; g.setAttribute('data-model3d', ''); planes.set(g, { yaw, bank, scale: 1 / m.span, lastHdg: NaN, lastT: 0, roll: 0, beacons }); };
         // Computers: compile this airplane's shaders off the main thread first (parallel compile), so its first
         // frame never stalls a scroll. Phones keep drawing it straight away.
         if (!fineCompile) { add(); return; }
@@ -139,7 +139,7 @@ export default function MapModels3D({ svgRef, regs, active }: { svgRef: React.Re
         const sim = g.closest('.traffic-sim') as SVGGElement | null;
         const m = g.isConnected && !(sim && sim.style.display === 'none') ? g.getCTM() : null;
         const span = m ? Math.hypot(m.a, m.b) : 0;
-        if (!m || span < 0.5) { p.yaw.visible = false; if (!g.isConnected) { scene.remove(p.yaw); planes.delete(g); } continue; }
+        if (!m || span < 0.5) { p.yaw.visible = false; if (!g.isConnected) { scene.remove(p.yaw); planes.delete(g); pending.delete(g); } continue; }
         const hdg = Math.atan2(m.b, m.a) * 180 / Math.PI;
         if (Number.isFinite(p.lastHdg) && t > p.lastT) {
           let d = hdg - p.lastHdg; d = ((d + 540) % 360) - 180;
