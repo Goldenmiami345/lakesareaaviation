@@ -89,8 +89,7 @@ export function settleTarget(g: JourneyGeometry, y: number, hold = JOURNEY_HOLD)
  * that comes to rest between two rest points finishes in the direction it was travelling, so one gentle
  * notch or nudge always shows the next stage and a scroll is never pulled back against its direction.
  * `start`: where the previous rest (or settle target) was. `dir`: sign of the visitor's last movement.
- * Untouched: rests on a rest point, before the first stage's rest point, once the last stage is fully
- * shown, nudges smaller than `deadzone` inside a hold, and a hold the scroll already passed into from
+ * Untouched: rests on a rest point, before the first stage's rest point, past the last stage's rest point, nudges smaller than `deadzone` inside a hold, and a hold the scroll already passed into from
  * outside (a fling that stopped on a fully shown stage stays on it).
  */
 export function desktopSettleTarget(g: JourneyGeometry, y: number, start: number, dir: number, hold = DESKTOP_JOURNEY_HOLD, deadzone = DESKTOP_SETTLE_DEADZONE): number | null {
@@ -99,7 +98,7 @@ export function desktopSettleTarget(g: JourneyGeometry, y: number, start: number
   const S = Math.max(1, g.stage);
   const pos = (y - g.base) / S;
   const rest = (k: number) => k + (k < n - 1 ? hold / 2 : JOURNEY_TAIL / 2);
-  if (pos <= rest(0) || pos >= n - 1) return null;
+  if (pos <= rest(0) || pos >= rest(n - 1)) return null;
   let k = 0;
   while (k < n - 2 && pos >= rest(k + 1)) k += 1;
   const lo = rest(k), hi = rest(k + 1), edge = 1 / S;

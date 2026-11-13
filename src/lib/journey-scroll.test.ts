@@ -199,7 +199,7 @@ describe("desktopSettleTarget", () => {
     assert.equal(desktopSettleTarget(g, at(0.15), 0, 1), null);
   });
   it("leaves the last stage and the lead-in alone", () => {
-    assert.equal(desktopSettleTarget(g, at(g.count - 1 + 0.1), land(4), 1), null);
+    assert.equal(desktopSettleTarget(g, at(g.count - 1 + 0.3), land(4), 1), null);
     assert.equal(desktopSettleTarget(g, at(0.05), 0, 1), null);
   });
   it("its targets are at rest", () => {
