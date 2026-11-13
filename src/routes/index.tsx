@@ -64,11 +64,12 @@ function HomePage() {
       <section className="bg-background py-20 sm:py-28" data-scroll-reveal>
         <div className="site-container">
           <div className="stagger-grid grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-3" data-scroll-reveal>
-            <ServiceLink title="Multi-Engine Training" text="Earn your commercial multi, then add your MEI and learn to teach in the Piper Apache. About 3–4 days each." to="/programs/$slug" slug="commercial-multi-engine" />
-            <ServiceLink title="Endorsements" text="Tailwheel, complex, high-performance, high-altitude, and spin training." to="/specialized-training" />
-            <ServiceLink title="Advanced Kodiak 100 Training" text="Insurance-approved initial and recurrent Kodiak 100 training." to="/specialized-training" />
-            <ServiceLink title="Specialty Courses" text="Mountain flying, light aerobatics, ski plane, and Cirrus transition." to="/specialized-training" />
-            <ServiceLink title="Flight Reviews" text="Stay proficient with instruction tailored to your experience and goals." to="/local-training" wide />
+            <ServiceLink title="Multi-Engine Training" text="Earn your commercial multi, then add your MEI and learn to teach in the Piper Apache. About 3–4 days each." dest={{ to: "/programs/$slug", slug: "commercial-multi-engine" }} />
+            <ServiceLink title="Endorsements" text="Tailwheel, complex, high-performance, high-altitude, and spin training." dest={{ to: "/specialized-training", hash: "endorsements" }} />
+            <ServiceLink title="Advanced Kodiak 100 Training" text="Insurance-approved initial and recurrent Kodiak 100 training." dest={{ to: "/specialized-training/$slug", slug: "kodiak-100" }} />
+            <ServiceLink title="Specialty Courses" text="Mountain flying, light aerobatics, ski plane, and Cirrus transition." dest={{ to: "/specialized-training", hash: "courses" }} />
+            <ServiceLink title="Flight Reviews" text="Stay proficient with instruction tailored to your experience and goals." dest={{ to: "/local-training" }} />
+            <ServiceLink title="Accelerated Courses" text="Every course in one list: ratings, endorsements, Kodiak 100, flight reviews and more." dest={{ to: "/accelerated-training", hash: "all-courses" }} />
           </div>
           <p className="mt-px bg-background p-6 text-sm leading-relaxed text-muted-foreground lg:p-7">First time in the air? <Link to="/introductory-flights" className="font-bold text-primary-text">Introductory flights from $100</Link>. Or <Link to="/scenic-flights" className="font-bold text-primary-text">book a scenic flight</Link> for up to three passengers.</p>
         </div>
@@ -84,12 +85,18 @@ function HomePage() {
 
 function Stat({ value, label }: { value: string; label: string }) { return <div className="bg-ink p-6"><p className="font-display text-4xl text-primary-text">{value}</p><p className="mt-2 text-xs font-bold uppercase tracking-widest text-background/60">{label}</p></div>; }
 
-function ServiceLink({ title, text, to, slug, wide }: { title: string; text: string; to: "/programs/$slug" | "/specialized-training" | "/local-training"; slug?: string; wide?: boolean }) {
+type ServiceDest =
+  | { to: "/programs/$slug" | "/specialized-training/$slug"; slug: string }
+  | { to: "/specialized-training" | "/accelerated-training"; hash: string }
+  | { to: "/local-training" };
+function ServiceLink({ title, text, dest }: { title: string; text: string; dest: ServiceDest }) {
   const content = <><h3 className="font-display text-[1.75rem] leading-tight sm:text-3xl">{title}</h3><p className="mt-3 text-sm leading-relaxed text-muted-foreground">{text}</p><span className="mt-5 inline-flex items-center gap-2 text-xs font-bold uppercase text-foreground sm:mt-8">Explore <ArrowRight className="size-4" /></span></>;
-  const cls = `program-card interactive-arrow group bg-background p-6 sm:min-h-64 sm:p-8${wide ? " sm:col-span-2" : ""}`;
-  return slug
-    ? <Link to={to} params={{ slug }} className={cls}>{content}</Link>
-    : <Link to={to} className={cls}>{content}</Link>;
+  const cls = "program-card interactive-arrow group bg-background p-6 sm:min-h-64 sm:p-8";
+  if ("slug" in dest) return dest.to === "/programs/$slug"
+    ? <Link to="/programs/$slug" params={{ slug: dest.slug }} className={cls}>{content}</Link>
+    : <Link to="/specialized-training/$slug" params={{ slug: dest.slug }} className={cls}>{content}</Link>;
+  if ("hash" in dest) return <Link to={dest.to} hash={dest.hash} className={cls}>{content}</Link>;
+  return <Link to={dest.to} className={cls}>{content}</Link>;
 }
 
 function HeroCta() {
