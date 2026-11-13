@@ -27,6 +27,8 @@ export default defineConfig({
       ...["private-pilot", "instrument-rating", "commercial-single-engine", "commercial-multi-engine", "cfi-cfii", "mei", "zero-to-hero"].map((s) => `/programs/${s}`),
       // One page per airplane (lowercase tail number); keep in sync with fleet in src/lib/site-data.ts.
       ...["n8570b", "n4383p", "n46201", "n6717a", "n6641f", "n96150", "n11059", "n7108g"].map((r) => `/fleet/${r}`),
+      // One page per endorsement or specialty course; keep in sync with specialtyCourses in src/lib/site-data.ts.
+      ...["kodiak-100", "tailwheel", "complex", "high-performance", "high-altitude", "spin-training", "mountain-flying", "light-aerobatics", "ski-plane", "cirrus-transition"].map((s) => `/specialized-training/${s}`),
     ].map((path) => ({ path })),
     prerender: { enabled: true, autoStaticPathsDiscovery: false, crawlLinks: false, autoSubfolderIndex: false, failOnError: true, onSuccess: verifyPrerender },
   },
