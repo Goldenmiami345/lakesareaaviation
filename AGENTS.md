@@ -25,7 +25,6 @@
 - Traffic airplanes (aerial and oblique views) share selection, radar tags and the info card from src/components/traffic-ui.tsx so tap/hover behaviour stays identical everywhere.
 - Stage zoom keeps single-finger scrolling passive; arm non-passive touchmove only for pinch/zoomed panning so native scrolling stays on the compositor fast path.
 - 3D: cards use show_3d_models (default off), maps a separate map_3d_models/map_3d_aircraft; read after mount, fail-closed lazy, no bypass. Fleet never renders 3D (owner). Retain model sources and baked traffic images. Traffic cards start models on open and warm visible-stage models into the viewer cache after idle (aircraft-media warmAircraftModels), so a tap shows the model directly; other media at ≥50% view after idle, one at a time. With 3D on, modeled slots never show the photo first (empty until the setting resolves); the photo appears only on load error/timeout. Gestures stay isolated.
-- AirportScene shares one USGS image/traffic viewBox; phone framing uses the protected rectangle, desktop searches centroid placements around actual text/CTA/HUD/rail boxes rather than excluding the whole lower band, so zoom can increase without hiding aircraft. Stage-zoom remains independent.
 - Training-plan leads are saved via the public submitTrainingLead server function (publishable client, insert-only RLS, admin-only reads, hashed-IP rate limit via recent_lead_count) so no lead depends on email delivery.
 - Aerial runway selection uses live METAR with FAA/calm fallback; the photo-calibrated oblique runway remains 13. Both views share use-traffic-animation.ts for leg-entry calls, targets and live card values, so collision/reduced-motion behavior cannot drift.
 - Weather→traffic logic is pure in wx-conditions.ts; live METAR renders only after mount in reserved slots (no weather in prerendered HTML).
@@ -36,8 +35,6 @@
 - GLBs (public/models, uppercase regs, _headers, versioned ?v=) are meshopt+WebP, error-capped simplify, ≤900KB; shared model-settings owns camera/light/span and mesh-sphere/aspect fitting for fleet/traffic slots; load/resize fit the rotation envelope and reset restores it. Keep walk-around pointers/CDN objects; Apache banner stays unchanged.
 - Hero comparisons stay separate, noindex, sitemap-excluded, without floating controls. Home uses Pixel Perfect Snapshot sunset assets: tall below 3:2 viewport aspect, wide otherwise, avoiding AI-redrawn planes.
 - Normalize pathnames with sitePath before shell visibility decisions: prerender URLs carry a trailing slash, and differing trees broke hydration.
-- The drawn pattern (TrafficPath) follows site_settings.traffic_pattern_mode (off/pulse/always), read after mount so prerendered HTML never depends on it; pulse pauses while a card is open and never runs in reduced motion.
-- USE_RENDERED_TOP_SPRITES (site-data) draws photo-derived top renders (src/assets/fleet/top, width = wingspan) for those registrations in the aerial view only, at the vectors' ~3x display scale (full 640px source) with an alpha-derived shadow; the oblique view uses model-baked heading sprites and other registrations keep SVG vectors.
 - Airport imagery mounts within 1.5 viewports or on a "journey-target" glide event, phone or desktop aerial only (first-load weight). Models spin only when visible.
 
 - Subdirectories have their own AGENTS.md (src/components) to read before changing files there.- Canonical/og:url are emitted only by the root head from src/lib/site-url.ts (SITE_URL + leaf fullPath, sitemap routes only; sitemap uses the same constant), so leaf routes never add their own and the domain switch is one line.
@@ -52,5 +49,4 @@
 - Story coachmarks share timing constants in story-nav.ts and stay pointer-transparent; each journey owns its first-arrival state so hints cannot block gestures or repeat on stage changes.
 
 - Netlify: NETLIFY-only @netlify/vite-plugin-tanstack-start, nitro off (its netlify preset breaks prerender); Lovable default untouched.
-- Endorsement/specialty course facts live in specialtyCourses (site-data.ts), photos in src/lib/specialty-photos.ts (standIn marks photos awaiting real ones); /specialized-training/<slug> pages need the vite.config.ts pages list, prerender contracts and sitemap kept in step with that list (plan-preselect.test.ts guards it).
-- Course "Build my training plan" links pass ?program=<name>; contact.tsx maps it via plan-preselect.ts after mount, so the prerendered form never changes.
+- Course facts: specialtyCourses (site-data.ts) + specialty-photos.ts; /specialized-training/<slug> pages, vite pages, contracts and sitemap stay in step (plan-preselect.test.ts). ?program= on /contact preselects after mount.
