@@ -45,7 +45,7 @@
 - Navy/blue/beige seams are clean edges (edge-fade no-ops); blends go grey.
 - Layout width: site-container/site-wrap + --gutter (styles.css), never max-w-7xl, so header, sections and HUD share one edge.
 - ALT readout: journeyAltitude; wind: nearest METAR (wx-stations.ts), wxStation fallback.
-- Phone Story section boundaries are native CSS scroll snap (story-snap.ts, phone Story mode only, the one scroll-snap exception); never drive vertical story movement from script, because it made slides uneven on iPhone.
+- Phone Story section boundaries are native CSS scroll snap (story-snap.ts, phone Story mode only, the one scroll-snap exception); never drive vertical story movement from script, because it made slides uneven on iPhone. The Locations-to-content stretch is unlocked and a rest there glides on in the travel direction (stretchSettleTarget), because mandatory snap flipped gentle swipes back.
 - Story coachmarks share timing constants in story-nav.ts and stay pointer-transparent; each journey owns its first-arrival state so hints cannot block gestures or repeat on stage changes.
 
 - Netlify: NETLIFY-only @netlify/vite-plugin-tanstack-start, nitro off (its netlify preset breaks prerender); Lovable default untouched.
