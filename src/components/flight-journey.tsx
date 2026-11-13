@@ -242,8 +242,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const INPUT_QUIET_MS = ease ? 150 : 200;
     const IDLE_MS = ease ? 110 : SETTLE_IDLE_MS;
     let idle = 0, fingers = 0, settling: number | null = null, lastInputAt = -Infinity;
-    let restY = window.scrollY, lastY = window.scrollY, dir = 0, glide = 0, glideY = NaN;
-    const stopGlide = () => { if (glide) cancelAnimationFrame(glide); glide = 0; glideY = NaN; };
+    let restY = window.scrollY, lastY = window.scrollY, dir = 0, glide = 0;
+    const stopGlide = () => { if (glide) cancelAnimationFrame(glide); glide = 0; };
     const settleGlide = (to: number) => {
       stopGlide();
       const from = window.scrollY, d = to - from, g = geo ?? measure();
@@ -252,13 +252,10 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const dur = 300 + 450 * Math.min(1, Math.abs(d) / g.stage);
       const t0 = performance.now();
       const step = (now: number) => {
-        // Anything else moved the page (scrollbar drag, find-in-page): stop and let it be.
-        if (!Number.isNaN(glideY) && Math.abs(window.scrollY - glideY) > 2) { stopGlide(); settling = null; return; }
         const t = Math.min(1, (now - t0) / dur);
-        glideY = from + d * (1 - Math.pow(1 - t, 2.4));
-        window.scrollTo({ top: glideY, behavior: "instant" });
+        window.scrollTo({ top: from + d * (1 - Math.pow(1 - t, 2.4)), behavior: "instant" });
         if (t < 1) glide = requestAnimationFrame(step);
-        else { glide = 0; glideY = NaN; lastY = window.scrollY; }
+        else { glide = 0; lastY = window.scrollY; }
       };
       glide = requestAnimationFrame(step);
     };
@@ -297,6 +294,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       if (ease && Math.abs(e.deltaY) > Math.abs(e.deltaX) && e.deltaY) dir = Math.sign(e.deltaY);
     };
     const onTouchStart = (e: TouchEvent) => { fingers = e.touches.length; onInput(); };
+    // A press anywhere (including the scrollbar) hands the page straight back to the visitor.
+    const onPress = () => { if (glide) onInput(); };
     const onTouchEnd = (e: TouchEvent) => { fingers = e.touches.length; if (fingers === 0) scheduleSettle(); };
 
     const onMove = (e: PointerEvent) => { mx = e.clientX / window.innerWidth - 0.5; my = e.clientY / window.innerHeight - 0.5; renderScroll(); };
@@ -317,6 +316,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("scrollend", onScrollEnd);
     window.addEventListener("wheel", onWheel, { passive: true });
+    if (ease) window.addEventListener("pointerdown", onPress, { passive: true });
     window.addEventListener("keydown", onInput, { passive: true });
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchend", onTouchEnd, { passive: true });
@@ -332,6 +332,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("scrollend", onScrollEnd);
       window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("pointerdown", onPress);
       window.removeEventListener("keydown", onInput);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchend", onTouchEnd);
