@@ -52,3 +52,5 @@
 - Story coachmarks share timing constants in story-nav.ts and stay pointer-transparent; each journey owns its first-arrival state so hints cannot block gestures or repeat on stage changes.
 
 - Netlify: NETLIFY-only @netlify/vite-plugin-tanstack-start, nitro off (its netlify preset breaks prerender); Lovable default untouched.
+- Endorsement/specialty course facts live in specialtyCourses (site-data.ts), photos in src/lib/specialty-photos.ts (standIn marks photos awaiting real ones); /specialized-training/<slug> pages need the vite.config.ts pages list, prerender contracts and sitemap kept in step with that list (plan-preselect.test.ts guards it).
+- Course "Build my training plan" links pass ?program=<name>; contact.tsx maps it via plan-preselect.ts after mount, so the prerendered form never changes.
