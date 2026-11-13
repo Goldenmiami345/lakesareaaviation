@@ -21,7 +21,7 @@ function Page() {
     <SiteLayout>
       <PageIntro eyebrow="Specialized training" title="Endorsements and courses beyond the ratings." text="Along with our commitment to providing you the best training to fit your needs and schedule, we also offer specialized training in a variety of endorsements and ratings." />
       <div className="site-container space-y-14 py-14 sm:space-y-20 sm:py-20">
-        {kodiak && <Link to="/specialized-training/$slug" params={{ slug: kodiak.slug }} className="interactive-arrow group grid overflow-hidden bg-ink text-background md:grid-cols-[1.1fr_1fr]" data-scroll-reveal>
+        {kodiak && <Link to="/specialized-training/$slug" params={{ slug: kodiak.slug }} className="interactive-arrow group grid min-h-56 overflow-hidden bg-ink text-background md:grid-cols-[1.1fr_1fr]" data-scroll-reveal>
           <div className="p-7 md:p-12">
             <p className="eyebrow text-primary-text">Kodiak 100 training</p>
             <h2 className="mt-3 font-display text-3xl sm:text-5xl">Approved initial & recurrent provider.</h2>
@@ -47,7 +47,7 @@ function Page() {
 
 function CourseCard({ c }: { c: SpecialtyCourse }) {
   const photo = SPECIALTY_PHOTOS[c.slug];
-  return <Link to="/specialized-training/$slug" params={{ slug: c.slug }} className="interactive-arrow group flex flex-col overflow-hidden border border-border bg-background transition-colors hover:border-foreground">
+  return <Link to="/specialized-training/$slug" params={{ slug: c.slug }} className="interactive-arrow group flex min-h-full flex-col overflow-hidden border border-border bg-background transition-colors hover:border-foreground">
     <div className="relative aspect-[4/3] overflow-hidden bg-secondary">{photo && <img src={photo.src} srcSet={srcSetFor(photo.src)} sizes="(min-width: 1024px) 20vw, 50vw" alt={photo.alt} width={800} height={600} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.05]" />}</div>
     <div className="flex flex-1 flex-col p-4 sm:p-5">
       {c.location && <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{c.location}</p>}
