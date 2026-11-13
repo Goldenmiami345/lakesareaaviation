@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getRouterInstance } from "@tanstack/react-start";
 import { isSitemapRouteIncluded, sitemapPathForLocation, sitemapStaticPaths, sitemapXML, type SitemapEntry } from "@/lib/sitemap";
-import { fleet, programs } from "@/lib/site-data";
+import { fleet, programs, specialtyCourses } from "@/lib/site-data";
 
 import { SITE_URL as BASE_URL } from "@/lib/site-url";
 
@@ -39,6 +39,21 @@ export const Route = createFileRoute("/sitemap.xml")({
               hash: "",
             });
             const path = sitemapPathForLocation(router, location, fleetRouteId);
+            if (path) entries.push({ path });
+          }
+        }
+
+        // Endorsement and specialty course pages (/specialized-training/tailwheel).
+        const specialtyRouteId = "/specialized-training_/$slug";
+        if (isSitemapRouteIncluded(router.routesById[specialtyRouteId])) {
+          for (const course of specialtyCourses) {
+            const location = router.buildLocation({
+              to: "/specialized-training/$slug",
+              params: { slug: course.slug },
+              search: () => ({}),
+              hash: "",
+            });
+            const path = sitemapPathForLocation(router, location, specialtyRouteId);
             if (path) entries.push({ path });
           }
         }

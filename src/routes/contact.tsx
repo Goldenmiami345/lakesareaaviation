@@ -9,6 +9,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { submitTrainingLead } from "../lib/leads.functions";
 import { CONTINGENCY_RATE, formatPhone, leadSchema, RATING_PREREQUISITES, withPrerequisites } from "../lib/lead-schema";
 import { SiteLayout } from "../components/site-shell";
+import { noteForProgram, plannedForProgram } from "../lib/plan-preselect";
 import { locations, SCHOOL_PHONE, SCHOOL_PHONE_TEL , fleet } from "../lib/site-data";
 
 type Rating = { id: string; name: string; days: number; cost: number; prerequisite?: string | undefined };
@@ -34,11 +35,14 @@ export const Route = createFileRoute("/contact")({
 });
 
 function ContactPage() {
-  const { location, aircraft } = Route.useSearch();
+  const { location, aircraft, program } = Route.useSearch();
   const plane = fleet.find((f) => aircraft && f.registration.toUpperCase() === aircraft.toUpperCase());
   const preferred = locations.find((l) => location && l.airport.toUpperCase().includes(location.toUpperCase()))?.city ?? "";
   const [earned, setEarned] = useState<string[]>([]);
   const [planned, setPlanned] = useState<string[]>(["cfi", "cfii"]);
+  // Course links pass ?program=; applied after mount so the prerendered form stays identical.
+  const [programNote, setProgramNote] = useState("");
+  useEffect(() => { const p = plannedForProgram(program); if (p) setPlanned(p); setProgramNote(noteForProgram(program)); }, [program]);
   const [housing, setHousing] = useState(true);
   const [car, setCar] = useState(false);
   const [pickup, setPickup] = useState(false);
@@ -178,7 +182,7 @@ function ContactPage() {
           <a href={SCHOOL_PHONE_TEL} className="mt-6 inline-flex min-h-12 items-center bg-primary px-6 text-sm font-bold uppercase text-primary-foreground">Call {SCHOOL_PHONE}</a></div> : <div className="grid gap-10 lg:grid-cols-[.7fr_1.3fr]"><div><p className="eyebrow text-primary-text">Request a review</p><h2 className="mt-4 font-display text-4xl">Put real dates around your plan.</h2><a href={SCHOOL_PHONE_TEL} className="mt-6 -mb-2 inline-flex min-h-11 items-center font-display text-2xl text-primary-text">{SCHOOL_PHONE}</a></div><form onSubmit={onSubmit} className="relative grid min-w-0 gap-5 sm:grid-cols-2">
           <Field name="firstName" label="First name" autoComplete="given-name" /><Field name="lastName" label="Last name" autoComplete="family-name" /><Field name="email" label="Email" type="email" autoComplete="email" /><Field name="phone" label="Phone" type="tel" />
           <Select key={preferred} label="Preferred location" options={locations.map(l => l.city)} defaultValue={preferred} /><Field name="targetStartDate" label="Target start date" type="date" required={false} />
-          <label className="sm:col-span-2"><span className="mb-2 block text-xs font-bold uppercase">Anything else we should know?</span><textarea name="notes" maxLength={2000} key={plane?.registration ?? ""} defaultValue={plane ? aircraftNote : ""} className="min-h-28 w-full border border-input bg-background p-4 outline-none focus:border-primary" /></label>
+          <label className="sm:col-span-2"><span className="mb-2 block text-xs font-bold uppercase">Anything else we should know?</span><textarea name="notes" maxLength={2000} key={`${plane?.registration ?? ""}|${programNote}`} defaultValue={[plane ? aircraftNote : "", programNote].filter(Boolean).join(" ")} className="min-h-28 w-full border border-input bg-background p-4 outline-none focus:border-primary" /></label>
           <div aria-hidden="true" className="sr-only"><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
           <Button disabled={busy} className="min-h-14 rounded-none sm:col-span-2">{busy ? "Sending…" : "Send my training plan request"}</Button>
           {error && <p ref={errorRef} tabIndex={-1} role="alert" className="outline-none text-sm text-destructive sm:col-span-2">{error}</p>}

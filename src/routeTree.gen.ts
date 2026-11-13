@@ -33,6 +33,7 @@ import { Route as TeamRouteImport } from './routes/team'
 import { Route as FleetRegRouteImport } from './routes/fleet_.$reg'
 import { Route as ProgramsIndexRouteImport } from './routes/programs.index'
 import { Route as ProgramsSlugRouteImport } from './routes/programs.$slug'
+import { Route as SpecializedTrainingSlugRouteImport } from './routes/specialized-training_.$slug'
 import { Route as ApiPublicLiveTrafficRouteImport } from './routes/api/public/live-traffic'
 import { Route as ApiPublicMetarRouteImport } from './routes/api/public/metar'
 
@@ -156,6 +157,11 @@ const ProgramsSlugRoute = ProgramsSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => ProgramsRoute,
 } as any)
+const SpecializedTrainingSlugRoute = SpecializedTrainingSlugRouteImport.update({
+  id: '/specialized-training_/$slug',
+  path: '/specialized-training/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicLiveTrafficRoute = ApiPublicLiveTrafficRouteImport.update({
   id: '/api/public/live-traffic',
   path: '/api/public/live-traffic',
@@ -191,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/team': typeof TeamRoute
   '/fleet/$reg': typeof FleetRegRoute
   '/programs/$slug': typeof ProgramsSlugRoute
+  '/specialized-training/$slug': typeof SpecializedTrainingSlugRoute
   '/programs/': typeof ProgramsIndexRoute
   '/api/public/live-traffic': typeof ApiPublicLiveTrafficRoute
   '/api/public/metar': typeof ApiPublicMetarRoute
@@ -218,6 +225,7 @@ export interface FileRoutesByTo {
   '/team': typeof TeamRoute
   '/fleet/$reg': typeof FleetRegRoute
   '/programs/$slug': typeof ProgramsSlugRoute
+  '/specialized-training/$slug': typeof SpecializedTrainingSlugRoute
   '/programs': typeof ProgramsIndexRoute
   '/api/public/live-traffic': typeof ApiPublicLiveTrafficRoute
   '/api/public/metar': typeof ApiPublicMetarRoute
@@ -247,6 +255,7 @@ export interface FileRoutesById {
   '/team': typeof TeamRoute
   '/fleet_/$reg': typeof FleetRegRoute
   '/programs/$slug': typeof ProgramsSlugRoute
+  '/specialized-training_/$slug': typeof SpecializedTrainingSlugRoute
   '/programs/': typeof ProgramsIndexRoute
   '/api/public/live-traffic': typeof ApiPublicLiveTrafficRoute
   '/api/public/metar': typeof ApiPublicMetarRoute
@@ -277,6 +286,7 @@ export interface FileRouteTypes {
     | '/team'
     | '/fleet/$reg'
     | '/programs/$slug'
+    | '/specialized-training/$slug'
     | '/programs/'
     | '/api/public/live-traffic'
     | '/api/public/metar'
@@ -304,6 +314,7 @@ export interface FileRouteTypes {
     | '/team'
     | '/fleet/$reg'
     | '/programs/$slug'
+    | '/specialized-training/$slug'
     | '/programs'
     | '/api/public/live-traffic'
     | '/api/public/metar'
@@ -332,6 +343,7 @@ export interface FileRouteTypes {
     | '/team'
     | '/fleet_/$reg'
     | '/programs/$slug'
+    | '/specialized-training_/$slug'
     | '/programs/'
     | '/api/public/live-traffic'
     | '/api/public/metar'
@@ -360,6 +372,7 @@ export interface RootRouteChildren {
   StudentsRoute: typeof StudentsRoute
   TeamRoute: typeof TeamRoute
   FleetRegRoute: typeof FleetRegRoute
+  SpecializedTrainingSlugRoute: typeof SpecializedTrainingSlugRoute
   ApiPublicLiveTrafficRoute: typeof ApiPublicLiveTrafficRoute
   ApiPublicMetarRoute: typeof ApiPublicMetarRoute
 }
@@ -534,6 +547,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProgramsSlugRouteImport
       parentRoute: typeof ProgramsRoute
     }
+    '/specialized-training_/$slug': {
+      id: '/specialized-training_/$slug'
+      path: '/specialized-training/$slug'
+      fullPath: '/specialized-training/$slug'
+      preLoaderRoute: typeof SpecializedTrainingSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/live-traffic': {
       id: '/api/public/live-traffic'
       path: '/api/public/live-traffic'
@@ -588,6 +608,7 @@ const rootRouteChildren: RootRouteChildren = {
   StudentsRoute: StudentsRoute,
   TeamRoute: TeamRoute,
   FleetRegRoute: FleetRegRoute,
+  SpecializedTrainingSlugRoute: SpecializedTrainingSlugRoute,
   ApiPublicLiveTrafficRoute: ApiPublicLiveTrafficRoute,
   ApiPublicMetarRoute: ApiPublicMetarRoute,
 }

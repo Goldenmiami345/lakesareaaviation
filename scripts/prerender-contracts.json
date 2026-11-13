@@ -134,5 +134,45 @@
   "/fleet/n7108g": {
     "heading": "N7108G Hawk",
     "copy": "1970 Cessna 172K"
+  },
+  "/specialized-training/kodiak-100": {
+    "heading": "Kodiak 100 Training",
+    "copy": "The Kodiak 100 is a single-engine turboprop utility airplane built for short, rough fields. We are an approved initial and recurrent training provider with most insurance companies."
+  },
+  "/specialized-training/tailwheel": {
+    "heading": "Tailwheel Endorsement",
+    "copy": "A logbook endorsement required to act as pilot in command of a tailwheel airplane (14 CFR 61.31(i))."
+  },
+  "/specialized-training/complex": {
+    "heading": "Complex Endorsement",
+    "copy": "Required to act as pilot in command of a complex airplane: retractable landing gear, flaps and a controllable-pitch propeller (14 CFR 61.31(e))."
+  },
+  "/specialized-training/high-performance": {
+    "heading": "High-Performance Endorsement",
+    "copy": "Required to act as pilot in command of an airplane with an engine of more than 200 horsepower (14 CFR 61.31(f))."
+  },
+  "/specialized-training/high-altitude": {
+    "heading": "High-Altitude Endorsement",
+    "copy": "Required to act as pilot in command of a pressurized airplane with a service ceiling or maximum operating altitude above 25,000 ft MSL (14 CFR 61.31(g))."
+  },
+  "/specialized-training/spin-training": {
+    "heading": "Spin Training",
+    "copy": "Stall and spin awareness, spin entry and recovery. Flight instructor applicants need this endorsement before the CFI checkride (14 CFR 61.183(i))."
+  },
+  "/specialized-training/mountain-flying": {
+    "heading": "Mountain Flying Course",
+    "copy": "Fly safely in and around high terrain, taught from Platte Valley Airpark (18V) at a field elevation of 4,965 ft."
+  },
+  "/specialized-training/light-aerobatics": {
+    "heading": "Light Aerobatics Course",
+    "copy": "An introduction to basic aerobatic maneuvers that builds confidence and control at unusual attitudes."
+  },
+  "/specialized-training/ski-plane": {
+    "heading": "Ski Plane Training",
+    "copy": "Learn to fly a ski-equipped airplane from snow and frozen lakes during a Minnesota winter."
+  },
+  "/specialized-training/cirrus-transition": {
+    "heading": "Cirrus Transition Training",
+    "copy": "Transition training for pilots moving into a Cirrus SR20 or SR22: its systems, avionics and the Cirrus Airframe Parachute System (CAPS)."
   }
 }
