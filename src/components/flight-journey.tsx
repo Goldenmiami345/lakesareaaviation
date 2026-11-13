@@ -3,7 +3,7 @@ import { srcSetFor } from "@/lib/responsive-image";
 import { Link } from "@tanstack/react-router";
 import { ArrowDown, ArrowRight, ChevronLeft, ChevronRight, MapPin, Pause, Phone, Play } from "lucide-react";
 import { Button } from "./ui/button";
-import { journeyFrame, journeyAltitude, settleTarget, stageLanding, stageLengthFrom, JOURNEY_TAIL, JOURNEY_HOLD, DESKTOP_JOURNEY_HOLD, type JourneyGeometry } from "../lib/journey-scroll";
+import { journeyFrame, journeyAltitude, settleTarget, desktopSettleTarget, stageLanding, stageLengthFrom, JOURNEY_TAIL, JOURNEY_HOLD, DESKTOP_JOURNEY_HOLD, type JourneyGeometry } from "../lib/journey-scroll";
 import { airportTraffic, SCHOOL_PHONE_TEL } from "../lib/site-data";
 import { patternFor, pickRunway, type PatternField } from "../lib/traffic-pattern";
 import { useMetar } from "../lib/use-metar";
@@ -182,7 +182,8 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const showActive = (idx: number) => {
       if (idx === last) return;
       last = idx;
-      setActive(idx);
+      // Desktop: the stage switch re-renders the whole journey; let React yield so the crossfade keeps its frames.
+      if (ease) startTransition(() => setActive(idx)); else setActive(idx);
       videoRefs.current.forEach((video, videoIndex) => {
         if (!video) return;
         if (videoIndex === idx && !reduce) void video.play().catch(() => undefined);
@@ -232,28 +233,69 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     };
     const renderScroll = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(render); };
 
-    // Settle: a scroll that comes to rest INSIDE a crossfade finishes it toward the nearer edge
+    // Settle (touch): a scroll that comes to rest INSIDE a crossfade finishes it toward the nearer edge
     // (never more than half a crossfade window, never while a finger is on the glass, never while
-    // wheel or keyboard input is still arriving). A rest position inside a hold is never touched,
-    // so no swipe, notch or key press is ever undone or "eaten".
-    const INPUT_QUIET_MS = 200;
+    // wheel or keyboard input is still arriving). A rest position inside a hold is never touched.
+    // Settle (desktop wheel/trackpad): a rest between two stages finishes in the direction the visitor
+    // was scrolling (desktopSettleTarget), with a short eased glide that any new input stops at once,
+    // so one gentle notch always shows the next stage and nothing is ever pulled back.
+    const INPUT_QUIET_MS = ease ? 150 : 200;
+    const IDLE_MS = ease ? 110 : SETTLE_IDLE_MS;
     let idle = 0, fingers = 0, settling: number | null = null, lastInputAt = -Infinity;
+    let restY = window.scrollY, lastY = window.scrollY, dir = 0, glide = 0, glideY = NaN;
+    const stopGlide = () => { if (glide) cancelAnimationFrame(glide); glide = 0; glideY = NaN; };
+    const glideTo = (to: number) => {
+      stopGlide();
+      const from = window.scrollY, d = to - from, g = geo ?? measure();
+      if (Math.abs(d) < 1) return;
+      // ~0.75s for a whole stage: the crossfade gets about half a second, then eases out invisibly in the hold.
+      const dur = 300 + 450 * Math.min(1, Math.abs(d) / g.stage);
+      const t0 = performance.now();
+      const step = (now: number) => {
+        // Anything else moved the page (scrollbar drag, find-in-page): stop and let it be.
+        if (!Number.isNaN(glideY) && Math.abs(window.scrollY - glideY) > 2) { stopGlide(); settling = null; return; }
+        const t = Math.min(1, (now - t0) / dur);
+        glideY = from + d * (1 - Math.pow(1 - t, 2.4));
+        window.scrollTo({ top: glideY, behavior: "instant" });
+        if (t < 1) glide = requestAnimationFrame(step);
+        else { glide = 0; glideY = NaN; lastY = window.scrollY; }
+      };
+      glide = requestAnimationFrame(step);
+    };
     const settle = () => {
       window.clearTimeout(idle);
+      if (glide) return;
       if (pageReturnActive() || fingers > 0 || document.documentElement.classList.contains("journey-zoomed")) return;
       if (performance.now() - lastInputAt < INPUT_QUIET_MS) { scheduleSettle(); return; }
-      const target = settleTarget(geo ?? measure(), window.scrollY, hold);
+      const y = window.scrollY;
+      const target = ease ? desktopSettleTarget(geo ?? measure(), y, restY, dir, hold) : settleTarget(geo ?? measure(), y, hold);
+      if (ease) restY = target ?? y;
       if (target === null) { settling = null; return; }
       if (settling === target) return; // already on its way there
       settling = target;
-      window.scrollTo({ top: target, behavior: reduce ? "instant" : "smooth" });
+      if (ease) glideTo(target);
+      else window.scrollTo({ top: target, behavior: reduce ? "instant" : "smooth" });
     };
-    const scheduleSettle = () => { window.clearTimeout(idle); idle = window.setTimeout(settle, SETTLE_IDLE_MS); };
-    const onScroll = () => { renderScroll(); scheduleSettle(); };
+    const scheduleSettle = () => { window.clearTimeout(idle); idle = window.setTimeout(settle, IDLE_MS); };
+    const onScroll = () => {
+      renderScroll();
+      if (ease && !glide) { const y = window.scrollY, dy = y - lastY; lastY = y; if (Math.abs(dy) > 0.5) dir = Math.sign(dy); }
+      if (!glide) scheduleSettle();
+    };
     // scrollend fires after every wheel notch's own animation, so it only re-arms the idle timer.
-    const onScrollEnd = () => scheduleSettle();
-    // Any new input cancels a settle in flight (the browser already stops the programmatic scroll).
-    const onInput = () => { lastInputAt = performance.now(); settling = null; window.clearTimeout(idle); };
+    const onScrollEnd = () => { if (!glide) scheduleSettle(); };
+    // Any new input stops a settle in flight; the browser carries on with the visitor's own scroll.
+    const onInput = () => {
+      lastInputAt = performance.now();
+      if (glide) { stopGlide(); lastY = window.scrollY; }
+      settling = null;
+      window.clearTimeout(idle);
+    };
+    const onWheel = (e: WheelEvent) => {
+      onInput();
+      // Direction straight from the wheel, before the scroll it causes arrives.
+      if (ease && Math.abs(e.deltaY) > Math.abs(e.deltaX) && e.deltaY) dir = Math.sign(e.deltaY);
+    };
     const onTouchStart = (e: TouchEvent) => { fingers = e.touches.length; onInput(); };
     const onTouchEnd = (e: TouchEvent) => { fingers = e.touches.length; if (fingers === 0) scheduleSettle(); };
 
@@ -266,7 +308,9 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       const d = (e as CustomEvent<{ id: string; index: number; animate?: boolean }>).detail;
       if (d?.id !== id) return;
       const y = stageLanding(measure(), d.index, hold);
+      stopGlide();
       settling = null;
+      restY = y;
       glideTo(y, !d.animate);
     };
     render();
