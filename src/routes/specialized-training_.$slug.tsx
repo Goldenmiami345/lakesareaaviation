@@ -29,7 +29,7 @@ function SpecialtyPage() {
     <section className="bg-ink pb-12 pt-28 text-background sm:pb-16 sm:pt-36">
       <div className="site-container grid items-center gap-8 lg:grid-cols-[1fr_1.1fr] lg:gap-14">
         <div>
-          <Link to="/specialized-training" className="inline-flex min-h-11 items-center gap-2 text-xs font-bold uppercase tracking-widest text-background/70 hover:text-background"><ArrowLeft className="size-4" /> Specialized training</Link>
+          <div><Link to="/specialized-training" className="inline-flex min-h-11 items-center gap-2 text-xs font-bold uppercase tracking-widest text-background/70 hover:text-background"><ArrowLeft className="size-4" /> Specialized training</Link></div>
           <p className="stage-label mt-4">{SPECIALTY_KIND_LABEL[c.kind]}</p>
           <h1 className="mt-3 font-display text-4xl sm:text-6xl">{c.name}</h1>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-background/80 sm:text-lg">{c.definition}</p>
