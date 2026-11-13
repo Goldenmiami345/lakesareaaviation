@@ -49,14 +49,22 @@ function loadModel(reg: string) {
   cache.set(reg, p);
   return p;
 }
+/** Download and decode these airplanes now (the map is near), so they are ready before the map is on screen. */
+export function warmMapModels(regs: Iterable<string>) { for (const r of regs) void loadModel(r); }
+/** How long a modeled airplane may stay hidden waiting for its model before the flat art is shown instead. */
+const MODEL_WAIT_MS = 10000;
 
 type Plane = { yaw: THREE.Group; bank: THREE.Group; scale: number; lastHdg: number; lastT: number; roll: number; beacons: THREE.MeshStandardMaterial[] };
 
 export default function MapModels3D({ svgRef, regs, active }: { svgRef: React.RefObject<SVGSVGElement | null>; regs: ReadonlySet<string>; active: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const activeRef = useRef(active);
+  activeRef.current = active;
+  // Started once (active stage or a neighbour) and kept while mounted: leaving a stage pauses drawing
+  // instead of rebuilding the renderer, so coming back never waits for the airplanes again.
   useEffect(() => {
     const canvas = canvasRef.current, svg = svgRef.current;
-    if (!canvas || !svg || !active || regs.size === 0) return;
+    if (!canvas || !svg || regs.size === 0) return;
     let renderer: THREE.WebGLRenderer;
     try { renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'low-power' }); }
     catch { return; }
@@ -84,17 +92,25 @@ export default function MapModels3D({ svgRef, regs, active }: { svgRef: React.Re
     const pending = new Set<SVGGElement>();
     let dead = false, raf = 0, lost = false;
     const host = svg.closest('[data-journey-section]');
+    const layer = svg.closest<HTMLElement>('.journey-layer');
+    // A neighbouring stage draws only while its layer is actually showing (crossfade or story turn).
+    const showing = () => activeRef.current || !layer || (layer.style.visibility !== 'hidden' && layer.style.opacity !== '0' && layer.style.opacity !== '');
     const fineCompile = window.matchMedia('(pointer: fine)').matches;
     const attach = (g: SVGGElement, reg: string) => {
       if (pending.has(g)) return; pending.add(g);
+      // With map 3D on, this airplane is only ever shown as its model: hide the flat art while the model
+      // gets ready, and fall back to it only if the model fails or is very slow.
+      g.setAttribute('data-model3d', '');
+      const giveUp = window.setTimeout(() => { if (!planes.has(g)) g.removeAttribute('data-model3d'); }, MODEL_WAIT_MS);
       void loadModel(reg).then((m) => {
-        if (dead || !m || !g.isConnected) return;
+        if (dead) return;
+        if (!m || !g.isConnected) { window.clearTimeout(giveUp); g.removeAttribute('data-model3d'); return; }
         const model = m.scene.clone(true);
         const beacons: THREE.MeshStandardMaterial[] = [];
         model.traverse((o) => { const mesh = o as THREE.Mesh; if (mesh.isMesh && mesh.userData['beacon']) { const mat = (mesh.material as THREE.MeshStandardMaterial).clone(); mesh.material = mat; beacons.push(mat); } });
         const bank = new THREE.Group(); bank.add(model);
         const yaw = new THREE.Group(); yaw.add(bank); yaw.visible = false; scene.add(yaw);
-        const add = () => { if (!dead) planes.set(g, { yaw, bank, scale: 1 / m.span, lastHdg: NaN, lastT: 0, roll: 0, beacons }); };
+        const add = () => { window.clearTimeout(giveUp); if (!dead) planes.set(g, { yaw, bank, scale: 1 / m.span, lastHdg: NaN, lastT: 0, roll: 0, beacons }); };
         // Computers: compile this airplane's shaders off the main thread first (parallel compile), so its first
         // frame never stalls a scroll. Phones keep drawing it straight away.
         if (!fineCompile) { add(); return; }
@@ -104,14 +120,21 @@ export default function MapModels3D({ svgRef, regs, active }: { svgRef: React.Re
         void compiled.then(add, add);
       });
     };
+    let lastScan = -Infinity;
     const draw = (t: number) => {
       raf = requestAnimationFrame(draw);
-      if (lost || document.hidden || host?.hasAttribute('data-offstage')) return;
-      if (!w || !h) resize();
-      for (const g of svg.querySelectorAll<SVGGElement>('[data-aircraft]')) {
-        const reg = g.getAttribute('data-aircraft') ?? '';
-        if (regs.has(reg) && !planes.has(g)) attach(g, reg);
+      if (lost || document.hidden) return;
+      const onScreen = !host?.hasAttribute('data-offstage') && showing();
+      // Off screen: keep preparing airplanes (a few checks a second) so they are ready on arrival.
+      if (onScreen || t - lastScan > 400) {
+        lastScan = t;
+        for (const g of svg.querySelectorAll<SVGGElement>('[data-aircraft]')) {
+          const reg = g.getAttribute('data-aircraft') ?? '';
+          if (regs.has(reg) && !pending.has(g)) attach(g, reg);
+        }
       }
+      if (!onScreen) return;
+      if (!w || !h) resize();
       for (const [g, p] of planes) {
         const sim = g.closest('.traffic-sim') as SVGGElement | null;
         const m = g.isConnected && !(sim && sim.style.display === 'none') ? g.getCTM() : null;
@@ -133,20 +156,19 @@ export default function MapModels3D({ svgRef, regs, active }: { svgRef: React.Re
         // Anti-collision beacon: short red flash once a second.
         const on = (t % 1000) < 120;
         for (const b of p.beacons) b.emissiveIntensity = on ? 4 : 0;
-        g.setAttribute('data-model3d', '');
       }
       renderer.render(scene, camera);
     };
     raf = requestAnimationFrame(draw);
-    const onLost = (e: Event) => { e.preventDefault(); lost = true; for (const g of planes.keys()) g.removeAttribute('data-model3d'); };
+    const onLost = (e: Event) => { e.preventDefault(); lost = true; for (const g of pending) g.removeAttribute('data-model3d'); };
     canvas.addEventListener('webglcontextlost', onLost);
     return () => {
       dead = true; cancelAnimationFrame(raf); ro.disconnect();
       canvas.removeEventListener('webglcontextlost', onLost);
-      for (const g of planes.keys()) g.removeAttribute('data-model3d');
+      for (const g of pending) g.removeAttribute('data-model3d');
       for (const p of planes.values()) for (const b of p.beacons) b.dispose();
       env.dispose(); pmrem.dispose(); renderer.dispose();
     };
-  }, [svgRef, regs, active]);
+  }, [svgRef, regs]);
   return <canvas ref={canvasRef} aria-hidden className="map-models-3d pointer-events-none absolute inset-0 h-full w-full" />;
 }
