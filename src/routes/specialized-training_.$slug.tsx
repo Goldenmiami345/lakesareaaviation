@@ -5,14 +5,18 @@ import { useSiteContent } from "../lib/use-site-content";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { srcSetFor } from "@/lib/responsive-image";
 import { InquiryBand, SiteLayout } from "../components/site-shell";
-import { findSpecialty, SPECIALTY_KIND_LABEL, specialtyCourses } from "../lib/site-data";
+import { findSpecialty, SPECIALTY_KIND_LABEL, type SpecialtyCourse } from "../lib/site-data";
+import { SLUG } from "../lib/catalog";
+import { useCourses } from "../lib/use-catalog";
+import { HideToggle } from "../components/catalog-controls";
+import { coursePhoto } from "./specialized-training";
 
 export const Route = createFileRoute("/specialized-training_/$slug")({
   staticData: { sitemap: true },
   loader: ({ params }) => {
     const course = findSpecialty(params.slug);
-    if (!course) throw notFound();
-    return course;
+    if (!course && !SLUG.test(params.slug)) throw notFound();
+    return course ?? null;
   },
   head: ({ loaderData: c }) => {
     const title = c ? `${c.name} | Lakes Area Aviation` : "Specialized Training | Lakes Area Aviation";
@@ -23,11 +27,21 @@ export const Route = createFileRoute("/specialized-training_/$slug")({
 });
 
 function SpecialtyPage() {
-  const c = Route.useLoaderData();
+  const loaded = Route.useLoaderData();
+  const { slug } = Route.useParams();
+  const { all, ready, editing } = useCourses();
+  const found = all.find((x) => x.slug === slug);
+  const list = editing ? all : all.filter((x) => !x.hidden);
+  if (found && (!found.hidden || editing)) return <CourseBody c={found} list={list} />;
+  if (!ready && loaded) return <CourseBody c={loaded} list={list} />;
+  return <SiteLayout><div className="site-container min-h-[60vh] pb-16 pt-28">{ready && <><p className="font-display text-3xl"><SlotText k="courses.gone.title" d="This course is no longer offered." /></p><Link to="/specialized-training" className="mt-6 inline-flex min-h-11 items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-primary-text"><SlotText k="courses.gone.link" d="See specialized training" /> <ArrowRight className="size-4" /></Link></>}</div></SiteLayout>;
+}
+
+function CourseBody({ c, list }: { c: SpecialtyCourse & { hidden?: boolean; photo?: string }; list: SpecialtyCourse[] }) {
   const site = useSiteContent();
-  const photo = site.photo(c.slug);
+  const photo = coursePhoto(site, c);
   const facts = [...(c.location ? [{ k: "Location", v: c.location }] : []), ...c.facts, { k: "Estimate", v: "In your training plan" }];
-  const related = specialtyCourses.filter((x) => x.slug !== c.slug && (x.kind === c.kind || (c.kind === "kodiak" && x.kind === "course")));
+  const related = list.filter((x) => x.slug !== c.slug && (x.kind === c.kind || (c.kind === "kodiak" && x.kind === "course")));
   return <SiteLayout>
     <section className="bg-ink pb-12 pt-28 text-background sm:pb-16 sm:pt-36">
       <div className="site-container grid items-center gap-8 lg:grid-cols-[1fr_1.1fr] lg:gap-14">
@@ -35,7 +49,8 @@ function SpecialtyPage() {
           <div><Link to="/specialized-training" className="inline-flex min-h-11 items-center gap-2 text-xs font-bold uppercase tracking-widest text-background/70 hover:text-background"><ArrowLeft className="size-4" /> <SlotText k="specialized-training---slug.text.1" d="Specialized training" /></Link></div>
           <p className="stage-label mt-4"><SlotText k={`course.kind.${c.kind}`} d={SPECIALTY_KIND_LABEL[c.kind]} /></p>
           <h1 className="mt-3 font-display text-4xl sm:text-6xl"><SlotText k={`course.${c.slug}.name`} d={c.name} /></h1>
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-background/80 sm:text-lg"><SlotText k={`course.${c.slug}.definition`} /></p>
+          <p className="mt-4 max-w-xl text-base leading-relaxed text-background/80 sm:text-lg"><SlotText k={`course.${c.slug}.definition`} d={c.definition} /></p>
+          <HideToggle kind="courses" id={c.slug} hidden={!!c.hidden} className="mt-4" />
         </div>
         {photo && <div className="relative aspect-[4/3] overflow-hidden bg-background/5 lg:aspect-[3/2]"><img data-slot-photo={`course.${c.slug}.photo`} src={photo.src} srcSet={srcSetFor(photo.src)} sizes="(min-width: 1024px) 52vw, 100vw" alt={photo.alt} width={1280} height={853} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover" /></div>}
       </div>
