@@ -999,7 +999,7 @@ function StageText({ s, field }: { s: Stage; field: "code" | "label" | "time" | 
   const index = airportIndex >= 0 ? airportIndex : journeyStages.indexOf(s);
   if (field === "time" && s === journeyStages[0]) return <RateText k={rateKey.other("Introductory flight")} amount />;
   if (field === "cta" && s.cta === "Build my training plan") return <SlotText k="cta.plan" d={s.cta} />;
-  return <SlotText k={`journey.${name}.${index}.${field}`} d={s[field]} />;
+  return <SlotText k={`journey.${name}.${index}.${field}`} d={s[field] ?? ""} />;
 }
 
 function StageCopy({ s, wx, wxLoading }: { s: Stage; wx: Metar | null; wxLoading: boolean }) {
