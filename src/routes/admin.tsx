@@ -167,7 +167,7 @@ function AdminPage() {
     {/* Top bar: who you are, the site, the editor. */}
     <header className="sticky top-0 z-40 bg-ink text-background">
       <div className="flex min-h-14 items-center gap-3 px-4 sm:px-6">
-        <a href="/" className="flex items-center gap-2 text-sm font-semibold"><Palette className="size-5 text-primary-text" /> <span className="hidden sm:inline">Lakes Area Aviation</span><span className="text-background/50">Admin</span></a>
+        <a href="/" className="flex min-h-10 items-center gap-2 text-sm font-semibold"><Palette className="size-5 text-primary-text" /> <span className="hidden sm:inline">Lakes Area Aviation</span><span className="text-background/50">Admin</span></a>
         <div className="ml-auto flex items-center gap-1">
           <a href="/" target="_blank" rel="noreferrer" className="hidden min-h-10 items-center gap-1.5 px-3 text-xs font-bold uppercase tracking-[0.12em] text-background/80 hover:text-background sm:inline-flex">View site <ArrowUpRight className="size-3.5" /></a>
           <Button className="h-10 rounded-none" aria-label="Open the visual editor" onClick={() => openEditor("/")}><PencilLine className="size-4" /> <span className="hidden sm:inline">Visual editor</span></Button>

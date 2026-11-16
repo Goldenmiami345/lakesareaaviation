@@ -162,7 +162,7 @@ export default function SiteEditor() {
         <button type="button" aria-pressed={!editing} onClick={() => { editStore.setPreview(true); setMsg("Preview: click around. Unsaved changes still show."); }} title="Use the site like a visitor, with your unsaved changes showing."
           className={`inline-flex min-h-9 items-center gap-1.5 px-3 text-xs font-bold uppercase tracking-[0.08em] transition-colors ${!editing ? "bg-primary text-primary-foreground" : "hover:bg-background/10"}`}><Eye className="size-4" /> Preview</button>
       </span>
-      <select aria-label="Page" value={pageInList ? path : ""} onChange={e => router.history.push(e.target.value)} className="h-10 w-full min-w-0 bg-transparent px-2 text-xs font-semibold sm:w-auto sm:max-w-[19rem] outline-none [&_optgroup]:bg-background [&_optgroup]:font-bold [&_optgroup]:text-foreground [&_option]:bg-background [&_option]:font-medium [&_option]:text-foreground">
+      <select aria-label="Page" value={pageInList ? path : ""} onChange={e => router.history.push(e.target.value)} className="h-10 w-full min-w-0 bg-transparent pl-2 pr-3 text-xs font-semibold sm:w-auto sm:px-2 sm:max-w-[19rem] outline-none [&_optgroup]:bg-background [&_optgroup]:font-bold [&_optgroup]:text-foreground [&_option]:bg-background [&_option]:font-medium [&_option]:text-foreground">
         {!pageInList && <option value="">This page</option>}
         {groupPages(pages).map(g => <optgroup key={g.name} label={g.name}>{g.pages.map(p => <option key={p.path} value={p.path}>{p.label}</option>)}</optgroup>)}
       </select>
