@@ -9,7 +9,7 @@ import { findSpecialty, SPECIALTY_KIND_LABEL, type SpecialtyCourse } from "../li
 import { SLUG } from "../lib/catalog";
 import { useCourses } from "../lib/use-catalog";
 import { HideToggle } from "../components/catalog-controls";
-import { coursePhoto } from "./specialized-training";
+import { coursePhoto } from "../lib/course-photo";
 
 export const Route = createFileRoute("/specialized-training_/$slug")({
   staticData: { sitemap: true },

@@ -8,9 +8,9 @@ import { type SpecialtyCourse } from "../lib/site-data";
 import { useCourses } from "../lib/use-catalog";
 import { AddTile, HideToggle, hiddenAttr } from "../components/catalog-controls";
 
+import { coursePhoto } from "../lib/course-photo";
+
 type Course = SpecialtyCourse & { hidden?: boolean; photo?: string };
-/** Saved photo, published photo, or the photo uploaded with an added course. */
-export const coursePhoto = (site: ReturnType<typeof useSiteContent>, c: Course) => site.photo(c.slug) ?? (c.photo ? { src: c.photo, alt: c.name, standIn: false } : undefined);
 
 export const Route = createFileRoute("/specialized-training")({
   staticData: { sitemap: true },
