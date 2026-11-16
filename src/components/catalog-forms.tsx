@@ -1,14 +1,15 @@
 // Add-a-plane / add-a-program / add-a-course forms, shared by the admin "Fleet & courses" tab and
 // the visual editor's "+ Add" tiles. They only produce data; the caller decides where it is saved.
 import { useMemo, useState, type ReactNode } from "react";
-import { ImageUp, Loader2, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ImageUp, Loader2, Plus, RotateCcw, Save, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { buildProgram, REG, slugify, type AddedCourse, type AddedPlane, type AddedProgram, type Catalog, type ProgramBlock } from "@/lib/catalog";
+import { allPlanes, buildProgram, editPlane, fieldsOf, originalPlane, PLANE_LIMITS, REG, resetPlane, slugify, type PlaneFields, type AddedCourse, type AddedPlane, type AddedProgram, type Catalog, type ProgramBlock } from "@/lib/catalog";
 import { applyRates, rateKey, withRateDrafts, type ExtraRental, type RatesConfig } from "@/lib/rates-engine";
 import { editStore, useEditState } from "@/lib/edit-store";
 import { useCatalog } from "@/lib/use-catalog";
+import type { Plane } from "@/lib/catalog";
 import { fleet as baseFleet, programs as basePrograms, specialtyCourses, SPECIALTY_KIND_LABEL, type FleetRole, type SpecialtyKind } from "@/lib/site-data";
 import { uploadSlotPhoto } from "@/lib/media-upload";
 
@@ -18,18 +19,19 @@ const select = "h-10 w-full border border-input bg-background px-3 text-sm font-
 const Field = ({ label, note, children }: { label: string; note?: string; children: ReactNode }) => <label className={field}>{label}{children}{note && <span className={hint}>{note}</span>}</label>;
 const linesOf = (s: string) => s.split("\n").map(x => x.trim()).filter(Boolean);
 
-function PhotoPick({ id, value, onChange }: { id: string; value: string; onChange: (url: string) => void }) {
+function PhotoPick({ id, value, onChange, label = "Photo", note = "Use a real photo of this airplane or course. It is resized for the web automatically.", extra }: { id: string; value: string; onChange: (url: string) => void; label?: string; note?: string; extra?: ReactNode }) {
   const [busy, setBusy] = useState(false); const [err, setErr] = useState("");
-  return <div className={field}>Photo
+  return <div className={field}>{label}
     <div className="flex items-center gap-3">
       {value ? <img src={value} alt="" className="h-16 w-24 border border-border object-cover" /> : <div className="grid h-16 w-24 place-items-center border border-dashed border-border text-muted-foreground"><ImageUp className="size-5" /></div>}
       <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 border border-input px-3 text-sm font-semibold hover:bg-secondary">
         {busy ? <Loader2 className="size-4 animate-spin" /> : <ImageUp className="size-4" />} {value ? "Replace photo" : "Upload photo"}
-        <input type="file" accept="image/*" className="sr-only" onChange={async e => { const f = e.target.files?.[0]; if (!f) return; setBusy(true); setErr(""); try { onChange(await uploadSlotPhoto(id, f)); } catch (x) { setErr(x instanceof Error ? x.message : "Upload failed"); } setBusy(false); }} />
+        <input type="file" accept="image/*" className="sr-only" onChange={async e => { const f = e.target.files?.[0]; if (!f) return; setBusy(true); setErr(""); try { onChange(await uploadSlotPhoto(id, f)); } catch (x) { setErr(x instanceof Error ? x.message : "Upload failed"); } setBusy(false); e.target.value = ""; }} />
       </label>
+      {extra}
     </div>
     {err && <span className="text-xs text-destructive">{err}</span>}
-    <span className={hint}>Use a real photo of this airplane or course. It is resized for the web automatically.</span>
+    {note && <span className={hint}>{note}</span>}
   </div>;
 }
 
@@ -189,4 +191,129 @@ export function EditorAddForm({ kind, onDone }: { kind: "fleet" | "programs" | "
   }} />;
   if (kind === "programs") return <ProgramForm rates={rates} taken={catalog.programs.map(p => p.slug)} onCancel={onDone} onSubmit={p => { editStore.setCatalog(addProgram(catalog, p)); onDone(); }} />;
   return <CourseForm taken={catalog.courses.map(c => c.slug)} onCancel={onDone} onSubmit={c => { editStore.setCatalog(addCourse(catalog, c)); onDone(); }} />;
+}
+
+const SPEC_NAMES = ["Year", "Model", "Horsepower", "Engine", "Engines", "Seats", "IFR/VFR", "Coms", "GPS", "Equipment", "Cruise speed", "Useful load", "Fuel", "Range"];
+const iconBtn = "grid size-9 shrink-0 place-items-center text-muted-foreground hover:text-foreground disabled:opacity-30";
+const move = <T,>(list: T[], i: number, d: number) => { const j = i + d; if (j < 0 || j >= list.length) return list; const out = [...list]; [out[i], out[j]] = [out[j]!, out[i]!]; return out; };
+
+/** Every detail of one airplane: words, type, specs, all its photos and which price line it uses. */
+export function PlaneEditForm({ plane, original, rates, onSave, onReset, onCancel }: { plane: Plane; original: Plane; rates: RatesConfig; onSave: (f: PlaneFields) => void; onReset?: (() => void) | undefined; onCancel?: () => void }) {
+  const applied = useMemo(() => applyRates(rates), [rates]);
+  const [f, setF] = useState<PlaneFields>(() => fieldsOf(plane));
+  const orig = useMemo(() => fieldsOf(original), [original]);
+  const [adding, setAdding] = useState(0); const [err, setErr] = useState("");
+  const reg = plane.registration;
+  const set = <K extends keyof PlaneFields>(k: K, v: PlaneFields[K]) => setF(x => ({ ...x, [k]: v }));
+  const text = (k: "name" | "nickname" | "use" | "note") => (e: { target: { value: string } }) => set(k, e.target.value.slice(0, PLANE_LIMITS[k]));
+  const setSpec = (i: number, j: 0 | 1, v: string) => set("specs", f.specs.map((s, n) => n === i ? (j === 0 ? [v.slice(0, PLANE_LIMITS.specKey), s[1]] : [s[0], v.slice(0, PLANE_LIMITS.specValue)]) : s));
+  const keys = f.specs.map(s => s[0].trim().toLowerCase()).filter(Boolean);
+  const errors = [
+    !f.name.trim() && "The airplane needs a name, for example 1975 Cessna 172M.",
+    !f.use.trim() && "Say what the airplane is used for.",
+    !f.image && "The airplane needs a main photo.",
+    keys.length !== new Set(keys).size && "Two specs have the same name.",
+    adding > 0 && "Wait for the photos to finish uploading.",
+  ].filter(Boolean) as string[];
+  async function addPhotos(files: FileList | null) {
+    const list = [...(files ?? [])].slice(0, PLANE_LIMITS.photos - f.photos.length); if (!list.length) return;
+    setErr(""); setAdding(list.length);
+    for (const file of list) {
+      try { const url = await uploadSlotPhoto(`fleet.${reg}.gallery`, file); setF(x => ({ ...x, photos: [...x.photos, url].slice(0, PLANE_LIMITS.photos) })); }
+      catch (x) { setErr(x instanceof Error ? x.message : "Upload failed"); }
+      setAdding(n => n - 1);
+    }
+  }
+  const undo = (k: keyof PlaneFields) => JSON.stringify(f[k]) !== JSON.stringify(orig[k])
+    ? <button type="button" onClick={() => set(k, orig[k])} className="inline-flex min-h-10 items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground"><RotateCcw className="size-3.5" /> Original</button> : null;
+
+  return <div className="grid gap-6">
+    <section className="grid gap-4">
+      <h3 className="text-xs font-bold uppercase tracking-[0.14em]">Basics</h3>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Tail number" note="The tail number can't change. Add a new airplane instead."><Input value={reg} disabled /></Field>
+        <Field label="Nickname" note="Optional. Leave empty for none."><Input value={f.nickname} onChange={text("nickname")} /></Field>
+      </div>
+      <Field label="Airplane"><Input value={f.name} onChange={text("name")} placeholder="1975 Cessna 172M" /></Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Type" note="Sets the fleet filter and the training it links to."><select className={select} value={f.role} onChange={e => set("role", e.target.value as FleetRole)}><option value="trainer">Trainer</option><option value="twin">Twin</option><option value="tailwheel">Tailwheel</option></select></Field>
+        <Field label="Used for"><Input value={f.use} onChange={text("use")} placeholder="Primary · Instrument · Commercial" /></Field>
+      </div>
+      <Field label="Short note" note="One or two sentences on the fleet card and airplane page."><Textarea rows={2} value={f.note} onChange={text("note")} /></Field>
+    </section>
+
+    <section className="grid gap-4 border-t border-border pt-5">
+      <h3 className="text-xs font-bold uppercase tracking-[0.14em]">Photos</h3>
+      <PhotoPick id={`fleet.${reg}.photo`} label="Main photo" value={f.image} onChange={v => set("image", v)} extra={undo("image")}
+        note="Shown on the fleet card and at the top of the airplane page. A side view on a plain background looks best." />
+      <PhotoPick id={`fleet.${reg}.panel`} label="Instrument panel" value={f.panel} onChange={v => set("panel", v)} note="Optional. Shown under Equipment & avionics."
+        extra={<>{f.panel && <button type="button" onClick={() => set("panel", "")} className="inline-flex min-h-10 items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-destructive"><Trash2 className="size-3.5" /> Remove</button>}{undo("panel")}</>} />
+      <div className={field}>More photos
+        {f.photos.length > 0 && <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">{f.photos.map((url, i) => <li key={url} className="border border-border">
+          <img src={url} alt={`Photo ${i + 2}`} className="aspect-[4/3] w-full object-cover" />
+          <div className="flex items-center justify-between">
+            <span className="flex"><button type="button" aria-label="Move earlier" disabled={i === 0} onClick={() => set("photos", move(f.photos, i, -1))} className={iconBtn}><ArrowLeft className="size-4" /></button>
+              <button type="button" aria-label="Move later" disabled={i === f.photos.length - 1} onClick={() => set("photos", move(f.photos, i, 1))} className={iconBtn}><ArrowRight className="size-4" /></button></span>
+            <button type="button" aria-label={`Remove photo ${i + 2}`} onClick={() => set("photos", f.photos.filter((_, j) => j !== i))} className={`${iconBtn} hover:!text-destructive`}><X className="size-4" /></button>
+          </div>
+        </li>)}</ul>}
+        {f.photos.length < PLANE_LIMITS.photos && <label className="inline-flex min-h-10 w-fit cursor-pointer items-center gap-2 border border-input px-3 text-sm font-semibold hover:bg-secondary">
+          {adding ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} {adding ? `Uploading ${adding}…` : "Add photos"}
+          <input type="file" accept="image/*" multiple className="sr-only" onChange={e => { void addPhotos(e.target.files); e.target.value = ""; }} />
+        </label>}
+        {err && <span className="text-xs text-destructive">{err}</span>}
+        <span className={hint}>Visitors flip through these after the main photo in the photo viewer. Up to {PLANE_LIMITS.photos}.</span>
+      </div>
+    </section>
+
+    <section className="grid gap-3 border-t border-border pt-5">
+      <div className="flex items-center justify-between gap-3"><h3 className="text-xs font-bold uppercase tracking-[0.14em]">Specs</h3>{undo("specs")}</div>
+      <datalist id="plane-spec-names">{SPEC_NAMES.map(n => <option key={n} value={n} />)}</datalist>
+      {f.specs.length === 0 && <p className={hint}>No specs yet.</p>}
+      <ul className="grid gap-2">{f.specs.map(([k, v], i) => <li key={i} className="grid grid-cols-[minmax(0,8rem)_minmax(0,1fr)_auto] items-center gap-2">
+        <Input aria-label={`Spec ${i + 1} name`} value={k} list="plane-spec-names" onChange={e => setSpec(i, 0, e.target.value)} placeholder="Seats" />
+        <Input aria-label={`Spec ${i + 1} value`} value={v} onChange={e => setSpec(i, 1, e.target.value)} placeholder="4" />
+        <span className="flex">
+          <button type="button" aria-label="Move up" disabled={i === 0} onClick={() => set("specs", move(f.specs, i, -1))} className={iconBtn}><ArrowUp className="size-4" /></button>
+          <button type="button" aria-label="Move down" disabled={i === f.specs.length - 1} onClick={() => set("specs", move(f.specs, i, 1))} className={iconBtn}><ArrowDown className="size-4" /></button>
+          <button type="button" aria-label={`Remove ${k || "spec"}`} onClick={() => set("specs", f.specs.filter((_, j) => j !== i))} className={`${iconBtn} hover:!text-destructive`}><Trash2 className="size-4" /></button>
+        </span>
+      </li>)}</ul>
+      {f.specs.length < PLANE_LIMITS.specs && <button type="button" onClick={() => set("specs", [...f.specs, ["", ""]])} className="inline-flex min-h-10 w-fit items-center gap-2 text-sm font-semibold text-primary-text"><Plus className="size-4" /> Add a spec</button>}
+      <span className={hint}>Seats, Horsepower and GPS also show as quick facts on the card. GPS, Equipment, IFR/VFR and Coms also list under Equipment & avionics. Rows left empty are skipped.</span>
+    </section>
+
+    <section className="grid gap-3 border-t border-border pt-5">
+      <div className="flex items-center justify-between gap-3"><h3 className="text-xs font-bold uppercase tracking-[0.14em]">Hourly price</h3>{undo("rateRow")}</div>
+      <select aria-label="Price line" className={select} value={f.rateRow} onChange={e => set("rateRow", e.target.value)}>
+        {applied.rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft} · {r.regular} regular / {r.prepay} prepay</option>)}
+        <option value="">No published price (visitors are asked to call)</option>
+      </select>
+      <span className={hint}>To change the dollar amount, click the price on the page or use Prices. Every airplane on the same line changes together.</span>
+    </section>
+
+    <div className="grid gap-2 border-t border-border pt-4">
+      {errors.length > 0 && <ul className="text-xs text-destructive">{errors.map(e => <li key={e}>{e}</li>)}</ul>}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        {onReset && plane.edited ? <Button type="button" variant="ghost" onClick={onReset}><RotateCcw className="size-4" /> Put back the original</Button> : <span />}
+        <span className="flex gap-2">
+          {onCancel && <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>}
+          <Button type="button" disabled={errors.length > 0} onClick={() => onSave({ ...f, name: f.name.trim(), nickname: f.nickname.trim(), use: f.use.trim(), note: f.note.trim(), specs: f.specs.map(([k, v]) => [k.trim(), v.trim()] as [string, string]).filter(([k, v]) => k && v) })}><Save className="size-4" /> Save changes</Button>
+        </span>
+      </div>
+    </div>
+  </div>;
+}
+
+/** The visual editor's "Edit details & photos" panel: writes into the editor's unsaved changes. */
+export function EditorPlaneForm({ reg, onDone }: { reg: string; onDone: () => void }) {
+  const edit = useEditState();
+  const { catalog } = useCatalog();
+  const rates = withRateDrafts(edit.rateBase ?? {}, edit.rateDrafts);
+  const plane = allPlanes(catalog).find(p => p.registration === reg);
+  const original = originalPlane(catalog, reg);
+  if (!plane || !original) return <p className="text-sm">This airplane is no longer in the list.</p>;
+  return <PlaneEditForm plane={plane} original={original} rates={rates} onCancel={onDone}
+    onReset={() => { editStore.setCatalog(resetPlane(catalog, reg)); onDone(); }}
+    onSave={f => { editStore.setCatalog(editPlane(catalog, reg, f)); onDone(); }} />;
 }
