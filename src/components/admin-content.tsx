@@ -69,7 +69,7 @@ export function AdminContent() {
   return <div className="mt-10 border-t border-border pt-8">
     <h2 className="font-display text-2xl">Words & photos</h2>
     <p className="mt-1 text-sm text-muted-foreground">Change the words or photo in a spot. Layout, fonts and colors stay locked, and each spot has a length limit so it always fits. Nothing goes live until you press Save.</p>
-    <div className="mt-4 grid gap-3">{groups.map(g => <details key={g} className="border border-border">
+    <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-3">{groups.map(g => <details key={g} className="border border-border">
       <summary className="flex min-h-12 cursor-pointer items-center px-4 font-semibold">{g}</summary>
       <div className="grid gap-5 border-t border-border p-4">{SLOTS.filter(s => s.group === g).map(s => {
         const v = value(s); const over = v.length > s.max; const edited = s.key in draft && draft[s.key] !== s.def;
@@ -99,7 +99,7 @@ export function AdminContent() {
     </div>
 
     <h3 className="mt-8 flex items-center gap-2 font-display text-xl"><History className="size-5" /> Earlier versions</h3>
-    <ul className="mt-3 grid gap-2">
+    <ul className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2">
       <li className="flex items-center justify-between gap-3 border border-border p-3 text-sm"><span>Original words and photos</span><Button size="sm" variant="outline" disabled={busy} className="rounded-none" onClick={() => write({}, "Restored original words and photos", "Original words and photos restored.")}><RotateCcw /> Restore</Button></li>
       {history.map(v => <li key={v.id} className="flex items-center justify-between gap-3 border border-border p-3 text-sm"><span className="min-w-0"><span className="block">{when(v.saved_at)}</span>{v.note && <span className="block truncate text-muted-foreground">{v.note}</span>}</span>
         <Button size="sm" variant="outline" disabled={busy} className="rounded-none" onClick={() => write(cleanContent(v.content), `Restored version from ${when(v.saved_at)}`, "That version is restored and live.")}><RotateCcw /> Restore</Button></li>)}

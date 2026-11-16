@@ -82,7 +82,7 @@ export function AdminRates() {
 
     <h3 className="mt-8 flex items-center gap-2 font-display text-xl"><History className="size-5" /> Earlier versions</h3>
     <p className="mt-1 text-sm text-muted-foreground">Restoring a version also keeps the current one here, so you can always switch back.</p>
-    <ul className="mt-3 grid gap-2">
+    <ul className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2">
       <li className="flex items-center justify-between gap-3 border border-border p-3 text-sm"><span>Original published rates</span><Button size="sm" variant="outline" disabled={busy} className="rounded-none" onClick={() => write({}, "Restored original published rates", "Original published rates restored.")}><RotateCcw /> Restore</Button></li>
       {history.map(v => <li key={v.id} className="flex items-center justify-between gap-3 border border-border p-3 text-sm"><span className="min-w-0"><span className="block">{when(v.saved_at)}</span>{v.note && <span className="block truncate text-muted-foreground">{v.note}</span>}</span>
         <Button size="sm" variant="outline" disabled={busy} className="rounded-none" onClick={() => write(cleanConfig(v.config), `Restored version from ${when(v.saved_at)}`, "That version is restored and live.")}><RotateCcw /> Restore</Button></li>)}
