@@ -61,11 +61,18 @@ function PlaneBody({ f, fleet }: { f: Plane; fleet: Plane[] }) {
       <div className="site-container pb-16 pt-20 sm:pt-28">
         <Link to="/fleet" className="inline-flex min-h-11 items-center gap-2 text-xs font-bold uppercase tracking-[0.14em]"><ArrowLeft className="size-4" /> All aircraft</Link>
         <div className="mt-2 grid gap-6 lg:grid-cols-[1.15fr_1fr] lg:gap-14">
+          <div className="min-w-0">
           <div className="relative bg-secondary/60">
             <img src={f.image} srcSet={srcSetFor(f.image)} sizes="(min-width: 1024px) 55vw, 100vw" alt={`${f.name} ${f.registration}${f.nickname ? ` “${f.nickname}”` : ""}`} width={1200} height={900} loading="eager" fetchPriority="high" decoding="async" className="fleet-cutout aspect-[4/3] w-full object-contain p-6 max-sm:aspect-[3/2] max-sm:p-4" />
             <button type="button" onClick={(e) => open(e.currentTarget)} className="absolute bottom-3 right-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-ink/80 px-4 text-xs font-bold uppercase tracking-[0.14em] text-background backdrop-blur-md hover:bg-primary">
               <Maximize className="size-4" /> {gallery.length ? `View photos · ${gallery.length}` : "View photo"}
             </button>
+          </div>
+          {gallery.length > 0 && <ul aria-label="More photos" className="mt-2 grid grid-cols-5 gap-2 max-sm:grid-cols-4">
+            {gallery.map((src, i) => <li key={src}><button type="button" onClick={(e) => open(e.currentTarget, i)} aria-label={`Open photo ${i + 1} of ${gallery.length}`} className="block w-full bg-secondary/60 outline-offset-2 hover:opacity-80">
+              <img src={src} alt="" loading="lazy" decoding="async" className={`aspect-[4/3] w-full ${i === 0 ? "fleet-cutout object-contain p-1" : "object-cover"}`} />
+            </button></li>)}
+          </ul>}
           </div>
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground/70">{ROLE_LABEL[f.role]} · <PlaneText f={f} field="use" /></p>
