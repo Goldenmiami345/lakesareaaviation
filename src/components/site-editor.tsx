@@ -89,7 +89,7 @@ export default function SiteEditor() {
     setBusy(false); if (file.current) file.current.value = "";
   }
   /** Writes words and/or prices; each table archives its previous version, so History can undo it. */
-  async function write(next: { content?: Record<string, string>; rates?: object }, note: string, done: string) {
+  async function write(next: { content?: Record<string, string> | undefined; rates?: object | undefined }, note: string, done: string) {
     setBusy(true); setMsg("");
     const results = await Promise.all([
       next.content ? supabase.from("site_content").update({ content: next.content as Json, note }).eq("id", "current") : null,
