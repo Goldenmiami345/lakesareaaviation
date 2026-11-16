@@ -70,7 +70,8 @@ export function PlaneForm({ rates, taken, onSubmit, onCancel, onDraft }: { rates
   useEffect(() => { onDraft?.(REG.test(reg) && f.name.trim() ? build() : null); }, [f, price, row, nr]); // eslint-disable-line react-hooks/exhaustive-deps
   return <div className="grid gap-4">
     <div className="grid gap-4 sm:grid-cols-2">
-      <Field label="Tail number"><Input value={f.registration} onChange={set("registration")} placeholder="N12345" autoCapitalize="characters" /></Field>      <Field label="Nickname" note="Optional"><Input value={f.nickname} onChange={set("nickname")} placeholder="Robin" /></Field>
+      <Field label="Tail number"><Input value={f.registration} onChange={set("registration")} placeholder="N12345" autoCapitalize="characters" /></Field>
+      <Field label="Nickname" note="Optional"><Input value={f.nickname} onChange={set("nickname")} placeholder="Robin" /></Field>
     </div>
     <Field label="Airplane"><Input value={f.name} onChange={set("name")} placeholder="1975 Cessna 172M" /></Field>
     <div className="grid gap-4 sm:grid-cols-2">
