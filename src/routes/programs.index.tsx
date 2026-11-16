@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
-import { programs } from "../lib/site-data";
 import { useLiveRates } from "../lib/use-live-rates";
 
 export const Route = createFileRoute("/programs/")({
