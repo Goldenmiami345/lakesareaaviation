@@ -22,3 +22,15 @@ export const EDIT_PAGES: { label: string; path: string }[] = [
   { label: "Locations", path: "/locations" },
   { label: "Build my training plan", path: "/contact" },
 ];
+
+export type PageGroup = { name: string; pages: { label: string; path: string }[] };
+const GROUPS: [prefix: string, name: string][] = [["Program · ", "Training programs"], ["Course · ", "Specialty courses"], ["Airplane · ", "Airplanes"]];
+/** Main pages first, then programs, courses and airplanes, each without its "Program · " style prefix. */
+export function groupPages(pages: { label: string; path: string }[]): PageGroup[] {
+  const out: PageGroup[] = [{ name: "Main pages", pages: [] }, ...GROUPS.map(([, name]) => ({ name, pages: [] as PageGroup["pages"] }))];
+  for (const p of pages) {
+    const gi = GROUPS.findIndex(([prefix]) => p.label.startsWith(prefix));
+    out[gi + 1]!.pages.push(gi < 0 ? p : { ...p, label: p.label.slice(GROUPS[gi]![0].length) });
+  }
+  return out.filter(g => g.pages.length);
+}

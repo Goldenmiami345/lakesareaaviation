@@ -2,7 +2,7 @@
 // real site: text slots become click-to-type, slot photos click-to-replace. Nothing else is editable.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "@tanstack/react-router";
-import { Check, History, ImageUp, Loader2, PencilLine, RotateCcw, Settings2, X } from "lucide-react";
+import { Check, History, ImageUp, LayoutDashboard, Loader2, PencilLine, RotateCcw, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -14,7 +14,7 @@ import { resetLiveRates } from "@/lib/use-live-rates";
 import { resetCatalog, useCatalog } from "@/lib/use-catalog";
 import { cleanCatalog } from "@/lib/catalog";
 import { cleanConfig, isRateKey, withRateDrafts } from "@/lib/rates-engine";
-import { EDIT_PAGES } from "@/lib/edit-pages";
+import { EDIT_PAGES, groupPages } from "@/lib/edit-pages";
 
 type Version = { id: string; content: Json; note: string | null; saved_at: string };
 type RateVersion = { id: string; config: Json; note: string | null; saved_at: string };
@@ -138,7 +138,7 @@ export default function SiteEditor() {
       <span className="flex min-h-10 items-center gap-2 pl-4 pr-2 text-xs font-bold uppercase tracking-[0.12em]"><PencilLine className="size-4 text-primary-text" /> Editing</span>
       <select aria-label="Page" value={pageInList ? path : ""} onChange={e => router.history.push(e.target.value)} className="h-10 max-w-52 bg-transparent px-2 text-xs font-semibold outline-none [&>option]:text-foreground">
         {!pageInList && <option value="">This page</option>}
-        {pages.map(p => <option key={p.path} value={p.path}>{p.label}</option>)}
+        {groupPages(pages).map(g => <optgroup key={g.name} label={g.name}>{g.pages.map(p => <option key={p.path} value={p.path}>{p.label}</option>)}</optgroup>)}
       </select>
       <span className="min-h-10 min-w-40 px-3 py-1 text-xs tabular-nums text-background/75 flex flex-col justify-center" aria-live="polite">
         {focus ? <><span className="max-w-64 truncate font-semibold text-background">{focus.label}</span>{focus.rate ? <span>Updates every page and course that uses it</span> : <span className={focusLen > focus.max ? "font-bold text-destructive" : ""}>{focusLen} / {focus.max} characters{focusLen > focus.max ? " · too long" : ""}</span>}</>
@@ -168,7 +168,7 @@ export default function SiteEditor() {
         </PopoverContent>
       </Popover>
       <button type="button" className={bar} disabled={busy || !keys.length} onClick={() => { editStore.clearDrafts(); setMsg("Changes discarded."); }}><RotateCcw className="size-4" /> Discard</button>
-      <a href="/admin#settings" className={bar} title="Prices and site settings"><Settings2 className="size-4" /> Settings</a>
+      <a href="/admin#catalog" className={bar} title="Back to admin: fleet & courses, prices, appearance"><LayoutDashboard className="size-4" /> Admin</a>
       <button type="button" className={`${bar} bg-primary text-primary-foreground hover:bg-primary/90`} disabled={busy || !keys.length || tooLong.length > 0} title={tooLong.length ? "Shorten the text marked too long first" : undefined} onClick={publish}>
         {busy ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Publish</button>
       <button type="button" className={bar} aria-label="Exit editor" onClick={exit}><X className="size-4" /></button>

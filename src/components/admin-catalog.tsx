@@ -48,10 +48,10 @@ export function AdminCatalog() {
     { kind: "courses", title: "Specialty courses & endorsements", noun: "course", items: allCourses(cat).map(c => ({ id: c.slug, label: c.name, sub: SPECIALTY_KIND_LABEL[c.kind], hidden: c.hidden, added: c.added })) },
   ];
 
-  return <div className="grid gap-8">
-    <p className="text-sm text-muted-foreground">Hidden items leave the site but stay saved, so you can bring them back any time. You can also do all of this on the pages themselves in the visual editor.</p>
+  return <div className="grid grid-cols-[minmax(0,1fr)] gap-8">
+    <p className="text-sm text-muted-foreground">Tip: you can also add and hide these right on the Fleet, Programs and Specialized training pages in the visual editor.</p>
     {msg && <p className="border border-border bg-secondary px-3 py-2 text-sm" role="status">{msg}</p>}
-    {lists.map(l => <section key={l.kind} className="grid gap-3">
+    {lists.map(l => <section key={l.kind} className="grid grid-cols-[minmax(0,1fr)] gap-3">
       <div className="flex items-center justify-between gap-3"><h3 className="font-display text-2xl">{l.title}</h3>
         <Button size="sm" variant={adding === l.kind ? "secondary" : "default"} disabled={busy} onClick={() => setAdding(a => (a === l.kind ? null : l.kind))}><Plus className="size-4" /> Add {l.noun}</Button></div>
       {adding === l.kind && <div className="border border-primary p-4">
@@ -64,7 +64,7 @@ export function AdminCatalog() {
         <Button size="sm" variant="outline" disabled={busy} onClick={() => void save(setHidden(cat, l.kind, it.id, !it.hidden), `${it.hidden ? "Brought back" : "Hid"} ${it.label}`)}>{it.hidden ? <><Eye className="size-4" /> Bring back</> : <><EyeOff className="size-4" /> Hide</>}</Button>
       </li>)}</ul>
     </section>)}
-    <section className="grid gap-2">
+    <section className="grid grid-cols-[minmax(0,1fr)] gap-2">
       <h3 className="flex items-center gap-2 font-display text-2xl"><History className="size-5" /> History</h3>
       <ul className="grid gap-2">
         <li className="flex items-center justify-between gap-3 border border-border p-3 text-sm"><span>Original fleet & courses</span><Button size="sm" variant="outline" disabled={busy} onClick={() => void save(EMPTY_CATALOG, "Restored the original fleet and courses")}><RotateCcw className="size-4" /> Restore</Button></li>
