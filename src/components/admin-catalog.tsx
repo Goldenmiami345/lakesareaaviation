@@ -5,7 +5,7 @@ import { Eye, EyeOff, History, PencilLine, Plus, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
-import { allCourses, allPlanes, allPrograms, cleanCatalog, editPlane, EMPTY_CATALOG, originalPlane, planePriceChange, resetPlane, setCoursePricing, setHidden, type Catalog, type CatalogKind } from "@/lib/catalog";
+import { allCourses, allPlanes, allPrograms, cleanCatalog, editPlane, EMPTY_CATALOG, originalPlane, planePriceChange, resetPlane, setCoursePricing, setHidden, type Catalog, type CatalogKind, type PlaneFields, type PlanePrice } from "@/lib/catalog";
 import { applyRates, cleanConfig, rateKey, withRateDrafts, type RatesConfig } from "@/lib/rates-engine";
 import { resetCatalog } from "@/lib/use-catalog";
 import { resetLiveRates } from "@/lib/use-live-rates";
@@ -73,7 +73,7 @@ export function AdminCatalog() {
     if (kind === "fleet") {
       const plane = planes.find(p => p.registration === id); const original = originalPlane(cat, id);
       if (!plane || !original) return null;
-      const priced = (f: Parameters<typeof editPlane>[2] & { rateRow: string }, price?: Parameters<typeof planePriceChange>[4]) => {
+      const priced = (f: PlaneFields, price?: PlanePrice) => {
         const ch = price ? planePriceChange(cat, applied, id, f.rateRow, price) : null;
         const nextRates = ch && Object.keys(ch.drafts).length ? withRateDrafts(rates, ch.drafts) : undefined;
         return { catalog: editPlane(cat, id, { ...f, rateRow: ch?.rateRow ?? f.rateRow }), rates: nextRates };
