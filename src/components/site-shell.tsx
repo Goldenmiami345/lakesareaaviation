@@ -8,6 +8,11 @@ import { jumpToPageTop } from "./flight-journey";
 import { sitePath } from '../lib/site-path';
 import * as Dialog from "@radix-ui/react-dialog";
 import { SCHOOL_PHONE, SCHOOL_PHONE_TEL } from "../lib/site-data";
+import { lazy, Suspense } from "react";
+import { useEditState } from "../lib/edit-store";
+
+// Admin-only visual editor; never in the prerendered HTML or a visitor's bundle path.
+const SiteEditor = lazy(() => import("./site-editor"));
 
 const nav = [
   ["Services", "/services"],
@@ -124,7 +129,8 @@ export function SiteLayout({ children, overlayHeader = false }: { children: Reac
   // once the new route's loaders and code are ready), never on the raw pathname, so the
   // old page stays still until the new one renders and the fade plays exactly once.
   const pageKey = useMatch({ strict: false, select: (match) => match.id });
-  return <><MotionExperience pageKey={pageKey} /><Header overlay={overlayHeader} /><main id="main" tabIndex={-1} key={pageKey} className="page-enter outline-none">{children}</main><Footer /><MobileActions /></>;
+  const editing = useEditState().on;
+  return <><MotionExperience pageKey={pageKey} /><Header overlay={overlayHeader} /><main id="main" tabIndex={-1} key={pageKey} className="page-enter outline-none">{children}</main><Footer /><MobileActions />{editing && <Suspense fallback={null}><SiteEditor /></Suspense>}</>;
 }
 
 /** Phones always get a short intro so page content starts on the first screen; `compact` is kept for callers and is now the default. */
