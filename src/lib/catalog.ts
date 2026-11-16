@@ -65,12 +65,16 @@ export function cleanCatalog(raw: unknown): Catalog {
 
 /** Every airplane (published then added), with `hidden` marking the ones taken off the site. */
 export function allPlanes(c: Catalog, r?: AppliedRates): (Plane & { hidden: boolean })[] {
-  const added: Plane[] = c.fleet.map(f => ({ name: f.name, registration: f.registration, role: f.role, nickname: f.nickname, use: f.use, note: f.note, image: f.photo, position: "center", specs: f.specs, rateRow: f.rateRow, added: true }));
-  return [...baseFleet.map(f => ({ ...f, rateRow: FLEET_RATE_ROW[f.registration] })), ...added].map(f => {
+  const added: Plane[] = c.fleet.map(f => ({ name: f.name, registration: f.registration, role: f.role, ...(f.nickname ? { nickname: f.nickname } : {}), use: f.use, note: f.note, image: f.photo, position: "center", specs: f.specs, ...(f.rateRow ? { rateRow: f.rateRow } : {}), added: true }));
+  return [...baseFleet.map((f): Plane => ({ ...f, rateRow: FLEET_RATE_ROW[f.registration] })), ...added].map(f => {
+    const out: Plane & { hidden: boolean } = { ...f, hidden: c.hidden.fleet.includes(f.registration) };
     // Prices always come from the live rental table, so a rate change shows on every fleet card.
-    const live = r && f.rateRow ? fleetRate(r, f.registration, f.rateRow) : undefined;
-    const priced = live ? { rate: live.rate, prepay: live.prepay } : f.rateRow && !r ? {} : { rate: undefined, prepay: undefined };
-    return { ...f, ...priced, hidden: c.hidden.fleet.includes(f.registration) };
+    if (r) {
+      const live = f.rateRow ? fleetRate(r, f.registration, f.rateRow) : undefined;
+      delete out.rate; delete out.prepay;
+      if (live) { out.rate = live.rate; out.prepay = live.prepay; }
+    }
+    return out;
   });
 }
 export const planesOf = (c: Catalog, r?: AppliedRates) => allPlanes(c, r).filter(f => !f.hidden);
