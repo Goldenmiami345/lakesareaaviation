@@ -12,7 +12,9 @@ const SIZE = { desktop: { w: 1280, h: 820 }, phone: { w: 390, h: 760 } } as cons
 export function SitePreview({ pages, state, startOpen = false, title = "Preview · not live until you save", onClose }: { pages: PreviewPage[]; state: PreviewState; startOpen?: boolean; title?: string; onClose?: () => void }) {
   const [open, setOpen] = useState(startOpen);
   const [at, setAt] = useState(0);
-  const [device, setDevice] = useState<keyof typeof SIZE>("desktop");
+  // Only rendered for a signed-in admin after load (never prerendered), so reading the width here is safe.
+  // On a phone the phone layout is the readable one; the computer layout is one tap away.
+  const [device, setDevice] = useState<keyof typeof SIZE>(() => (typeof window !== "undefined" && window.innerWidth < 640 ? "phone" : "desktop"));
   const [width, setWidth] = useState(0);
   const frame = useRef<HTMLIFrameElement>(null);
   const box = useRef<HTMLDivElement>(null);
