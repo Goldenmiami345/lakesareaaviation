@@ -88,7 +88,8 @@ export function PlaneForm({ rates, taken, onSubmit, onCancel, onDraft }: { rates
     <fieldset className="grid gap-2 border border-border p-3 text-sm">
       <legend className="px-1 font-semibold">Hourly price</legend>
       <label className="flex items-center gap-2"><input type="radio" checked={price === "share"} onChange={() => setPrice("share")} /> Same price as an existing rate line</label>
-      {price === "share" && <select className={select} value={row} onChange={e => setRow(e.target.value)}>{applied.rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft} · {r.regular} regular / {r.prepay} prepay</option>)}</select>}
+      {price === "share" && <select className={selectFit} value={row} onChange={e => setRow(e.target.value)}>{applied.rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft} · {r.regular} / {r.prepay}</option>)}</select>}
+      {price === "share" && <span className={hint}>{priceHint}</span>}
       <label className="flex items-center gap-2"><input type="radio" checked={price === "new"} onChange={() => setPrice("new")} /> Its own new rate line</label>
       {price === "new" && <div className="grid gap-3 sm:grid-cols-3">
         <Field label="Rate line name"><Input value={nr.aircraft} onChange={e => setNr(v => ({ ...v, aircraft: e.target.value }))} placeholder={f.name.replace(/^\d{4}\s+/, "") || "Cessna 172M"} /></Field>
@@ -132,13 +133,13 @@ export function ProgramForm({ rates, taken, onSubmit, onCancel, onDraft }: { rat
     <fieldset className="grid gap-2 border border-border p-3 text-sm">
       <legend className="px-1 font-semibold">What it costs</legend>
       <Field label="Course fee $"><Input value={f.fee} onChange={e => setF(v => ({ ...v, fee: e.target.value.replace(/[^\d]/g, "") }))} inputMode="numeric" className="max-w-32" /></Field>
-      {blocks.map((b, i) => <div key={i} className="grid grid-cols-[4.5rem_minmax(0,9rem)_minmax(0,1fr)_auto] items-center gap-2">
+      {blocks.map((b, i) => <div key={i} className="grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-2 sm:grid-cols-[4.5rem_minmax(0,9rem)_minmax(0,1fr)_auto]">
         <Input aria-label="Hours" value={b.hours || ""} onChange={e => upd(i, { hours: Number(e.target.value.replace(/[^\d.]/g, "")) || 0 })} inputMode="decimal" />
         <select aria-label="Kind" className={select} value={b.what} onChange={e => upd(i, { what: e.target.value as ProgramBlock["what"] })}><option value="rental">hrs rental</option><option value="flight">hrs flight instr.</option><option value="ground">hrs ground instr.</option></select>
         {b.what === "rental"
-          ? <select aria-label="Aircraft" className={select} value={b.aircraft} onChange={e => upd(i, { aircraft: e.target.value } as Partial<ProgramBlock>)}>{applied.rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft} · {r.prepay}/hr</option>)}</select>
-          : <select aria-label="Instruction rate" className={select} value={b.instruction} onChange={e => upd(i, { instruction: e.target.value } as Partial<ProgramBlock>)}>{applied.instructionRates.map(r => <option key={r.label} value={r.label}>{r.label} · {r.rate}/hr</option>)}</select>}
-        <button type="button" aria-label="Remove line" onClick={() => setBlocks(l => l.filter((_, j) => j !== i))} className="grid size-10 place-items-center text-muted-foreground hover:text-destructive"><Trash2 className="size-4" /></button>
+          ? <select aria-label="Aircraft" className={`${selectFit} col-span-3 sm:col-span-1`} value={b.aircraft} onChange={e => upd(i, { aircraft: e.target.value } as Partial<ProgramBlock>)}>{applied.rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft} · {r.prepay}/hr</option>)}</select>
+          : <select aria-label="Instruction rate" className={`${selectFit} col-span-3 sm:col-span-1`} value={b.instruction} onChange={e => upd(i, { instruction: e.target.value } as Partial<ProgramBlock>)}>{applied.instructionRates.map(r => <option key={r.label} value={r.label}>{r.label} · {r.rate}/hr</option>)}</select>}
+        <button type="button" aria-label="Remove line" onClick={() => setBlocks(l => l.filter((_, j) => j !== i))} className="col-start-3 row-start-1 grid size-10 place-items-center text-muted-foreground hover:text-destructive sm:col-start-4 sm:row-start-1"><Trash2 className="size-4" /></button>
       </div>)}
       <button type="button" onClick={() => setBlocks(l => [...l, { hours: 5, what: "flight", instruction: applied.instructionRates[0]?.label ?? "" }])} className="inline-flex min-h-10 w-fit items-center gap-2 text-sm font-semibold text-primary-text"><Plus className="size-4" /> Add a line</button>
       <div className="mt-1 border-t border-border pt-3">
@@ -295,10 +296,11 @@ export function PlaneEditForm({ plane, original, rates, onSave, onReset, onCance
 
     <section className="grid gap-3 border-t border-border pt-5">
       <div className="flex items-center justify-between gap-3"><h3 className="text-xs font-bold uppercase tracking-[0.14em]">Hourly price</h3>{undo("rateRow")}</div>
-      <select aria-label="Price line" className={select} value={f.rateRow} onChange={e => set("rateRow", e.target.value)}>
-        {applied.rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft} · {r.regular} regular / {r.prepay} prepay</option>)}
+      <select aria-label="Price line" className={selectFit} value={f.rateRow} onChange={e => set("rateRow", e.target.value)}>
+        {applied.rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft} · {r.regular} / {r.prepay}</option>)}
         <option value="">No published price (visitors are asked to call)</option>
       </select>
+      <span className={hint}>{priceHint}</span>
       <span className={hint}>To change the dollar amount, click the price on the page or use Prices. Every airplane on the same line changes together.</span>
     </section>
 
