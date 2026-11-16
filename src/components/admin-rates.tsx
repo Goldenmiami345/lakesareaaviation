@@ -6,6 +6,8 @@ import { applyRates, cleanConfig, defaultAircraftFor, rateImpact, type RatesConf
 import { instructionRates, otherRates, programs, rentalRates } from "@/lib/site-data";
 import { resetLiveRates } from "@/lib/use-live-rates";
 import type { Json } from "@/integrations/supabase/types";
+import { SitePreview } from "./site-preview";
+import { ratePages } from "@/lib/site-preview";
 
 type Version = { id: string; config: Json; note: string | null; saved_at: string };
 const num = (s: string) => Number(s.replace(/[^0-9.]/g, "")) || 0;
@@ -74,6 +76,7 @@ export function AdminRates() {
       {impact.length ? <ul className="mt-2 grid gap-1 text-sm">{impact.map(i => <li key={i.option} className="flex justify-between gap-3"><span>{i.option}</span><span className="tabular-nums">{i.from.replace(/^As low as /, "")} → <b>{i.to.replace(/^As low as /, "")}</b></span></li>)}</ul>
         : <p className="mt-2 text-sm text-muted-foreground">{dirty ? "Rate tables change; no course totals change." : "No unsaved changes."}</p>}
     </div>
+    <div className="mt-3"><SitePreview pages={ratePages(programs.filter(p => p.options.some(o => impact.some(i => i.option === o.name))))} state={{ rates: cleanConfig(draft) }} /></div>
     <input value={note} onChange={e => setNote(e.target.value)} maxLength={200} placeholder="Note for this change (optional)" className="mt-3 h-11 w-full border border-input bg-background px-3 text-sm outline-none focus:border-primary" />
     <div className="mt-3 grid grid-cols-2 gap-3">
       <Button disabled={busy || !dirty} variant="outline" className="h-12 rounded-none" onClick={() => setDraft(saved)}>Discard changes</Button>

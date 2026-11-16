@@ -11,6 +11,8 @@ import { resetCatalog } from "@/lib/use-catalog";
 import { resetLiveRates } from "@/lib/use-live-rates";
 import { SPECIALTY_KIND_LABEL } from "@/lib/site-data";
 import { addCourse, addPlane, addProgram, CourseForm, PlaneEditForm, PlaneForm, ProgramForm } from "./catalog-forms";
+import { SitePreview } from "./site-preview";
+import { coursePages, planePages, programPages, type PreviewPage, type PreviewState } from "@/lib/site-preview";
 
 type Version = { id: string; catalog: Json; note: string | null; saved_at: string };
 const when = (iso: string) => new Date(iso).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
@@ -23,6 +25,8 @@ export function AdminCatalog() {
   const [editing, setEditing] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
+  /** What the open add/edit form would publish, for the live preview under it. */
+  const [draft, setDraft] = useState<{ state: PreviewState; pages: PreviewPage[] } | null>(null);
 
   async function load() {
     const [{ data: c }, { data: r }, { data: h }] = await Promise.all([
@@ -42,7 +46,10 @@ export function AdminCatalog() {
     else { setMsg(`${note}. Saved, everyone sees it now.`); setAdding(null); setEditing(null); resetCatalog(); if (newRates) resetLiveRates(); await load(); }
     setBusy(false);
   }
+  useEffect(() => { setDraft(null); }, [adding, editing]);
   const applied = useMemo(() => applyRates(rates), [rates]);
+  const startPages: Record<CatalogKind, PreviewPage[]> = { fleet: [{ label: "Fleet", path: "/fleet" }, { label: "Rates", path: "/rates" }], programs: programPages("", ""), courses: coursePages("", "") };
+  const preview = (kind: CatalogKind) => <div className="mt-4"><SitePreview pages={draft?.pages ?? startPages[kind]} state={draft?.state ?? { catalog: cat }} /></div>;
   const planes = useMemo(() => allPlanes(cat, applied), [cat, applied]);
   const lists: { kind: CatalogKind; title: string; noun: string; items: { id: string; label: string; sub: string; hidden: boolean; added?: boolean | undefined }[] }[] = [
     { kind: "fleet", title: "Airplanes", noun: "airplane", items: planes.map(f => ({ id: f.registration, label: `${f.registration}${f.nickname ? ` “${f.nickname}”` : ""}`, sub: `${f.name}${f.rate ? ` · ${f.rate}` : ""}${f.edited ? " · edited" : ""}`, hidden: f.hidden, added: f.added })) },
@@ -57,9 +64,13 @@ export function AdminCatalog() {
       <div className="flex items-center justify-between gap-3"><h3 className="font-display text-2xl">{l.title}</h3>
         <Button size="sm" variant={adding === l.kind ? "secondary" : "default"} disabled={busy} onClick={() => setAdding(a => (a === l.kind ? null : l.kind))}><Plus className="size-4" /> Add {l.noun}</Button></div>
       {adding === l.kind && <div className="border border-primary p-4">
-        {l.kind === "fleet" && <PlaneForm rates={rates} taken={cat.fleet.map(f => f.registration)} onCancel={() => setAdding(null)} onSubmit={r => void save(addPlane(cat, r), `Added ${r.plane.registration}`, r.newRow ? withRateDrafts(rates, { [rateKey.newRow(r.newRow.aircraft)]: JSON.stringify(r.newRow) }) : undefined)} />}
-        {l.kind === "programs" && <ProgramForm rates={rates} taken={cat.programs.map(p => p.slug)} onCancel={() => setAdding(null)} onSubmit={p => void save(addProgram(cat, p), `Added ${p.name}`)} />}
-        {l.kind === "courses" && <CourseForm taken={cat.courses.map(c => c.slug)} onCancel={() => setAdding(null)} onSubmit={c => void save(addCourse(cat, c), `Added ${c.name}`)} />}
+        {l.kind === "fleet" && <PlaneForm rates={rates} taken={cat.fleet.map(f => f.registration)} onCancel={() => setAdding(null)}
+          onDraft={r => setDraft(r ? { state: { catalog: addPlane(cat, r), ...(r.newRow ? { rates: withRateDrafts(rates, { [rateKey.newRow(r.newRow.aircraft)]: JSON.stringify(r.newRow) }) } : {}) }, pages: planePages(r.plane.registration, r.plane.registration) } : null)} onSubmit={r => void save(addPlane(cat, r), `Added ${r.plane.registration}`, r.newRow ? withRateDrafts(rates, { [rateKey.newRow(r.newRow.aircraft)]: JSON.stringify(r.newRow) }) : undefined)} />}
+        {l.kind === "programs" && <ProgramForm rates={rates} taken={cat.programs.map(p => p.slug)} onCancel={() => setAdding(null)}
+          onDraft={p => setDraft(p ? { state: { catalog: addProgram(cat, p) }, pages: programPages(p.slug, p.name) } : null)} onSubmit={p => void save(addProgram(cat, p), `Added ${p.name}`)} />}
+        {l.kind === "courses" && <CourseForm taken={cat.courses.map(c => c.slug)} onCancel={() => setAdding(null)}
+          onDraft={c => setDraft(c ? { state: { catalog: addCourse(cat, c) }, pages: coursePages(c.slug, c.name) } : null)} onSubmit={c => void save(addCourse(cat, c), `Added ${c.name}`)} />}
+        {preview(l.kind)}
       </div>}
       <ul className="divide-y divide-border border border-border">{l.items.map(it => <li key={it.id} className={it.hidden ? "bg-secondary/60 text-muted-foreground" : ""}><div className="flex min-h-14 items-center justify-between gap-3 px-3 py-2">
         <span className="min-w-0"><span className="block truncate font-semibold">{it.label}{it.added && <span className="ml-2 text-[10px] font-bold uppercase tracking-widest text-primary-text">Added</span>}{it.hidden && <span className="ml-2 text-[10px] font-bold uppercase tracking-widest">Hidden</span>}</span><span className="block truncate text-xs text-muted-foreground">{it.sub}</span></span>
@@ -72,7 +83,9 @@ export function AdminCatalog() {
           return plane && original ? <div className="border-t border-primary p-4 text-foreground">
             <PlaneEditForm plane={plane} original={original} rates={rates} onCancel={() => setEditing(null)}
               onReset={() => void save(resetPlane(cat, it.id), `Put ${it.label} back to the original`)}
-              onSave={f => void save(editPlane(cat, it.id, f), `Edited ${it.label}`)} />
+              onSave={f => void save(editPlane(cat, it.id, f), `Edited ${it.label}`)}
+              onDraft={f => setDraft({ state: { catalog: editPlane(cat, it.id, f) }, pages: planePages(it.id, it.label) })} />
+            {preview("fleet")}
           </div> : null;
         })()}
       </li>)}</ul>

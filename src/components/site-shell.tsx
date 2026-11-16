@@ -1,4 +1,5 @@
 import { Link, useLocation, useMatch } from "@tanstack/react-router";
+import { inPreviewFrame } from "@/lib/site-preview";
 import { srcSetFor } from "@/lib/responsive-image";
 import { ArrowUp, ArrowUpRight, Menu, Phone, X } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
@@ -132,7 +133,7 @@ export function SiteLayout({ children, overlayHeader = false }: { children: Reac
   // old page stays still until the new one renders and the fade plays exactly once.
   const pageKey = useMatch({ strict: false, select: (match) => match.id });
   const editing = useEditState().on;
-  return <><MotionExperience pageKey={pageKey} /><Header overlay={overlayHeader} /><main id="main" tabIndex={-1} key={pageKey} className="page-enter outline-none">{children}</main><Footer /><MobileActions />{editing && <Suspense fallback={null}><SiteEditor /></Suspense>}</>;
+  return <><MotionExperience pageKey={pageKey} /><Header overlay={overlayHeader} /><main id="main" tabIndex={-1} key={pageKey} className="page-enter outline-none">{children}</main><Footer /><MobileActions />{editing && !inPreviewFrame() && <Suspense fallback={null}><SiteEditor /></Suspense>}</>;
 }
 
 /** Phones always get a short intro so page content starts on the first screen; `compact` is kept for callers and is now the default. */
