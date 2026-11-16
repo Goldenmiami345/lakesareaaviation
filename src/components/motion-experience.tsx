@@ -1,3 +1,4 @@
+import { SlotText } from "@/components/slot-text";
 import { useEffect, useState } from "react";
 import { ArrowDown, ArrowRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
@@ -80,7 +81,7 @@ export function ScrollCue({ targetId }: { targetId: string }) {
     <TapScrollHint />
     <div className="absolute inset-x-0 bottom-5 z-20 hidden justify-center sm:flex">
       <button type="button" aria-label="Scroll to see the professional pilot program" onClick={() => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" })} className="landing-scroll-cue group/cue relative flex flex-col items-center gap-2 text-background/70 transition-colors hover:text-background">
-        <span aria-hidden className="hidden text-[10px] font-semibold uppercase tracking-[0.22em] lg:block">Scroll to see the professional pilot program</span>
+        <span aria-hidden className="hidden text-[10px] font-semibold uppercase tracking-[0.22em] lg:block"><SlotText k="home.scroll-cue" d="Scroll to see the professional pilot program" /></span>
         <span className="relative h-10 w-5" aria-hidden="true">
           <span className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 overflow-hidden bg-background/25">
             <span className="landing-scroll-stroke absolute inset-x-0 top-0 h-4 bg-primary" />
@@ -101,14 +102,14 @@ export function ProgramExplorer() {
   return <section className="bg-secondary py-20 sm:py-28" data-scroll-reveal>
     <div className="site-container">
       <div className="grid gap-10 lg:grid-cols-[.7fr_1.3fr]">
-        <div><p className="eyebrow text-primary-text">Interactive route finder</p><h2 className="mt-4 font-display text-4xl sm:text-5xl">What are you training for next?</h2></div>
+        <div><p className="eyebrow text-primary-text"><SlotText k="explorer.eyebrow" d="Interactive route finder" /></p><h2 className="mt-4 font-display text-4xl sm:text-5xl"><SlotText k="explorer.title" d="What are you training for next?" /></h2></div>
         <div>
           <div className="flex flex-wrap gap-2" role="tablist" aria-label="Choose a training program">
-            {programs.map((item, index) => <button key={item.slug} type="button" role="tab" aria-selected={index === active} onClick={() => setActive(index)} className={`program-chip min-h-11 border px-4 text-xs font-bold uppercase transition-[color,background-color,border-color,scale] ${index === active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-foreground hover:border-primary"}`}>{item.name}</button>)}
+            {programs.map((item, index) => <button key={item.slug} type="button" role="tab" aria-selected={index === active} onClick={() => setActive(index)} className={`program-chip min-h-11 border px-4 text-xs font-bold uppercase transition-[color,background-color,border-color,scale] ${index === active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-foreground hover:border-primary"}`}><SlotText k={`program.${item.slug}.name`} d={item.name} /></button>)}
           </div>
           <div key={program.slug} className="program-detail mt-8 border-l-2 border-primary pl-6">
-            <p className="eyebrow text-primary-text">{program.short}</p><h3 className="mt-3 font-display text-4xl">{program.name}</h3><p className="mt-4 max-w-2xl leading-relaxed text-muted-foreground">{program.description}</p>
-            <Link to="/programs/$slug" params={{ slug: program.slug }} className="mt-7 inline-flex items-center gap-3 text-sm font-bold uppercase text-primary-text">View this training path <ArrowRight className="size-4" /></Link>
+            <p className="eyebrow text-primary-text"><SlotText k={`program.${program.slug}.short`} d={program.short} /></p><h3 className="mt-3 font-display text-4xl"><SlotText k={`program.${program.slug}.name`} d={program.name} /></h3><p className="mt-4 max-w-2xl leading-relaxed text-muted-foreground"><SlotText k={`program.${program.slug}.description`} /></p>
+            <Link to="/programs/$slug" params={{ slug: program.slug }} className="mt-7 inline-flex items-center gap-3 text-sm font-bold uppercase text-primary-text"><SlotText k="explorer.cta" d="View this training path " /><ArrowRight className="size-4" /></Link>
           </div>
         </div>
       </div>

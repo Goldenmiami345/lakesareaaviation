@@ -1,3 +1,4 @@
+import { SlotText } from "@/components/slot-text";
 import introImg from "../assets/photos/lake-aerial.webp";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, MapPin, Phone } from "lucide-react";
@@ -18,7 +19,7 @@ export const Route = createFileRoute("/local-training")({
 function Page() {
   return (
     <SiteLayout>
-      <PageIntro image={introImg} imageAlt="Aerial view of a Minnesota lake shoreline"
+      <PageIntro k="local.intro" image={introImg} imageAlt="Aerial view of a Minnesota lake shoreline"
         eyebrow="Local training"
         title="Train at your own pace, close to home."
         text="While we specialize in accelerated, full-time training, we value our local students. One of our main goals is to grow a community of aviators."
@@ -26,35 +27,35 @@ function Page() {
       <div className="site-container py-20">
         <div className="grid gap-12 lg:grid-cols-[1.1fr_.9fr]" data-scroll-reveal>
           <div>
-            <p className="eyebrow text-primary-text">Your goals, your schedule</p>
-            <h2 className="mt-4 font-display text-4xl sm:text-5xl">A community of aviators.</h2>
+            <p className="eyebrow text-primary-text"><SlotText k="local.eyebrow" d="Your goals, your schedule" /></p>
+            <h2 className="mt-4 font-display text-4xl sm:text-5xl"><SlotText k="local.title" d="A community of aviators." /></h2>
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-              Whether you are looking to work through your career change into aviation, are adding a rating or endorsement to your skill set, or are getting into aviation as a hobby, we are excited to help you reach your goals at your own pace.
+              <SlotText k="local.text" d="Whether you are looking to work through your career change into aviation, are adding a rating or endorsement to your skill set, or are getting into aviation as a hobby, we are excited to help you reach your goals at your own pace." />
             </p>
             <div className="stagger-grid mt-10 grid gap-px border border-border bg-border sm:grid-cols-3">
               {[
                 ["Career change", "Work through a structured path into professional aviation."],
                 ["Ratings & endorsements", "Add an instrument, commercial, tailwheel, or instructor rating."],
                 ["Fly for fun", "Get into aviation as a hobby with instruction built around your life."],
-              ].map(([t, d]) => (
+              ].map(([t, d], i) => (
                 <div key={t} className="card-lift bg-background p-6">
-                  <h3 className="font-display text-xl">{t}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{d}</p>
+                  <h3 className="font-display text-xl"><SlotText k={`local.goal.${i}.title`} d={t!} /></h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground"><SlotText k={`local.goal.${i}.text`} d={d!} /></p>
                 </div>
               ))}
             </div>
             <Link to="/contact" className="btn-shine mt-10 inline-flex min-h-14 items-center gap-3 bg-primary px-6 text-sm font-bold uppercase text-primary-foreground">
-              Build my training plan <ArrowRight className="size-4" />
+              <SlotText k="cta.plan" d="Build my training plan" /> <ArrowRight className="size-4" />
             </Link>
           </div>
           <div>
-            <p className="eyebrow text-primary-text">Three great locations</p>
+            <p className="eyebrow text-primary-text"><SlotText k="local.locations" d="Three great locations" /></p>
             <div className="stagger-grid mt-6 grid gap-px border border-border bg-border" data-scroll-reveal>
-              {locations.map((l) => (
+              {locations.map((l, i) => (
                 <div key={l.city} className="card-lift bg-background p-6">
-                  <h3 className="font-display text-2xl">{l.city}</h3>
-                  <p className="mt-1 text-sm font-semibold text-primary-text">{l.airport}</p>
-                  <p className="mt-3 flex items-start gap-2 text-sm text-muted-foreground"><MapPin className="mt-0.5 size-4 shrink-0" />{l.address}</p>
+                  <h3 className="font-display text-2xl"><SlotText k={`location.${i}.city`} d={l.city} /></h3>
+                  <p className="mt-1 text-sm font-semibold text-primary-text"><SlotText k={`location.${i}.airport`} d={l.airport} /></p>
+                  <p className="mt-3 flex items-start gap-2 text-sm text-muted-foreground"><MapPin className="mt-0.5 size-4 shrink-0" /><SlotText k={`location.${i}.address`} d={l.address} /></p>
                 </div>
               ))}
             </div>

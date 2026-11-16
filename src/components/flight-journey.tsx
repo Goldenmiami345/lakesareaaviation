@@ -1,3 +1,6 @@
+import { RateText, SlotText } from "@/components/slot-text";
+import { rateKey } from "@/lib/rates-engine";
+import { useEditState } from "@/lib/edit-store";
 import { startTransition, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { srcSetFor } from "@/lib/responsive-image";
 import { Link } from "@tanstack/react-router";
@@ -95,6 +98,7 @@ export function jumpToJourney(id: string, index: number, animate = false) {
 type Props = { stages?: Stage[]; id?: string; label?: string; mode?: "alt" | "code"; fadeBottom?: "ink" | "background" };
 
 export function FlightJourney({ stages = journeyStages, id = "flight-path", label = "Your accelerated flight path", mode = "alt", fadeBottom = "ink" }: Props = {}) {
+  const edit = useEditState();
   const fadeTopRef = useRef<HTMLDivElement>(null);
   const fadeBottomRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
@@ -121,7 +125,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const [interacted, setInteracted] = useState(false);
   // Reading an airplane's card holds the stage: nothing moves on while it is up.
   const cardOpen = useTrafficCardOpen();
-  const autoOn = story && playing && inView && !holding && !interacted && !cardOpen;
+  const autoOn = !edit.on && story && playing && inView && !holding && !interacted && !cardOpen;
   const activeRef = useRef(0);
   activeRef.current = active;
   const storyRef = useRef(story);
@@ -289,6 +293,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       window.clearTimeout(idle);
     };
     const onWheel = (e: WheelEvent) => {
+      if ((e.target as Element | null)?.closest?.("[data-slot-text]")) return;
       onInput();
       // Direction straight from the wheel, before the scroll it causes arrives.
       if (ease && Math.abs(e.deltaY) > Math.abs(e.deltaX) && e.deltaY) dir = Math.sign(e.deltaY);
@@ -714,6 +719,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const cardTap = { open: false };
     const onDownCapture = () => { cardTap.open = trafficCardIsOpen(); };
     const onDown = (e: PointerEvent) => {
+      if ((e.target as Element | null)?.closest?.("[data-slot-text]")) return;
       if (!e.isPrimary || document.documentElement.classList.contains("journey-zoomed")) return;
       // A neighbour-section copy made earlier may be stale if that section has moved on since.
       const g = ghostRef.current;
@@ -721,6 +727,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       down = true; axis = null; dx = 0; vx = 0; sx = lx = e.clientX; sy = ly = e.clientY; lt = performance.now(); if (!carousel) startTransition(() => { setHolding(true); setInteracted(true); });
     };
     const onMove = (e: PointerEvent) => {
+      if ((e.target as Element | null)?.closest?.("[data-slot-text]")) return;
       if (!down) return;
       if (document.documentElement.classList.contains("journey-zoomed") || !e.isPrimary) { down = false; return; }
       const now = performance.now(), dt = Math.max(1, now - lt);
@@ -747,6 +754,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       paintStory(p, false);
     };
     const onUp = (e: PointerEvent) => {
+      if ((e.target as Element | null)?.closest?.("[data-slot-text]")) return;
       startTransition(() => setHolding(false));
       if (!down) return;
       down = false;
@@ -782,7 +790,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
       if (Math.abs(box().top) <= 2) return;
       jumpTo(target, "story:enter", true);
     };
-    const noDrag = (e: Event) => e.preventDefault(); // native image drag would steal the pointer mid-swipe
+    const noDrag = (e: Event) => { if ((e.target as Element | null)?.closest?.("[data-slot-text]")) return; e.preventDefault(); }; // native image drag would steal the pointer mid-swipe
     viewport.addEventListener("dragstart", noDrag);
     viewport.addEventListener("pointerdown", onDown);
     window.addEventListener("pointerdown", onDownCapture, true);
@@ -821,13 +829,14 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
     const onKey = (e: KeyboardEvent) => {
       const r = vp.getBoundingClientRect();
       if (r.top > window.innerHeight * 0.4 || r.bottom < window.innerHeight * 0.6) return;
-      if ((e.target as Element | null)?.closest?.("input,textarea,select")) return;
+      if ((e.target as Element | null)?.closest?.("input,textarea,select,[data-slot-text]")) return;
       if (e.key === "ArrowRight") { e.preventDefault(); setPlaying(false); step(1); }
       else if (e.key === "ArrowLeft") { e.preventDefault(); setPlaying(false); step(-1); }
     };
     // Two-finger sideways swipe on a trackpad turns one stage; vertical scrolling stays native.
     let acc = 0, cool = 0;
     const onWheel = (e: WheelEvent) => {
+      if ((e.target as Element | null)?.closest?.("[data-slot-text]")) return;
       if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
       e.preventDefault();
       const now = performance.now();
@@ -888,11 +897,11 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
           <div aria-hidden className="story-hint pointer-events-none absolute right-3 top-[36%] z-30 h-14 w-11 text-background" style={{ "--hint-swipe": `${STORY_SWIPE_HINT_MS}ms`, "--hint-tap": `${STORY_TAP_HINT_MS}ms` } as React.CSSProperties}>
             <div className="story-hint-swipe absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-md bg-ink/65">
               <span className="story-hint-chevrons flex items-center"><ChevronLeft className="size-4" strokeWidth={2} /><ChevronLeft className="-ml-2 size-4" strokeWidth={2} /></span>
-              <span className="text-[9px] font-semibold uppercase">Swipe</span>
+              <span className="text-[9px] font-semibold uppercase"><SlotText k="journey.ui.swipe" d="Swipe" /></span>
             </div>
             <div className="story-hint-tap absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-md bg-ink/65">
               <span className="relative grid size-6 place-items-center"><span className="story-hint-ring absolute inset-0 rounded-full border border-background/80" /><span className="size-1.5 rounded-full bg-background" /></span>
-              <span className="text-[9px] font-semibold uppercase">Tap</span>
+              <span className="text-[9px] font-semibold uppercase"><SlotText k="journey.ui.tap" d="Tap" /></span>
             </div>
           </div>
         )}
@@ -939,7 +948,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
 
         {/* HUD */}
         <div className={`journey-hud ${phoneStory && mode === "alt" ? "hidden " : ""}absolute left-5 sm:left-[max(var(--gutter),calc((100%-1720px)/2))] top-24 z-20 font-mono text-xs uppercase tracking-[0.2em] text-background/70 lg:text-[13px]`}>
-          {mode === "alt" ? <p>Alt <span ref={hudRef} className="tabular-nums text-background">0</span> ft</p> : <><p className="text-background">{s.hud}</p>{s.traffic && <div className="wx-hud-slot">{(() => { const o = ops[active]; if (!o?.obs) return null; const w = o.obs; return (<>
+          {mode === "alt" ? <p>Alt <span ref={hudRef} className="tabular-nums text-background">0</span> ft</p> : <><p className="text-background"><StageText s={s} field="hud" /></p>{s.traffic && <div className="wx-hud-slot">{(() => { const o = ops[active]; if (!o?.obs) return null; const w = o.obs; return (<>
             <button type="button" onClick={() => setWxOpen((v) => !v)} aria-expanded={wxOpen} className="pointer-events-auto flex min-h-11 items-center gap-1.5 text-left uppercase tracking-[inherit] text-background sm:pointer-events-none sm:cursor-default" data-wind aria-label={`Wind at ${w.station}: ${w.dir === null ? (w.kt ? "variable" : "calm") : `${w.dir} degrees`} ${w.kt} knots${w.gust ? ` gusting ${w.gust}` : ""}. Active runway ${o.rwy.runway}. ${wxOpen ? "Hide" : "Show"} full METAR`}>
               {w.dir !== null && w.kt > 0 && <svg viewBox="0 0 12 12" className="size-3 text-[color:var(--radar)]" style={{ transform: `rotate(${w.dir + 180}deg)` }} aria-hidden><path d="M6 1v10M2.5 4.5 6 1l3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>}
               <span>Wind {w.kt === 0 ? "calm" : `${w.dir === null ? "VRB" : String(w.dir).padStart(3, "0") + "°"} ${w.kt}${w.gust ? `G${w.gust}` : ""}KT`}</span>
@@ -948,7 +957,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
             </button>
             <p className={`mt-1 max-w-[min(34rem,calc(100vw-6rem))] ${wxOpen ? "" : "max-sm:hidden"}`}><MetarLine obs={w} /></p>
           </>); })()}</div>}{s.traffic && <p className="mt-1 hidden sm:block">RWY {ops[active]?.rwy.runway ?? s.traffic.runway} · {ops[active]?.rwy.side ?? s.traffic.side} traffic · TPA {(s.traffic.elevation + (ops[active]?.pattern.tpaAgl ?? s.traffic.tpaAgl)).toLocaleString("en-US")} MSL</p>}</>}
-          <p className="mt-1 hidden sm:block">Stage {s.code} / 0{stages.length}</p>
+          <p className="mt-1 hidden sm:block"><SlotText k="journey.ui.stage" d="Stage " /><StageText s={s} field="code" /> / 0{stages.length}</p>
         </div>
 
         {/* Stage rail */}
@@ -960,9 +969,9 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
           <ol className="flex flex-col justify-between gap-1 sm:gap-3">
             {stages.map((st, i) => (
               <li key={st.code}>
-                <Button variant="ghost" type="button" aria-label={st.label} aria-current={i === active ? "step" : undefined} onClick={() => jump(i)} className={`group h-11 min-w-11 justify-start gap-3 rounded-none px-2 text-left text-xs lg:text-[13px] font-bold uppercase tracking-[0.16em] transition-colors hover:bg-transparent ${i === active ? "outlined-accent-label" : "text-background/55 hover:text-background/80"}`}>
+                <Button variant="ghost" type="button" aria-label={st.label} aria-current={i === active ? "step" : undefined} onClick={(e) => { if ((e.target as Element | null)?.closest?.("[data-slot-text]")) return; jump(i); }} className={`group h-11 min-w-11 justify-start gap-3 rounded-none px-2 text-left text-xs lg:text-[13px] font-bold uppercase tracking-[0.16em] transition-colors hover:bg-transparent ${i === active ? "outlined-accent-label" : "text-background/55 hover:text-background/80"}`}>
                   <span className={`size-2 rounded-full border border-current transition-[scale,background-color,border-color] ${i === active ? "scale-150 bg-primary border-primary" : ""}`} />
-                  <span className="hidden sm:inline">{st.label}</span>
+                  <span className="hidden sm:inline"><StageText s={st} field="label" /></span>
                 </Button>
               </li>
             ))}
@@ -970,7 +979,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         </nav>
 
         {zoomed && (
-          <button type="button" onClick={reset} aria-label="Reset zoom" className="absolute right-4 top-24 z-30 inline-flex min-h-11 min-w-11 items-center gap-1.5 border border-background/40 bg-ink/70 px-3 font-mono text-xs font-bold uppercase tracking-[0.14em] text-background backdrop-blur-sm">✕ Reset</button>
+          <button type="button" onClick={reset} aria-label="Reset zoom" className="absolute right-4 top-24 z-30 inline-flex min-h-11 min-w-11 items-center gap-1.5 border border-background/40 bg-ink/70 px-3 font-mono text-xs font-bold uppercase tracking-[0.14em] text-background backdrop-blur-sm"><SlotText k="journey.ui.reset" d="✕ Reset" /></button>
         )}
         {/* Copy */}
         {!story && <div className="site-container journey-copy-wrap pointer-events-none absolute inset-x-0 bottom-0 z-20 pb-[calc(2.75rem+env(safe-area-inset-bottom))] max-lg:!pr-14 sm:pb-24 md:pb-12 lg:pb-16">
@@ -984,22 +993,31 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   );
 }
 
+function StageText({ s, field }: { s: Stage; field: "code" | "label" | "time" | "title" | "text" | "cta" | "hud" }) {
+  const airportIndex = airportStages.indexOf(s);
+  const name = airportIndex >= 0 ? "airports" : "flight-path";
+  const index = airportIndex >= 0 ? airportIndex : journeyStages.indexOf(s);
+  if (field === "time" && s === journeyStages[0]) return <RateText k={rateKey.other("Introductory flight")} amount />;
+  if (field === "cta" && s.cta === "Build my training plan") return <SlotText k="cta.plan" d={s.cta} />;
+  return <SlotText k={`journey.${name}.${index}.${field}`} d={s[field] ?? ""} />;
+}
+
 function StageCopy({ s, wx, wxLoading }: { s: Stage; wx: Metar | null; wxLoading: boolean }) {
   return (
     <>
-      <p className="stage-label max-sm:tracking-[0.18em]"><span className="max-sm:hidden">{s.code} · </span>{s.label}<span className="sm:hidden"> · {s.time}</span></p>
-      <p className="mt-2 hidden font-display text-5xl leading-none sm:block">{s.time}</p>
-      <h2 className="mt-1.5 font-display text-lg leading-[1.1] min-[380px]:text-xl sm:mt-2 sm:text-2xl">{s.title}</h2>
-      {s.text && <p className="mt-1 max-w-lg text-pretty text-sm leading-snug text-background/80 sm:mt-2 sm:text-base">{s.text}</p>}
+      <p className="stage-label max-sm:tracking-[0.18em]"><span className="max-sm:hidden"><StageText s={s} field="code" /> · </span><StageText s={s} field="label" /><span className="sm:hidden"> · <StageText s={s} field="time" /></span></p>
+      <p className="mt-2 hidden font-display text-5xl leading-none sm:block"><StageText s={s} field="time" /></p>
+      <h2 className="mt-1.5 font-display text-lg leading-[1.1] min-[380px]:text-xl sm:mt-2 sm:text-2xl"><StageText s={s} field="title" /></h2>
+      {s.text && <p className="mt-1 max-w-lg text-pretty text-sm leading-snug text-background/80 sm:mt-2 sm:text-base"><StageText s={s} field="text" /></p>}
       {s.code === "01" && !s.location && <DiscoveryLocations />}
       {s.liveWx && <InstrumentConditions obs={wx} loading={wxLoading} />}
       <div className="flex flex-nowrap items-end gap-2">
       {s.location
-        ? <Link to="/contact" search={{ location: s.location }} className="interactive-arrow btn-shine pointer-events-auto mt-2.5 inline-flex min-h-11 items-center gap-2 whitespace-nowrap bg-primary px-3 text-xs max-sm:tracking-[0.06em] sm:gap-3 sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>
+        ? <Link to="/contact" search={{ location: s.location }} className="interactive-arrow btn-shine pointer-events-auto mt-2.5 inline-flex min-h-11 items-center gap-2 whitespace-nowrap bg-primary px-3 text-xs max-sm:tracking-[0.06em] sm:gap-3 sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground"><StageText s={s} field="cta" /> <ArrowRight className="size-4" /></Link>
         : s.slug
-        ? <Link to="/programs/$slug" params={{ slug: s.slug }} className="interactive-arrow btn-shine pointer-events-auto mt-2.5 inline-flex min-h-11 items-center gap-2 whitespace-nowrap bg-primary px-3 text-xs max-sm:tracking-[0.06em] sm:gap-3 sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>
-        : <Link to={s.to ?? "/contact"} className="interactive-arrow btn-shine pointer-events-auto mt-2.5 inline-flex min-h-11 items-center gap-2 whitespace-nowrap bg-primary px-3 text-xs max-sm:tracking-[0.06em] sm:gap-3 sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">{s.cta} <ArrowRight className="size-4" /></Link>}
-      <a href={SCHOOL_PHONE_TEL} aria-label="Call Lakes Area Aviation" className="pointer-events-auto mt-2.5 inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap border border-background/50 px-3 text-xs font-bold uppercase tracking-[0.06em] text-background backdrop-blur-sm sm:hidden"><Phone className="size-4" /> Call</a>
+        ? <Link to="/programs/$slug" params={{ slug: s.slug }} className="interactive-arrow btn-shine pointer-events-auto mt-2.5 inline-flex min-h-11 items-center gap-2 whitespace-nowrap bg-primary px-3 text-xs max-sm:tracking-[0.06em] sm:gap-3 sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground"><StageText s={s} field="cta" /> <ArrowRight className="size-4" /></Link>
+        : <Link to={s.to ?? "/contact"} className="interactive-arrow btn-shine pointer-events-auto mt-2.5 inline-flex min-h-11 items-center gap-2 whitespace-nowrap bg-primary px-3 text-xs max-sm:tracking-[0.06em] sm:gap-3 sm:mt-4 sm:min-h-11 sm:px-6 sm:text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground"><StageText s={s} field="cta" /> <ArrowRight className="size-4" /></Link>}
+      <a href={SCHOOL_PHONE_TEL} aria-label="Call Lakes Area Aviation" className="pointer-events-auto mt-2.5 inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap border border-background/50 px-3 text-xs font-bold uppercase tracking-[0.06em] text-background backdrop-blur-sm sm:hidden"><Phone className="size-4" /><SlotText k="journey.ui.call" d=" Call" /></a>
       </div>
       {!s.location && s.code !== "01" && <LocationsSkip end={s.code === "06"} />}
     </>
@@ -1015,12 +1033,12 @@ const toAirport = (index: number) => jumpToJourney("airports", index, true);
 function DiscoveryLocations() {
   return (
     <p className="mt-1 flex flex-wrap items-center text-xs leading-snug text-background/80 sm:mt-2 sm:text-sm">
-      <span className="mr-1"><span className="max-sm:hidden">Take a discovery flight at one of our three locations:</span><span className="sm:hidden">At our 3 locations:</span></span>
+      <span className="mr-1"><span className="max-sm:hidden"><SlotText k="journey.ui.discovery.locations" d="Take a discovery flight at one of our three locations:" /></span><span className="sm:hidden"><SlotText k="journey.ui.discovery.locations-short" d="At our 3 locations:" /></span></span>
       {TRAINING_STATES.map(([state, code], i) => (
         <span key={code} className="inline-flex items-center">
           {i > 0 && <span aria-hidden className="px-1 text-background/40">·</span>}
-          <button type="button" onClick={() => toAirport(i)} aria-label={`See our ${state} location`} className="pointer-events-auto -my-2 inline-flex min-h-10 items-center font-semibold text-background underline decoration-background/30 underline-offset-4 transition-colors hover:text-primary-text hover:decoration-current">
-            <span className="sm:hidden">{code}</span><span className="max-sm:hidden">{state}</span>
+          <button type="button" onClick={(e) => { if ((e.target as Element | null)?.closest?.("[data-slot-text]")) return; toAirport(i); }} aria-label={`See our ${state} location`} className="pointer-events-auto -my-2 inline-flex min-h-10 items-center font-semibold text-background underline decoration-background/30 underline-offset-4 transition-colors hover:text-primary-text hover:decoration-current">
+            <span className="sm:hidden"><SlotText k={`journey.states.${i}.code`} d={code} /></span><span className="max-sm:hidden"><SlotText k={`journey.states.${i}.name`} d={state} /></span>
           </button>
         </span>
       ))}
@@ -1031,10 +1049,10 @@ function DiscoveryLocations() {
 /** Quiet shortcut to the airports on every later stage; the final stage points down to them. */
 function LocationsSkip({ end }: { end: boolean }) {
   return (
-    <button type="button" onClick={() => toAirport(0)} className="pointer-events-auto -mb-2 mt-0.5 inline-flex min-h-10 items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-background/70 transition-colors hover:text-background sm:mt-1.5 sm:text-[11px]">
+    <button type="button" onClick={(e) => { if ((e.target as Element | null)?.closest?.("[data-slot-text]")) return; toAirport(0); }} className="pointer-events-auto -mb-2 mt-0.5 inline-flex min-h-10 items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-background/70 transition-colors hover:text-background sm:mt-1.5 sm:text-[11px]">
       {end
-        ? <>Scroll to see our locations <ArrowDown aria-hidden className="scroll-arrow size-3.5" /></>
-        : <><MapPin aria-hidden className="size-3 text-background/55" /> Our locations · MN · CO · AZ</>}
+        ? <><SlotText k="journey.ui.locations.end" d="Scroll to see our locations " /><ArrowDown aria-hidden className="scroll-arrow size-3.5" /></>
+        : <><MapPin aria-hidden className="size-3 text-background/55" /><SlotText k="journey.ui.locations.short" d=" Our locations · MN · CO · AZ" /></>}
     </button>
   );
 }

@@ -1,3 +1,4 @@
+import { FleetPrice, SlotText as ST } from "@/components/slot-text";
 import { SlotText } from "@/components/slot-text";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { lazy, Suspense, useRef, useState } from "react";
@@ -49,17 +50,17 @@ function PlanePage() {
             </button>
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground/70">{ROLE_LABEL[f.role]} · {f.use}</p>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground/70">{ROLE_LABEL[f.role]} · <ST k={`fleet.${f.registration}.use`} d={f.use} /></p>
             <h1 className="mt-2 font-display text-4xl leading-tight sm:text-5xl">{planeTitle(f)}</h1>
-            <p className="mt-1 text-lg text-foreground/80">{f.name}</p>
+            <p className="mt-1 text-lg text-foreground/80"><ST k={`fleet.${f.registration}.name`} d={f.name} /></p>
 
             <div className="mt-6 grid grid-cols-2 border-y-2 border-foreground">
               {f.rate ? <>
-                <div className="py-4 pr-4"><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/70">Regular</p><p className="mt-1 text-3xl font-bold tabular-nums">{f.rate.replace("/hr", "")}<span className="text-sm font-semibold text-foreground/70">/hr</span></p></div>
-                <div className="bg-secondary px-4 py-4"><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/70">Prepay</p><p className="mt-1 text-3xl font-bold tabular-nums">{(f.prepay ?? f.rate).replace("/hr", "")}<span className="text-sm font-semibold text-foreground/70">/hr</span></p></div>
+                <div className="py-4 pr-4"><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/70">Regular</p><p className="mt-1 text-3xl font-bold tabular-nums"><FleetPrice reg={f.registration} field="regular" suffix="" /><span className="text-sm font-semibold text-foreground/70">/hr</span></p></div>
+                <div className="bg-secondary px-4 py-4"><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/70">Prepay</p><p className="mt-1 text-3xl font-bold tabular-nums"><FleetPrice reg={f.registration} field={f.prepay ? "prepay" : "regular"} suffix="" /><span className="text-sm font-semibold text-foreground/70">/hr</span></p></div>
               </> : <div className="col-span-2 py-4"><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/70">Rate</p><a href={SCHOOL_PHONE_TEL} className="mt-1 inline-flex min-h-11 items-center gap-2 text-lg font-bold"><Phone className="size-4" /> Call {SCHOOL_PHONE} for the current rate</a></div>}
             </div>
-            {f.rate && <p className="mt-3 text-sm text-foreground/75">{RATE_NOTES.wet} <Link to="/rates" className="font-semibold underline underline-offset-2">All rates</Link></p>}
+            {f.rate && <p className="mt-3 text-sm text-foreground/75"><ST k="rates.note.wet" d={RATE_NOTES.wet} /> <Link to="/rates" className="font-semibold underline underline-offset-2"><ST k="fleet.all-rates" d="All rates" /></Link></p>}
 
             <div className="mt-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
               <Link to="/contact" search={{ aircraft: f.registration }} className="inline-flex min-h-12 items-center justify-between gap-3 bg-primary px-5 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">Build my training plan <ArrowRight className="size-4" /></Link>
@@ -71,7 +72,7 @@ function PlanePage() {
         <div className="mt-12 grid gap-10 lg:grid-cols-3 lg:gap-14">
           {specs.length > 0 && (
             <section>
-              <h2 className="border-b border-foreground pb-2 font-display text-2xl">Specifications</h2>
+              <h2 className="border-b border-foreground pb-2 font-display text-2xl"><ST k="fleet.page.specs" d="Specifications" /></h2>
               <dl className="divide-y divide-border">
                 {specs.map(([k, v]) => <div key={k} className="grid grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)] gap-3 py-2.5"><dt className="text-sm text-foreground/70">{k}</dt><dd className="text-sm font-semibold">{v}</dd></div>)}
               </dl>
@@ -85,8 +86,8 @@ function PlanePage() {
             </section>
           )}
           <section>
-            <h2 className="border-b border-foreground pb-2 font-display text-2xl">Used in training</h2>
-            <p className="mt-3 text-sm text-foreground/80">{f.use}. <SlotText k={`fleet.${f.registration}.note`} /></p>
+            <h2 className="border-b border-foreground pb-2 font-display text-2xl"><ST k="fleet.page.used" d="Used in training" /></h2>
+            <p className="mt-3 text-sm text-foreground/80"><ST k={`fleet.${f.registration}.use`} d={f.use} />. <SlotText k={`fleet.${f.registration}.note`} /></p>
             <ul className="mt-2 divide-y divide-border">
               {TRAINING[f.role].map((t) => <li key={t.to}><a href={t.to} className="flex min-h-11 items-center justify-between gap-3 text-sm font-semibold">{t.label}<ArrowRight className="size-4 shrink-0" /></a></li>)}
             </ul>
