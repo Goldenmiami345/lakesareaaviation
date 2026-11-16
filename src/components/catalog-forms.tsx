@@ -16,8 +16,9 @@ import { uploadSlotPhoto } from "@/lib/media-upload";
 const field = "grid gap-1.5 text-sm font-semibold";
 const hint = "text-xs font-normal text-muted-foreground";
 const select = "h-10 w-full border border-input bg-background px-3 text-sm font-normal";
-/** Airplane and rate names are long: size these to their own text (never w-full, which clips them). */
-const selectFit = "h-10 w-auto max-w-full min-w-0 justify-self-start border border-input bg-background px-2 text-[13px] font-normal sm:px-3 sm:text-sm";
+/** Airplane and rate names are long: size these to their own text (never w-full, which clips them).
+ *  The caller sets justify-self (start = as wide as the name, stretch = the full row on phones). */
+const selectFit = "h-10 w-auto max-w-full min-w-0 border border-input bg-background px-2 text-[13px] font-normal sm:px-3 sm:text-sm";
 const priceHint = "Prices are regular / prepay per hour.";
 const Field = ({ label, note, children }: { label: string; note?: string; children: ReactNode }) => <label className={field}>{label}{children}{note && <span className={hint}>{note}</span>}</label>;
 const linesOf = (s: string) => s.split("\n").map(x => x.trim()).filter(Boolean);
@@ -88,7 +89,7 @@ export function PlaneForm({ rates, taken, onSubmit, onCancel, onDraft }: { rates
     <fieldset className="grid gap-2 border border-border p-3 text-sm">
       <legend className="px-1 font-semibold">Hourly price</legend>
       <label className="flex items-center gap-2"><input type="radio" checked={price === "share"} onChange={() => setPrice("share")} /> Same price as an existing rate line</label>
-      {price === "share" && <select className={selectFit} value={row} onChange={e => setRow(e.target.value)}>{applied.rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft}</option>)}</select>}
+      {price === "share" && <select className={`${selectFit} justify-self-start`} value={row} onChange={e => setRow(e.target.value)}>{applied.rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft}</option>)}</select>}
       {price === "share" && <span className={hint}>{(() => { const s = applied.rentalRates.find(r => r.aircraft === row); return s ? `Regular ${s.regular} / prepay ${s.prepay} per hour.` : priceHint; })()}</span>}
       <label className="flex items-center gap-2"><input type="radio" checked={price === "new"} onChange={() => setPrice("new")} /> Its own new rate line</label>
       {price === "new" && <div className="grid gap-3 sm:grid-cols-3">
@@ -296,7 +297,7 @@ export function PlaneEditForm({ plane, original, rates, onSave, onReset, onCance
 
     <section className="grid gap-3 border-t border-border pt-5">
       <div className="flex items-center justify-between gap-3"><h3 className="text-xs font-bold uppercase tracking-[0.14em]">Hourly price</h3>{undo("rateRow")}</div>
-      <select aria-label="Price line" className={selectFit} value={f.rateRow} onChange={e => set("rateRow", e.target.value)}>
+      <select aria-label="Price line" className={`${selectFit} justify-self-start`} value={f.rateRow} onChange={e => set("rateRow", e.target.value)}>
         {applied.rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft}</option>)}
         <option value="">No published price (visitors are asked to call)</option>
       </select>
