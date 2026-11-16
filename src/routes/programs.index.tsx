@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SlotText } from "@/components/slot-text";
-import { useSiteContent } from "../lib/use-site-content";
 import { ArrowRight } from "lucide-react";
 import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
 import { useLiveRates } from "../lib/use-live-rates";
