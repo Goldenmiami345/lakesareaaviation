@@ -4,7 +4,6 @@ import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { srcSetFor } from "@/lib/responsive-image";
 import { InquiryBand, SiteLayout } from "../components/site-shell";
 import { findSpecialty, SPECIALTY_KIND_LABEL, specialtyCourses } from "../lib/site-data";
-import { SPECIALTY_PHOTOS } from "../lib/specialty-photos";
 
 export const Route = createFileRoute("/specialized-training_/$slug")({
   staticData: { sitemap: true },

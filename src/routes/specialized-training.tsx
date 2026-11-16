@@ -4,7 +4,6 @@ import { ArrowRight } from "lucide-react";
 import { srcSetFor } from "@/lib/responsive-image";
 import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
 import { specialtyCourses, type SpecialtyCourse } from "../lib/site-data";
-import { SPECIALTY_PHOTOS } from "../lib/specialty-photos";
 
 const kodiak = specialtyCourses.find((c) => c.kind === "kodiak");
 const endorsements = specialtyCourses.filter((c) => c.kind === "endorsement");
