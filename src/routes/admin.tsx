@@ -147,7 +147,7 @@ function AdminPage() {
         </> : <>
           <div className="mt-4 flex items-center justify-between gap-4 text-sm"><span className="truncate text-muted-foreground">{user.email}</span><Button variant="ghost" size="sm" onClick={() => supabase.auth.signOut()}><LogOut /> Sign out</Button></div>
           {!isAdmin ? <div className="mt-8 border border-border bg-secondary p-5"><p className="text-sm leading-relaxed">If this is the first account connected to the site, claim administrator access below.</p><Button disabled={busy} className="mt-4 rounded-none" onClick={claimAdmin}>Claim administrator access</Button></div> : <Tabs value={tab} onValueChange={v => { setTab(v); history.replaceState(null, "", `#${v}`); }} className="mt-8">
-            <TabsList className="grid h-auto w-full grid-cols-3 rounded-none p-1">
+            <TabsList className="grid h-auto w-full grid-cols-2 rounded-none p-1 sm:grid-cols-4">
               <TabsTrigger value="edit" className="min-h-11 rounded-none">Edit site</TabsTrigger>
               <TabsTrigger value="catalog" className="min-h-11 rounded-none">Fleet & courses</TabsTrigger>
               <TabsTrigger value="prices" className="min-h-11 rounded-none">Prices</TabsTrigger>
