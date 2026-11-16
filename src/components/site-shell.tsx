@@ -10,6 +10,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { SCHOOL_PHONE, SCHOOL_PHONE_TEL } from "../lib/site-data";
 import { lazy, Suspense } from "react";
 import { useEditState } from "../lib/edit-store";
+import { SlotText } from "./slot-text";
 
 // Admin-only visual editor; never in the prerendered HTML or a visitor's bundle path.
 const SiteEditor = lazy(() => import("./site-editor"));
@@ -134,7 +135,10 @@ export function SiteLayout({ children, overlayHeader = false }: { children: Reac
 }
 
 /** Phones always get a short intro so page content starts on the first screen; `compact` is kept for callers and is now the default. */
-export function PageIntro({ eyebrow, title, text, image, imageAlt = "", compact = true }: { eyebrow: string; title: string; text: ReactNode; image?: string; imageAlt?: string; compact?: boolean }) {
+/** Page header. With `k`, plain-string eyebrow, title and text become editable spots `${k}.eyebrow|title|text`. */
+export function PageIntro({ k, eyebrow: eyebrowIn, title: titleIn, text: textIn, image, imageAlt = "", compact = true }: { k?: string; eyebrow: ReactNode; title: ReactNode; text: ReactNode; image?: string; imageAlt?: string; compact?: boolean }) {
+  const slot = (part: string, v: ReactNode) => k && typeof v === "string" ? <SlotText k={`${k}.${part}`} d={v} /> : v;
+  const eyebrow = slot("eyebrow", eyebrowIn), title = slot("title", titleIn), text = slot("text", textIn);
   return <section className={`relative isolate overflow-hidden edge-fade-b bg-ink pb-32 pt-36 text-background ${compact ? "max-sm:pb-10 max-sm:pt-28" : ""}`}>{image && <><img src={image} srcSet={srcSetFor(image)} sizes="100vw" alt={imageAlt} width={1920} height={1080} loading="eager" fetchPriority="high" decoding="async" className="hero-kenburns absolute inset-0 -z-20 h-full w-full object-cover" /><div className="absolute inset-0 -z-10 bg-gradient-to-r from-ink/90 via-ink/65 to-ink/25" /></>}<div className="site-container relative z-10" data-scroll-reveal><p className="stage-label">{eyebrow}</p><h1 className={`mt-4 max-w-4xl font-display text-5xl sm:text-7xl ${compact ? "max-sm:mt-3 max-sm:text-4xl" : ""}`}>{title}</h1><p className={`mt-6 max-w-2xl text-lg leading-relaxed text-background/80 ${compact ? "max-sm:mt-3 max-sm:text-base" : ""}`}>{text}</p></div></section>;
 }
 
