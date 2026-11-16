@@ -2,12 +2,12 @@
 // real site: text slots become click-to-type, slot photos click-to-replace. Nothing else is editable.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "@tanstack/react-router";
-import { Check, History, ImageUp, LayoutDashboard, Loader2, PencilLine, RotateCcw, X } from "lucide-react";
+import { Check, Eye, History, ImageUp, LayoutDashboard, Loader2, PencilLine, RotateCcw, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cleanContent, SLOT_BY_KEY } from "@/lib/content-slots";
-import { editStore, useEditState } from "@/lib/edit-store";
+import { editStore, isEditing, useEditState } from "@/lib/edit-store";
 import { uploadSlotPhoto } from "@/lib/media-upload";
 import { resetSiteContent } from "@/lib/use-site-content";
 import { resetLiveRates } from "@/lib/use-live-rates";
@@ -20,6 +20,13 @@ type Version = { id: string; content: Json; note: string | null; saved_at: strin
 type RateVersion = { id: string; config: Json; note: string | null; saved_at: string };
 type CatalogVersion = { id: string; catalog: Json; note: string | null; saved_at: string };
 const when = (iso: string) => new Date(iso).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+
+/** Editor UI keeps working in Edit mode: the bar, its popovers, side panels and catalog buttons. */
+const EDITOR_UI = '[role=toolbar][aria-label="Site editor"], [data-catalog-control], [role=dialog], [data-radix-popper-content-wrapper]';
+/** Same-page controls that only open, close or switch what is shown stay usable in Edit mode,
+ *  so words inside tabs, accordions, menus and journey stages can still be reached. */
+const EDIT_ALLOWED = "summary, [aria-expanded], [aria-pressed], [role=tab], [data-edit-allow]";
+const CLICKABLE = "a[href], button, [role=button], [role=link], input[type=submit], input[type=button]";
 
 const bar = "inline-flex min-h-10 items-center gap-1.5 px-3 text-xs font-bold uppercase tracking-[0.08em] transition-colors hover:bg-background/10 disabled:opacity-40";
 
@@ -59,23 +66,32 @@ export default function SiteEditor() {
     })();
   }, []);
 
-  // Outline hooks for CSS, photo click-to-replace and the hover chip, only while an admin edits.
+  const editing = isEditing(edit);
+  // Outline hooks for CSS, photo click-to-replace and the hover chip, only in Edit mode.
+  // Edit mode also switches off links and buttons so clicking a word never leaves the page;
+  // Preview mode removes all of this and the page behaves like the live site.
   useEffect(() => {
-    if (!admin) return;
+    if (!admin || !editing) return;
     const html = document.documentElement; html.classList.add("site-editing");
     const photoOf = (t: EventTarget | null) => (t instanceof Element ? t.closest<HTMLElement>("[data-slot-photo]") : null);
     const onClick = (e: MouseEvent) => {
-      if (e.target instanceof Element && e.target.closest("[data-catalog-control]")) return;
+      if (!(e.target instanceof Element) || e.target.closest(EDITOR_UI)) return;
       const calc = e.target instanceof Element ? e.target.closest("[data-slot-calc]") : null;
       if (calc) { e.preventDefault(); e.stopPropagation(); setMsg("Worked out from the rates: change an hourly rate to update it"); return; }
-      const el = photoOf(e.target); if (!el) return; e.preventDefault(); e.stopPropagation(); pendingPhoto.current = el.dataset["slotPhoto"]!; file.current?.click(); };
+      const el = photoOf(e.target);
+      if (el) { e.preventDefault(); e.stopPropagation(); pendingPhoto.current = el.dataset["slotPhoto"]!; file.current?.click(); return; }
+      const hit = e.target.closest(CLICKABLE);
+      if (!hit || hit.closest(EDIT_ALLOWED)) return;
+      e.preventDefault(); e.stopPropagation();
+      if (!e.target.closest("[data-slot-text]")) setMsg("Links and buttons are off while editing. Switch to Preview to click through.");
+    };
     const onOver = (e: MouseEvent) => { const el = photoOf(e.target); setHover(el ? { key: el.dataset["slotPhoto"]!, rect: el.getBoundingClientRect() } : null); };
     const clear = () => setHover(null);
     document.addEventListener("click", onClick, true);
     document.addEventListener("mouseover", onOver, { passive: true });
     window.addEventListener("scroll", clear, { passive: true });
-    return () => { html.classList.remove("site-editing"); document.removeEventListener("click", onClick, true); document.removeEventListener("mouseover", onOver); window.removeEventListener("scroll", clear); };
-  }, [admin]);
+    return () => { html.classList.remove("site-editing"); document.removeEventListener("click", onClick, true); document.removeEventListener("mouseover", onOver); window.removeEventListener("scroll", clear); setHover(null); };
+  }, [admin, editing]);
 
   const drafts = edit.drafts;
   const textKeys = Object.keys(drafts);
@@ -135,14 +151,19 @@ export default function SiteEditor() {
     {hover && <div className="pointer-events-none fixed z-[190] inline-flex items-center gap-1.5 bg-ink px-2.5 py-1.5 text-xs font-bold uppercase text-background shadow-lg" style={{ top: Math.max(8, hover.rect.top + 12), left: hover.rect.left + 12 }}>
       <ImageUp className="size-3.5" /> {drafts[hover.key] ? "New photo · click to change" : "Click to replace photo"}</div>}
     <div role="toolbar" aria-label="Site editor" className="fixed inset-x-2 bottom-3 z-[200] mx-auto flex max-w-fit flex-wrap items-center gap-px bg-ink text-background shadow-[0_18px_50px_-12px_oklch(0_0_0/0.6)] sm:bottom-5">
-      <span className="flex min-h-10 items-center gap-2 pl-4 pr-2 text-xs font-bold uppercase tracking-[0.12em]"><PencilLine className="size-4 text-primary-text" /> Editing</span>
+      <span role="group" aria-label="Editor mode" className="m-1 flex border border-background/25">
+        <button type="button" aria-pressed={editing} onClick={() => { editStore.setPreview(false); setMsg("Edit mode: click any outlined text, price or photo."); }} title="Click words, prices and photos to change them. Links and buttons are off."
+          className={`inline-flex min-h-9 items-center gap-1.5 px-3 text-xs font-bold uppercase tracking-[0.08em] transition-colors ${editing ? "bg-primary text-primary-foreground" : "hover:bg-background/10"}`}><PencilLine className="size-4" /> Edit</button>
+        <button type="button" aria-pressed={!editing} onClick={() => { editStore.setPreview(true); setMsg("Preview: click around like a visitor. Your unsaved changes are shown."); }} title="Use the site like a visitor, with your unsaved changes showing."
+          className={`inline-flex min-h-9 items-center gap-1.5 px-3 text-xs font-bold uppercase tracking-[0.08em] transition-colors ${!editing ? "bg-primary text-primary-foreground" : "hover:bg-background/10"}`}><Eye className="size-4" /> Preview</button>
+      </span>
       <select aria-label="Page" value={pageInList ? path : ""} onChange={e => router.history.push(e.target.value)} className="h-10 max-w-52 bg-transparent px-2 text-xs font-semibold outline-none [&>option]:text-foreground">
         {!pageInList && <option value="">This page</option>}
         {groupPages(pages).map(g => <optgroup key={g.name} label={g.name}>{g.pages.map(p => <option key={p.path} value={p.path}>{p.label}</option>)}</optgroup>)}
       </select>
       <span className="min-h-10 min-w-40 px-3 py-1 text-xs tabular-nums text-background/75 flex flex-col justify-center" aria-live="polite">
         {focus ? <><span className="max-w-64 truncate font-semibold text-background">{focus.label}</span>{focus.rate ? <span>Updates every page and course that uses it</span> : <span className={focusLen > focus.max ? "font-bold text-destructive" : ""}>{focusLen} / {focus.max} characters{focusLen > focus.max ? " · too long" : ""}</span>}</>
-          : msg || (keys.length ? `${keys.length} unsaved change${keys.length === 1 ? "" : "s"}` : "Click any outlined text, price or photo")}
+          : msg || (keys.length ? `${keys.length} unsaved change${keys.length === 1 ? "" : "s"}` : editing ? "Click any outlined text, price or photo" : "Preview: links and buttons work")}
       </span>
       <Popover>
         <PopoverTrigger className={bar} disabled={busy}><History className="size-4" /> History</PopoverTrigger>
