@@ -82,3 +82,16 @@ export function rateImpact(before: AppliedRates, after: AppliedRates) {
   }));
   return out;
 }
+
+const ESTIMATOR_OPTIONS: Record<string, string> = {
+  private: "Accelerated Private Pilot", instrument: "Accelerated Instrument Rating", "commercial-single": "Commercial Single-Engine Land",
+  "commercial-multi": "Commercial Multi-Engine Land", cfi: "Certified Flight Instructor", cfii: "Certified Flight Instructor–Instrument", mei: "Multi-Engine Flight Instructor",
+};
+/** Prices the training-plan estimator adds up, taken from the same applied rates as every page. */
+export function estimatorPrices(r: AppliedRates) {
+  const opts = r.programs.flatMap(p => p.options);
+  const cost: Record<string, number> = {};
+  for (const [id, name] of Object.entries(ESTIMATOR_OPTIONS)) cost[id] = num(opts.find(o => o.name === name)?.estimatedCost ?? "0");
+  const other = (label: string, fallback: number) => num(r.otherRates.find(x => x.label === label)?.rate ?? "") || fallback;
+  return { cost, housing: other("Student housing", 30), car: other("Student cars (housing residents)", 20), pickup: other("Airport pickup (MSP)", 125) };
+}

@@ -7,13 +7,15 @@ import { Car, Check, House, PlaneTakeoff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useServerFn } from "@tanstack/react-start";
 import { submitTrainingLead } from "../lib/leads.functions";
+import { useLiveRates } from "../lib/use-live-rates";
+import { estimatorPrices } from "../lib/rates-engine";
 import { CONTINGENCY_RATE, formatPhone, leadSchema, RATING_PREREQUISITES, withPrerequisites } from "../lib/lead-schema";
 import { SiteLayout } from "../components/site-shell";
 import { noteForProgram, plannedForProgram } from "../lib/plan-preselect";
 import { locations, SCHOOL_PHONE, SCHOOL_PHONE_TEL , fleet } from "../lib/site-data";
 
 type Rating = { id: string; name: string; days: number; cost: number; prerequisite?: string | undefined };
-const ratings: Rating[] = [
+const baseRatings: Rating[] = [
   { id: "private", name: "Private Pilot", days: 21, cost: 9600 },
   { id: "instrument", name: "Instrument Rating", days: 10, cost: 8300, prerequisite: RATING_PREREQUISITES["instrument"] },
   { id: "commercial-single", name: "Commercial Single-Engine", days: 5, cost: 4625, prerequisite: RATING_PREREQUISITES["commercial-single"] },
@@ -38,6 +40,9 @@ function ContactPage() {
   const { location, aircraft, program } = Route.useSearch();
   const plane = fleet.find((f) => aircraft && f.registration.toUpperCase() === aircraft.toUpperCase());
   const preferred = locations.find((l) => location && l.airport.toUpperCase().includes(location.toUpperCase()))?.city ?? "";
+  const live = useLiveRates();
+  const prices = useMemo(() => estimatorPrices(live), [live]);
+  const ratings = useMemo(() => baseRatings.map(r => ({ ...r, cost: prices.cost[r.id] ?? r.cost })), [prices]);
   const [earned, setEarned] = useState<string[]>([]);
   const [planned, setPlanned] = useState<string[]>(["cfi", "cfii"]);
   // Course links pass ?program=; applied after mount so the prerendered form stays identical.
@@ -78,12 +83,12 @@ function ContactPage() {
   const totals = useMemo(() => {
     const days = selected.reduce((sum, r) => sum + r.days, 0);
     const training = selected.reduce((sum, r) => sum + r.cost, 0);
-    const lodging = housing ? days * 30 : 0;
-    const transportation = car ? days * 20 : 0;
+    const lodging = housing ? days * prices.housing : 0;
+    const transportation = car ? days * prices.car : 0;
     const total = training + lodging + transportation;
     const contingency = Math.round(total * CONTINGENCY_RATE);
     return { days, training, lodging, transportation, total, contingency, buffered: total + contingency };
-  }, [selected, housing, car]);
+  }, [selected, housing, car, prices]);
 
   function toggle(list: string[], setList: (value: string[]) => void, id: string) {
     setList(list.includes(id) ? list.filter(value => value !== id) : [...list, id]);
@@ -144,9 +149,9 @@ function ContactPage() {
           </PlannerStep>
           <PlannerStep number="03" title="Travel support">
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
-              <ServiceChoice checked={housing} onChange={() => setHousing(!housing)} icon={<House />} title="Housing" detail="$30 / night" />
-              <ServiceChoice checked={car} onChange={() => setCar(!car)} icon={<Car />} title="Student car" detail="$20 / day" />
-              <ServiceChoice checked={pickup} onChange={() => setPickup(!pickup)} icon={<PlaneTakeoff />} title="Airport pickup" detail="MSP · $125" />
+              <ServiceChoice checked={housing} onChange={() => setHousing(!housing)} icon={<House />} title="Housing" detail={`$${prices.housing} / night`} />
+              <ServiceChoice checked={car} onChange={() => setCar(!car)} icon={<Car />} title="Student car" detail={`$${prices.car} / day`} />
+              <ServiceChoice checked={pickup} onChange={() => setPickup(!pickup)} icon={<PlaneTakeoff />} title="Airport pickup" detail={`MSP · $${prices.pickup}`} />
             </div>
           </PlannerStep>
         </div>
@@ -161,7 +166,7 @@ function ContactPage() {
             <Line label="Training" value={money(totals.training)} />
             {housing && <Line label={`Housing · ${totals.days} nights`} value={money(totals.lodging)} />}
             {car && <Line label={`Car · ${totals.days} days`} value={money(totals.transportation)} />}
-            {pickup && <Line label="Airport pickup (MSP)" value="$125" />}
+            {pickup && <Line label="Airport pickup (MSP)" value={`$${prices.pickup}`} />}
             <Line label="Overestimate buffer (20%)" value={money(totals.contingency)} />
             <div className="border-t border-background/20 pt-3"><Line label="Estimated total" value={money(totals.buffered)} /></div>
           </div>

@@ -40,3 +40,14 @@ test("impact preview lists only changed courses", () => {
   assert.deepEqual(list.map(x => x.option), ["Accelerated Instrument Rating"]);
   assert.equal(list[0]!.to, "As low as $8,550");
 });
+import { estimatorPrices } from "./rates-engine";
+test("estimator defaults match published course and service prices", () => {
+  const e = estimatorPrices(applyRates({}));
+  assert.deepEqual(e.cost, { private: 9600, instrument: 8300, "commercial-single": 4625, "commercial-multi": 5300, cfi: 5125, cfii: 3150, mei: 4475 });
+  assert.deepEqual([e.housing, e.car, e.pickup], [30, 20, 125]);
+});
+test("estimator follows a Cessna 172 rate change and a housing change", () => {
+  const e = estimatorPrices(applyRates({ rental: { "Cessna 172": { regular: 195, prepay: 185 } }, other: { "Student housing": "$35/night" } }));
+  assert.equal(e.cost.private, 10000);
+  assert.equal(e.housing, 35);
+});
