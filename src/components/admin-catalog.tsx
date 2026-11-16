@@ -49,7 +49,7 @@ export function AdminCatalog() {
   ];
 
   return <div className="grid gap-8">
-    <p className="text-sm text-muted-foreground">Hidden items leave the site but stay saved, so you can bring them back any time. You can also do all of this on the pages themselves in the visual editor.</p>
+    <p className="text-sm text-muted-foreground">Tip: you can also add and hide these right on the Fleet, Programs and Specialized training pages in the visual editor.</p>
     {msg && <p className="border border-border bg-secondary px-3 py-2 text-sm" role="status">{msg}</p>}
     {lists.map(l => <section key={l.kind} className="grid gap-3">
       <div className="flex items-center justify-between gap-3"><h3 className="font-display text-2xl">{l.title}</h3>

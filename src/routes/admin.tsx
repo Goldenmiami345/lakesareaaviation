@@ -166,7 +166,7 @@ function AdminPage() {
         <a href="/" className="flex items-center gap-2 text-sm font-semibold"><Palette className="size-5 text-primary-text" /> <span className="hidden sm:inline">Lakes Area Aviation</span><span className="text-background/50">Admin</span></a>
         <div className="ml-auto flex items-center gap-1">
           <a href="/" target="_blank" rel="noreferrer" className="hidden min-h-10 items-center gap-1.5 px-3 text-xs font-bold uppercase tracking-[0.12em] text-background/80 hover:text-background sm:inline-flex">View site <ArrowUpRight className="size-3.5" /></a>
-          <Button className="h-10 rounded-none" onClick={() => openEditor("/")}><PencilLine className="size-4" /> <span className="hidden xs:inline sm:inline">Visual editor</span></Button>
+          <Button className="h-10 rounded-none" onClick={() => openEditor("/")}><PencilLine className="size-4" /> <span className="hidden sm:inline">Visual editor</span></Button>
           <Button variant="ghost" className="h-10 rounded-none text-background/80 hover:bg-background/10 hover:text-background" title={`Signed in as ${user.email ?? ""}`} onClick={() => supabase.auth.signOut()}><LogOut className="size-4" /><span className="sr-only sm:not-sr-only">Sign out</span></Button>
         </div>
       </div>
