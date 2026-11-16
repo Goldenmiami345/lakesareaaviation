@@ -48,6 +48,7 @@ export function PlaneForm({ rates, taken, onSubmit, onCancel }: { rates: RatesCo
     !REG.test(reg) && "Tail number must look like N12345.",
     (taken.includes(reg) || baseFleet.some(p => p.registration === reg)) && "That tail number is already in the fleet.",
     !f.name.trim() && "Add the airplane name, for example 1975 Cessna 172M.",
+    !f.photo && "Upload a photo of the airplane.",
     price === "new" && (!lineName || !(Number(nr.regular) > 0) || !(Number(nr.prepay) > 0)) && "Give the new rate line a name and both prices.",
     price === "new" && applied.rentalRates.some(r => r.aircraft === lineName) && "A rate line with that name already exists. Share it instead.",
   ].filter(Boolean) as string[];
