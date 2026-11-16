@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useSiteContent } from "../lib/use-site-content";
 import { ArrowRight } from "lucide-react";
 import { srcSetFor } from "@/lib/responsive-image";
 import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
@@ -16,7 +17,8 @@ export const Route = createFileRoute("/specialized-training")({
 });
 
 function Page() {
-  const kPhoto = kodiak ? SPECIALTY_PHOTOS[kodiak.slug] : undefined;
+  const site = useSiteContent();
+  const kPhoto = kodiak ? site.photo(kodiak.slug) : undefined;
   return (
     <SiteLayout>
       <PageIntro eyebrow="Specialized training" title="Endorsements and courses beyond the ratings." text="Along with our commitment to providing you the best training to fit your needs and schedule, we also offer specialized training in a variety of endorsements and ratings." />
@@ -46,13 +48,14 @@ function Page() {
 }
 
 function CourseCard({ c }: { c: SpecialtyCourse }) {
-  const photo = SPECIALTY_PHOTOS[c.slug];
+  const site = useSiteContent();
+  const photo = site.photo(c.slug);
   return <Link to="/specialized-training/$slug" params={{ slug: c.slug }} className="interactive-arrow group flex min-h-full flex-col overflow-hidden border border-border bg-background transition-colors hover:border-foreground">
     <div className="relative aspect-[4/3] overflow-hidden bg-secondary">{photo && <img src={photo.src} srcSet={srcSetFor(photo.src)} sizes="(min-width: 1024px) 20vw, 50vw" alt={photo.alt} width={800} height={600} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.05]" />}</div>
     <div className="flex flex-1 flex-col p-4 sm:p-5">
       {c.location && <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{c.location}</p>}
       <h3 className="mt-1 font-display text-lg leading-tight sm:text-xl">{c.name}</h3>
-      <p className="mt-2 text-xs leading-relaxed text-muted-foreground max-sm:line-clamp-2 sm:text-sm">{c.summary}</p>
+      <p className="mt-2 text-xs leading-relaxed text-muted-foreground max-sm:line-clamp-2 sm:text-sm">{site.get(`course.${c.slug}.summary`)}</p>
       <span className="mt-auto inline-flex items-center gap-1.5 pt-4 text-[11px] font-bold uppercase">Details <ArrowRight className="size-3.5" /></span>
     </div>
   </Link>;
