@@ -51,3 +51,19 @@ test("estimator follows a Cessna 172 rate change and a housing change", () => {
   assert.equal(e.cost["private"], 10000);
   assert.equal(e.housing, 35);
 });
+
+test("Commercial Single-Engine can only be priced with single-engine airplanes, never the twin Apache", async () => {
+  const { aircraftChoicesFor } = await import("./rates-engine");
+  const o = (await import("./site-data")).programs.flatMap(p => p.options).find(x => x.name === "Commercial Single-Engine Land")!;
+  const choices = aircraftChoicesFor(o.lineItems);
+  assert.ok(choices.includes("Cessna 172"));
+  assert.ok(!choices.includes("Piper Apache PA-23-160"));
+  const r = applyRates({ assign: { "Commercial Single-Engine Land": "Piper Apache PA-23-160" } });
+  assert.equal(r.config.assign!["Commercial Single-Engine Land"], undefined);
+  assert.equal(r.programs.flatMap(p => p.options).find(x => x.name === "Commercial Single-Engine Land")!.estimatedCost, o.estimatedCost);
+});
+
+test("multi-engine courses stay on the Apache: a single-engine airplane is refused", () => {
+  const r = applyRates({ assign: { "Multi-Engine Flight Instructor": "Cessna 172" } });
+  assert.equal(r.config.assign!["Multi-Engine Flight Instructor"], undefined);
+});
