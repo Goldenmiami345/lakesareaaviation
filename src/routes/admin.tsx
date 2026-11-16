@@ -10,6 +10,7 @@ import { AdminCatalog } from "@/components/admin-catalog";
 import { EDIT_PAGES, groupPages } from "@/lib/edit-pages";
 import { editStore } from "@/lib/edit-store";
 import { MAP_MODEL_AIRCRAFT } from "@/lib/map-models";
+import logoAsset from "@/assets/lakes-logo-transparent.png.asset.json";
 import { applyAccentTheme, type AccentTheme } from "@/components/theme-sync";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
@@ -138,8 +139,8 @@ function AdminPage() {
     <div className="mx-auto max-w-md">
       <a href="/" className="text-xs font-bold uppercase text-background/70">← Back to site</a>
       <div className="mt-10 border border-background/20 bg-background p-6 text-foreground sm:p-10">
-        <Palette className="size-8 text-primary-text" />
-        <h1 className="mt-5 font-display text-4xl">Site admin</h1>
+        <img src={logoAsset.url} alt="Lakes Area Aviation" className="mx-auto h-16 w-auto max-w-[240px] object-contain sm:h-20" />
+        <h1 className="mt-6 text-center font-display text-4xl">Site admin</h1>
         {!user ? <>
           <p className="mt-3 text-sm text-muted-foreground">Sign in to edit pages, prices, the fleet and courses.</p>
           <form onSubmit={emailAuth} className="mt-8 grid gap-4">
