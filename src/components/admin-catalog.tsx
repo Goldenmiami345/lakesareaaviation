@@ -12,6 +12,7 @@ import { resetLiveRates } from "@/lib/use-live-rates";
 import { programs as basePrograms, SPECIALTY_KIND_LABEL } from "@/lib/site-data";
 import { addCourse, addPlane, addProgram, CourseForm, CoursePricingForm, PlaneEditForm, PlaneForm, ProgramForm, PublishedProgramForm } from "./catalog-forms";
 import { SitePreview } from "./site-preview";
+import { ROW, ROW_ACTIONS, ROW_BTN } from "./admin-ui";
 import { coursePages, planePages, programPages, type PreviewPage, type PreviewState } from "@/lib/site-preview";
 
 type Version = { id: string; catalog: Json; note: string | null; saved_at: string };
@@ -108,8 +109,8 @@ export function AdminCatalog() {
     <p className="text-sm text-muted-foreground">Tip: you can also add, hide and edit these right on the Fleet, Programs and Specialized training pages in the visual editor.</p>
     {msg && <p role="status" className={`fixed inset-x-4 bottom-4 z-50 mx-auto w-fit max-w-[calc(100%-2rem)] border px-4 py-3 text-sm shadow-xl ${msg.error ? "border-destructive bg-background text-destructive" : "border-border bg-ink text-background"}`}>{msg.text}</p>}
     {lists.map(l => <section key={l.kind} className="grid grid-cols-[minmax(0,1fr)] gap-3">
-      <div className="flex items-center justify-between gap-3"><h3 className="font-display text-2xl">{l.title}</h3>
-        <Button size="sm" variant={adding === l.kind ? "secondary" : "default"} onClick={() => setAdding(a => (a === l.kind ? null : l.kind))}><Plus className="size-4" /> Add {l.noun}</Button></div>
+      <div className="flex items-center justify-between gap-3"><h3 className="min-w-0 font-display text-xl sm:text-2xl">{l.title}</h3>
+        <Button size="sm" className="h-11 shrink-0 text-sm sm:h-8 sm:text-xs" variant={adding === l.kind ? "secondary" : "default"} onClick={() => setAdding(a => (a === l.kind ? null : l.kind))}><Plus className="size-4" /> Add {l.noun}</Button></div>
       {adding === l.kind && <div className="border border-primary p-3 sm:p-4">
         {l.kind === "fleet" && <PlaneForm rates={rates} taken={cat.fleet.map(f => f.registration)} onCancel={() => setAdding(null)}
           onDraft={r => setDraft(r ? { state: { catalog: addPlane(cat, r), ...(r.newRow ? { rates: withRateDrafts(rates, { [rateKey.newRow(r.newRow.aircraft)]: JSON.stringify(r.newRow) }) } : {}) }, pages: planePages(r.plane.registration, r.plane.registration) } : null)} onSubmit={r => void save({ catalog: addPlane(cat, r), rates: r.newRow ? withRateDrafts(rates, { [rateKey.newRow(r.newRow.aircraft)]: JSON.stringify(r.newRow) }) : undefined }, `Added ${r.plane.registration}`)} />}
@@ -119,23 +120,23 @@ export function AdminCatalog() {
           onDraft={c => setDraft(c ? { state: { catalog: addCourse(cat, c) }, pages: coursePages(c.slug, c.name) } : null)} onSubmit={c => void save({ catalog: addCourse(cat, c) }, `Added ${c.name}`)} />}
         {preview(l.kind)}
       </div>}
-      <ul className="divide-y divide-border border border-border">{l.items.map(it => { const key = `${l.kind}:${it.id}`; return <li key={it.id} className={it.hidden ? "bg-secondary/60 text-muted-foreground" : ""}><div className="flex min-h-14 items-center justify-between gap-3 px-3 py-2">
+      <ul className="divide-y divide-border border border-border">{l.items.map(it => { const key = `${l.kind}:${it.id}`; return <li key={it.id} className={it.hidden ? "bg-secondary/60 text-muted-foreground" : ""}><div className={`${ROW} min-h-14 px-3 py-3 sm:py-2`}>
         <span className="min-w-0"><span className="block font-semibold">{it.label}{it.added && <span className="ml-2 text-[10px] font-bold uppercase tracking-widest text-primary-text">Added</span>}{it.hidden && <span className="ml-2 text-[10px] font-bold uppercase tracking-widest">Hidden</span>}</span><span className="block text-xs text-muted-foreground">{it.sub}</span></span>
-        <span className="flex shrink-0 flex-wrap justify-end gap-2">
-          <Button size="sm" variant={editing === key ? "secondary" : "outline"} aria-expanded={editing === key} onClick={() => setEditing(e => (e === key ? null : key))}><PencilLine className="size-4" /> {l.kind === "courses" ? "Price" : "Edit"}</Button>
-          <Button size="sm" variant="outline" className="min-w-[7.5rem]" aria-busy={busy || undefined} onClick={() => void save({ catalog: setHidden(cat, l.kind, it.id, !it.hidden) }, `${it.hidden ? "Brought back" : "Hid"} ${it.label}`)}>{it.hidden ? <><Eye className="size-4" /> Bring back</> : <><EyeOff className="size-4" /> Hide</>}</Button>
+        <span className={ROW_ACTIONS}>
+          <Button size="sm" className={ROW_BTN} variant={editing === key ? "secondary" : "outline"} aria-expanded={editing === key} onClick={() => setEditing(e => (e === key ? null : key))}><PencilLine className="size-4" /> {l.kind === "courses" ? "Price" : "Edit"}</Button>
+          <Button size="sm" variant="outline" className={`${ROW_BTN} sm:min-w-[7.5rem]`} aria-busy={busy || undefined} onClick={() => void save({ catalog: setHidden(cat, l.kind, it.id, !it.hidden) }, `${it.hidden ? "Brought back" : "Hid"} ${it.label}`)}>{it.hidden ? <><Eye className="size-4" /> Bring back</> : <><EyeOff className="size-4" /> Hide</>}</Button>
         </span></div>
         {editing === key && <div className="border-t border-primary p-3 text-foreground sm:p-4">{editor(l.kind, it.id, it.label)}</div>}
       </li>; })}</ul>
     </section>)}
     <section className="grid grid-cols-[minmax(0,1fr)] gap-2">
-      <h3 className="flex items-center gap-2 font-display text-2xl"><History className="size-5" /> History</h3>
+      <h3 className="flex items-center gap-2 font-display text-xl sm:text-2xl"><History className="size-5" /> History</h3>
       <p className="text-sm text-muted-foreground">Preview any earlier version on the site before restoring it. Restoring keeps the current version here too.</p>
       <ul className="grid gap-2">{versions.map(v => <li key={v.id} className="grid gap-3 border border-border p-3 text-sm">
-        <div className="flex items-center justify-between gap-3"><span className="min-w-0"><span className="block">{v.label}</span>{v.note && <span className="block text-muted-foreground">{v.note}</span>}</span>
-          <span className="flex shrink-0 flex-wrap justify-end gap-2">
-            <Button size="sm" variant={peek === v.id ? "secondary" : "outline"} aria-expanded={peek === v.id} onClick={() => setPeek(p => (p === v.id ? null : v.id))}><Eye className="size-4" /> Preview</Button>
-            <Button size="sm" variant="outline" onClick={() => void save({ catalog: v.catalog }, v.id === "original" ? "Restored the original fleet and courses" : `Restored version from ${v.label}`)}><RotateCcw className="size-4" /> Restore</Button>
+        <div className={ROW}><span className="min-w-0"><span className="block">{v.label}</span>{v.note && <span className="block text-muted-foreground">{v.note}</span>}</span>
+          <span className={ROW_ACTIONS}>
+            <Button size="sm" className={ROW_BTN} variant={peek === v.id ? "secondary" : "outline"} aria-expanded={peek === v.id} onClick={() => setPeek(p => (p === v.id ? null : v.id))}><Eye className="size-4" /> Preview</Button>
+            <Button size="sm" className={ROW_BTN} variant="outline" onClick={() => void save({ catalog: v.catalog }, v.id === "original" ? "Restored the original fleet and courses" : `Restored version from ${v.label}`)}><RotateCcw className="size-4" /> Restore</Button>
           </span></div>
         {peek === v.id && <SitePreview startOpen pages={ALL_PAGES} state={{ catalog: v.catalog }} title={`Earlier version · ${v.label} · not live`} onClose={() => setPeek(null)} />}
       </li>)}</ul>

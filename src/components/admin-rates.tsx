@@ -7,6 +7,7 @@ import { instructionRates, otherRates, programs } from "@/lib/site-data";
 import { resetLiveRates } from "@/lib/use-live-rates";
 import type { Json } from "@/integrations/supabase/types";
 import { SitePreview } from "./site-preview";
+import { ROW, ROW_ACTIONS, ROW_BTN, STICKY_SAVE } from "./admin-ui";
 import { ratePages } from "@/lib/site-preview";
 
 type Version = { id: string; config: Json; note: string | null; saved_at: string };
@@ -92,10 +93,10 @@ export function AdminRates() {
     <p className="mt-1 text-sm text-muted-foreground">Restoring a version also keeps the current one here, so you can always switch back.</p>
     <ul className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2">
       {[{ id: "original", label: "Original published rates", note: null as string | null, config: {} as RatesConfig }, ...history.map(v => ({ id: v.id, label: when(v.saved_at), note: v.note, config: cleanConfig(v.config) }))].map(v => <li key={v.id} className="grid gap-3 border border-border p-3 text-sm">
-        <div className="flex items-center justify-between gap-3"><span className="min-w-0"><span className="block">{v.label}</span>{v.note && <span className="block text-muted-foreground">{v.note}</span>}</span>
-          <span className="flex shrink-0 flex-wrap justify-end gap-2">
-            <Button size="sm" variant={peek === v.id ? "secondary" : "outline"} className="rounded-none" aria-expanded={peek === v.id} onClick={() => setPeek(p => (p === v.id ? null : v.id))}><Eye /> Preview</Button>
-            <Button size="sm" variant="outline" disabled={busy} className="rounded-none" onClick={() => write(v.config, v.id === "original" ? "Restored original published rates" : `Restored version from ${v.label}`, "That version is restored and live.")}><RotateCcw /> Restore</Button>
+        <div className={ROW}><span className="min-w-0"><span className="block">{v.label}</span>{v.note && <span className="block text-muted-foreground">{v.note}</span>}</span>
+          <span className={ROW_ACTIONS}>
+            <Button size="sm" variant={peek === v.id ? "secondary" : "outline"} className={`${ROW_BTN} rounded-none`} aria-expanded={peek === v.id} onClick={() => setPeek(p => (p === v.id ? null : v.id))}><Eye /> Preview</Button>
+            <Button size="sm" variant="outline" disabled={busy} className={`${ROW_BTN} rounded-none`} onClick={() => write(v.config, v.id === "original" ? "Restored original published rates" : `Restored version from ${v.label}`, "That version is restored and live.")}><RotateCcw /> Restore</Button>
           </span></div>
         {peek === v.id && <SitePreview startOpen pages={ratePages(programs)} state={{ rates: v.config }} title={`Earlier prices · ${v.label} · not live`} onClose={() => setPeek(null)} />}
       </li>)}
