@@ -67,14 +67,14 @@ export function PlaneText({ f, field }: { f: Plane; field: PlaneField }) {
 }
 
 /** "Edit details & photos" for one airplane: specs, photos, type and price line in one panel. */
-export function PlaneEditButton({ f, className = "" }: { f: Plane; className?: string }) {
+export function PlaneEditButton({ f, className = "", short = false }: { f: Plane; className?: string; short?: boolean }) {
   const edit = useEditState();
   const [open, setOpen] = useState(false);
   if (!edit.on) return null;
   return <>
     <button type="button" data-catalog-control onClick={e => { e.preventDefault(); e.stopPropagation(); setOpen(true); }}
       className={`catalog-control relative z-20 inline-flex min-h-9 items-center gap-1.5 bg-primary px-3 text-[11px] font-bold uppercase tracking-[0.1em] text-primary-foreground shadow-lg hover:bg-ink hover:text-background ${className}`}>
-      <PencilLine className="size-3.5" /> Edit details & photos
+      <PencilLine className="size-3.5" /> {short ? <span aria-label="Edit details & photos">Edit</span> : "Edit details & photos"}
     </button>
     {/* The panel renders in a portal, but React still bubbles its clicks to the card underneath
         (a phone tile is one big button), so they stop here. */}
@@ -97,6 +97,6 @@ export function PlaneControls({ f, compact = false, className = "" }: { f: Plane
   const small = compact ? "!min-h-8 !px-2 !text-[9px]" : "";
   return <div data-catalog-control className={`absolute z-20 flex flex-col items-start gap-1 ${className}`}>
     <HideToggle kind="fleet" id={f.registration} hidden={!!f.hidden} className={small} />
-    <PlaneEditButton f={f} className={small} />
+    <PlaneEditButton f={f} className={small} short={compact} />
   </div>;
 }

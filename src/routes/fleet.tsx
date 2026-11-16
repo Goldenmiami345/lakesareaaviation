@@ -210,10 +210,11 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
 function PlaneTile({ f, open, onToggle }: { f: Plane; open: boolean; onToggle: () => void }) {
   const id = planeSlug(f);
   return (
-    <article id={`${id}-tile`} data-plane={id} {...hiddenAttr(!!f.hidden)} className={`min-w-0 scroll-mt-20 border bg-background transition-colors ${open ? "border-foreground" : "border-border"}`}>
+    <article id={`${id}-tile`} data-plane={id} {...hiddenAttr(!!f.hidden)} className={`relative min-w-0 scroll-mt-20 border bg-background transition-colors ${open ? "border-foreground" : "border-border"}`}>
+      {/* Editor buttons sit beside the tile's button, never inside it (nested buttons swallow taps). */}
+      <PlaneControls f={f} compact className="left-1 top-1" />
       <button type="button" onClick={onToggle} aria-expanded={open} aria-controls={`${id}-quick`} className="block w-full text-left">
         <span className="relative block aspect-[2/1] overflow-hidden bg-secondary/60">
-          <PlaneControls f={f} compact className="left-1 top-1" />
           <img src={f.image} srcSet={srcSetFor(f.image)} sizes="50vw" alt="" width={600} height={400} loading="lazy" decoding="async" className="fleet-cutout h-full w-full object-contain p-2" />
         </span>
         <span className="block px-2.5 pb-2 pt-1.5">
