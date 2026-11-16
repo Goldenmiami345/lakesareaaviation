@@ -171,8 +171,8 @@ function AdminPage() {
         </div>
       </div>
       {/* Phones and tablets: the sections as a row of tabs. */}
-      <nav aria-label="Admin sections" className="flex overflow-x-auto border-t border-background/15 md:hidden">
-        {SECTIONS.map(x => <button key={x.id} type="button" onClick={() => go(x.id)} aria-current={tab === x.id ? "page" : undefined} className={`flex min-h-12 shrink-0 items-center gap-2 border-b-2 px-4 text-sm font-semibold ${tab === x.id ? "border-primary text-background" : "border-transparent text-background/65"}`}><x.icon className="size-4" /> {x.short}</button>)}
+      <nav aria-label="Admin sections" className="grid grid-cols-4 border-t border-background/15 md:hidden">
+        {SECTIONS.map(x => <button key={x.id} type="button" onClick={() => go(x.id)} aria-current={tab === x.id ? "page" : undefined} className={`flex min-h-14 flex-col items-center justify-center gap-1 border-b-2 px-1 text-[11px] font-semibold leading-tight ${tab === x.id ? "border-primary text-background" : "border-transparent text-background/65"}`}><x.icon className="size-4" /> {x.short}</button>)}
       </nav>
     </header>
     <div className="mx-auto flex max-w-[1400px]">
@@ -241,7 +241,7 @@ function AdminPage() {
 type SectionId = "edit" | "catalog" | "prices" | "settings";
 const SECTIONS: { id: SectionId; icon: LucideIcon; label: string; short: string; hint: string; intro: string }[] = [
   { id: "edit", icon: PencilLine, label: "Pages & photos", short: "Pages", hint: "Change words and photos on any page", intro: "Open a page in the visual editor, then click any outlined text, price or photo to change it. Nothing goes live until you press Publish." },
-  { id: "catalog", icon: Plane, label: "Fleet & courses", short: "Fleet & courses", hint: "Add or hide airplanes, programs and courses", intro: "Add a new airplane, training program or specialty course, or hide one. Hidden items stay saved so you can bring them back." },
+  { id: "catalog", icon: Plane, label: "Fleet & courses", short: "Fleet", hint: "Add or hide airplanes, programs and courses", intro: "Add a new airplane, training program or specialty course, or hide one. Hidden items stay saved so you can bring them back." },
   { id: "prices", icon: CircleDollarSign, label: "Prices", short: "Prices", hint: "Rental, instruction and fees", intro: "Change a rate once and every course and page that uses it updates. You see what changes before you save." },
   { id: "settings", icon: SlidersHorizontal, label: "Appearance", short: "Appearance", hint: "Color, home page style, 3D airplanes", intro: "These switches change the whole site for every visitor as soon as you click them." },
 ];

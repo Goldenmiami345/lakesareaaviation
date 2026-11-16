@@ -9,7 +9,7 @@ import type { Json } from "@/integrations/supabase/types";
 
 type Version = { id: string; config: Json; note: string | null; saved_at: string };
 const num = (s: string) => Number(s.replace(/[^0-9.]/g, "")) || 0;
-const field = "h-10 w-24 border border-input bg-background px-2 text-right tabular-nums outline-none focus:border-primary";
+const field = "h-10 w-20 sm:w-24 border border-input bg-background px-2 text-right tabular-nums outline-none focus:border-primary";
 const when = (iso: string) => new Date(iso).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
 
 /** Rates editor: inputs, live impact preview, Save with note, version history with one-click restore. */
@@ -51,7 +51,7 @@ export function AdminRates() {
     <p className="text-sm text-muted-foreground">Nothing goes live until you press Save, and every save can be undone below.</p>
 
     <h3 className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Aircraft rental, per hour (regular / prepay)</h3>
-    <div className="mt-2 grid grid-cols-[minmax(0,1fr)] gap-2">{rentalRates.map(r => { const v = rentalOf(r.aircraft); return <label key={r.aircraft} className="flex items-center justify-between gap-2 text-sm"><span className="min-w-0 flex-1 truncate">{r.aircraft}</span>
+    <div className="mt-2 grid grid-cols-[minmax(0,1fr)] gap-2">{rentalRates.map(r => { const v = rentalOf(r.aircraft); return <label key={r.aircraft} className="flex items-center justify-between gap-2 text-sm"><span className="min-w-0 flex-1 break-words">{r.aircraft}</span>
       <input type="number" min={0} max={5000} className={field} value={v.regular} onChange={e => setRental(r.aircraft, "regular", Number(e.target.value))} aria-label={`${r.aircraft} regular`} />
       <input type="number" min={0} max={5000} className={field} value={v.prepay} onChange={e => setRental(r.aircraft, "prepay", Number(e.target.value))} aria-label={`${r.aircraft} prepay`} /></label>; })}</div>
     <p className="mt-1 text-xs text-muted-foreground">Course estimates use the prepay rate.</p>
