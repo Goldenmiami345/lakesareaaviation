@@ -68,7 +68,7 @@ function Page() {
           <p className="mt-4 text-sm text-foreground/75">{RATE_NOTES.examiner} Estimates are for planning, not fixed prices.</p>
         </section>
 
-        <div className="mt-14 grid gap-6 bg-secondary p-6 sm:p-10 md:grid-cols-[1fr_auto] md:items-end">
+        <div data-print-hide className="mt-14 grid gap-6 bg-secondary p-6 sm:p-10 md:grid-cols-[1fr_auto] md:items-end">
           <div>
             <h2 className="font-display text-3xl sm:text-4xl">Get a plan, not a vague total.</h2>
             <p className="mt-3 max-w-2xl text-foreground/80">Aircraft time varies with the rating, your experience and proficiency. Share your logbook totals and goals for a useful estimate.</p>
