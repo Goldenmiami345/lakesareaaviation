@@ -12,7 +12,7 @@ import { ratePages } from "@/lib/site-preview";
 
 type Version = { id: string; config: Json; note: string | null; saved_at: string };
 const num = (s: string) => Number(s.replace(/[^0-9.]/g, "")) || 0;
-const field = "h-11 w-24 border border-input bg-background px-2 text-right tabular-nums outline-none focus:border-primary sm:h-10";
+const field = "h-11 border border-input bg-background px-2 text-right tabular-nums outline-none focus:border-primary sm:h-10";
 const when = (iso: string) => new Date(iso).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
 
 /** Rates editor: inputs, live impact preview, Save with note, version history with one-click restore. */
@@ -66,7 +66,7 @@ export function AdminRates() {
 
     <h3 className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Instruction, per hour</h3>
     <div className="mt-2 grid grid-cols-[minmax(0,1fr)] gap-2">{instructionRates.map(r => <label key={r.label} className="flex items-center justify-between gap-2 text-sm"><span className="min-w-0 flex-1">{r.label}</span>
-      <input type="number" inputMode="decimal" min={0} max={5000} className={field} value={num(next.instructionRates.find(x => x.label === r.label)!.rate)} onChange={e => setDraft(d => ({ ...d, instruction: { ...d.instruction, [r.label]: Number(e.target.value) } }))} /></label>)}</div>
+      <input type="number" inputMode="decimal" min={0} max={5000} className={`${field} w-24`} value={num(next.instructionRates.find(x => x.label === r.label)!.rate)} onChange={e => setDraft(d => ({ ...d, instruction: { ...d.instruction, [r.label]: Number(e.target.value) } }))} /></label>)}</div>
 
     <h3 className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Flights, housing & travel</h3>
     <div className="mt-2 grid grid-cols-[minmax(0,1fr)] gap-2">{otherRates.map(r => <label key={r.label} className="flex items-center justify-between gap-2 text-sm"><span className="min-w-0 flex-1">{r.label}</span>
