@@ -123,3 +123,4 @@
 - [x] Edit training programs: hours per line, airplane, fee (published and added programs).
 - [x] Specialty courses get optional pricing: fee, rental hours (default C172), flight and ground instruction; price shows on the course page.
 - [x] Hide / Bring back feels glitchy: fix the jump.
+- [ ] Make the admin (all four sections, forms, history, visual editor bar) comfortable on phones.
