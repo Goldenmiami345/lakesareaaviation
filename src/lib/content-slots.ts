@@ -22,7 +22,8 @@ export const SLOTS: Slot[] = [
   ]),
   ...fleet.map(f => text(`fleet.${f.registration}.note`, "Fleet", `${f.registration}${f.nickname ? ` “${f.nickname}”` : ""}: note`, f.note, true)),
 ];
-const BY_KEY = new Map(SLOTS.map(s => [s.key, s]));
+export const SLOT_BY_KEY = new Map(SLOTS.map(s => [s.key, s]));
+const BY_KEY = SLOT_BY_KEY;
 
 /** Keep only valid values for known slots; anything else falls back to the original. */
 export function cleanContent(raw: unknown): Record<string, string> {
