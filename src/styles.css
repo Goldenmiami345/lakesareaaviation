@@ -435,3 +435,7 @@ html.page-returning .page-enter { animation: page-in-fade .35s ease-out both; }
 .slot-edit:focus { outline: 2px solid var(--primary); }
 html.site-editing [data-slot-photo] { cursor: pointer; outline: 2px dashed var(--primary); outline-offset: -8px; }
 html.site-editing [data-slot-photo]:hover { outline-style: solid; }
+
+/* Visual editor: prices typed in place and figures worked out from them (admins only). */
+.slot-edit.slot-rate { outline-style: dashed; outline-color: color-mix(in oklab, var(--primary) 90%, transparent); }
+html.site-editing .slot-calc { text-decoration: underline dotted color-mix(in oklab, var(--primary) 80%, transparent); text-underline-offset: 4px; cursor: help; }

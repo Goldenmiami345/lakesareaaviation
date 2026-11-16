@@ -95,3 +95,66 @@ export function estimatorPrices(r: AppliedRates) {
   const other = (label: string, fallback: number) => num(r.otherRates.find(x => x.label === label)?.rate ?? "") || fallback;
   return { cost, housing: other("Student housing", 30), car: other("Student cars (housing residents)", 20), pickup: other("Airport pickup (MSP)", 125) };
 }
+
+// ---- Visual editor: every price on the site is one of these rate spots, so a change typed
+// anywhere (rates table, fleet card, course page) updates every page and course that uses it.
+export const rateKey = {
+  rental: (aircraft: string, field: "regular" | "prepay") => `rate|rental|${aircraft}|${field}`,
+  instruction: (label: string) => `rate|instruction|${label}`,
+  other: (label: string) => `rate|other|${label}`,
+  assign: (option: string) => `rate|assign|${option}`,
+};
+export const isRateKey = (k: string) => k.startsWith("rate|");
+/** Which rental-rate row prices each airplane in the fleet. */
+export const FLEET_RATE_ROW: Record<string, string> = {
+  N8570B: "Cessna 172", N6717A: "Cessna 172", N46201: "Cessna 172I / 172K", N7108G: "Cessna 172I / 172K",
+  N4383P: "Piper Apache PA-23-160", N6641F: "Cessna 150", N96150: "Taylorcraft BC-12D",
+};
+/** "$185/hr"-style fleet rates from the live rental table (undefined when the airplane has no published rate). */
+export function fleetRate(r: AppliedRates, registration: string) {
+  const row = r.rentalRates.find(x => x.aircraft === FLEET_RATE_ROW[registration]);
+  return row ? { row: row.aircraft, rate: `${row.regular}/hr`, prepay: `${row.prepay}/hr` } : undefined;
+}
+/** Parsed "N hours X at $R/hr: $T" lines are worked out from the rates, not typed. */
+export const isCalculatedLine = (line: string) => LINE.test(line);
+
+const parts = (k: string) => { const [p, kind, name, field] = k.split("|"); return p === "rate" ? { kind, name: name ?? "", field } : null; };
+/** The price a rate spot shows right now ("$185", "$30/night", or the assigned aircraft). */
+export function rateValue(r: AppliedRates, key: string): string {
+  const k = parts(key); if (!k) return "";
+  if (k.kind === "rental") { const row = r.rentalRates.find(x => x.aircraft === k.name); return row ? (k.field === "prepay" ? row.prepay : row.regular) : ""; }
+  if (k.kind === "instruction") return r.instructionRates.find(x => x.label === k.name)?.rate ?? "";
+  if (k.kind === "other") return r.otherRates.find(x => x.label === k.name)?.rate ?? "";
+  if (k.kind === "assign") { const o = programs.flatMap(p => p.options).find(x => x.name === k.name); return r.config.assign?.[k.name] ?? (o ? defaultAircraftFor(o.lineItems) ?? "" : ""); }
+  return "";
+}
+export function rateLabel(key: string) {
+  const k = parts(key); if (!k) return "Rate";
+  if (k.kind === "rental") return `${k.name}: ${k.field === "prepay" ? "prepay" : "regular"} rate per hour`;
+  if (k.kind === "instruction") return `${k.name}: rate per hour`;
+  if (k.kind === "assign") return `${k.name}: rental aircraft`;
+  return `${k.name}: price`;
+}
+const typedNumber = (v: string) => { const t = v.replace(/[$,\s]/g, ""); if (!/^\d+(\.\d+)?$/.test(t)) return null; const n = Number(t); return ok(n) ? n : null; };
+
+/** Saved rates plus the visual editor's unsaved rate edits. Entries equal to the published
+ *  defaults are dropped, so undoing a change leaves nothing behind. */
+export function withRateDrafts(raw: unknown, drafts: Record<string, string>): RatesConfig {
+  const c = cleanConfig(raw);
+  for (const [key, v] of Object.entries(drafts)) {
+    const k = parts(key); if (!k || !k.name) continue;
+    if (k.kind === "rental" && (k.field === "regular" || k.field === "prepay")) {
+      const row = rentalRates.find(x => x.aircraft === k.name); const n = typedNumber(v); if (!row || n === null) continue;
+      const prev = c.rental![k.name] ?? { regular: num(row.regular), prepay: num(row.prepay) };
+      c.rental![k.name] = { ...prev, [k.field]: n };
+    } else if (k.kind === "instruction") { const n = typedNumber(v); if (n !== null && instructionRates.some(x => x.label === k.name)) c.instruction![k.name] = n; }
+    else if (k.kind === "other") { if (otherRates.some(x => x.label === k.name) && v.trim()) c.other![k.name] = v.trim(); }
+    else if (k.kind === "assign") c.assign![k.name] = v;
+  }
+  const out = cleanConfig(c);
+  for (const r of rentalRates) { const v = out.rental![r.aircraft]; if (v && v.regular === num(r.regular) && v.prepay === num(r.prepay)) delete out.rental![r.aircraft]; }
+  for (const r of instructionRates) if (out.instruction![r.label] === num(r.rate)) delete out.instruction![r.label];
+  for (const r of otherRates) if (out.other![r.label] === r.rate) delete out.other![r.label];
+  for (const o of programs.flatMap(p => p.options)) if (out.assign![o.name] && out.assign![o.name] === defaultAircraftFor(o.lineItems)) delete out.assign![o.name];
+  return out;
+}
