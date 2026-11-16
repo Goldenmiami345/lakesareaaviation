@@ -69,6 +69,7 @@ function PlaneBody({ f, fleet }: { f: Plane; fleet: Plane[] }) {
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground/70">{ROLE_LABEL[f.role]} · <ST k={`fleet.${f.registration}.use`} d={f.use} /></p>
             <h1 className="mt-2 font-display text-4xl leading-tight sm:text-5xl">{planeTitle(f)}</h1>
+            <HideToggle kind="fleet" id={f.registration} hidden={!!f.hidden} className="mt-3" />
             <p className="mt-1 text-lg text-foreground/80"><ST k={`fleet.${f.registration}.name`} d={f.name} /></p>
 
             <div className="mt-6 grid grid-cols-2 border-y-2 border-foreground">
