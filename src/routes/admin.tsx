@@ -253,7 +253,7 @@ const SECTIONS: { id: SectionId; icon: LucideIcon; label: string; short: string;
 const openEditor = (path: string) => { editStore.start(); window.location.assign(path); };
 
 function Panel({ title, text, children }: { title?: string; text?: string; children: React.ReactNode }) {
-  return <section className="min-w-0 border border-border bg-background p-5 sm:p-7">
+  return <section className="min-w-0 border border-border bg-background p-4 sm:p-7">
     {title && <h2 className="font-display text-xl">{title}</h2>}
     {text && <p className="mt-1 text-sm text-muted-foreground">{text}</p>}
     <div className={`min-w-0 ${title ? "mt-4" : ""}`}>{children}</div>

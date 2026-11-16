@@ -63,7 +63,7 @@ export function AdminCatalog() {
     {lists.map(l => <section key={l.kind} className="grid grid-cols-[minmax(0,1fr)] gap-3">
       <div className="flex items-center justify-between gap-3"><h3 className="font-display text-2xl">{l.title}</h3>
         <Button size="sm" variant={adding === l.kind ? "secondary" : "default"} disabled={busy} onClick={() => setAdding(a => (a === l.kind ? null : l.kind))}><Plus className="size-4" /> Add {l.noun}</Button></div>
-      {adding === l.kind && <div className="border border-primary p-4">
+      {adding === l.kind && <div className="border border-primary p-3 sm:p-4">
         {l.kind === "fleet" && <PlaneForm rates={rates} taken={cat.fleet.map(f => f.registration)} onCancel={() => setAdding(null)}
           onDraft={r => setDraft(r ? { state: { catalog: addPlane(cat, r), ...(r.newRow ? { rates: withRateDrafts(rates, { [rateKey.newRow(r.newRow.aircraft)]: JSON.stringify(r.newRow) }) } : {}) }, pages: planePages(r.plane.registration, r.plane.registration) } : null)} onSubmit={r => void save(addPlane(cat, r), `Added ${r.plane.registration}`, r.newRow ? withRateDrafts(rates, { [rateKey.newRow(r.newRow.aircraft)]: JSON.stringify(r.newRow) }) : undefined)} />}
         {l.kind === "programs" && <ProgramForm rates={rates} taken={cat.programs.map(p => p.slug)} onCancel={() => setAdding(null)}
