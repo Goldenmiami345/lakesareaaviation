@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { History, RotateCcw, Save } from "lucide-react";
+import { Eye, History, RotateCcw, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { applyRates, cleanConfig, defaultAircraftFor, rateImpact, type RatesConfig } from "@/lib/rates-engine";
-import { instructionRates, otherRates, programs, rentalRates } from "@/lib/site-data";
+import { aircraftChoicesFor, applyRates, cleanConfig, defaultAircraftFor, rateImpact, type RatesConfig } from "@/lib/rates-engine";
+import { instructionRates, otherRates, programs } from "@/lib/site-data";
 import { resetLiveRates } from "@/lib/use-live-rates";
 import type { Json } from "@/integrations/supabase/types";
 import { SitePreview } from "./site-preview";
@@ -22,6 +22,7 @@ export function AdminRates() {
   const [note, setNote] = useState("");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
+  const [peek, setPeek] = useState<string | null>(null);
 
   async function load() {
     const [{ data: cur }, { data: hist }] = await Promise.all([
@@ -38,7 +39,10 @@ export function AdminRates() {
   const dirty = JSON.stringify(cleanConfig(draft)) !== JSON.stringify(cleanConfig(saved));
 
   const rentalOf = (a: string) => { const r = next.rentalRates.find(x => x.aircraft === a)!; return { regular: num(r.regular), prepay: num(r.prepay) }; };
-  const setRental = (a: string, k: "regular" | "prepay", v: number) => setDraft(d => ({ ...d, rental: { ...d.rental, [a]: { ...rentalOf(a), [k]: v } } }));
+  // Lines the owner added (a new airplane, or one airplane given its own price) live in extraRental.
+  const setRental = (a: string, k: "regular" | "prepay", v: number) => setDraft(d => d.extraRental?.some(e => e.aircraft === a)
+    ? { ...d, extraRental: d.extraRental.map(e => (e.aircraft === a ? { ...e, [k]: v } : e)) }
+    : { ...d, rental: { ...d.rental, [a]: { ...rentalOf(a), [k]: v } } });
 
   async function write(config: RatesConfig, n: string, done: string) {
     setBusy(true); setMsg("");
@@ -47,13 +51,13 @@ export function AdminRates() {
     setBusy(false);
   }
 
-  const optionsWithPlane = programs.flatMap(p => p.options.map(o => ({ name: o.name, def: defaultAircraftFor(o.lineItems) }))).filter(o => o.def);
+  const optionsWithPlane = programs.flatMap(p => p.options.map(o => ({ name: o.name, def: defaultAircraftFor(o.lineItems), choices: aircraftChoicesFor(o.lineItems, next.config.extraRental) }))).filter(o => o.def && o.choices.length > 1);
 
   return <div>
     <p className="text-sm text-muted-foreground">Nothing goes live until you press Save, and every save can be undone below.</p>
 
     <h3 className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Aircraft rental, per hour (regular / prepay)</h3>
-    <div className="mt-2 grid grid-cols-[minmax(0,1fr)] gap-2">{rentalRates.map(r => { const v = rentalOf(r.aircraft); return <label key={r.aircraft} className="flex items-center justify-between gap-2 text-sm"><span className="min-w-0 flex-1 break-words">{r.aircraft}</span>
+    <div className="mt-2 grid grid-cols-[minmax(0,1fr)] gap-2">{next.rentalRates.map(r => { const v = rentalOf(r.aircraft); return <label key={r.aircraft} className="flex items-center justify-between gap-2 text-sm"><span className="min-w-0 flex-1 break-words">{r.aircraft}{"added" in r && <span className="block text-xs text-muted-foreground">Own price line · {r.names}</span>}</span>
       <input type="number" min={0} max={5000} className={field} value={v.regular} onChange={e => setRental(r.aircraft, "regular", Number(e.target.value))} aria-label={`${r.aircraft} regular`} />
       <input type="number" min={0} max={5000} className={field} value={v.prepay} onChange={e => setRental(r.aircraft, "prepay", Number(e.target.value))} aria-label={`${r.aircraft} prepay`} /></label>; })}</div>
     <p className="mt-1 text-xs text-muted-foreground">Course estimates use the prepay rate.</p>
@@ -69,7 +73,8 @@ export function AdminRates() {
     <h3 className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Airplane each course is priced with</h3>
     <div className="mt-2 grid grid-cols-[minmax(0,1fr)] gap-2">{optionsWithPlane.map(o => <label key={o.name} className="flex flex-col gap-1.5 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-2"><span className="min-w-0">{o.name}</span>
       <select className="h-10 w-auto max-w-full min-w-0 shrink-0 justify-self-start border border-input bg-background px-2 outline-none focus:border-primary" value={draft.assign?.[o.name] ?? o.def!} onChange={e => setDraft(d => { const a = { ...d.assign }; if (e.target.value === o.def) delete a[o.name]; else a[o.name] = e.target.value; return { ...d, assign: a }; })}>
-        {rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft}</option>)}</select></label>)}</div>
+        {o.choices.map(a => <option key={a} value={a}>{a}</option>)}</select></label>)}</div>
+    <p className="mt-1 text-xs text-muted-foreground">Multi-engine courses always use the Apache. Change a program's hours under Fleet & courses.</p>
 
     <div className="mt-6 border border-border bg-secondary p-4">
       <p className="text-xs font-bold uppercase tracking-[0.16em]">What this changes</p>
@@ -86,9 +91,14 @@ export function AdminRates() {
     <h3 className="mt-8 flex items-center gap-2 font-display text-xl"><History className="size-5" /> Earlier versions</h3>
     <p className="mt-1 text-sm text-muted-foreground">Restoring a version also keeps the current one here, so you can always switch back.</p>
     <ul className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2">
-      <li className="flex items-center justify-between gap-3 border border-border p-3 text-sm"><span>Original published rates</span><Button size="sm" variant="outline" disabled={busy} className="rounded-none" onClick={() => write({}, "Restored original published rates", "Original published rates restored.")}><RotateCcw /> Restore</Button></li>
-      {history.map(v => <li key={v.id} className="flex items-center justify-between gap-3 border border-border p-3 text-sm"><span className="min-w-0"><span className="block">{when(v.saved_at)}</span>{v.note && <span className="block truncate text-muted-foreground">{v.note}</span>}</span>
-        <Button size="sm" variant="outline" disabled={busy} className="rounded-none" onClick={() => write(cleanConfig(v.config), `Restored version from ${when(v.saved_at)}`, "That version is restored and live.")}><RotateCcw /> Restore</Button></li>)}
+      {[{ id: "original", label: "Original published rates", note: null as string | null, config: {} as RatesConfig }, ...history.map(v => ({ id: v.id, label: when(v.saved_at), note: v.note, config: cleanConfig(v.config) }))].map(v => <li key={v.id} className="grid gap-3 border border-border p-3 text-sm">
+        <div className="flex items-center justify-between gap-3"><span className="min-w-0"><span className="block">{v.label}</span>{v.note && <span className="block text-muted-foreground">{v.note}</span>}</span>
+          <span className="flex shrink-0 flex-wrap justify-end gap-2">
+            <Button size="sm" variant={peek === v.id ? "secondary" : "outline"} className="rounded-none" aria-expanded={peek === v.id} onClick={() => setPeek(p => (p === v.id ? null : v.id))}><Eye /> Preview</Button>
+            <Button size="sm" variant="outline" disabled={busy} className="rounded-none" onClick={() => write(v.config, v.id === "original" ? "Restored original published rates" : `Restored version from ${v.label}`, "That version is restored and live.")}><RotateCcw /> Restore</Button>
+          </span></div>
+        {peek === v.id && <SitePreview startOpen pages={ratePages(programs)} state={{ rates: v.config }} title={`Earlier prices · ${v.label} · not live`} onClose={() => setPeek(null)} />}
+      </li>)}
     </ul>
     {msg && <p className="mt-4 text-sm text-muted-foreground" role="status">{msg}</p>}
   </div>;
