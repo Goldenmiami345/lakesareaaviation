@@ -7,11 +7,12 @@ import { instructionRates, otherRates, programs } from "@/lib/site-data";
 import { resetLiveRates } from "@/lib/use-live-rates";
 import type { Json } from "@/integrations/supabase/types";
 import { SitePreview } from "./site-preview";
+import { ROW, ROW_ACTIONS, ROW_BTN, STICKY_SAVE } from "./admin-ui";
 import { ratePages } from "@/lib/site-preview";
 
 type Version = { id: string; config: Json; note: string | null; saved_at: string };
 const num = (s: string) => Number(s.replace(/[^0-9.]/g, "")) || 0;
-const field = "h-10 w-20 sm:w-24 border border-input bg-background px-2 text-right tabular-nums outline-none focus:border-primary";
+const field = "h-11 border border-input bg-background px-2 text-right tabular-nums outline-none focus:border-primary sm:h-10";
 const when = (iso: string) => new Date(iso).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
 
 /** Rates editor: inputs, live impact preview, Save with note, version history with one-click restore. */
@@ -57,14 +58,15 @@ export function AdminRates() {
     <p className="text-sm text-muted-foreground">Nothing goes live until you press Save, and every save can be undone below.</p>
 
     <h3 className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Aircraft rental, per hour (regular / prepay)</h3>
-    <div className="mt-2 grid grid-cols-[minmax(0,1fr)] gap-2">{next.rentalRates.map(r => { const v = rentalOf(r.aircraft); return <label key={r.aircraft} className="flex items-center justify-between gap-2 text-sm"><span className="min-w-0 flex-1 break-words">{r.aircraft}{"added" in r && <span className="block text-xs text-muted-foreground">Own price line · {r.names}</span>}</span>
-      <input type="number" min={0} max={5000} className={field} value={v.regular} onChange={e => setRental(r.aircraft, "regular", Number(e.target.value))} aria-label={`${r.aircraft} regular`} />
-      <input type="number" min={0} max={5000} className={field} value={v.prepay} onChange={e => setRental(r.aircraft, "prepay", Number(e.target.value))} aria-label={`${r.aircraft} prepay`} /></label>; })}</div>
+    {/* Phones: the airplane name on its own line, the two prices side by side under it. */}
+    <div className="mt-2 grid grid-cols-[minmax(0,1fr)] gap-3 sm:gap-2">{next.rentalRates.map(r => { const v = rentalOf(r.aircraft); return <div key={r.aircraft} className="grid grid-cols-2 items-center gap-x-3 gap-y-1.5 border-b border-border pb-3 text-sm last:border-0 sm:flex sm:justify-between sm:gap-2 sm:border-0 sm:pb-0"><span className="col-span-2 min-w-0 break-words font-semibold sm:flex-1 sm:font-normal">{r.aircraft}{"added" in r && <span className="block text-xs font-normal text-muted-foreground">Own price line · {r.names}</span>}</span>
+      <label className="grid gap-1 text-xs text-muted-foreground sm:block"><span className="sm:sr-only">Regular $/hr</span><input type="number" inputMode="decimal" min={0} max={5000} className={`${field} w-full text-sm text-foreground sm:w-24`} value={v.regular} onChange={e => setRental(r.aircraft, "regular", Number(e.target.value))} aria-label={`${r.aircraft} regular`} /></label>
+      <label className="grid gap-1 text-xs text-muted-foreground sm:block"><span className="sm:sr-only">Prepay $/hr</span><input type="number" inputMode="decimal" min={0} max={5000} className={`${field} w-full text-sm text-foreground sm:w-24`} value={v.prepay} onChange={e => setRental(r.aircraft, "prepay", Number(e.target.value))} aria-label={`${r.aircraft} prepay`} /></label></div>; })}</div>
     <p className="mt-1 text-xs text-muted-foreground">Course estimates use the prepay rate.</p>
 
     <h3 className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Instruction, per hour</h3>
     <div className="mt-2 grid grid-cols-[minmax(0,1fr)] gap-2">{instructionRates.map(r => <label key={r.label} className="flex items-center justify-between gap-2 text-sm"><span className="min-w-0 flex-1">{r.label}</span>
-      <input type="number" min={0} max={5000} className={field} value={num(next.instructionRates.find(x => x.label === r.label)!.rate)} onChange={e => setDraft(d => ({ ...d, instruction: { ...d.instruction, [r.label]: Number(e.target.value) } }))} /></label>)}</div>
+      <input type="number" inputMode="decimal" min={0} max={5000} className={`${field} w-24`} value={num(next.instructionRates.find(x => x.label === r.label)!.rate)} onChange={e => setDraft(d => ({ ...d, instruction: { ...d.instruction, [r.label]: Number(e.target.value) } }))} /></label>)}</div>
 
     <h3 className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Flights, housing & travel</h3>
     <div className="mt-2 grid grid-cols-[minmax(0,1fr)] gap-2">{otherRates.map(r => <label key={r.label} className="flex items-center justify-between gap-2 text-sm"><span className="min-w-0 flex-1">{r.label}</span>
@@ -72,7 +74,7 @@ export function AdminRates() {
 
     <h3 className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Airplane each course is priced with</h3>
     <div className="mt-2 grid grid-cols-[minmax(0,1fr)] gap-2">{optionsWithPlane.map(o => <label key={o.name} className="flex flex-col gap-1.5 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-2"><span className="min-w-0">{o.name}</span>
-      <select className="h-10 w-auto max-w-full min-w-0 shrink-0 justify-self-start border border-input bg-background px-2 outline-none focus:border-primary" value={draft.assign?.[o.name] ?? o.def!} onChange={e => setDraft(d => { const a = { ...d.assign }; if (e.target.value === o.def) delete a[o.name]; else a[o.name] = e.target.value; return { ...d, assign: a }; })}>
+      <select className="h-11 w-auto max-w-full min-w-0 shrink-0 justify-self-start border sm:h-10 border-input bg-background px-2 outline-none focus:border-primary" value={draft.assign?.[o.name] ?? o.def!} onChange={e => setDraft(d => { const a = { ...d.assign }; if (e.target.value === o.def) delete a[o.name]; else a[o.name] = e.target.value; return { ...d, assign: a }; })}>
         {o.choices.map(a => <option key={a} value={a}>{a}</option>)}</select></label>)}</div>
     <p className="mt-1 text-xs text-muted-foreground">Multi-engine courses always use the Apache. Change a program's hours under Fleet & courses.</p>
 
@@ -83,7 +85,7 @@ export function AdminRates() {
     </div>
     <div className="mt-3"><SitePreview pages={ratePages(programs.filter(p => p.options.some(o => impact.some(i => i.option === o.name))))} state={{ rates: cleanConfig(draft) }} /></div>
     <input value={note} onChange={e => setNote(e.target.value)} maxLength={200} placeholder="Note for this change (optional)" className="mt-3 h-11 w-full border border-input bg-background px-3 text-sm outline-none focus:border-primary" />
-    <div className="mt-3 grid grid-cols-2 gap-3">
+    <div className={`mt-3 grid grid-cols-2 gap-3 ${dirty ? STICKY_SAVE : ""}`}>
       <Button disabled={busy || !dirty} variant="outline" className="h-12 rounded-none" onClick={() => setDraft(saved)}>Discard changes</Button>
       <Button disabled={busy || !dirty} className="h-12 rounded-none" onClick={() => write(cleanConfig(draft), note, "Saved. The new prices are live for everyone.")}><Save /> Save</Button>
     </div>
@@ -92,10 +94,10 @@ export function AdminRates() {
     <p className="mt-1 text-sm text-muted-foreground">Restoring a version also keeps the current one here, so you can always switch back.</p>
     <ul className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2">
       {[{ id: "original", label: "Original published rates", note: null as string | null, config: {} as RatesConfig }, ...history.map(v => ({ id: v.id, label: when(v.saved_at), note: v.note, config: cleanConfig(v.config) }))].map(v => <li key={v.id} className="grid gap-3 border border-border p-3 text-sm">
-        <div className="flex items-center justify-between gap-3"><span className="min-w-0"><span className="block">{v.label}</span>{v.note && <span className="block text-muted-foreground">{v.note}</span>}</span>
-          <span className="flex shrink-0 flex-wrap justify-end gap-2">
-            <Button size="sm" variant={peek === v.id ? "secondary" : "outline"} className="rounded-none" aria-expanded={peek === v.id} onClick={() => setPeek(p => (p === v.id ? null : v.id))}><Eye /> Preview</Button>
-            <Button size="sm" variant="outline" disabled={busy} className="rounded-none" onClick={() => write(v.config, v.id === "original" ? "Restored original published rates" : `Restored version from ${v.label}`, "That version is restored and live.")}><RotateCcw /> Restore</Button>
+        <div className={ROW}><span className="min-w-0"><span className="block">{v.label}</span>{v.note && <span className="block text-muted-foreground">{v.note}</span>}</span>
+          <span className={ROW_ACTIONS}>
+            <Button size="sm" variant={peek === v.id ? "secondary" : "outline"} className={`${ROW_BTN} rounded-none`} aria-expanded={peek === v.id} onClick={() => setPeek(p => (p === v.id ? null : v.id))}><Eye /> Preview</Button>
+            <Button size="sm" variant="outline" disabled={busy} className={`${ROW_BTN} rounded-none`} onClick={() => write(v.config, v.id === "original" ? "Restored original published rates" : `Restored version from ${v.label}`, "That version is restored and live.")}><RotateCcw /> Restore</Button>
           </span></div>
         {peek === v.id && <SitePreview startOpen pages={ratePages(programs)} state={{ rates: v.config }} title={`Earlier prices · ${v.label} · not live`} onClose={() => setPeek(null)} />}
       </li>)}

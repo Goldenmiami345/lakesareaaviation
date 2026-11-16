@@ -30,7 +30,8 @@ const EDITOR_UI = '[role=toolbar][aria-label="Site editor"], [data-catalog-contr
 const EDIT_ALLOWED = "summary, [aria-expanded], [aria-pressed], [role=tab], [data-edit-allow]";
 const CLICKABLE = "a[href], button, [role=button], [role=link], input[type=submit], input[type=button]";
 
-const bar = "inline-flex min-h-10 items-center gap-1.5 px-3 text-xs font-bold uppercase tracking-[0.08em] transition-colors hover:bg-background/10 disabled:opacity-40";
+// Phones: action buttons stack icon over label so five fit one even row; wider screens keep one line.
+const bar = "inline-flex min-h-12 flex-col items-center justify-center gap-0.5 px-1 text-[10px] font-bold uppercase tracking-[0.06em] transition-colors hover:bg-background/10 disabled:opacity-40 sm:min-h-10 sm:flex-row sm:gap-1.5 sm:px-3 sm:text-xs sm:tracking-[0.08em]";
 
 export default function SiteEditor() {
   const edit = useEditState();
@@ -154,24 +155,25 @@ export default function SiteEditor() {
     <input ref={file} type="file" accept="image/*" className="sr-only" tabIndex={-1} aria-hidden onChange={e => onFile(e.target.files?.[0])} />
     {hover && <div className="pointer-events-none fixed z-[190] inline-flex items-center gap-1.5 bg-ink px-2.5 py-1.5 text-xs font-bold uppercase text-background shadow-lg" style={{ top: Math.max(8, hover.rect.top + 12), left: hover.rect.left + 12 }}>
       <ImageUp className="size-3.5" /> {drafts[hover.key] ? "New photo · click to change" : "Click to replace photo"}</div>}
-    <div role="toolbar" aria-label="Site editor" className="fixed inset-x-2 bottom-3 z-[200] mx-auto flex max-w-fit flex-wrap items-center gap-px bg-ink text-background shadow-[0_18px_50px_-12px_oklch(0_0_0/0.6)] sm:bottom-5">
+    <div role="toolbar" aria-label="Site editor" className="fixed inset-x-2 bottom-[max(0.5rem,env(safe-area-inset-bottom))] z-[200] mx-auto grid grid-cols-[auto_minmax(0,1fr)] items-center gap-px bg-ink text-background shadow-[0_18px_50px_-12px_oklch(0_0_0/0.6)] sm:bottom-5 sm:flex sm:max-w-fit sm:flex-wrap">
       <span role="group" aria-label="Editor mode" className="m-1 flex border border-background/25">
         <button type="button" aria-pressed={editing} onClick={() => { editStore.setPreview(false); setMsg("Click any outlined text, price or photo"); }} title="Click words, prices and photos to change them. Links and buttons are off."
           className={`inline-flex min-h-9 items-center gap-1.5 px-3 text-xs font-bold uppercase tracking-[0.08em] transition-colors ${editing ? "bg-primary text-primary-foreground" : "hover:bg-background/10"}`}><PencilLine className="size-4" /> Edit</button>
         <button type="button" aria-pressed={!editing} onClick={() => { editStore.setPreview(true); setMsg("Preview: click around. Unsaved changes still show."); }} title="Use the site like a visitor, with your unsaved changes showing."
           className={`inline-flex min-h-9 items-center gap-1.5 px-3 text-xs font-bold uppercase tracking-[0.08em] transition-colors ${!editing ? "bg-primary text-primary-foreground" : "hover:bg-background/10"}`}><Eye className="size-4" /> Preview</button>
       </span>
-      <select aria-label="Page" value={pageInList ? path : ""} onChange={e => router.history.push(e.target.value)} className="h-10 w-auto max-w-[19rem] min-w-0 bg-transparent px-2 text-xs font-semibold outline-none [&_optgroup]:bg-background [&_optgroup]:font-bold [&_optgroup]:text-foreground [&_option]:bg-background [&_option]:font-medium [&_option]:text-foreground">
+      <select aria-label="Page" value={pageInList ? path : ""} onChange={e => router.history.push(e.target.value)} className="h-10 w-full min-w-0 bg-transparent pl-2 pr-3 text-xs font-semibold sm:w-auto sm:px-2 sm:max-w-[19rem] outline-none [&_optgroup]:bg-background [&_optgroup]:font-bold [&_optgroup]:text-foreground [&_option]:bg-background [&_option]:font-medium [&_option]:text-foreground">
         {!pageInList && <option value="">This page</option>}
         {groupPages(pages).map(g => <optgroup key={g.name} label={g.name}>{g.pages.map(p => <option key={p.path} value={p.path}>{p.label}</option>)}</optgroup>)}
       </select>
-      <span className="min-h-10 min-w-40 px-3 py-1 text-xs tabular-nums text-background/75 flex flex-col justify-center" aria-live="polite">
-        {focus ? <><span className="max-w-64 truncate font-semibold text-background">{focus.label}</span>{focus.rate ? <span>Updates every page and course that uses it</span> : <span className={focusLen > focus.max ? "font-bold text-destructive" : ""}>{focusLen} / {focus.max} characters{focusLen > focus.max ? " · too long" : ""}</span>}</>
+      <span className="col-span-2 flex min-w-0 flex-col justify-center border-y border-background/10 px-3 py-1.5 text-[11px] tabular-nums text-background/75 sm:min-h-10 sm:min-w-40 sm:border-0 sm:py-1 sm:text-xs" aria-live="polite">
+        {focus ? <><span className="truncate font-semibold text-background sm:max-w-64">{focus.label}</span>{focus.rate ? <span>Updates every page and course that uses it</span> : <span className={focusLen > focus.max ? "font-bold text-destructive" : ""}>{focusLen} / {focus.max} characters{focusLen > focus.max ? " · too long" : ""}</span>}</>
           : msg || (keys.length ? `${keys.length} unsaved change${keys.length === 1 ? "" : "s"}` : editing ? "Click any outlined text, price or photo" : "Preview: links and buttons work")}
       </span>
+      <span className="col-span-2 grid grid-cols-[repeat(4,minmax(0,1fr))_3rem] gap-px sm:contents">
       <Popover>
         <PopoverTrigger className={bar} disabled={busy}><History className="size-4" /> History</PopoverTrigger>
-        <PopoverContent side="top" align="end" className="z-[210] max-h-[70vh] w-80 overflow-auto rounded-none p-2">
+        <PopoverContent side="top" align="end" className="z-[210] max-h-[70vh] w-[min(20rem,calc(100vw-1rem))] overflow-auto rounded-none p-2">
           <p className="px-2 pb-1 text-xs text-muted-foreground">The eye shows a version on the site first; nothing changes until you restore.</p>
           {([
             { title: "Words & photos", items: [{ id: "o", label: "Original words & photos", note: null as string | null, state: { content: {} } as PreviewState, restore: () => write({ content: {} }, "Restored original words and photos", "Original words and photos are live again.") },
@@ -195,6 +197,7 @@ export default function SiteEditor() {
       <button type="button" className={`${bar} bg-primary text-primary-foreground hover:bg-primary/90`} disabled={busy || !keys.length || tooLong.length > 0} title={tooLong.length ? "Shorten the text marked too long first" : undefined} onClick={publish}>
         {busy ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Publish</button>
       <button type="button" className={bar} aria-label="Exit editor" onClick={exit}><X className="size-4" /></button>
+      </span>
     </div>
     {peek && <div role="dialog" aria-modal="true" aria-label={`Earlier version: ${peek.title}`} className="fixed inset-2 z-[220] overflow-auto border border-border bg-background p-3 shadow-2xl sm:inset-6">
       <SitePreview startOpen pages={[{ label: "This page", path }, ...EDIT_PAGES.filter(p => p.path !== path && !p.label.includes(" · "))]} state={peek.state} title={`Earlier version · ${peek.title} · not live`} onClose={() => setPeek(null)} />

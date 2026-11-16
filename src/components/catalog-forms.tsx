@@ -38,10 +38,11 @@ function Section({ title, summary, open = false, children }: { title: string; su
 /** Save/Cancel pinned to the top of a form (below the admin bar), so long forms never need a
  *  scroll to the bottom. The bottom Footer stays too. */
 function TopActions({ errors, onCancel, onSubmit, label, icon }: { errors: string[]; onCancel?: (() => void) | undefined; onSubmit: () => void; label: string; icon: ReactNode }) {
-  return <div className="sticky z-10 -mx-1 flex flex-wrap items-center justify-end gap-2 border-b border-border bg-background px-1 py-2" style={{ top: "var(--form-sticky-top, 0px)" }}>
-    {errors.length > 0 && <span className="mr-auto min-w-0 text-xs text-destructive">{errors.length === 1 ? errors[0] : `${errors.length} things to fix, listed at the bottom.`}</span>}
-    {onCancel && <Button type="button" size="sm" variant="ghost" onClick={onCancel}>Cancel</Button>}
-    <Button type="button" size="sm" disabled={errors.length > 0} onClick={onSubmit}>{icon} {label}</Button>
+  // Phones: the buttons share the bar evenly (big tap targets) and the note sits under them.
+  return <div className="sticky z-10 -mx-1 grid grid-cols-2 items-center gap-2 border-b border-border bg-background px-1 py-2 sm:flex sm:flex-wrap sm:justify-end" style={{ top: "var(--form-sticky-top, 0px)" }}>
+    {errors.length > 0 && <span className="order-last col-span-2 min-w-0 text-xs text-destructive sm:order-none sm:mr-auto">{errors.length === 1 ? errors[0] : `${errors.length} things to fix, listed at the bottom.`}</span>}
+    {onCancel && <Button type="button" size="sm" variant="outline" className="h-11 text-sm sm:h-8 sm:border-transparent sm:bg-transparent sm:text-xs sm:shadow-none" onClick={onCancel}>Cancel</Button>}
+    <Button type="button" size="sm" className={`h-11 text-sm sm:h-8 sm:text-xs ${onCancel ? "" : "col-span-2"}`} disabled={errors.length > 0} onClick={onSubmit}>{icon} {label}</Button>
   </div>;
 }
 
@@ -277,8 +278,8 @@ export function CoursePricingForm({ slug, pricing, rates, onSave, onCancel, onDr
       {errors.length > 0 && <ul className="text-xs text-destructive">{errors.map(e => <li key={e}>{e}</li>)}</ul>}
       <div className="flex flex-wrap items-center justify-between gap-2">
         {pricing ? <Button type="button" variant="ghost" onClick={() => onSave(null)}><Trash2 className="size-4" /> Remove the price</Button> : <span />}
-        <span className="flex gap-2">{onCancel && <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>}
-          <Button type="button" disabled={errors.length > 0} onClick={save}><Save className="size-4" /> Save price</Button></span>
+        <span className="flex gap-2">{onCancel && <Button type="button" variant="ghost" className="h-11 sm:h-9" onClick={onCancel}>Cancel</Button>}
+          <Button type="button" className="h-11 sm:h-9" disabled={errors.length > 0} onClick={save}><Save className="size-4" /> Save price</Button></span>
       </div>
     </div>
   </div>;
@@ -310,8 +311,8 @@ function Footer({ errors, onCancel, onSubmit, label, icon = <Plus className="siz
   return <div className="grid gap-2 border-t border-border pt-4">
     {errors.length > 0 && <ul className="text-xs text-destructive">{errors.map(e => <li key={e}>{e}</li>)}</ul>}
     <div className="flex flex-wrap justify-end gap-2">
-      {onCancel && <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>}
-      <Button type="button" disabled={errors.length > 0} onClick={onSubmit}>{icon} {label}</Button>
+      {onCancel && <Button type="button" variant="ghost" className="h-11 sm:h-9" onClick={onCancel}>Cancel</Button>}
+      <Button type="button" className="h-11 sm:h-9" disabled={errors.length > 0} onClick={onSubmit}>{icon} {label}</Button>
     </div>
   </div>;
 }
@@ -335,7 +336,7 @@ export function EditorAddForm({ kind, onDone }: { kind: "fleet" | "programs" | "
 }
 
 const SPEC_NAMES = ["Year", "Model", "Horsepower", "Engine", "Engines", "Seats", "IFR/VFR", "Coms", "GPS", "Equipment", "Cruise speed", "Useful load", "Fuel", "Range"];
-const iconBtn = "grid size-8 shrink-0 place-items-center text-muted-foreground hover:text-foreground disabled:opacity-30";
+const iconBtn = "grid size-10 shrink-0 sm:size-8 place-items-center text-muted-foreground hover:text-foreground disabled:opacity-30";
 const move = <T,>(list: T[], i: number, d: number) => { const j = i + d; if (j < 0 || j >= list.length) return list; const out = [...list]; [out[i], out[j]] = [out[j]!, out[i]!]; return out; };
 
 /** Every detail of one airplane: words, type, specs, all its photos and which price line it uses. */
@@ -426,10 +427,11 @@ export function PlaneEditForm({ plane, original, rates, planes, onSave, onReset,
       <div className="flex justify-end">{undo("specs")}</div>
       <datalist id="plane-spec-names">{SPEC_NAMES.map(n => <option key={n} value={n} />)}</datalist>
       {f.specs.length === 0 && <p className={hint}>No specs yet.</p>}
-      <ul className="grid gap-2">{f.specs.map(([k, v], i) => <li key={i} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_auto] items-center gap-2">
+      {/* Phones: name and value share a line, the move/remove buttons sit under them. */}
+      <ul className="grid gap-3 sm:gap-2">{f.specs.map(([k, v], i) => <li key={i} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] items-center gap-x-2 gap-y-1 border-b border-border pb-2 last:border-0 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_auto] sm:border-0 sm:pb-0">
         <Input aria-label={`Spec ${i + 1} name`} value={k} list="plane-spec-names" onChange={e => setSpec(i, 0, e.target.value)} placeholder="Seats" />
         <Input aria-label={`Spec ${i + 1} value`} value={v} onChange={e => setSpec(i, 1, e.target.value)} placeholder="4" />
-        <span className="flex">
+        <span className="col-span-2 flex justify-end sm:col-span-1">
           <button type="button" aria-label="Move up" disabled={i === 0} onClick={() => set("specs", move(f.specs, i, -1))} className={iconBtn}><ArrowUp className="size-4" /></button>
           <button type="button" aria-label="Move down" disabled={i === f.specs.length - 1} onClick={() => set("specs", move(f.specs, i, 1))} className={iconBtn}><ArrowDown className="size-4" /></button>
           <button type="button" aria-label={`Remove ${k || "spec"}`} onClick={() => set("specs", f.specs.filter((_, j) => j !== i))} className={`${iconBtn} hover:!text-destructive`}><Trash2 className="size-4" /></button>
@@ -466,8 +468,8 @@ export function PlaneEditForm({ plane, original, rates, planes, onSave, onReset,
       <div className="flex flex-wrap items-center justify-between gap-2">
         {onReset && plane.edited ? <Button type="button" variant="ghost" onClick={onReset}><RotateCcw className="size-4" /> Put back the original</Button> : <span />}
         <span className="flex gap-2">
-          {onCancel && <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>}
-          <Button type="button" disabled={errors.length > 0} onClick={save}><Save className="size-4" /> Save changes</Button>
+          {onCancel && <Button type="button" variant="ghost" className="h-11 sm:h-9" onClick={onCancel}>Cancel</Button>}
+          <Button type="button" className="h-11 sm:h-9" disabled={errors.length > 0} onClick={save}><Save className="size-4" /> Save changes</Button>
         </span>
       </div>
     </div>

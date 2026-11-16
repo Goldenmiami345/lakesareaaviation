@@ -8,6 +8,7 @@ import { resetSiteContent } from "@/lib/use-site-content";
 import { programs, specialtyCourses } from "@/lib/site-data";
 import { contentPages } from "@/lib/site-preview";
 import { SitePreview } from "./site-preview";
+import { ROW, ROW_ACTIONS, ROW_BTN, STICKY_SAVE } from "./admin-ui";
 
 const NAMES = { programs: Object.fromEntries(programs.map(p => [p.slug, p.name])), courses: Object.fromEntries(specialtyCourses.map(c => [c.slug, c.name])) };
 
@@ -81,8 +82,8 @@ export function AdminContent() {
         const v = value(s); const over = v.length > s.max; const edited = s.key in draft && draft[s.key] !== s.def;
         return <div key={s.key}>
           <div className="flex items-center justify-between gap-2"><span className="text-sm font-semibold">{s.label}</span>
-            {edited && <button type="button" className="text-xs font-bold uppercase text-muted-foreground underline" onClick={() => restoreSlot(s)}>Use original</button>}</div>
-          {s.kind === "photo" ? <div className="mt-2 flex items-center gap-3">
+            {edited && <button type="button" className="min-h-10 text-xs font-bold uppercase text-muted-foreground underline sm:min-h-0" onClick={() => restoreSlot(s)}>Use original</button>}</div>
+          {s.kind === "photo" ? <div className="mt-2 flex flex-wrap items-center gap-3">
             {v && <img src={v} alt="" className="aspect-[4/3] w-32 object-cover outline outline-1 -outline-offset-1 outline-foreground/10" />}
             <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 border border-input px-3 text-sm"><ImageUp className="size-4" /> Replace photo
               <input type="file" accept="image/*" className="sr-only" disabled={busy} onChange={e => upload(s, e.target.files?.[0])} /></label>
@@ -100,7 +101,7 @@ export function AdminContent() {
     </div>
     <div className="mt-3"><SitePreview pages={contentPages(changed.map(c => c.key), NAMES)} state={{ content: cleanContent(draft) }} /></div>
     <input value={note} onChange={e => setNote(e.target.value)} maxLength={200} placeholder="Note for this change (optional)" className="mt-3 h-11 w-full border border-input bg-background px-3 text-sm outline-none focus:border-primary" />
-    <div className="mt-3 grid grid-cols-2 gap-3">
+    <div className={`mt-3 grid grid-cols-2 gap-3 ${changed.length ? STICKY_SAVE : ""}`}>
       <Button disabled={busy || !changed.length} variant="outline" className="h-12 rounded-none" onClick={() => setDraft(saved)}>Discard changes</Button>
       <Button disabled={busy || !changed.length} className="h-12 rounded-none" onClick={() => write(cleanContent(draft), note, "Saved. The changes are live for everyone.")}><Save /> Save</Button>
     </div>
@@ -111,10 +112,10 @@ export function AdminContent() {
         // The pages to show first: wherever this version differs from what is live now.
         const diff = [...new Set([...Object.keys(v.content), ...Object.keys(saved)])].filter(k => v.content[k] !== saved[k]);
         return <li key={v.id} className="grid gap-3 border border-border p-3 text-sm">
-          <div className="flex items-center justify-between gap-3"><span className="min-w-0"><span className="block">{v.label}</span>{v.note && <span className="block text-muted-foreground">{v.note}</span>}</span>
-            <span className="flex shrink-0 flex-wrap justify-end gap-2">
-              <Button size="sm" variant={peek === v.id ? "secondary" : "outline"} className="rounded-none" aria-expanded={peek === v.id} onClick={() => setPeek(p => (p === v.id ? null : v.id))}><Eye /> Preview</Button>
-              <Button size="sm" variant="outline" disabled={busy} className="rounded-none" onClick={() => write(v.content, v.id === "original" ? "Restored original words and photos" : `Restored version from ${v.label}`, "That version is restored and live.")}><RotateCcw /> Restore</Button>
+          <div className={ROW}><span className="min-w-0"><span className="block">{v.label}</span>{v.note && <span className="block text-muted-foreground">{v.note}</span>}</span>
+            <span className={ROW_ACTIONS}>
+              <Button size="sm" variant={peek === v.id ? "secondary" : "outline"} className={`${ROW_BTN} rounded-none`} aria-expanded={peek === v.id} onClick={() => setPeek(p => (p === v.id ? null : v.id))}><Eye /> Preview</Button>
+              <Button size="sm" variant="outline" disabled={busy} className={`${ROW_BTN} rounded-none`} onClick={() => write(v.content, v.id === "original" ? "Restored original words and photos" : `Restored version from ${v.label}`, "That version is restored and live.")}><RotateCcw /> Restore</Button>
             </span></div>
           {peek === v.id && <SitePreview startOpen pages={contentPages(diff, NAMES)} state={{ content: v.content }} title={`Earlier words & photos · ${v.label} · not live`} onClose={() => setPeek(null)} />}
         </li>;
