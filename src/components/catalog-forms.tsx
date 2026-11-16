@@ -194,7 +194,7 @@ export function EditorAddForm({ kind, onDone }: { kind: "fleet" | "programs" | "
 }
 
 const SPEC_NAMES = ["Year", "Model", "Horsepower", "Engine", "Engines", "Seats", "IFR/VFR", "Coms", "GPS", "Equipment", "Cruise speed", "Useful load", "Fuel", "Range"];
-const iconBtn = "grid size-9 shrink-0 place-items-center text-muted-foreground hover:text-foreground disabled:opacity-30";
+const iconBtn = "grid size-8 shrink-0 place-items-center text-muted-foreground hover:text-foreground disabled:opacity-30";
 const move = <T,>(list: T[], i: number, d: number) => { const j = i + d; if (j < 0 || j >= list.length) return list; const out = [...list]; [out[i], out[j]] = [out[j]!, out[i]!]; return out; };
 
 /** Every detail of one airplane: words, type, specs, all its photos and which price line it uses. */
@@ -270,7 +270,7 @@ export function PlaneEditForm({ plane, original, rates, onSave, onReset, onCance
       <div className="flex items-center justify-between gap-3"><h3 className="text-xs font-bold uppercase tracking-[0.14em]">Specs</h3>{undo("specs")}</div>
       <datalist id="plane-spec-names">{SPEC_NAMES.map(n => <option key={n} value={n} />)}</datalist>
       {f.specs.length === 0 && <p className={hint}>No specs yet.</p>}
-      <ul className="grid gap-2">{f.specs.map(([k, v], i) => <li key={i} className="grid grid-cols-[minmax(0,8rem)_minmax(0,1fr)_auto] items-center gap-2">
+      <ul className="grid gap-2">{f.specs.map(([k, v], i) => <li key={i} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_auto] items-center gap-2">
         <Input aria-label={`Spec ${i + 1} name`} value={k} list="plane-spec-names" onChange={e => setSpec(i, 0, e.target.value)} placeholder="Seats" />
         <Input aria-label={`Spec ${i + 1} value`} value={v} onChange={e => setSpec(i, 1, e.target.value)} placeholder="4" />
         <span className="flex">
