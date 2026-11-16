@@ -76,6 +76,9 @@ export function PlaneEditButton({ f, className = "" }: { f: Plane; className?: s
       className={`catalog-control relative z-20 inline-flex min-h-9 items-center gap-1.5 bg-primary px-3 text-[11px] font-bold uppercase tracking-[0.1em] text-primary-foreground shadow-lg hover:bg-ink hover:text-background ${className}`}>
       <PencilLine className="size-3.5" /> Edit details & photos
     </button>
+    {/* The panel renders in a portal, but React still bubbles its clicks to the card underneath
+        (a phone tile is one big button), so they stop here. */}
+    <span className="contents" onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()}>
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetContent side="right" className="z-[230] w-full overflow-y-auto sm:max-w-xl" data-catalog-control>
         <SheetHeader><SheetTitle>{f.registration}{f.nickname ? ` “${f.nickname}”` : ""}</SheetTitle></SheetHeader>
@@ -83,6 +86,7 @@ export function PlaneEditButton({ f, className = "" }: { f: Plane; className?: s
         <div className="mt-5">{open && <Suspense fallback={<p className="text-sm">Loading…</p>}><PlaneEdit reg={f.registration} onDone={() => setOpen(false)} /></Suspense>}</div>
       </SheetContent>
     </Sheet>
+    </span>
   </>;
 }
 
