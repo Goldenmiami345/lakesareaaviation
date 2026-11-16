@@ -1,3 +1,4 @@
+import { SlotText } from "@/components/slot-text";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { lazy, Suspense, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Maximize, Phone } from "lucide-react";
@@ -85,7 +86,7 @@ function PlanePage() {
           )}
           <section>
             <h2 className="border-b border-foreground pb-2 font-display text-2xl">Used in training</h2>
-            <p className="mt-3 text-sm text-foreground/80">{f.use}. {f.note}</p>
+            <p className="mt-3 text-sm text-foreground/80">{f.use}. <SlotText k={`fleet.${f.registration}.note`} /></p>
             <ul className="mt-2 divide-y divide-border">
               {TRAINING[f.role].map((t) => <li key={t.to}><a href={t.to} className="flex min-h-11 items-center justify-between gap-3 text-sm font-semibold">{t.label}<ArrowRight className="size-4 shrink-0" /></a></li>)}
             </ul>

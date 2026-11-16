@@ -1,3 +1,4 @@
+import { SlotText } from "@/components/slot-text";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { srcSetFor } from "@/lib/responsive-image";
 import { lazy, Suspense, useLayoutEffect, useRef, useState } from "react";
@@ -175,7 +176,7 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
             </Section>
           )}
           <Section title="Used in training">
-            <p className="text-sm text-muted-foreground">{f.use}. {f.note}</p>
+            <p className="text-sm text-muted-foreground">{f.use}. <SlotText k={`fleet.${f.registration}.note`} /></p>
             <ul className="mt-2 flex flex-wrap gap-x-4">
               {TRAINING[f.role].map((t) => <li key={t.to}><a href={t.to} className="inline-flex min-h-11 items-center text-sm font-semibold text-primary-text">{t.label} →</a></li>)}
             </ul>
@@ -238,7 +239,7 @@ function QuickLook({ f, onClose, onView }: { f: Plane; onClose: () => void; onVi
           {stats.map((s) => <div key={s.k} className="min-w-0"><dt className="text-[10px] font-bold uppercase tracking-[0.12em] text-foreground/65">{s.k}</dt><dd className="truncate text-sm font-semibold">{s.v}</dd></div>)}
         </dl>
       )}
-      <p className="mt-3 text-sm text-foreground/80">{f.note}</p>
+      <p className="mt-3 text-sm text-foreground/80"><SlotText k={`fleet.${f.registration}.note`} /></p>
       <div className="mt-4 grid grid-cols-2 gap-2">
         <Link to="/fleet/$reg" params={{ reg: id }} className="inline-flex min-h-11 items-center justify-center gap-1.5 border border-foreground px-3 text-xs font-bold uppercase tracking-[0.1em]">Full details <ArrowRight className="size-3.5" /></Link>
         <button type="button" onClick={(e) => onView(e.currentTarget)} className="inline-flex min-h-11 items-center justify-center gap-1.5 border border-border px-3 text-xs font-bold uppercase tracking-[0.1em]"><Maximize className="size-3.5" /> Photo</button>
