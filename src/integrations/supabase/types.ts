@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      site_rates: {
+        Row: {
+          config: Json
+          id: string
+          note: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          config?: Json
+          id: string
+          note?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          config?: Json
+          id?: string
+          note?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      site_rates_history: {
+        Row: {
+          config: Json
+          id: string
+          note: string | null
+          replaced_at: string
+          saved_at: string
+          saved_by: string | null
+        }
+        Insert: {
+          config: Json
+          id?: string
+          note?: string | null
+          replaced_at?: string
+          saved_at: string
+          saved_by?: string | null
+        }
+        Update: {
+          config?: Json
+          id?: string
+          note?: string | null
+          replaced_at?: string
+          saved_at?: string
+          saved_by?: string | null
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           accent_theme: string
