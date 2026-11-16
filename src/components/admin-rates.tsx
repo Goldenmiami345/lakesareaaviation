@@ -67,8 +67,8 @@ export function AdminRates() {
       <input maxLength={40} className={`${field} w-32`} value={next.otherRates.find(x => x.label === r.label)!.rate} onChange={e => setDraft(d => ({ ...d, other: { ...d.other, [r.label]: e.target.value } }))} /></label>)}</div>
 
     <h3 className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Airplane each course is priced with</h3>
-    <div className="mt-2 grid grid-cols-[minmax(0,1fr)] gap-2">{optionsWithPlane.map(o => <label key={o.name} className="flex items-center justify-between gap-2 text-sm"><span className="min-w-0 flex-1">{o.name}</span>
-      <select className="h-10 max-w-48 border border-input bg-background px-2 outline-none focus:border-primary" value={draft.assign?.[o.name] ?? o.def!} onChange={e => setDraft(d => { const a = { ...d.assign }; if (e.target.value === o.def) delete a[o.name]; else a[o.name] = e.target.value; return { ...d, assign: a }; })}>
+    <div className="mt-2 grid grid-cols-[minmax(0,1fr)] gap-2">{optionsWithPlane.map(o => <label key={o.name} className="flex flex-col gap-1.5 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-2"><span className="min-w-0">{o.name}</span>
+      <select className="h-10 w-auto max-w-full min-w-0 shrink-0 justify-self-start border border-input bg-background px-2 outline-none focus:border-primary" value={draft.assign?.[o.name] ?? o.def!} onChange={e => setDraft(d => { const a = { ...d.assign }; if (e.target.value === o.def) delete a[o.name]; else a[o.name] = e.target.value; return { ...d, assign: a }; })}>
         {rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft}</option>)}</select></label>)}</div>
 
     <div className="mt-6 border border-border bg-secondary p-4">

@@ -133,12 +133,12 @@ export const airportTraffic = {
 // (public/downloads, built by scripts/build-rate-sheet.py from these values).
 export const RATES_YEAR = 2026;
 export const RATE_SHEET_URL = "/downloads/lakes-area-aviation-2026-rates.pdf";
-export const instructionRates: { label: string; rate: string }[] = [
-  { label: "Primary flight & ground instruction", rate: "$60" },
-  { label: "Instrument flight & ground instruction", rate: "$60" },
-  { label: "Commercial flight & ground instruction", rate: "$60" },
-  { label: "Multi-engine flight & ground instruction", rate: "$75" },
-  { label: "Flight instruction in non-flight-school aircraft", rate: "$70" },
+export const instructionRates: { label: string; short: string; rate: string }[] = [
+  { label: "Primary flight & ground instruction", short: "Primary", rate: "$60" },
+  { label: "Instrument flight & ground instruction", short: "Instrument", rate: "$60" },
+  { label: "Commercial flight & ground instruction", short: "Commercial", rate: "$60" },
+  { label: "Multi-engine flight & ground instruction", short: "Multi-engine", rate: "$75" },
+  { label: "Flight instruction in non-flight-school aircraft", short: "Non-school aircraft", rate: "$70" },
 ];
 // Per-hour wet rental rates; prepay applies with a $500+ account balance at billing.
 export const rentalRates: { aircraft: string; names: string; regular: string; prepay: string }[] = [

@@ -63,7 +63,7 @@ export function AdminCatalog() {
     {lists.map(l => <section key={l.kind} className="grid grid-cols-[minmax(0,1fr)] gap-3">
       <div className="flex items-center justify-between gap-3"><h3 className="font-display text-2xl">{l.title}</h3>
         <Button size="sm" variant={adding === l.kind ? "secondary" : "default"} disabled={busy} onClick={() => setAdding(a => (a === l.kind ? null : l.kind))}><Plus className="size-4" /> Add {l.noun}</Button></div>
-      {adding === l.kind && <div className="border border-primary p-4">
+      {adding === l.kind && <div className="border border-primary p-3 sm:p-4">
         {l.kind === "fleet" && <PlaneForm rates={rates} taken={cat.fleet.map(f => f.registration)} onCancel={() => setAdding(null)}
           onDraft={r => setDraft(r ? { state: { catalog: addPlane(cat, r), ...(r.newRow ? { rates: withRateDrafts(rates, { [rateKey.newRow(r.newRow.aircraft)]: JSON.stringify(r.newRow) }) } : {}) }, pages: planePages(r.plane.registration, r.plane.registration) } : null)} onSubmit={r => void save(addPlane(cat, r), `Added ${r.plane.registration}`, r.newRow ? withRateDrafts(rates, { [rateKey.newRow(r.newRow.aircraft)]: JSON.stringify(r.newRow) }) : undefined)} />}
         {l.kind === "programs" && <ProgramForm rates={rates} taken={cat.programs.map(p => p.slug)} onCancel={() => setAdding(null)}
@@ -73,7 +73,7 @@ export function AdminCatalog() {
         {preview(l.kind)}
       </div>}
       <ul className="divide-y divide-border border border-border">{l.items.map(it => <li key={it.id} className={it.hidden ? "bg-secondary/60 text-muted-foreground" : ""}><div className="flex min-h-14 items-center justify-between gap-3 px-3 py-2">
-        <span className="min-w-0"><span className="block truncate font-semibold">{it.label}{it.added && <span className="ml-2 text-[10px] font-bold uppercase tracking-widest text-primary-text">Added</span>}{it.hidden && <span className="ml-2 text-[10px] font-bold uppercase tracking-widest">Hidden</span>}</span><span className="block truncate text-xs text-muted-foreground">{it.sub}</span></span>
+        <span className="min-w-0"><span className="block font-semibold">{it.label}{it.added && <span className="ml-2 text-[10px] font-bold uppercase tracking-widest text-primary-text">Added</span>}{it.hidden && <span className="ml-2 text-[10px] font-bold uppercase tracking-widest">Hidden</span>}</span><span className="block text-xs text-muted-foreground">{it.sub}</span></span>
         <span className="flex shrink-0 flex-wrap justify-end gap-2">
           {l.kind === "fleet" && <Button size="sm" variant={editing === it.id ? "secondary" : "outline"} disabled={busy} aria-expanded={editing === it.id} onClick={() => setEditing(e => (e === it.id ? null : it.id))}><PencilLine className="size-4" /> Edit</Button>}
           <Button size="sm" variant="outline" disabled={busy} onClick={() => void save(setHidden(cat, l.kind, it.id, !it.hidden), `${it.hidden ? "Brought back" : "Hid"} ${it.label}`)}>{it.hidden ? <><Eye className="size-4" /> Bring back</> : <><EyeOff className="size-4" /> Hide</>}</Button>
