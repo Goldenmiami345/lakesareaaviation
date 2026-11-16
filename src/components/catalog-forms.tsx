@@ -70,8 +70,7 @@ export function PlaneForm({ rates, taken, onSubmit, onCancel, onDraft }: { rates
   useEffect(() => { onDraft?.(REG.test(reg) && f.name.trim() ? build() : null); }, [f, price, row, nr]); // eslint-disable-line react-hooks/exhaustive-deps
   return <div className="grid gap-4">
     <div className="grid gap-4 sm:grid-cols-2">
-      <Field label="Tail number"><Input value={f.registration} onChange={set("registration")} placeholder="N12345" autoCapitalize="characters" /></Field>
-      <Field label="Nickname" note="Optional"><Input value={f.nickname} onChange={set("nickname")} placeholder="Robin" /></Field>
+      <Field label="Tail number"><Input value={f.registration} onChange={set("registration")} placeholder="N12345" autoCapitalize="characters" /></Field>      <Field label="Nickname" note="Optional"><Input value={f.nickname} onChange={set("nickname")} placeholder="Robin" /></Field>
     </div>
     <Field label="Airplane"><Input value={f.name} onChange={set("name")} placeholder="1975 Cessna 172M" /></Field>
     <div className="grid gap-4 sm:grid-cols-2">
@@ -86,7 +85,7 @@ export function PlaneForm({ rates, taken, onSubmit, onCancel, onDraft }: { rates
       <Field label="Seats"><Input value={f.seats} onChange={set("seats")} inputMode="numeric" /></Field>
       <Field label="Avionics"><Input value={f.avionics} onChange={set("avionics")} /></Field>
     </div>
-    <fieldset className="grid gap-2 border border-border p-3 text-sm">
+    <fieldset className="grid gap-2 border border-border p-2 text-sm sm:p-3">
       <legend className="px-1 font-semibold">Hourly price</legend>
       <label className="flex items-center gap-2"><input type="radio" checked={price === "share"} onChange={() => setPrice("share")} /> Same price as an existing rate line</label>
       {price === "share" && <select className={`${selectFit} justify-self-start`} value={row} onChange={e => setRow(e.target.value)}>{applied.rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft}</option>)}</select>}
@@ -131,7 +130,7 @@ export function ProgramForm({ rates, taken, onSubmit, onCancel, onDraft }: { rat
       <Field label="Timeline"><Input value={f.timeline} onChange={set("timeline")} placeholder="5–7 days" /></Field>
     </div>
     <Field label="Description"><Textarea rows={2} value={f.description} onChange={set("description")} /></Field>
-    <fieldset className="grid gap-2 border border-border p-3 text-sm">
+    <fieldset className="grid gap-2 border border-border p-2 text-sm sm:p-3">
       <legend className="px-1 font-semibold">What it costs</legend>
       <Field label="Course fee $"><Input value={f.fee} onChange={e => setF(v => ({ ...v, fee: e.target.value.replace(/[^\d]/g, "") }))} inputMode="numeric" className="max-w-32" /></Field>
       {blocks.map((b, i) => {
