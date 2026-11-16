@@ -2,7 +2,7 @@
 // (site-data.ts) plus what the owner added, minus what the owner hid (site_catalog.catalog).
 // Hiding never deletes, so anything hidden comes back in one click.
 import { fleet as baseFleet, programs as basePrograms, specialtyCourses as baseCourses, type FleetRole, type Program, type SpecialtyCourse, type SpecialtyKind } from "./site-data";
-import { FLEET_RATE_ROW, numOf, usdOf, type AppliedRates } from "./rates-engine";
+import { FLEET_RATE_ROW, fleetRate, numOf, usdOf, type AppliedRates } from "./rates-engine";
 
 export type Plane = (typeof baseFleet)[number] & { rateRow?: string | undefined; added?: boolean };
 export type AddedPlane = { registration: string; name: string; nickname?: string; role: FleetRole; use: string; note: string; photo: string; rateRow?: string; specs: Record<string, string> };
@@ -64,12 +64,16 @@ export function cleanCatalog(raw: unknown): Catalog {
 }
 
 /** Every airplane (published then added), with `hidden` marking the ones taken off the site. */
-export function allPlanes(c: Catalog): (Plane & { hidden: boolean })[] {
-  const added: Plane[] = c.fleet.map(f => ({ name: f.name, registration: f.registration, role: f.role, nickname: f.nickname, use: f.use, note: f.note, image: f.photo, position: "center", specs: f.specs, rateRow: f.rateRow, added: true,
-    ...(f.rateRow ? { rate: "rate" } : {}) }));
-  return [...baseFleet.map(f => ({ ...f, rateRow: FLEET_RATE_ROW[f.registration] })), ...added].map(f => ({ ...f, hidden: c.hidden.fleet.includes(f.registration) }));
+export function allPlanes(c: Catalog, r?: AppliedRates): (Plane & { hidden: boolean })[] {
+  const added: Plane[] = c.fleet.map(f => ({ name: f.name, registration: f.registration, role: f.role, nickname: f.nickname, use: f.use, note: f.note, image: f.photo, position: "center", specs: f.specs, rateRow: f.rateRow, added: true }));
+  return [...baseFleet.map(f => ({ ...f, rateRow: FLEET_RATE_ROW[f.registration] })), ...added].map(f => {
+    // Prices always come from the live rental table, so a rate change shows on every fleet card.
+    const live = r && f.rateRow ? fleetRate(r, f.registration, f.rateRow) : undefined;
+    const priced = live ? { rate: live.rate, prepay: live.prepay } : f.rateRow && !r ? {} : { rate: undefined, prepay: undefined };
+    return { ...f, ...priced, hidden: c.hidden.fleet.includes(f.registration) };
+  });
 }
-export const planesOf = (c: Catalog) => allPlanes(c).filter(f => !f.hidden);
+export const planesOf = (c: Catalog, r?: AppliedRates) => allPlanes(c, r).filter(f => !f.hidden);
 
 /** An added program priced from the live rates, in the same shape and line format as a published one. */
 export function buildProgram(p: AddedProgram, r: AppliedRates): Program {
