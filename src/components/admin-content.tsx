@@ -82,7 +82,7 @@ export function AdminContent() {
         const v = value(s); const over = v.length > s.max; const edited = s.key in draft && draft[s.key] !== s.def;
         return <div key={s.key}>
           <div className="flex items-center justify-between gap-2"><span className="text-sm font-semibold">{s.label}</span>
-            {edited && <button type="button" className="text-xs font-bold uppercase text-muted-foreground underline" onClick={() => restoreSlot(s)}>Use original</button>}</div>
+            {edited && <button type="button" className="min-h-10 text-xs font-bold uppercase text-muted-foreground underline sm:min-h-0" onClick={() => restoreSlot(s)}>Use original</button>}</div>
           {s.kind === "photo" ? <div className="mt-2 flex flex-wrap items-center gap-3">
             {v && <img src={v} alt="" className="aspect-[4/3] w-32 object-cover outline outline-1 -outline-offset-1 outline-foreground/10" />}
             <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 border border-input px-3 text-sm"><ImageUp className="size-4" /> Replace photo
