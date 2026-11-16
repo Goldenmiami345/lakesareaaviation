@@ -48,6 +48,6 @@ test("estimator defaults match published course and service prices", () => {
 });
 test("estimator follows a Cessna 172 rate change and a housing change", () => {
   const e = estimatorPrices(applyRates({ rental: { "Cessna 172": { regular: 195, prepay: 185 } }, other: { "Student housing": "$35/night" } }));
-  assert.equal(e.cost.private, 10000);
+  assert.equal(e.cost["private"], 10000);
   assert.equal(e.housing, 35);
 });
