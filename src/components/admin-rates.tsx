@@ -47,9 +47,8 @@ export function AdminRates() {
 
   const optionsWithPlane = programs.flatMap(p => p.options.map(o => ({ name: o.name, def: defaultAircraftFor(o.lineItems) }))).filter(o => o.def);
 
-  return <div className="mt-10 border-t border-border pt-8">
-    <h2 className="font-display text-2xl">Rates & course prices</h2>
-    <p className="mt-1 text-sm text-muted-foreground">Change a rate and every course that uses it updates. Nothing goes live until you press Save, and every save can be undone below.</p>
+  return <div>
+    <p className="text-sm text-muted-foreground">Nothing goes live until you press Save, and every save can be undone below.</p>
 
     <h3 className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Aircraft rental, per hour (regular / prepay)</h3>
     <div className="mt-2 grid gap-2">{rentalRates.map(r => { const v = rentalOf(r.aircraft); return <label key={r.aircraft} className="flex items-center justify-between gap-2 text-sm"><span className="min-w-0 flex-1 truncate">{r.aircraft}</span>
