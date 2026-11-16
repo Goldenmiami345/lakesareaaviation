@@ -1,4 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { SlotText } from "@/components/slot-text";
 import { useSiteContent } from "../lib/use-site-content";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { srcSetFor } from "@/lib/responsive-image";
@@ -33,9 +34,9 @@ function SpecialtyPage() {
           <div><Link to="/specialized-training" className="inline-flex min-h-11 items-center gap-2 text-xs font-bold uppercase tracking-widest text-background/70 hover:text-background"><ArrowLeft className="size-4" /> Specialized training</Link></div>
           <p className="stage-label mt-4">{SPECIALTY_KIND_LABEL[c.kind]}</p>
           <h1 className="mt-3 font-display text-4xl sm:text-6xl">{c.name}</h1>
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-background/80 sm:text-lg">{site.get(`course.${c.slug}.definition`)}</p>
+          <p className="mt-4 max-w-xl text-base leading-relaxed text-background/80 sm:text-lg"><SlotText k={`course.${c.slug}.definition`} /></p>
         </div>
-        {photo && <div className="relative aspect-[4/3] overflow-hidden bg-background/5 lg:aspect-[3/2]"><img src={photo.src} srcSet={srcSetFor(photo.src)} sizes="(min-width: 1024px) 52vw, 100vw" alt={photo.alt} width={1280} height={853} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover" /></div>}
+        {photo && <div className="relative aspect-[4/3] overflow-hidden bg-background/5 lg:aspect-[3/2]"><img data-slot-photo={`course.${c.slug}.photo`} src={photo.src} srcSet={srcSetFor(photo.src)} sizes="(min-width: 1024px) 52vw, 100vw" alt={photo.alt} width={1280} height={853} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover" /></div>}
       </div>
     </section>
     <section className="site-container relative z-10 -mt-6 sm:-mt-8">
