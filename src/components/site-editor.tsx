@@ -10,21 +10,11 @@ import { cleanContent, SLOT_BY_KEY } from "@/lib/content-slots";
 import { editStore, useEditState } from "@/lib/edit-store";
 import { uploadSlotPhoto } from "@/lib/media-upload";
 import { resetSiteContent } from "@/lib/use-site-content";
-import { fleet, programs, specialtyCourses } from "@/lib/site-data";
+import { EDIT_PAGES } from "@/lib/edit-pages";
 
 type Version = { id: string; content: Json; note: string | null; saved_at: string };
 const when = (iso: string) => new Date(iso).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
 
-export const EDIT_PAGES: { label: string; path: string }[] = [
-  { label: "Home", path: "/" },
-  { label: "Programs", path: "/programs" },
-  ...programs.map(p => ({ label: `Program · ${p.name}`, path: `/programs/${p.slug}` })),
-  { label: "Specialized training", path: "/specialized-training" },
-  ...specialtyCourses.map(c => ({ label: `Course · ${c.name}`, path: `/specialized-training/${c.slug}` })),
-  { label: "Student success", path: "/student-success" },
-  { label: "Fleet", path: "/fleet" },
-  ...fleet.map(f => ({ label: `Airplane · ${f.registration}`, path: `/fleet/${f.registration.toLowerCase()}` })),
-];
 const bar = "inline-flex min-h-10 items-center gap-1.5 px-3 text-xs font-bold uppercase tracking-[0.08em] transition-colors hover:bg-background/10 disabled:opacity-40";
 
 export default function SiteEditor() {
