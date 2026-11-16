@@ -2,10 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Download } from "lucide-react";
 import type { ReactNode } from "react";
 import { PageIntro, SiteLayout } from "../components/site-shell";
-import { instructionRates, otherRates, programs, RATE_NOTES, RATE_SHEET_URL, RATES_YEAR, rentalRates } from "../lib/site-data";
+import { RATE_NOTES, RATE_SHEET_URL, RATES_YEAR, type Program } from "../lib/site-data";
+import { useLiveRates } from "../lib/use-live-rates";
 
 // Course estimates in the order the school publishes its rating sheets.
-const courses = programs.flatMap((p) => p.options.map((o) => ({ slug: p.slug, name: p.slug === "cfi-cfii" ? o.name.replace("Certified Flight Instructor–Instrument", "CFII").replace("Certified Flight Instructor", "CFI") : p.name, timeline: o.timeline, cost: o.estimatedCost.replace(/^As low as /, "").replace(/^Approximately /, "About ") })));
+const coursesOf = (programs: Program[]) => programs.flatMap((p) => p.options.map((o) => ({ slug: p.slug, name: p.slug === "cfi-cfii" ? o.name.replace("Certified Flight Instructor–Instrument", "CFII").replace("Certified Flight Instructor", "CFI") : p.name, timeline: o.timeline, cost: o.estimatedCost.replace(/^As low as /, "").replace(/^Approximately /, "About ") })));
 
 export const Route = createFileRoute("/rates")({
   staticData: { sitemap: true },
@@ -14,6 +15,8 @@ export const Route = createFileRoute("/rates")({
 });
 
 function Page() {
+  const { rentalRates, instructionRates, otherRates, programs } = useLiveRates();
+  const courses = coursesOf(programs);
   return (
     <SiteLayout>
       <PageIntro eyebrow="Our rates" title="Every published rate, in one place." text="We strive to keep our aircraft costs low to make aviation accessible for everyone. All aircraft rates are wet and include fuel and insurance." />
