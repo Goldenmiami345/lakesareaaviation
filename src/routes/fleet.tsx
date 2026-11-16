@@ -1,3 +1,4 @@
+import { FleetPrice, SlotText as ST } from "@/components/slot-text";
 import { SlotText } from "@/components/slot-text";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { srcSetFor } from "@/lib/responsive-image";
@@ -132,10 +133,10 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
           <div className="min-w-0">
             <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-primary-text"><span className="h-px w-5 shrink-0 bg-primary" />{f.registration}
-              {f.nickname && <span className="truncate font-display text-sm font-normal normal-case tracking-normal text-muted-foreground sm:hidden">“{f.nickname}”</span>}
+              {f.nickname && <span className="truncate font-display text-sm font-normal normal-case tracking-normal text-muted-foreground sm:hidden">“<ST k={`fleet.${f.registration}.nickname`} d={f.nickname} />”</span>}
             </p>
-            <h2 className="mt-2 font-display text-2xl leading-tight sm:text-3xl max-sm:mt-1 max-sm:text-xl">{f.name}</h2>
-            {f.nickname && <p className="font-display text-base text-muted-foreground max-sm:hidden">“{f.nickname}”</p>}
+            <h2 className="mt-2 font-display text-2xl leading-tight sm:text-3xl max-sm:mt-1 max-sm:text-xl"><ST k={`fleet.${f.registration}.name`} d={f.name} /></h2>
+            {f.nickname && <p className="font-display text-base text-muted-foreground max-sm:hidden">“<ST k={`fleet.${f.registration}.nickname`} d={f.nickname} />”</p>}
           </div>
           <button type="button" onClick={(e) => onView(e.currentTarget)} aria-label={`View photos of ${label}`} className="-mr-2 grid size-11 place-items-center rounded-full text-muted-foreground transition-colors active:bg-muted sm:hidden">
             <Maximize className="size-4" />
@@ -165,7 +166,7 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
             <Section title="Full specs" open={open}>
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                 {specs.map(([k, v]) => <div key={k}><dt className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{k}</dt><dd className="font-semibold">{v}</dd></div>)}
-                {f.prepay && <div><dt className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Prepay rate</dt><dd className="font-semibold">{f.prepay}</dd></div>}
+                {f.prepay && <div><dt className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Prepay rate</dt><dd className="font-semibold"><FleetPrice reg={f.registration} field="prepay" /></dd></div>}
               </dl>
             </Section>
           )}
@@ -176,7 +177,7 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
             </Section>
           )}
           <Section title="Used in training">
-            <p className="text-sm text-muted-foreground">{f.use}. <SlotText k={`fleet.${f.registration}.note`} /></p>
+            <p className="text-sm text-muted-foreground"><ST k={`fleet.${f.registration}.use`} d={f.use} />. <SlotText k={`fleet.${f.registration}.note`} /></p>
             <ul className="mt-2 flex flex-wrap gap-x-4">
               {TRAINING[f.role].map((t) => <li key={t.to}><a href={t.to} className="inline-flex min-h-11 items-center text-sm font-semibold text-primary-text">{t.label} →</a></li>)}
             </ul>
@@ -213,8 +214,8 @@ function PlaneTile({ f, open, onToggle }: { f: Plane; open: boolean; onToggle: (
             <ChevronDown aria-hidden="true" className={`size-3.5 shrink-0 text-foreground/60 transition-transform ${open ? "rotate-180" : ""}`} />
           </span>
           <span className="block truncate font-display text-base leading-tight">{f.nickname ?? f.name.replace(/^\d{4} /, "")}</span>
-          <span className="block truncate text-xs text-foreground/70">{f.name}</span>
-          <span className="mt-0.5 block text-xs font-bold tabular-nums">{f.rate ? <>{f.rate} <span className="font-semibold text-foreground/60">wet</span></> : <span className="font-semibold text-foreground/60">Ask for rate</span>}</span>
+          <span className="block truncate text-xs text-foreground/70"><ST k={`fleet.${f.registration}.name`} d={f.name} /></span>
+          <span className="mt-0.5 block text-xs font-bold tabular-nums">{f.rate ? <><FleetPrice reg={f.registration} field="regular" /> <span className="font-semibold text-foreground/60">wet</span></> : <span className="font-semibold text-foreground/60">Ask for rate</span>}</span>
         </span>
       </button>
     </article>
@@ -228,9 +229,9 @@ function QuickLook({ f, onClose, onView }: { f: Plane; onClose: () => void; onVi
     <section id={`${id}-quick`} aria-label={`${f.registration} quick look`} className="col-span-2 border border-foreground bg-background p-4 duration-300 animate-in fade-in slide-in-from-top-1">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/70">{ROLE_LABEL[f.role]} · {f.use}</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/70">{ROLE_LABEL[f.role]} · <ST k={`fleet.${f.registration}.use`} d={f.use} /></p>
           <h2 className="mt-1 font-display text-xl leading-tight">{f.registration}{f.nickname && ` “${f.nickname}”`}</h2>
-          <p className="text-sm text-foreground/75">{f.name}</p>
+          <p className="text-sm text-foreground/75"><ST k={`fleet.${f.registration}.name`} d={f.name} /></p>
         </div>
         <button type="button" onClick={onClose} aria-label="Close quick look" className="-mr-2 -mt-2 grid size-11 place-items-center"><X className="size-4" /></button>
       </div>

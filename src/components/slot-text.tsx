@@ -3,7 +3,7 @@ import { SLOT_BY_KEY, slotLimit } from "@/lib/content-slots";
 import { editStore, useEditState, type SpotMeta } from "@/lib/edit-store";
 import { useSiteContent } from "@/lib/use-site-content";
 import { useLiveRates } from "@/lib/use-live-rates";
-import { applyRates, defaultAircraftFor, rateKey, rateLabel, rateValue } from "@/lib/rates-engine";
+import { applyRates, defaultAircraftFor, FLEET_RATE_ROW, rateKey, rateLabel, rateValue } from "@/lib/rates-engine";
 import { programs, rentalRates } from "@/lib/site-data";
 
 const humanize = (k: string) => k.split(".").map(s => s.replace(/[-_]/g, " ")).join(" · ");
@@ -92,4 +92,10 @@ function EditableSpan({ k, value, meta, multiline = false, numeric = false, onTy
     onBlur={e => { editStore.setFocus(null); if (!e.currentTarget.textContent?.trim()) e.currentTarget.textContent = onEmpty(); }}
     onKeyDown={e => { if (e.key === "Enter" && (!multiline || numeric)) { e.preventDefault(); e.currentTarget.blur(); } if (e.key === "Escape") e.currentTarget.blur(); }}
     onInput={e => onType((e.currentTarget.textContent ?? "").replace(/\s+/g, " ").trim())} />;
+}
+
+/** A fleet airplane's price from the live rental table ("$185/hr"), editable in place. */
+export function FleetPrice({ reg, field, suffix = "/hr" }: { reg: string; field: "regular" | "prepay"; suffix?: string }) {
+  const row = FLEET_RATE_ROW[reg];
+  return row ? <><RateText k={rateKey.rental(row, field)} />{suffix}</> : null;
 }
