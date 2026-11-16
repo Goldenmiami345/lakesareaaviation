@@ -421,3 +421,10 @@ html.page-restoring main#main { visibility: hidden !important; }
 /* A returning page only fades in: the usual slide would shift the sections the return is aligning to. */
 @keyframes page-in-fade { from { opacity: 0; } to { opacity: 1; } }
 html.page-returning .page-enter { animation: page-in-fade .35s ease-out both; }
+
+/* Printed rate sheet (used when saved rates differ from the bundled PDF): content only. */
+@media print {
+  header, footer, .fixed, [data-print-hide] { display: none !important; }
+  [data-scroll-reveal] { opacity: 1 !important; transform: none !important; }
+  main { padding-top: 0 !important; }
+}

@@ -92,6 +92,13 @@
       "when": 1794813739578,
       "tag": "0012_site_rates_with_history",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794814093210,
+      "tag": "0013_site_content_with_history",
+      "breakpoints": true
     }
   ]
 }

@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      site_content: {
+        Row: {
+          content: Json
+          id: string
+          note: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          content?: Json
+          id: string
+          note?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          content?: Json
+          id?: string
+          note?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      site_content_history: {
+        Row: {
+          content: Json
+          id: string
+          note: string | null
+          replaced_at: string
+          saved_at: string
+          saved_by: string | null
+        }
+        Insert: {
+          content: Json
+          id?: string
+          note?: string | null
+          replaced_at?: string
+          saved_at: string
+          saved_by?: string | null
+        }
+        Update: {
+          content?: Json
+          id?: string
+          note?: string | null
+          replaced_at?: string
+          saved_at?: string
+          saved_by?: string | null
+        }
+        Relationships: []
+      }
       site_rates: {
         Row: {
           config: Json

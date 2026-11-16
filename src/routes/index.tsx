@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useSiteContent } from "../lib/use-site-content";
 import { srcSetFor } from "@/lib/responsive-image";
 import { ArrowRight, MapPin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -7,7 +8,6 @@ import heroTallImage from "../assets/photos/sunset-ramp-tall.webp.asset.json";
 import apachePhoto from "../assets/fleet/walkaround/n4383p-03-1600.webp.asset.json";
 const trainingImage = apachePhoto.url;
 import { InquiryBand, SiteLayout } from "../components/site-shell";
-import { testimonials } from "../lib/site-data";
 import { ScrollCue } from "../components/motion-experience";
 import { FlightJourney, airportStages, glideTo, jumpToJourney } from "../components/flight-journey";
 
@@ -28,7 +28,8 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-  const featuredStory = testimonials[0];
+  const site = useSiteContent();
+  const featuredStory = site.testimonials[0];
   if (!featuredStory) return null;
   return <SiteLayout overlayHeader>
     <div>

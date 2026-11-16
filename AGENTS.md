@@ -50,4 +50,4 @@
 
 - Netlify: NETLIFY-only @netlify/vite-plugin-tanstack-start, nitro off (its netlify preset breaks prerender); Lovable default untouched.
 - Course facts: specialtyCourses (site-data.ts) + specialty-photos.ts; /specialized-training/<slug> pages, vite pages, contracts and sitemap stay in step (plan-preselect.test.ts). ?program= on /contact preselects after mount.
-- Prices: site-data.ts holds published defaults; site_rates.config holds admin overrides only, applied by the pure rates-engine.ts (useLiveRates after mount, so prerendered HTML stays the published rates). A BEFORE UPDATE trigger archives every prior version to site_rates_history, so saves are always restorable.
+- Owner edits (site_rates, site_content via rates-engine.ts/content-slots.ts) store overrides only, load after mount, and are archived by triggers for restore.

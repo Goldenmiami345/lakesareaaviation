@@ -5,6 +5,7 @@ import { parseMobileJourneyMode, type MobileJourneyMode } from "@/lib/story-nav"
 import { parseDesktopJourneyMode, type DesktopJourneyMode } from "@/lib/use-site-settings";
 import { Button } from "@/components/ui/button";
 import { AdminRates } from "@/components/admin-rates";
+import { AdminContent } from "@/components/admin-content";
 import { MAP_MODEL_AIRCRAFT } from "@/lib/map-models";
 import { applyAccentTheme, type AccentTheme } from "@/components/theme-sync";
 import { lovable } from "@/integrations/lovable";
@@ -169,6 +170,7 @@ function AdminPage() {
             </div>
           </div>}
           {isAdmin && <AdminRates />}
+          {isAdmin && <AdminContent />}
         </>}
         {message && <p className="mt-5 text-sm text-muted-foreground" role="status">{message}</p>}
       </div>
