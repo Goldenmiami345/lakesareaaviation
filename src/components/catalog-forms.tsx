@@ -138,7 +138,7 @@ export function ProgramForm({ rates, taken, onSubmit, onCancel, onDraft }: { rat
         const rLine = b.what === "rental" ? applied.rentalRates.find(r => r.aircraft === b.aircraft) : undefined;
         const iLine = b.what === "rental" ? undefined : applied.instructionRates.find(r => r.label === b.instruction);
         const line = rLine ? `${rLine.aircraft} · ${rLine.prepay}/hr prepay` : iLine ? `${iLine.label} · ${iLine.rate}/hr` : "";
-        return <div key={i} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:grid-cols-[4.5rem_minmax(0,9rem)_minmax(0,1fr)_auto] sm:items-center">
+        return <div key={i} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:grid-cols-[4.5rem_auto_minmax(0,1fr)_auto] sm:items-center">
           <Input aria-label="Hours" className="col-start-1 row-start-1" value={b.hours || ""} onChange={e => upd(i, { hours: Number(e.target.value.replace(/[^\d.]/g, "")) || 0 })} inputMode="decimal" />
           <button type="button" aria-label="Remove line" onClick={() => setBlocks(l => l.filter((_, j) => j !== i))} className="col-start-2 row-start-1 grid size-10 place-items-center text-muted-foreground hover:text-destructive sm:col-start-4"><Trash2 className="size-4" /></button>
           <select aria-label="Kind" className={`${select} col-span-2 row-start-2 sm:col-span-1 sm:col-start-2 sm:row-start-1`} value={b.what} onChange={e => upd(i, { what: e.target.value as ProgramBlock["what"] })}><option value="rental">hrs rental</option><option value="flight">hrs flight instr.</option><option value="ground">hrs ground instr.</option></select>
