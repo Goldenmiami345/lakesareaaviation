@@ -1,4 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useSiteContent } from "../lib/use-site-content";
 import { ArrowRight, Check, Clock3, DollarSign, FileCheck2 } from "lucide-react";
 import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
 import { programs, testimonials } from "../lib/site-data";
@@ -19,7 +20,7 @@ const heroBySlug: Record<string,string>={"private-pilot":runway,"instrument-rati
 
 export const Route=createFileRoute("/programs/$slug")({
   staticData: { sitemap: true },loader:({params})=>{const program=programs.find(p=>p.slug===params.slug);if(!program)throw notFound();return program},head:({loaderData})=>{const title=`${loaderData?.name??"Flight Training"} | Lakes Area Aviation`;const d=loaderData?.description??"Focused flight training programs.";return{meta:[{title},{name:"description",content:d},{property:"og:title",content:title},{property:"og:description",content:d},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary_large_image"}]}},component:ProgramPage});
-function ProgramPage(){const base=Route.useLoaderData();const live=useLiveRates();const p=live.programs.find(x=>x.slug===base.slug)??base;return <SiteLayout><PageIntro eyebrow={p.short} title={p.name} text={p.description} image={heroBySlug[p.slug]??clouds} imageAlt={`${p.name} training`}/><div>
+function ProgramPage(){const base=Route.useLoaderData();const live=useLiveRates();const site=useSiteContent();const lp=live.programs.find(x=>x.slug===base.slug)??base;const p={...lp,description:site.get(`program.${lp.slug}.description`)||lp.description};const testimonials=site.testimonials;return <SiteLayout><PageIntro eyebrow={p.short} title={p.name} text={p.description} image={heroBySlug[p.slug]??clouds} imageAlt={`${p.name} training`}/><div>
   <section className="site-container relative z-10 -mt-10"><div className="grid gap-px overflow-hidden border border-border bg-border shadow-2xl sm:grid-cols-2 lg:grid-cols-4" data-scroll-reveal>
     <div className="bg-background p-6"><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Timeline</p><p className="mt-2 font-display text-3xl">{p.slug==="cfi-cfii"?"4–6 weeks":p.options.at(0)?.timeline??"Custom"}</p></div>
     <div className="bg-background p-6"><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Estimate from</p><p className="mt-2 font-display text-3xl">{p.options.at(0)?.estimatedCost??"Request"}</p></div>

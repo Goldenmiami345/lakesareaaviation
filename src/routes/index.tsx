@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useSiteContent } from "../lib/use-site-content";
 import { srcSetFor } from "@/lib/responsive-image";
 import { ArrowRight, MapPin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -28,7 +29,8 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-  const featuredStory = testimonials[0];
+  const site = useSiteContent();
+  const featuredStory = site.testimonials[0];
   if (!featuredStory) return null;
   return <SiteLayout overlayHeader>
     <div>
