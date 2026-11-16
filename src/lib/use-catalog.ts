@@ -49,6 +49,7 @@ export function usePrograms() {
 }
 export function useCourses() {
   const { catalog, ready, editing } = useCatalog();
-  const all = useMemo(() => allCourses(catalog), [catalog]);
+  const rates = useLiveRates();
+  const all = useMemo(() => allCourses(catalog, rates), [catalog, rates]);
   return { all, courses: all.filter(p => !p.hidden), ready, editing };
 }
