@@ -2,7 +2,7 @@
 // (site-data.ts) plus what the owner added, minus what the owner hid (site_catalog.catalog).
 // Hiding never deletes, so anything hidden comes back in one click.
 import { fleet as baseFleet, programs as basePrograms, specialtyCourses as baseCourses, type FleetRole, type Program, type SpecialtyCourse, type SpecialtyKind } from "./site-data";
-import { FLEET_RATE_ROW, fleetRate, numOf, usdOf, type AppliedRates } from "./rates-engine";
+import { FLEET_RATE_ROW, fleetRate, isMultiEngineLine, numOf, rateKey, usdOf, type AppliedRates } from "./rates-engine";
 
 export type Plane = (typeof baseFleet)[number] & { rateRow?: string | undefined; added?: boolean; photos?: string[]; edited?: boolean };
 /** Owner changes to any airplane (published or added). Only fields that differ are kept;
@@ -12,8 +12,10 @@ export type AddedPlane = { registration: string; name: string; nickname?: string
 export type ProgramBlock = { hours: number; what: "rental"; aircraft: string } | { hours: number; what: "flight" | "ground"; instruction: string };
 export type AddedProgram = { slug: string; name: string; short: string; description: string; timeline: string; fee: number; blocks: ProgramBlock[]; requirements: string[]; notes: string[] };
 export type AddedCourse = { slug: string; name: string; kind: SpecialtyKind; summary: string; definition: string; train: string[]; location?: string; photo?: string };
+/** Optional price for a specialty course or endorsement, worked out from the rates like a program. */
+export type CoursePricing = { fee: number; blocks: ProgramBlock[] };
 export type CatalogKind = "fleet" | "programs" | "courses";
-export type Catalog = { hidden: Record<CatalogKind, string[]>; fleet: AddedPlane[]; programs: AddedProgram[]; courses: AddedCourse[]; edits?: Record<string, PlaneEdit> };
+export type Catalog = { hidden: Record<CatalogKind, string[]>; fleet: AddedPlane[]; programs: AddedProgram[]; courses: AddedCourse[]; edits?: Record<string, PlaneEdit>; coursePricing?: Record<string, CoursePricing> };
 export const EMPTY_CATALOG: Catalog = { hidden: { fleet: [], programs: [], courses: [] }, fleet: [], programs: [], courses: [] };
 export const PLANE_LIMITS = { name: 60, nickname: 30, use: 80, note: 400, specs: 16, specKey: 30, specValue: 80, photos: 12 } as const;
 
@@ -26,6 +28,16 @@ const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice
 const lines = (v: unknown, n: number, max: number) => (Array.isArray(v) ? v.map(x => str(x, max)).filter(Boolean).slice(0, n) : []);
 const https = (v: unknown) => { const s = str(v, 2000); return /^https:\/\//.test(s) ? s : ""; };
 const hours = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v > 0 && v <= 500 ? Math.round(v * 10) / 10 : 0);
+const feeOf = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= 100000 ? Math.round(v) : 0);
+function cleanBlocks(raw: unknown): ProgramBlock[] {
+  const blocks: ProgramBlock[] = [];
+  for (const b of Array.isArray(raw) ? raw.slice(0, 12) : []) {
+    const h = hours(b?.hours); if (!h) continue;
+    if (b.what === "rental") { const a = str(b.aircraft, 60); if (a) blocks.push({ hours: h, what: "rental", aircraft: a }); }
+    else if (b.what === "flight" || b.what === "ground") { const i = str(b.instruction, 80); if (i) blocks.push({ hours: h, what: b.what, instruction: i }); }
+  }
+  return blocks;
+}
 
 /** Keep only well-formed entries; anything malformed is dropped so a bad save can never break a page. */
 export function cleanCatalog(raw: unknown): Catalog {
@@ -47,13 +59,8 @@ export function cleanCatalog(raw: unknown): Catalog {
   for (const p of Array.isArray(c.programs) ? c.programs : []) {
     const slug = str(p?.slug, 60); const name = str(p?.name, 60);
     if (!SLUG.test(slug) || progSlugs.has(slug) || !name) continue; progSlugs.add(slug);
-    const blocks: ProgramBlock[] = [];
-    for (const b of Array.isArray(p.blocks) ? p.blocks.slice(0, 12) : []) {
-      const h = hours(b?.hours); if (!h) continue;
-      if (b.what === "rental") { const a = str(b.aircraft, 60); if (a) blocks.push({ hours: h, what: "rental", aircraft: a }); }
-      else if (b.what === "flight" || b.what === "ground") { const i = str(b.instruction, 80); if (i) blocks.push({ hours: h, what: b.what, instruction: i }); }
-    }
-    const fee = typeof p.fee === "number" && Number.isFinite(p.fee) && p.fee >= 0 && p.fee <= 100000 ? Math.round(p.fee) : 0;
+    const blocks = cleanBlocks(p.blocks);
+    const fee = feeOf(p.fee);
     programs.push({ slug, name, short: str(p.short, 40) || name, description: str(p.description, 400), timeline: str(p.timeline, 40) || "Custom", fee, blocks, requirements: lines(p.requirements, 8, 200), notes: lines(p.notes, 8, 300) });
   }
   const courses: AddedCourse[] = [];
@@ -69,8 +76,14 @@ export function cleanCatalog(raw: unknown): Catalog {
     const out = cleanEdit(e);
     if (Object.keys(out).length) edits[reg] = out;
   }
+  const coursePricing: Record<string, CoursePricing> = {};
+  for (const [slug, v] of Object.entries(c.coursePricing && typeof c.coursePricing === "object" ? c.coursePricing : {})) {
+    if (!courseSlugs.has(slug) || !v || typeof v !== "object") continue;
+    const blocks = cleanBlocks(v.blocks); const fee = feeOf(v.fee);
+    if (blocks.length || fee) coursePricing[slug] = { fee, blocks };
+  }
   const hiddenOf = (k: CatalogKind) => { const v = (c.hidden as Record<string, unknown> | undefined)?.[k]; return Array.isArray(v) ? [...new Set(v.filter((s): s is string => typeof s === "string" && s.length <= 60))] : []; };
-  return { hidden: { fleet: hiddenOf("fleet"), programs: hiddenOf("programs"), courses: hiddenOf("courses") }, fleet, programs, courses, ...(Object.keys(edits).length ? { edits } : {}) };
+  return { hidden: { fleet: hiddenOf("fleet"), programs: hiddenOf("programs"), courses: hiddenOf("courses") }, fleet, programs, courses, ...(Object.keys(edits).length ? { edits } : {}), ...(Object.keys(coursePricing).length ? { coursePricing } : {}) };
 }
 
 function cleanEdit(e: Partial<Record<keyof PlaneEdit, unknown>>): PlaneEdit {
@@ -160,34 +173,86 @@ export function allPlanes(c: Catalog, r?: AppliedRates): (Plane & { hidden: bool
 }
 export const planesOf = (c: Catalog, r?: AppliedRates) => allPlanes(c, r).filter(f => !f.hidden);
 
-/** An added program priced from the live rates, in the same shape and line format as a published one. */
-export function buildProgram(p: AddedProgram, r: AppliedRates): Program {
-  let total = p.fee;
-  const items: string[] = p.fee ? [`Course fee: ${usdOf(p.fee)}`] : [];
+/** Course fee + hours of rental and instruction, priced from the live rates (rental at prepay). */
+export function priceBlocks(fee: number, blocks: ProgramBlock[], r: AppliedRates) {
+  let total = fee;
+  const items: string[] = fee ? [`Course fee: ${usdOf(fee)}`] : [];
   const details: string[] = [];
-  for (const b of p.blocks) {
+  for (const b of blocks) {
     const what = b.what === "rental" ? `${b.aircraft} rental` : `${b.what === "flight" ? "flight" : "ground"} instruction`;
     const rate = b.what === "rental" ? numOf(r.rentalRates.find(x => x.aircraft === b.aircraft)?.prepay ?? "0") : numOf(r.instructionRates.find(x => x.label === b.instruction)?.rate ?? "0");
     total += b.hours * rate;
     items.push(`${b.hours} hours ${what} at $${rate}/hr: ${usdOf(b.hours * rate)}`);
     details.push(`${b.hours} hours ${what}`);
   }
+  return { total, items, details, estimatedCost: `As low as ${usdOf(total)}` };
+}
+/** An added program priced from the live rates, in the same shape and line format as a published one. */
+export function buildProgram(p: AddedProgram, r: AppliedRates): Program {
+  const { items, details, estimatedCost } = priceBlocks(p.fee, p.blocks, r);
   return { slug: p.slug, name: p.name, short: p.short, description: p.description, details, notes: p.notes,
-    options: [{ name: p.name, timeline: p.timeline, estimatedCost: `As low as ${usdOf(total)}`, lineItems: items, requirements: p.requirements }] };
+    options: [{ name: p.name, timeline: p.timeline, estimatedCost, lineItems: items, requirements: p.requirements }] };
 }
 export function allPrograms(c: Catalog, r: AppliedRates): (Program & { hidden: boolean; added?: boolean })[] {
   return [...r.programs, ...c.programs.map(p => ({ ...buildProgram(p, r), added: true }))].map(p => ({ ...p, hidden: c.hidden.programs.includes(p.slug) }));
 }
 export const programsOf = (c: Catalog, r: AppliedRates) => allPrograms(c, r).filter(p => !p.hidden);
 
-export function allCourses(c: Catalog): (SpecialtyCourse & { hidden: boolean; photo?: string; added?: boolean })[] {
+export type CoursePrice = { estimatedCost: string; lineItems: string[] };
+export type CourseItem = SpecialtyCourse & { hidden: boolean; photo?: string; added?: boolean; price?: CoursePrice };
+/** Every course; with rates, the ones the owner priced carry their worked-out estimate. */
+export function allCourses(c: Catalog, r?: AppliedRates): CourseItem[] {
   return [...baseCourses, ...c.courses.map(x => ({ slug: x.slug, name: x.name, kind: x.kind, summary: x.summary, definition: x.definition, train: x.train, facts: [], ...(x.location ? { location: x.location } : {}), ...(x.photo ? { photo: x.photo } : {}), added: true }))]
-    .map(x => ({ ...x, hidden: c.hidden.courses.includes(x.slug) }));
+    .map(x => {
+      const pr = r && c.coursePricing?.[x.slug];
+      const price = pr ? priceBlocks(pr.fee, pr.blocks, r) : null;
+      return { ...x, hidden: c.hidden.courses.includes(x.slug), ...(price ? { price: { estimatedCost: price.estimatedCost, lineItems: price.items } } : {}) };
+    });
 }
-export const coursesOf = (c: Catalog) => allCourses(c).filter(x => !x.hidden);
+export const coursesOf = (c: Catalog, r?: AppliedRates) => allCourses(c, r).filter(x => !x.hidden);
+/** Set (or with null, remove) the price of one course. */
+export function setCoursePricing(c: Catalog, slug: string, p: CoursePricing | null): Catalog {
+  const next = { ...c.coursePricing };
+  const blocks = p ? p.blocks.filter(b => b.hours > 0) : [];
+  if (p && (blocks.length || p.fee > 0)) next[slug] = { fee: Math.max(0, Math.round(p.fee)), blocks }; else delete next[slug];
+  const { coursePricing: _old, ...rest } = c;
+  return Object.keys(next).length ? { ...rest, coursePricing: next } : rest;
+}
 
 /** Hide or bring back one item. */
 export function setHidden(c: Catalog, kind: CatalogKind, id: string, hidden: boolean): Catalog {
   const list = c.hidden[kind].filter(x => x !== id);
   return { ...c, hidden: { ...c.hidden, [kind]: hidden ? [...list, id] : list } };
+}
+
+// ---- One airplane's hourly price. Changing it on an airplane that shares a rate line gives that
+// airplane its own line (the others keep theirs) unless the owner chooses the whole line.
+export type PlanePrice = { regular: number; prepay: number; scope: "plane" | "line" };
+/** The airplanes on a rate line, in "“Blue,” “Robin” or “Phoenix”" style. */
+export function joinNames(names: string[]) {
+  const q = names.map(n => `“${n}”`);
+  if (q.length <= 1) return q.join("");
+  return [...names.slice(0, -2).map(n => `“${n},”`), `${q.at(-2)} or ${q.at(-1)}`].join(" ");
+}
+/** Take one nickname out of a rate line's airplane list (unchanged when it isn't listed). */
+export function withoutName(list: string, name: string) {
+  const names = [...list.matchAll(/“([^”]+)”/g)].map(m => m[1]!.replace(/,$/, "").trim());
+  if (!names.includes(name) || names.length < 2) return list;
+  return joinNames(names.filter(n => n !== name));
+}
+export const ownLineName = (line: string, reg: string) => `${line.slice(0, 60 - reg.length - 3)} (${reg})`;
+/** Rate edits (rateKey -> value, for withRateDrafts or the visual editor) and the rate line the
+ *  airplane ends up on. */
+export function planePriceChange(c: Catalog, r: AppliedRates, reg: string, line: string, price: PlanePrice): { drafts: Record<string, string>; rateRow: string } {
+  const row = r.rentalRates.find(x => x.aircraft === line);
+  const plane = allPlanes(c).find(p => p.registration === reg);
+  if (!row || !plane || !(price.regular >= 0) || !(price.prepay >= 0)) return { drafts: {}, rateRow: line };
+  if (numOf(row.regular) === price.regular && numOf(row.prepay) === price.prepay) return { drafts: {}, rateRow: line };
+  const sharers = allPlanes(c).filter(p => p.registration !== reg && p.rateRow === line);
+  if (price.scope === "line" || !sharers.length) return { drafts: { [rateKey.rental(line, "regular")]: String(price.regular), [rateKey.rental(line, "prepay")]: String(price.prepay) }, rateRow: line };
+  const own = ownLineName(line, reg);
+  const twin = plane.role === "twin" || isMultiEngineLine(line, r.config.extraRental);
+  const drafts: Record<string, string> = { [rateKey.newRow(own)]: JSON.stringify({ names: plane.nickname ? `“${plane.nickname}”` : reg, regular: price.regular, prepay: price.prepay, ...(twin ? { twin: true } : {}) }) };
+  if (plane.nickname && !("added" in row)) { const rest = withoutName(row.names, plane.nickname); if (rest !== row.names) drafts[rateKey.names(line)] = rest; }
+  return { drafts, rateRow: own };
 }

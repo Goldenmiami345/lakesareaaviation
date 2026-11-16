@@ -68,7 +68,7 @@ export function AssignAircraft({ option }: { option: string }) {
   const edit = useEditState();
   const rates = useLiveRates();
   const o = programs.flatMap(p => p.options).find(x => x.name === option);
-  const choices = o ? aircraftChoicesFor(o.lineItems) : [];
+  const choices = o ? aircraftChoicesFor(o.lineItems, rates.config.extraRental) : [];
   if (!isEditing(edit) || !o || choices.length < 2) return null; // e.g. multi-engine courses: the Apache is the only twin
   const k = rateKey.assign(option);
   const published = rateValue(ratesOf(edit), k);

@@ -15,6 +15,8 @@ import { resetCatalog, useCatalog } from "@/lib/use-catalog";
 import { cleanCatalog } from "@/lib/catalog";
 import { cleanConfig, isRateKey, withRateDrafts } from "@/lib/rates-engine";
 import { EDIT_PAGES, groupPages } from "@/lib/edit-pages";
+import { SitePreview } from "./site-preview";
+import type { PreviewState } from "@/lib/site-preview";
 
 type Version = { id: string; content: Json; note: string | null; saved_at: string };
 type RateVersion = { id: string; config: Json; note: string | null; saved_at: string };
@@ -39,6 +41,8 @@ export default function SiteEditor() {
   const [catalogHistory, setCatalogHistory] = useState<CatalogVersion[]>([]);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  /** An earlier version shown in a preview frame before restoring it. */
+  const [peek, setPeek] = useState<{ title: string; state: PreviewState } | null>(null);
   const [hover, setHover] = useState<{ key: string; rect: DOMRect } | null>(null);
   const file = useRef<HTMLInputElement>(null);
   const pendingPhoto = useRef<string | null>(null);
@@ -168,24 +172,22 @@ export default function SiteEditor() {
       <Popover>
         <PopoverTrigger className={bar} disabled={busy}><History className="size-4" /> History</PopoverTrigger>
         <PopoverContent side="top" align="end" className="z-[210] max-h-[70vh] w-80 overflow-auto rounded-none p-2">
-          <p className="px-2 py-1 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">Words & photos · restore a version</p>
-          <ul>
-            <li><button type="button" disabled={busy} onClick={() => write({ content: {} }, "Restored original words and photos", "Original words and photos are live again.")} className="flex min-h-11 w-full items-center justify-between gap-2 px-2 text-left text-sm hover:bg-secondary">Original words & photos <RotateCcw className="size-4" /></button></li>
-            {history.map(v => <li key={v.id}><button type="button" disabled={busy} onClick={() => write({ content: cleanContent(v.content) }, `Restored version from ${when(v.saved_at)}`, "That version is live again.")} className="flex min-h-11 w-full items-center justify-between gap-2 px-2 text-left text-sm hover:bg-secondary">
-              <span className="min-w-0"><span className="block">{when(v.saved_at)}</span>{v.note && <span className="block truncate text-xs text-muted-foreground">{v.note}</span>}</span><RotateCcw className="size-4 shrink-0" /></button></li>)}
-          </ul>
-          <p className="mt-2 border-t border-border px-2 pb-1 pt-3 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">Prices · restore a version</p>
-          <ul>
-            <li><button type="button" disabled={busy} onClick={() => write({ rates: {} }, "Restored original published rates", "Original rates are live again.")} className="flex min-h-11 w-full items-center justify-between gap-2 px-2 text-left text-sm hover:bg-secondary">Original published rates <RotateCcw className="size-4" /></button></li>
-            {rateHistory.map(v => <li key={v.id}><button type="button" disabled={busy} onClick={() => write({ rates: cleanConfig(v.config) }, `Restored rates from ${when(v.saved_at)}`, "Those rates are live again.")} className="flex min-h-11 w-full items-center justify-between gap-2 px-2 text-left text-sm hover:bg-secondary">
-              <span className="min-w-0"><span className="block">{when(v.saved_at)}</span>{v.note && <span className="block truncate text-xs text-muted-foreground">{v.note}</span>}</span><RotateCcw className="size-4 shrink-0" /></button></li>)}
-          </ul>
-          <p className="mt-2 border-t border-border px-2 pb-1 pt-3 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">Fleet & courses · restore a version</p>
-          <ul>
-            <li><button type="button" disabled={busy} onClick={() => write({ catalog: {} }, "Restored the original fleet and courses", "The original fleet and courses are live again.")} className="flex min-h-11 w-full items-center justify-between gap-2 px-2 text-left text-sm hover:bg-secondary">Original fleet & courses <RotateCcw className="size-4" /></button></li>
-            {catalogHistory.map(v => <li key={v.id}><button type="button" disabled={busy} onClick={() => write({ catalog: cleanCatalog(v.catalog) }, `Restored fleet & courses from ${when(v.saved_at)}`, "That version is live again.")} className="flex min-h-11 w-full items-center justify-between gap-2 px-2 text-left text-sm hover:bg-secondary">
-              <span className="min-w-0"><span className="block">{when(v.saved_at)}</span>{v.note && <span className="block truncate text-xs text-muted-foreground">{v.note}</span>}</span><RotateCcw className="size-4 shrink-0" /></button></li>)}
-          </ul>
+          <p className="px-2 pb-1 text-xs text-muted-foreground">The eye shows a version on the site first; nothing changes until you restore.</p>
+          {([
+            { title: "Words & photos", items: [{ id: "o", label: "Original words & photos", note: null as string | null, state: { content: {} } as PreviewState, restore: () => write({ content: {} }, "Restored original words and photos", "Original words and photos are live again.") },
+              ...history.map(v => ({ id: v.id, label: when(v.saved_at), note: v.note, state: { content: cleanContent(v.content) } as PreviewState, restore: () => write({ content: cleanContent(v.content) }, `Restored version from ${when(v.saved_at)}`, "That version is live again.") }))] },
+            { title: "Prices", items: [{ id: "o", label: "Original published rates", note: null as string | null, state: { rates: {} } as PreviewState, restore: () => write({ rates: {} }, "Restored original published rates", "Original rates are live again.") },
+              ...rateHistory.map(v => ({ id: v.id, label: when(v.saved_at), note: v.note, state: { rates: cleanConfig(v.config) } as PreviewState, restore: () => write({ rates: cleanConfig(v.config) }, `Restored rates from ${when(v.saved_at)}`, "Those rates are live again.") }))] },
+            { title: "Fleet & courses", items: [{ id: "o", label: "Original fleet & courses", note: null as string | null, state: { catalog: cleanCatalog({}) } as PreviewState, restore: () => write({ catalog: {} }, "Restored the original fleet and courses", "The original fleet and courses are live again.") },
+              ...catalogHistory.map(v => ({ id: v.id, label: when(v.saved_at), note: v.note, state: { catalog: cleanCatalog(v.catalog) } as PreviewState, restore: () => write({ catalog: cleanCatalog(v.catalog) }, `Restored fleet & courses from ${when(v.saved_at)}`, "That version is live again.") }))] },
+          ]).map((g, gi) => <div key={g.title}>
+            <p className={`px-2 pb-1 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground ${gi ? "mt-2 border-t border-border pt-3" : "pt-1"}`}>{g.title} · restore a version</p>
+            <ul>{g.items.map(v => <li key={v.id} className="flex items-stretch">
+              <button type="button" disabled={busy} onClick={() => void v.restore()} className="flex min-h-11 min-w-0 flex-1 items-center justify-between gap-2 px-2 text-left text-sm hover:bg-secondary">
+                <span className="min-w-0"><span className="block">{v.label}</span>{v.note && <span className="block truncate text-xs text-muted-foreground">{v.note}</span>}</span><RotateCcw className="size-4 shrink-0" /></button>
+              <button type="button" aria-label={`Preview ${g.title.toLowerCase()} from ${v.label}`} title="Preview this version" onClick={() => setPeek({ title: `${g.title} · ${v.label}`, state: v.state })} className="grid w-11 shrink-0 place-items-center hover:bg-secondary"><Eye className="size-4" /></button>
+            </li>)}</ul>
+          </div>)}
         </PopoverContent>
       </Popover>
       <button type="button" className={bar} disabled={busy || !keys.length} onClick={() => { editStore.clearDrafts(); setMsg("Changes discarded."); }}><RotateCcw className="size-4" /> Discard</button>
@@ -194,5 +196,8 @@ export default function SiteEditor() {
         {busy ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Publish</button>
       <button type="button" className={bar} aria-label="Exit editor" onClick={exit}><X className="size-4" /></button>
     </div>
+    {peek && <div role="dialog" aria-modal="true" aria-label={`Earlier version: ${peek.title}`} className="fixed inset-2 z-[220] overflow-auto border border-border bg-background p-3 shadow-2xl sm:inset-6">
+      <SitePreview startOpen pages={[{ label: "This page", path }, ...EDIT_PAGES.filter(p => p.path !== path && !p.label.includes(" · "))]} state={peek.state} title={`Earlier version · ${peek.title} · not live`} onClose={() => setPeek(null)} />
+    </div>}
   </>;
 }

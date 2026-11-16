@@ -163,7 +163,7 @@ function AdminPage() {
   </main>;
 
   const current = SECTIONS.find(x => x.id === tab)!;
-  return <div className="min-h-screen bg-secondary text-foreground">
+  return <div className="min-h-screen bg-secondary text-foreground [--form-sticky-top:calc(7rem+1px)] md:[--form-sticky-top:3.5rem]">
     {/* Top bar: who you are, the site, the editor. */}
     <header className="sticky top-0 z-40 bg-ink text-background">
       <div className="flex min-h-14 items-center gap-3 px-4 sm:px-6">

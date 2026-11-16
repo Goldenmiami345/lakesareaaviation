@@ -1,12 +1,12 @@
 import { rateKey, } from "@/lib/rates-engine";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { SlotText, RateText, } from "@/components/slot-text";
+import { SlotText, RateText, CalcText } from "@/components/slot-text";
 import { useSiteContent } from "../lib/use-site-content";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { srcSetFor } from "@/lib/responsive-image";
 import { InquiryBand, SiteLayout } from "../components/site-shell";
 import { findSpecialty, SPECIALTY_KIND_LABEL, type SpecialtyCourse } from "../lib/site-data";
-import { SLUG } from "../lib/catalog";
+import { SLUG, type CoursePrice } from "../lib/catalog";
 import { useCourses } from "../lib/use-catalog";
 import { HideToggle } from "../components/catalog-controls";
 import { coursePhoto } from "../lib/course-photo";
@@ -37,7 +37,7 @@ function SpecialtyPage() {
   return <SiteLayout><div className="site-container min-h-[60vh] pb-16 pt-28">{ready && <><p className="font-display text-3xl"><SlotText k="courses.gone.title" d="This course is no longer offered." /></p><Link to="/specialized-training" className="mt-6 inline-flex min-h-11 items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-primary-text"><SlotText k="courses.gone.link" d="See specialized training" /> <ArrowRight className="size-4" /></Link></>}</div></SiteLayout>;
 }
 
-function CourseBody({ c, list }: { c: SpecialtyCourse & { hidden?: boolean; photo?: string }; list: SpecialtyCourse[] }) {
+function CourseBody({ c, list }: { c: SpecialtyCourse & { hidden?: boolean; photo?: string; price?: CoursePrice }; list: SpecialtyCourse[] }) {
   const site = useSiteContent();
   const photo = coursePhoto(site, c);
   const facts = [...(c.location ? [{ k: "Location", v: c.location }] : []), ...c.facts, { k: "Estimate", v: "In your training plan" }];
@@ -57,7 +57,7 @@ function CourseBody({ c, list }: { c: SpecialtyCourse & { hidden?: boolean; phot
     </section>
     <section className="site-container relative z-10 -mt-6 sm:-mt-8">
       <div className="grid gap-px overflow-hidden border border-border bg-border shadow-2xl sm:grid-cols-2 lg:grid-flow-col lg:grid-cols-none lg:auto-cols-fr">
-        {facts.map((f) => <div key={f.k} className="bg-background p-5 sm:p-6"><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{c.facts.includes(f) ? <SlotText k={`course.${c.slug}.fact.${c.facts.indexOf(f)}.k`} d={f.k} /> : <SlotText k={`specialized.fact.${f.k.toLowerCase()}`} d={f.k} />}</p><p className="mt-2 font-display text-2xl sm:text-3xl">{f.k === "Location" ? <SlotText k={`course.${c.slug}.location`} d={c.location!} /> : c.facts.includes(f) ? c.slug === "tailwheel" && f.v === "$135/hr wet" ? <><RateText k={rateKey.rental("Taylorcraft BC-12D", "regular")} /><SlotText k="course.tailwheel.rate-suffix" d="/hr wet" /></> : <SlotText k={`course.${c.slug}.fact.${c.facts.indexOf(f)}.v`} d={f.v} /> : <SlotText k="specialized.estimate-value" d={f.v} />}</p></div>)}
+        {facts.map((f) => <div key={f.k} className="bg-background p-5 sm:p-6"><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{c.facts.includes(f) ? <SlotText k={`course.${c.slug}.fact.${c.facts.indexOf(f)}.k`} d={f.k} /> : <SlotText k={`specialized.fact.${f.k.toLowerCase()}`} d={f.k} />}</p><p className="mt-2 font-display text-2xl sm:text-3xl">{f.k === "Location" ? <SlotText k={`course.${c.slug}.location`} d={c.location!} /> : c.facts.includes(f) ? c.slug === "tailwheel" && f.v === "$135/hr wet" ? <><RateText k={rateKey.rental("Taylorcraft BC-12D", "regular")} /><SlotText k="course.tailwheel.rate-suffix" d="/hr wet" /></> : <SlotText k={`course.${c.slug}.fact.${c.facts.indexOf(f)}.v`} d={f.v} /> : c.price ? <CalcText>{c.price.estimatedCost}</CalcText> : <SlotText k="specialized.estimate-value" d={f.v} />}</p></div>)}
         <Link to="/contact" search={{ program: c.name }} className={`btn-shine flex min-h-16 items-center justify-between gap-3 bg-primary p-5 text-sm font-bold uppercase text-primary-foreground sm:p-6 lg:col-span-1 ${facts.length % 2 === 0 ? "sm:col-span-2" : ""}`}><SlotText k="cta.plan" d="Build my training plan" /> <ArrowRight className="size-5" /></Link>
       </div>
     </section>
@@ -65,6 +65,10 @@ function CourseBody({ c, list }: { c: SpecialtyCourse & { hidden?: boolean; phot
       <div>
         <p className="eyebrow text-primary-text"><SlotText k="specialized-training---slug.text.2" d="What you’ll train" /></p>
         <ul className="mt-5 border-y border-border">{c.train.map((t,i) => <li key={t} className="flex gap-4 border-b border-border py-4 last:border-0"><Check className="mt-0.5 size-5 shrink-0 text-primary-text" /><span className="font-semibold"><SlotText k={`course.${c.slug}.train.${i}`} d={t} /></span></li>)}</ul>
+        {c.price && c.price.lineItems.length > 0 && <>
+          <p className="eyebrow mt-10 text-primary-text"><SlotText k="specialized.cost-breakdown" d="Cost breakdown" /></p>
+          <ul className="mt-5 border-y border-border">{c.price.lineItems.map((l) => <li key={l} className="border-b border-border py-3 text-sm leading-relaxed text-muted-foreground last:border-0"><CalcText>{l}</CalcText></li>)}</ul>
+        </>}
       </div>
       {related.length > 0 && <div>
         <p className="eyebrow text-primary-text">{c.kind === "endorsement" ? "More endorsements" : "More specialty courses"}</p>

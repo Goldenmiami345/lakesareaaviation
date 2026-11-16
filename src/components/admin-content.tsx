@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { History, ImageUp, RotateCcw, Save } from "lucide-react";
+import { Eye, History, ImageUp, RotateCcw, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
@@ -33,6 +33,7 @@ export function AdminContent() {
   const [note, setNote] = useState("");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
+  const [peek, setPeek] = useState<string | null>(null);
 
   async function load() {
     const [{ data: cur }, { data: hist }] = await Promise.all([
@@ -106,9 +107,18 @@ export function AdminContent() {
 
     <h3 className="mt-8 flex items-center gap-2 font-display text-xl"><History className="size-5" /> Earlier versions</h3>
     <ul className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2">
-      <li className="flex items-center justify-between gap-3 border border-border p-3 text-sm"><span>Original words and photos</span><Button size="sm" variant="outline" disabled={busy} className="rounded-none" onClick={() => write({}, "Restored original words and photos", "Original words and photos restored.")}><RotateCcw /> Restore</Button></li>
-      {history.map(v => <li key={v.id} className="flex items-center justify-between gap-3 border border-border p-3 text-sm"><span className="min-w-0"><span className="block">{when(v.saved_at)}</span>{v.note && <span className="block truncate text-muted-foreground">{v.note}</span>}</span>
-        <Button size="sm" variant="outline" disabled={busy} className="rounded-none" onClick={() => write(cleanContent(v.content), `Restored version from ${when(v.saved_at)}`, "That version is restored and live.")}><RotateCcw /> Restore</Button></li>)}
+      {[{ id: "original", label: "Original words and photos", note: null as string | null, content: {} as Record<string, string> }, ...history.map(v => ({ id: v.id, label: when(v.saved_at), note: v.note, content: cleanContent(v.content) }))].map(v => {
+        // The pages to show first: wherever this version differs from what is live now.
+        const diff = [...new Set([...Object.keys(v.content), ...Object.keys(saved)])].filter(k => v.content[k] !== saved[k]);
+        return <li key={v.id} className="grid gap-3 border border-border p-3 text-sm">
+          <div className="flex items-center justify-between gap-3"><span className="min-w-0"><span className="block">{v.label}</span>{v.note && <span className="block text-muted-foreground">{v.note}</span>}</span>
+            <span className="flex shrink-0 flex-wrap justify-end gap-2">
+              <Button size="sm" variant={peek === v.id ? "secondary" : "outline"} className="rounded-none" aria-expanded={peek === v.id} onClick={() => setPeek(p => (p === v.id ? null : v.id))}><Eye /> Preview</Button>
+              <Button size="sm" variant="outline" disabled={busy} className="rounded-none" onClick={() => write(v.content, v.id === "original" ? "Restored original words and photos" : `Restored version from ${v.label}`, "That version is restored and live.")}><RotateCcw /> Restore</Button>
+            </span></div>
+          {peek === v.id && <SitePreview startOpen pages={contentPages(diff, NAMES)} state={{ content: v.content }} title={`Earlier words & photos · ${v.label} · not live`} onClose={() => setPeek(null)} />}
+        </li>;
+      })}
     </ul>
     {msg && <p className="mt-4 text-sm text-muted-foreground" role="status">{msg}</p>}
   </div>;
