@@ -134,14 +134,20 @@ export function ProgramForm({ rates, taken, onSubmit, onCancel, onDraft }: { rat
     <fieldset className="grid gap-2 border border-border p-3 text-sm">
       <legend className="px-1 font-semibold">What it costs</legend>
       <Field label="Course fee $"><Input value={f.fee} onChange={e => setF(v => ({ ...v, fee: e.target.value.replace(/[^\d]/g, "") }))} inputMode="numeric" className="max-w-32" /></Field>
-      {blocks.map((b, i) => <div key={i} className="grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-2 sm:grid-cols-[4.5rem_minmax(0,9rem)_minmax(0,1fr)_auto]">
-        <Input aria-label="Hours" value={b.hours || ""} onChange={e => upd(i, { hours: Number(e.target.value.replace(/[^\d.]/g, "")) || 0 })} inputMode="decimal" />
-        <select aria-label="Kind" className={select} value={b.what} onChange={e => upd(i, { what: e.target.value as ProgramBlock["what"] })}><option value="rental">hrs rental</option><option value="flight">hrs flight instr.</option><option value="ground">hrs ground instr.</option></select>
-        {b.what === "rental"
-          ? <select aria-label="Aircraft" className={`${selectFit} col-span-3 sm:col-span-1`} value={b.aircraft} onChange={e => upd(i, { aircraft: e.target.value } as Partial<ProgramBlock>)}>{applied.rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft} · {r.prepay}/hr</option>)}</select>
-          : <select aria-label="Instruction rate" className={`${selectFit} col-span-3 sm:col-span-1`} value={b.instruction} onChange={e => upd(i, { instruction: e.target.value } as Partial<ProgramBlock>)}>{applied.instructionRates.map(r => <option key={r.label} value={r.label}>{r.label} · {r.rate}/hr</option>)}</select>}
-        <button type="button" aria-label="Remove line" onClick={() => setBlocks(l => l.filter((_, j) => j !== i))} className="col-start-3 row-start-1 grid size-10 place-items-center text-muted-foreground hover:text-destructive sm:col-start-4 sm:row-start-1"><Trash2 className="size-4" /></button>
-      </div>)}
+      {blocks.map((b, i) => {
+        const rLine = b.what === "rental" ? applied.rentalRates.find(r => r.aircraft === b.aircraft) : undefined;
+        const iLine = b.what === "rental" ? undefined : applied.instructionRates.find(r => r.label === b.instruction);
+        const line = rLine ? `${rLine.aircraft} · ${rLine.prepay}/hr prepay` : iLine ? `${iLine.label} · ${iLine.rate}/hr` : "";
+        return <div key={i} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:grid-cols-[4.5rem_minmax(0,9rem)_minmax(0,1fr)_auto] sm:items-center">
+          <Input aria-label="Hours" className="col-start-1 row-start-1" value={b.hours || ""} onChange={e => upd(i, { hours: Number(e.target.value.replace(/[^\d.]/g, "")) || 0 })} inputMode="decimal" />
+          <button type="button" aria-label="Remove line" onClick={() => setBlocks(l => l.filter((_, j) => j !== i))} className="col-start-2 row-start-1 grid size-10 place-items-center text-muted-foreground hover:text-destructive sm:col-start-4"><Trash2 className="size-4" /></button>
+          <select aria-label="Kind" className={`${select} col-span-2 row-start-2 sm:col-span-1 sm:col-start-2 sm:row-start-1`} value={b.what} onChange={e => upd(i, { what: e.target.value as ProgramBlock["what"] })}><option value="rental">hrs rental</option><option value="flight">hrs flight instr.</option><option value="ground">hrs ground instr.</option></select>
+          {b.what === "rental"
+            ? <select aria-label="Aircraft" className={`${selectFit} col-span-2 row-start-3 justify-self-stretch sm:col-span-1 sm:col-start-3 sm:row-start-1 sm:justify-self-start`} value={b.aircraft} onChange={e => upd(i, { aircraft: e.target.value } as Partial<ProgramBlock>)}>{applied.rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft}</option>)}</select>
+            : <select aria-label="Instruction rate" className={`${selectFit} col-span-2 row-start-3 justify-self-stretch sm:col-span-1 sm:col-start-3 sm:row-start-1 sm:justify-self-start`} value={b.instruction} onChange={e => upd(i, { instruction: e.target.value } as Partial<ProgramBlock>)}>{applied.instructionRates.map(r => <option key={r.label} value={r.label}>{r.short}</option>)}</select>}
+          {line && <p className="col-span-2 row-start-4 text-xs text-muted-foreground sm:col-span-4 sm:row-start-2">{line}</p>}
+        </div>;
+      })}
       <button type="button" onClick={() => setBlocks(l => [...l, { hours: 5, what: "flight", instruction: applied.instructionRates[0]?.label ?? "" }])} className="inline-flex min-h-10 w-fit items-center gap-2 text-sm font-semibold text-primary-text"><Plus className="size-4" /> Add a line</button>
       <div className="mt-1 border-t border-border pt-3">
         <ul className="grid gap-1 text-xs text-muted-foreground">{preview.lineItems.map(l => <li key={l}>{l}</li>)}</ul>
