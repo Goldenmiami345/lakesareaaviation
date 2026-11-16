@@ -5,7 +5,10 @@ import { fleet, programs, specialtyCourses, testimonials } from "./site-data";
 import { SPECIALTY_PHOTOS } from "./specialty-photos";
 
 export type Slot = { key: string; group: string; label: string; kind: "text" | "photo"; def: string; max: number; multiline?: boolean };
-const limit = (s: string) => Math.max(Math.ceil(s.length * 1.4), s.length + 30);
+/** Longest replacement a spot accepts: short labels get a little room, sentences more, so a
+ *  rewrite never pushes the layout out of shape. */
+export const slotLimit = (s: string) => s.length <= 40 ? s.length + Math.max(10, Math.ceil(s.length * 0.6)) : Math.max(Math.ceil(s.length * 1.4), s.length + 30);
+const limit = slotLimit;
 const text = (key: string, group: string, label: string, def: string, multiline = false): Slot => ({ key, group, label, kind: "text", def, max: limit(def), multiline });
 
 export const SLOTS: Slot[] = [
@@ -25,12 +28,19 @@ export const SLOTS: Slot[] = [
 export const SLOT_BY_KEY = new Map(SLOTS.map(s => [s.key, s]));
 const BY_KEY = SLOT_BY_KEY;
 
+/** Inline text spots (SlotText with its own default) are named in the page code, not listed here;
+ *  their keys follow this shape and their length is checked against the default where they render. */
+export const INLINE_KEY = /^[a-z][a-z0-9-]*(\.[A-Za-z0-9_-]+)+$/;
+const INLINE_MAX = 2000;
+
 /** Keep only valid values for known slots; anything else falls back to the original. */
 export function cleanContent(raw: unknown): Record<string, string> {
   const out: Record<string, string> = {};
   if (!raw || typeof raw !== "object") return out;
   for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
-    const s = BY_KEY.get(k); if (!s || typeof v !== "string") continue;
+    if (typeof v !== "string") continue;
+    const s = BY_KEY.get(k);
+    if (!s) { const t = v.trim(); if (t && t.length <= INLINE_MAX && k.length <= 160 && INLINE_KEY.test(k) && !/\.photo$/.test(k)) out[k] = t; continue; }
     const t = v.trim(); if (!t || t.length > s.max || t === s.def) continue;
     if (s.kind === "photo" && !/^https:\/\//.test(t)) continue;
     out[k] = t;
@@ -41,9 +51,12 @@ export function cleanContent(raw: unknown): Record<string, string> {
 export function contentOf(raw: unknown) {
   const c = cleanContent(raw);
   const get = (key: string) => c[key] ?? BY_KEY.get(key)?.def ?? "";
+  /** Saved words for an inline spot, or its default when nothing (or something too long) is saved. */
+  const text = (key: string, def: string) => { const v = c[key]; return v !== undefined && v.length <= slotLimit(def) ? v : def; };
   return {
     values: c,
     get,
+    text,
     testimonials: testimonials.map((t, i) => ({ quote: get(`testimonial.${i}.quote`), name: get(`testimonial.${i}.name`), detail: get(`testimonial.${i}.detail`) })),
     photo: (slug: string) => { const p = SPECIALTY_PHOTOS[slug]; const o = c[`course.${slug}.photo`]; return o ? { src: o, alt: p?.alt ?? "", standIn: false } : p; },
   };
