@@ -16,6 +16,9 @@ import { uploadSlotPhoto } from "@/lib/media-upload";
 const field = "grid gap-1.5 text-sm font-semibold";
 const hint = "text-xs font-normal text-muted-foreground";
 const select = "h-10 w-full border border-input bg-background px-3 text-sm font-normal";
+/** Airplane and rate names are long: size these to their own text (never w-full, which clips them). */
+const selectFit = "h-10 w-auto max-w-full min-w-0 justify-self-start border border-input bg-background px-3 text-sm font-normal";
+const priceHint = "Prices are regular / prepay per hour.";
 const Field = ({ label, note, children }: { label: string; note?: string; children: ReactNode }) => <label className={field}>{label}{children}{note && <span className={hint}>{note}</span>}</label>;
 const linesOf = (s: string) => s.split("\n").map(x => x.trim()).filter(Boolean);
 
