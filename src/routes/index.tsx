@@ -8,7 +8,6 @@ import heroTallImage from "../assets/photos/sunset-ramp-tall.webp.asset.json";
 import apachePhoto from "../assets/fleet/walkaround/n4383p-03-1600.webp.asset.json";
 const trainingImage = apachePhoto.url;
 import { InquiryBand, SiteLayout } from "../components/site-shell";
-import { testimonials } from "../lib/site-data";
 import { ScrollCue } from "../components/motion-experience";
 import { FlightJourney, airportStages, glideTo, jumpToJourney } from "../components/flight-journey";
 

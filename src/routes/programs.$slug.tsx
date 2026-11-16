@@ -2,7 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useSiteContent } from "../lib/use-site-content";
 import { ArrowRight, Check, Clock3, DollarSign, FileCheck2 } from "lucide-react";
 import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
-import { programs, testimonials } from "../lib/site-data";
+import { programs } from "../lib/site-data";
 import { useLiveRates } from "../lib/use-live-rates";
 import clouds from "../assets/journey/01-clouds.webp";
 import runway from "../assets/journey/02-runway.webp";
