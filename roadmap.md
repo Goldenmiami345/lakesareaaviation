@@ -112,4 +112,4 @@
 - [x] Merge Team into About (team photos on About, /team forwards there, menus updated).
 - [x] Phones: shorter inner-page banners and a much shorter footer.
 
-- [ ] Visual editor: every visible text and every price editable in place, prices tied to the rates engine (fleet cards, course totals, estimator follow), price history in the editor bar.
+- [x] Visual editor: every visible text and every price editable in place, prices tied to the rates engine (fleet cards, course totals, estimator follow), price history in the editor bar.
