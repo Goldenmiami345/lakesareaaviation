@@ -88,8 +88,8 @@ export function PlaneForm({ rates, taken, onSubmit, onCancel, onDraft }: { rates
     <fieldset className="grid gap-2 border border-border p-3 text-sm">
       <legend className="px-1 font-semibold">Hourly price</legend>
       <label className="flex items-center gap-2"><input type="radio" checked={price === "share"} onChange={() => setPrice("share")} /> Same price as an existing rate line</label>
-      {price === "share" && <select className={selectFit} value={row} onChange={e => setRow(e.target.value)}>{applied.rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft} · {r.regular} / {r.prepay}</option>)}</select>}
-      {price === "share" && <span className={hint}>{priceHint}</span>}
+      {price === "share" && <select className={selectFit} value={row} onChange={e => setRow(e.target.value)}>{applied.rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft}</option>)}</select>}
+      {price === "share" && <span className={hint}>{(() => { const s = applied.rentalRates.find(r => r.aircraft === row); return s ? `Regular ${s.regular} / prepay ${s.prepay} per hour.` : priceHint; })()}</span>}
       <label className="flex items-center gap-2"><input type="radio" checked={price === "new"} onChange={() => setPrice("new")} /> Its own new rate line</label>
       {price === "new" && <div className="grid gap-3 sm:grid-cols-3">
         <Field label="Rate line name"><Input value={nr.aircraft} onChange={e => setNr(v => ({ ...v, aircraft: e.target.value }))} placeholder={f.name.replace(/^\d{4}\s+/, "") || "Cessna 172M"} /></Field>
@@ -297,10 +297,10 @@ export function PlaneEditForm({ plane, original, rates, onSave, onReset, onCance
     <section className="grid gap-3 border-t border-border pt-5">
       <div className="flex items-center justify-between gap-3"><h3 className="text-xs font-bold uppercase tracking-[0.14em]">Hourly price</h3>{undo("rateRow")}</div>
       <select aria-label="Price line" className={selectFit} value={f.rateRow} onChange={e => set("rateRow", e.target.value)}>
-        {applied.rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft} · {r.regular} / {r.prepay}</option>)}
+        {applied.rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft}</option>)}
         <option value="">No published price (visitors are asked to call)</option>
       </select>
-      <span className={hint}>{priceHint}</span>
+      <span className={hint}>{(() => { const s = applied.rentalRates.find(r => r.aircraft === f.rateRow); return s ? `Regular ${s.regular} / prepay ${s.prepay} per hour.` : priceHint; })()}</span>
       <span className={hint}>To change the dollar amount, click the price on the page or use Prices. Every airplane on the same line changes together.</span>
     </section>
 
