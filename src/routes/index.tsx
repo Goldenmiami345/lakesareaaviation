@@ -1,5 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { SlotText } from "@/components/slot-text";
+import { RateText, SlotText } from "@/components/slot-text";
+import { rateKey } from "@/lib/rates-engine";
+import { keyPart } from "@/lib/content-slots";
+import type { ReactNode } from "react";
 import { useSiteContent } from "../lib/use-site-content";
 import { srcSetFor } from "@/lib/responsive-image";
 import { ArrowRight, MapPin } from "lucide-react";
@@ -42,13 +45,13 @@ function HomePage() {
         <script dangerouslySetInnerHTML={{ __html: "var d=document.documentElement,u=navigator.userAgent;d.classList.add('hero-enter','first-view');if(/iPhone|iPod/.test(u)&&/Version\\/(2[6-9]|[3-9]\\d)/.test(u)&&!/CriOS|FxiOS|EdgiOS|OPiOS|GSA/.test(u))d.classList.add('ios-glass')" }} />
         <div className="hero-content relative flex min-h-[100svh] w-full px-[var(--gutter)] flex-col justify-end pb-3 pt-24 sm:pb-[4.5rem] sm:pt-32">
           <div className="max-w-4xl lg:max-w-[76vw]">
-            <h1 className="font-display text-[min(3.45rem,calc(74.75vw/16.6))] leading-[1.02] whitespace-nowrap"><span className="line-mask hero-mask"><span style={{ ["--d" as string]: "60ms" }}><span>BECOME A PROFESSIONAL PILOT</span></span></span></h1>
-            <p className="hero-step mt-2 text-xs leading-relaxed text-background/80 sm:text-sm" style={{ ["--d" as string]: "180ms" }}>Zero to CFI in six months. <span className="whitespace-nowrap font-semibold text-background">Under $50K</span></p>
+            <h1 className="font-display text-[min(3.45rem,calc(74.75vw/16.6))] leading-[1.02] whitespace-nowrap"><span className="line-mask hero-mask"><span style={{ ["--d" as string]: "60ms" }}><span><SlotText k="home.hero.title" d="BECOME A PROFESSIONAL PILOT" /></span></span></span></h1>
+            <p className="hero-step mt-2 text-xs leading-relaxed text-background/80 sm:text-sm" style={{ ["--d" as string]: "180ms" }}><SlotText k="home.hero.support" d="Zero to CFI in six months. " /><span className="whitespace-nowrap font-semibold text-background"><SlotText k="home.hero.budget" d="Under $50K" /></span></p>
           </div>
           <HeroCta />
           <nav aria-label="Training locations" className="hero-step mt-2.5 flex flex-nowrap items-center gap-1 text-[10px] max-[360px]:gap-0.5 max-[360px]:text-[9px] sm:text-[11px] lg:mt-3.5 font-medium uppercase text-background/75 sm:gap-2" style={{ ["--d" as string]: "360ms" }}>
             <MapPin aria-hidden className="size-3 shrink-0 text-background/55" />
-            {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} aria-label={`${a.label}, ${a.code}`} className="group/chip inline-flex min-h-11 uppercase shrink-0 items-center whitespace-nowrap"><span className="rounded-full border border-background/25 px-1 py-1 transition-colors max-[360px]:px-0.5 group-hover/chip:border-primary group-hover/chip:bg-primary group-hover/chip:text-primary-foreground sm:px-2">{a.label}<span className="sm:inline">, {a.code}</span></span></button>)}
+            {airportStages.map((a, i) => <button key={a.code} type="button" onClick={() => jumpToJourney("airports", i)} aria-label={`${a.label}, ${a.code}`} className="group/chip inline-flex min-h-11 uppercase shrink-0 items-center whitespace-nowrap"><span className="rounded-full border border-background/25 px-1 py-1 transition-colors max-[360px]:px-0.5 group-hover/chip:border-primary group-hover/chip:bg-primary group-hover/chip:text-primary-foreground sm:px-2"><SlotText k={`home.chips.${i}.label`} d={a.label} /><span className="sm:inline">, <SlotText k={`home.chips.${i}.code`} d={a.code} /></span></span></button>)}
           </nav>
           <ScrollCue targetId="flight-path" />
         </div>
@@ -73,26 +76,26 @@ function HomePage() {
             <ServiceLink title="Specialty Courses" text="Mountain flying, light aerobatics, ski plane, and Cirrus transition." dest={{ to: "/specialized-training", hash: "courses" }} />
             <ServiceLink title="Advanced Kodiak 100 Training" text="Insurance-approved initial and recurrent Kodiak 100 training." dest={{ to: "/specialized-training/$slug", slug: "kodiak-100" }} />
           </div>
-          <p className="mt-px bg-background p-6 text-sm leading-relaxed text-muted-foreground lg:p-7">First time in the air? <Link to="/introductory-flights" className="font-bold text-primary-text">Introductory flights from $100</Link>. Or <Link to="/scenic-flights" className="font-bold text-primary-text">book a scenic flight</Link> for up to three passengers.</p>
+          <p className="mt-px bg-background p-6 text-sm leading-relaxed text-muted-foreground lg:p-7"><SlotText k="home.intro.before" d="First time in the air? " /><Link to="/introductory-flights" className="font-bold text-primary-text"><SlotText k="home.intro.cta" d="Introductory flights from " /><RateText k={rateKey.other("Introductory flight")} amount /></Link><SlotText k="home.intro.between" d=". Or " /><Link to="/scenic-flights" className="font-bold text-primary-text"><SlotText k="home.intro.scenic" d="book a scenic flight" /></Link><SlotText k="home.intro.after" d=" for up to three passengers." /></p>
         </div>
       </section>
 
-      <section className="edge-fade-b bg-ink pb-32 pt-20 text-background sm:pb-40 sm:pt-28"><div className="site-container grid gap-10 lg:grid-cols-2" data-scroll-reveal><div className="photo-reveal zoom-reveal relative min-h-[380px] overflow-hidden sm:min-h-[520px]" data-scroll-reveal><img src={trainingImage} alt="Lakes Area Aviation Piper Apache N4383P on the ramp" width={1600} height={1200} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 hover:scale-[1.04]" /></div><div className="flex flex-col justify-center"><p className="stage-label">Stay on site</p><h2 className="mt-4 font-display text-5xl sm:text-6xl">Arrive ready.<br />Train every day.</h2><div className="mt-10 grid grid-cols-2 gap-px bg-background/15"><Stat value="$30" label="Housing / night" /><Stat value="$20" label="Car / day" /></div></div></div></section>
+      <section className="edge-fade-b bg-ink pb-32 pt-20 text-background sm:pb-40 sm:pt-28"><div className="site-container grid gap-10 lg:grid-cols-2" data-scroll-reveal><div className="photo-reveal zoom-reveal relative min-h-[380px] overflow-hidden sm:min-h-[520px]" data-scroll-reveal><img src={trainingImage} alt="Lakes Area Aviation Piper Apache N4383P on the ramp" width={1600} height={1200} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 hover:scale-[1.04]" /></div><div className="flex flex-col justify-center"><p className="stage-label"><SlotText k="home.stay.eyebrow" d="Stay on site" /></p><h2 className="mt-4 font-display text-5xl sm:text-6xl"><SlotText k="home.stay.title1" d="Arrive ready." /><br /><SlotText k="home.stay.title2" d="Train every day." /></h2><div className="mt-10 grid grid-cols-2 gap-px bg-background/15"><Stat value={<RateText k={rateKey.other("Student housing")} amount />} label={<SlotText k="home.stay.housing" d="Housing / night" />} /><Stat value={<RateText k={rateKey.other("Student cars (housing residents)")} amount />} label={<SlotText k="home.stay.car" d="Car / day" />} /></div></div></div></section>
 
-      <section className="bg-secondary py-20 sm:py-28"><div className="mx-auto max-w-5xl px-5 lg:px-8" data-scroll-reveal="blur"><p className="eyebrow text-primary-text">Student experience</p><blockquote className="mt-6 font-display text-3xl leading-snug sm:text-5xl">“<SlotText k="testimonial.0.quote" />”<footer className="mt-8 font-sans text-sm font-bold uppercase text-foreground"><SlotText k="testimonial.0.name" /></footer></blockquote><Link to="/student-success" className="interactive-arrow mt-8 inline-flex items-center gap-2 text-sm font-bold uppercase text-primary-text">More stories <ArrowRight className="size-4" /></Link><p className="mt-6 text-xs text-muted-foreground">Individual results vary.</p></div></section>
+      <section className="bg-secondary py-20 sm:py-28"><div className="mx-auto max-w-5xl px-5 lg:px-8" data-scroll-reveal="blur"><p className="eyebrow text-primary-text"><SlotText k="home.stories.eyebrow" d="Student experience" /></p><blockquote className="mt-6 font-display text-3xl leading-snug sm:text-5xl">“<SlotText k="testimonial.0.quote" />”<footer className="mt-8 font-sans text-sm font-bold uppercase text-foreground"><SlotText k="testimonial.0.name" /></footer></blockquote><Link to="/student-success" className="interactive-arrow mt-8 inline-flex items-center gap-2 text-sm font-bold uppercase text-primary-text"><SlotText k="home.stories.cta" d="More stories " /><ArrowRight className="size-4" /></Link><p className="mt-6 text-xs text-muted-foreground"><SlotText k="home.stories.disclaimer" d="Individual results vary." /></p></div></section>
       <InquiryBand />
     </div>
   </SiteLayout>;
 }
 
-function Stat({ value, label }: { value: string; label: string }) { return <div className="bg-ink p-6"><p className="font-display text-4xl text-primary-text">{value}</p><p className="mt-2 text-xs font-bold uppercase tracking-widest text-background/60">{label}</p></div>; }
+function Stat({ value, label }: { value: ReactNode; label: ReactNode }) { return <div className="bg-ink p-6"><p className="font-display text-4xl text-primary-text">{value}</p><p className="mt-2 text-xs font-bold uppercase tracking-widest text-background/60">{label}</p></div>; }
 
 type ServiceDest =
   | { to: "/programs/$slug" | "/specialized-training/$slug"; slug: string }
   | { to: "/specialized-training" | "/accelerated-training"; hash: string }
   | { to: "/local-training" };
 function ServiceLink({ title, text, dest }: { title: string; text: string; dest: ServiceDest }) {
-  const content = <><h3 className="font-display text-[1.75rem] leading-tight sm:text-3xl">{title}</h3><p className="mt-3 text-sm leading-relaxed text-muted-foreground">{text}</p><span className="mt-5 inline-flex items-center gap-2 text-xs font-bold uppercase text-foreground sm:mt-8">Explore <ArrowRight className="size-4" /></span></>;
+  const content = <><h3 className="font-display text-[1.75rem] leading-tight sm:text-3xl"><SlotText k={`home.services.${keyPart(title)}.title`} d={title} /></h3><p className="mt-3 text-sm leading-relaxed text-muted-foreground"><SlotText k={`home.services.${keyPart(title)}.text`} d={text} /></p><span className="mt-5 inline-flex items-center gap-2 text-xs font-bold uppercase text-foreground sm:mt-8"><SlotText k="home.services.explore" d="Explore " /><ArrowRight className="size-4" /></span></>;
   const cls = "program-card interactive-arrow group bg-background p-6 sm:min-h-64 sm:p-8";
   if ("slug" in dest) return dest.to === "/programs/$slug"
     ? <Link to="/programs/$slug" params={{ slug: dest.slug }} className={cls}>{content}</Link>
@@ -123,5 +126,5 @@ function HeroCta() {
     el.addEventListener("animationend", end);
     return () => { leave(); window.clearInterval(timer); io.disconnect(); };
   }, []);
-  return <div className="hero-step mt-1" style={{ ["--d" as string]: "270ms" }}><Link ref={ref} to="/contact" className="interactive-arrow group inline-flex min-h-12 items-center gap-4 border-b border-background/45 pb-1 text-sm sm:text-[clamp(0.875rem,0.5rem+0.6vw,1.3rem)] font-bold uppercase text-background transition-colors hover:border-primary">Build my training plan <span className="cta-orb grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><ArrowRight className="cta-arrow size-4" /></span></Link></div>;
+  return <div className="hero-step mt-1" style={{ ["--d" as string]: "270ms" }}><Link ref={ref} to="/contact" className="interactive-arrow group inline-flex min-h-12 items-center gap-4 border-b border-background/45 pb-1 text-sm sm:text-[clamp(0.875rem,0.5rem+0.6vw,1.3rem)] font-bold uppercase text-background transition-colors hover:border-primary"><SlotText k="cta.plan" d="Build my training plan" /> <span className="cta-orb grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><ArrowRight className="cta-arrow size-4" /></span></Link></div>;
 }
