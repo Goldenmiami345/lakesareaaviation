@@ -4,7 +4,10 @@ import { SlotText, RateText, CalcText, AssignAircraft } from "@/components/slot-
 import { useSiteContent } from "../lib/use-site-content";
 import { ArrowRight, Check, Clock3, DollarSign, FileCheck2 } from "lucide-react";
 import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
-import { programs } from "../lib/site-data";
+import { programs, type Program } from "../lib/site-data";
+import { SLUG } from "../lib/catalog";
+import { usePrograms } from "../lib/use-catalog";
+import { HideToggle } from "../components/catalog-controls";
 import { useLiveRates } from "../lib/use-live-rates";
 import clouds from "../assets/journey/01-clouds.webp";
 import runway from "../assets/journey/02-runway.webp";
@@ -21,8 +24,13 @@ const faqs=[["What do I need before I start?","Each course option lists its prer
 const heroBySlug: Record<string,string>={"private-pilot":runway,"instrument-rating":instrument,"commercial-single-engine":n6717a,"commercial-multi-engine":apache,"cfi-cfii":instructor,"mei":apache,"zero-to-hero":airline};
 
 export const Route=createFileRoute("/programs/$slug")({
-  staticData: { sitemap: true },loader:({params})=>{const program=programs.find(p=>p.slug===params.slug);if(!program)throw notFound();return program},head:({loaderData})=>{const title=`${loaderData?.name??"Flight Training"} | Lakes Area Aviation`;const d=loaderData?.description??"Focused flight training programs.";return{meta:[{title},{name:"description",content:d},{property:"og:title",content:title},{property:"og:description",content:d},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary_large_image"}]}},component:ProgramPage});
-function ProgramPage(){const base=Route.useLoaderData();const live=useLiveRates();const site=useSiteContent();const lp=live.programs.find(x=>x.slug===base.slug)??base;const p={...lp,description:site.get(`program.${lp.slug}.description`)||lp.description};const testimonials=site.testimonials;return <SiteLayout><PageIntro k="programs-detail.intro" eyebrow={<SlotText k={`program.${p.slug}.short`} d={base.short} />} title={<SlotText k={`program.${p.slug}.name`} d={base.name} />} text={<SlotText k={`program.${p.slug}.description`} />} image={heroBySlug[p.slug]??clouds} imageAlt={`${p.name} training`}/><div>
+  staticData: { sitemap: true },loader:({params})=>{const program=programs.find(p=>p.slug===params.slug);if(!program&&!SLUG.test(params.slug))throw notFound();return program??null},head:({loaderData})=>{const title=`${loaderData?.name??"Flight Training"} | Lakes Area Aviation`;const d=loaderData?.description??"Focused flight training programs.";return{meta:[{title},{name:"description",content:d},{property:"og:title",content:title},{property:"og:description",content:d},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary_large_image"}]}},component:ProgramPage});
+function ProgramPage(){const loaded=Route.useLoaderData();const {slug}=Route.useParams();const {all,ready,editing}=usePrograms();const found=all.find(x=>x.slug===slug);
+  // Published programs prerender; owner-added ones render once the catalog loads; hidden ones are gone for visitors.
+  if(found&&(!found.hidden||editing))return <ProgramBody base={loaded??found} lp={found} hidden={!!found.hidden}/>;
+  if(!ready&&loaded)return <ProgramBody base={loaded} lp={loaded} hidden={false}/>;
+  return <SiteLayout><div className="site-container min-h-[60vh] pb-16 pt-28">{ready&&<><p className="font-display text-3xl"><SlotText k="programs.gone.title" d="This program is no longer offered." /></p><Link to="/programs" className="mt-6 inline-flex min-h-11 items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-primary-text"><SlotText k="programs.gone.link" d="See all training programs" /> <ArrowRight className="size-4"/></Link></>}</div></SiteLayout>}
+function ProgramBody({base,lp,hidden}:{base:Program;lp:Program;hidden:boolean}){const site=useSiteContent();const p={...lp,description:site.get(`program.${lp.slug}.description`)||lp.description};const testimonials=site.testimonials;return <SiteLayout><PageIntro k="programs-detail.intro" eyebrow={<SlotText k={`program.${p.slug}.short`} d={base.short} />} title={<SlotText k={`program.${p.slug}.name`} d={base.name} />} text={<><SlotText k={`program.${p.slug}.description`} d={base.description} /><HideToggle kind="programs" id={p.slug} hidden={hidden} className="ml-3 align-middle" /></>} image={heroBySlug[p.slug]??clouds} imageAlt={`${p.name} training`}/><div>
   <section className="site-container relative z-10 -mt-10"><div className="grid gap-px overflow-hidden border border-border bg-border shadow-2xl sm:grid-cols-2 lg:grid-cols-4" data-scroll-reveal>
     <div className="bg-background p-6"><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground"><SlotText k="programs--slug.text.1" d="Timeline" /></p><p className="mt-2 font-display text-3xl">{p.slug==="cfi-cfii"?<SlotText k="program.cfi-cfii.timeline" d="4–6 weeks" />:base.options[0]?<SlotText k={`program.${p.slug}.opt0.timeline`} d={base.options[0].timeline} />:<SlotText k="programs.timeline-custom" d="Custom" />}</p></div>
     <div className="bg-background p-6"><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground"><SlotText k="programs--slug.text.2" d="Estimate from" /></p><p className="mt-2 font-display text-3xl"><CalcText>{p.options.at(0)?.estimatedCost??"Request"}</CalcText></p></div>
