@@ -6,6 +6,7 @@ import { parseDesktopJourneyMode, type DesktopJourneyMode } from "@/lib/use-site
 import { Button } from "@/components/ui/button";
 import { AdminRates } from "@/components/admin-rates";
 import { AdminContent } from "@/components/admin-content";
+import { AdminCatalog } from "@/components/admin-catalog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EDIT_PAGES } from "@/lib/edit-pages";
 import { editStore } from "@/lib/edit-store";
@@ -41,7 +42,7 @@ function AdminPage() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState("edit");
-  useEffect(() => { const h = window.location.hash.slice(1); if (h === "prices" || h === "settings" || h === "edit") setTab(h); }, []);
+  useEffect(() => { const h = window.location.hash.slice(1); if (h === "prices" || h === "settings" || h === "edit" || h === "catalog") setTab(h); }, []);
 
   useEffect(() => {
     const refresh = async () => {
@@ -148,10 +149,12 @@ function AdminPage() {
           {!isAdmin ? <div className="mt-8 border border-border bg-secondary p-5"><p className="text-sm leading-relaxed">If this is the first account connected to the site, claim administrator access below.</p><Button disabled={busy} className="mt-4 rounded-none" onClick={claimAdmin}>Claim administrator access</Button></div> : <Tabs value={tab} onValueChange={v => { setTab(v); history.replaceState(null, "", `#${v}`); }} className="mt-8">
             <TabsList className="grid h-auto w-full grid-cols-3 rounded-none p-1">
               <TabsTrigger value="edit" className="min-h-11 rounded-none">Edit site</TabsTrigger>
+              <TabsTrigger value="catalog" className="min-h-11 rounded-none">Fleet & courses</TabsTrigger>
               <TabsTrigger value="prices" className="min-h-11 rounded-none">Prices</TabsTrigger>
               <TabsTrigger value="settings" className="min-h-11 rounded-none">Site settings</TabsTrigger>
             </TabsList>
             <TabsContent value="edit"><EditSiteTab /></TabsContent>
+            <TabsContent value="catalog"><AdminCatalog /></TabsContent>
             <TabsContent value="prices"><AdminRates /></TabsContent>
             <TabsContent value="settings">
             <h2 className="mt-6 font-display text-xl">Accent color</h2>
