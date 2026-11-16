@@ -8,7 +8,10 @@ export type RatesConfig = {
   other?: Record<string, string>;
   /** Course option name -> aircraft row (rentalRates[].aircraft) used for its rental hours. */
   assign?: Record<string, string>;
+  /** Rental-rate lines the owner added (a new airplane with its own price). */
+  extraRental?: ExtraRental[];
 };
+export type ExtraRental = { aircraft: string; names: string; regular: number; prepay: number };
 
 const num = (s: string) => Number(s.replace(/[^0-9.]/g, "")) || 0;
 const usd = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
@@ -18,10 +21,18 @@ const ok = (n: unknown): n is number => typeof n === "number" && Number.isFinite
 export function cleanConfig(raw: unknown): RatesConfig {
   const c = (raw && typeof raw === "object" ? raw : {}) as RatesConfig;
   const out: RatesConfig = { rental: {}, instruction: {}, other: {}, assign: {} };
+  const extra: ExtraRental[] = [];
+  const baseNames = new Set(rentalRates.map(r => r.aircraft));
+  for (const e of Array.isArray(c.extraRental) ? c.extraRental : []) {
+    const a = typeof e?.aircraft === "string" ? e.aircraft.trim() : "";
+    if (!a || a.length > 60 || /\|/.test(a) || baseNames.has(a) || extra.some(x => x.aircraft === a) || !ok(e.regular) || !ok(e.prepay)) continue;
+    extra.push({ aircraft: a, names: typeof e.names === "string" ? e.names.trim().slice(0, 80) : "", regular: e.regular, prepay: e.prepay });
+  }
+  if (extra.length) out.extraRental = extra;
   for (const r of rentalRates) { const v = c.rental?.[r.aircraft]; if (v && ok(v.regular) && ok(v.prepay)) out.rental![r.aircraft] = { regular: v.regular, prepay: v.prepay }; }
   for (const r of instructionRates) { const v = c.instruction?.[r.label]; if (ok(v)) out.instruction![r.label] = v; }
   for (const r of otherRates) { const v = c.other?.[r.label]; if (typeof v === "string" && v.trim() && v.length <= 40) out.other![r.label] = v.trim(); }
-  const names = new Set(rentalRates.map(r => r.aircraft));
+  const names = new Set([...rentalRates.map(r => r.aircraft), ...extra.map(e => e.aircraft)]);
   for (const [k, v] of Object.entries(c.assign ?? {})) if (typeof v === "string" && names.has(v)) out.assign![k] = v;
   return out;
 }
@@ -46,7 +57,8 @@ export function defaultAircraftFor(lineItems: string[]) {
 
 export function applyRates(raw: unknown = {}) {
   const c = cleanConfig(raw);
-  const rental = rentalRates.map(r => { const v = c.rental![r.aircraft]; return v ? { ...r, regular: usd(v.regular), prepay: usd(v.prepay) } : r; });
+  const rental = [...rentalRates.map(r => { const v = c.rental![r.aircraft]; return v ? { ...r, regular: usd(v.regular), prepay: usd(v.prepay) } : r; }),
+    ...(c.extraRental ?? []).map(e => ({ aircraft: e.aircraft, names: e.names, regular: usd(e.regular), prepay: usd(e.prepay), added: true as const }))];
   const instruction = instructionRates.map(r => { const v = c.instruction![r.label]; return v !== undefined ? { ...r, rate: usd(v) } : r; });
   const other = otherRates.map(r => { const v = c.other![r.label]; return v ? { ...r, rate: v } : r; });
   const prepayOf = (aircraft: string) => num(rental.find(r => r.aircraft === aircraft)?.prepay ?? "0");
@@ -103,7 +115,11 @@ export const rateKey = {
   instruction: (label: string) => `rate|instruction|${label}`,
   other: (label: string) => `rate|other|${label}`,
   assign: (option: string) => `rate|assign|${option}`,
+  /** A new rental-rate line; the value is JSON {names, regular, prepay}. */
+  newRow: (aircraft: string) => `rate|newrow|${aircraft}`,
 };
+export const usdOf = usd;
+export const numOf = num;
 export const isRateKey = (k: string) => k.startsWith("rate|");
 /** Which rental-rate row prices each airplane in the fleet. */
 export const FLEET_RATE_ROW: Record<string, string> = {
@@ -111,8 +127,8 @@ export const FLEET_RATE_ROW: Record<string, string> = {
   N4383P: "Piper Apache PA-23-160", N6641F: "Cessna 150", N96150: "Taylorcraft BC-12D",
 };
 /** "$185/hr"-style fleet rates from the live rental table (undefined when the airplane has no published rate). */
-export function fleetRate(r: AppliedRates, registration: string) {
-  const row = r.rentalRates.find(x => x.aircraft === FLEET_RATE_ROW[registration]);
+export function fleetRate(r: AppliedRates, registration: string, rateRow: string | undefined = FLEET_RATE_ROW[registration]) {
+  const row = r.rentalRates.find(x => x.aircraft === rateRow);
   return row ? { row: row.aircraft, rate: `${row.regular}/hr`, prepay: `${row.prepay}/hr` } : undefined;
 }
 /** Parsed "N hours X at $R/hr: $T" lines are worked out from the rates, not typed. */
@@ -143,7 +159,13 @@ export function withRateDrafts(raw: unknown, drafts: Record<string, string>): Ra
   const c = cleanConfig(raw);
   for (const [key, v] of Object.entries(drafts)) {
     const k = parts(key); if (!k || !k.name) continue;
+    if (k.kind === "newrow") {
+      try { const e = JSON.parse(v) as Partial<ExtraRental>; c.extraRental = [...(c.extraRental ?? []).filter(x => x.aircraft !== k.name), { aircraft: k.name, names: String(e.names ?? ""), regular: Number(e.regular), prepay: Number(e.prepay) }]; } catch { /* ignore */ }
+      continue;
+    }
     if (k.kind === "rental" && (k.field === "regular" || k.field === "prepay")) {
+      const ex = c.extraRental?.find(x => x.aircraft === k.name);
+      if (ex) { const n = typedNumber(v); if (n !== null) ex[k.field] = n; continue; }
       const row = rentalRates.find(x => x.aircraft === k.name); const n = typedNumber(v); if (!row || n === null) continue;
       const prev = c.rental![k.name] ?? { regular: num(row.regular), prepay: num(row.prepay) };
       c.rental![k.name] = { ...prev, [k.field]: n };

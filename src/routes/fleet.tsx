@@ -6,7 +6,9 @@ import { lazy, Suspense, useLayoutEffect, useRef, useState } from "react";
 import { ArrowRight, ChevronDown, Maximize, X } from "lucide-react";
 import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
 import { Button } from "../components/ui/button";
-import { fleet, type FleetRole } from "../lib/site-data";
+import { type FleetRole } from "../lib/site-data";
+import { useFleet } from "../lib/use-catalog";
+import { AddTile, HideToggle, hiddenAttr } from "../components/catalog-controls";
 import { ENDORSEMENTS, keyStats, planeSlug, ROLE_LABEL, TRAINING, type Plane } from "../lib/fleet-info";
 
 // The viewer code is only downloaded when a visitor opens it.
@@ -38,6 +40,9 @@ function Page() {
   const [viewer, setViewer] = useState<Plane | null>(null);
   const [viewIndex, setViewIndex] = useState(0);
   const opener = useRef<HTMLButtonElement | null>(null);
+  // Published + owner-added airplanes; in the visual editor hidden ones stay (dimmed) to bring back.
+  const { all, planes, editing } = useFleet();
+  const fleet = editing ? all : planes;
 
   // A #tail link (e.g. from the home-page traffic) opens that card before the first paint.
   useLayoutEffect(() => {
@@ -48,7 +53,7 @@ function Page() {
     sync();
     window.addEventListener("hashchange", sync);
     return () => window.removeEventListener("hashchange", sync);
-  }, []);
+  }, [fleet]);
 
   const shown = fleet.filter((f) => role === "all" || f.role === role);
 
@@ -62,7 +67,7 @@ function Page() {
 
   return (
     <SiteLayout>
-      <PageIntro
+      <PageIntro k="fleet.intro"
         eyebrow="Aircraft"
         title="The airplanes you’ll actually fly."
         text="Real photos, real tail numbers and the published rates for every airplane in the Lakes Area Aviation fleet."
@@ -92,11 +97,13 @@ function Page() {
             const openInRow = shown.slice(i - (i % 2), i + 1).find((x) => planeSlug(x) === quick);
             return rowEnd && openInRow ? [tile, <QuickLook key={`${quick}-quick`} f={openInRow} onClose={() => setQuick("")} onView={openView(openInRow)} />] : [tile];
           })}
+          <AddTile kind="fleet" className="col-span-2" />
         </div>
         <div className="mt-6 grid gap-5 max-sm:hidden md:grid-cols-2 lg:grid-cols-3">
           {shown.map((f) => (
             <PlaneCard key={f.registration} f={f} open={hashId === f.registration.toLowerCase()} onView={openView(f)} />
           ))}
+          <AddTile kind="fleet" className="min-h-64" />
         </div>
       </div>
       <InquiryBand />
@@ -119,8 +126,9 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
   const details = `${id}-details`;
   const label = `${f.name} ${f.registration}${f.nickname ? ` “${f.nickname}”` : ""}`;
   return (
-    <article id={id} data-plane={id} className="scroll-mt-20 overflow-hidden border border-border bg-background target:border-primary">
+    <article id={id} data-plane={id} {...hiddenAttr(!!f.hidden)} className="scroll-mt-20 overflow-hidden border border-border bg-background target:border-primary">
       <div className="relative aspect-[4/3] overflow-hidden bg-background max-sm:aspect-[11/5]">
+        <HideToggle kind="fleet" id={f.registration} hidden={!!f.hidden} className="!absolute left-3 top-3" />
         {/* Fleet is photos only: no 3D models on this page, whatever the 3D setting is. */}
         <img src={f.image} srcSet={srcSetFor(f.image)} sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw" alt={label} width={1200} height={900} loading="lazy" decoding="async" className="fleet-cutout h-full w-full object-contain p-5 max-sm:px-3 max-sm:pb-5 max-sm:pt-2" />
         {/* On phones the whole photo opens the viewer, so no pill sits on top of the airplane. */}
@@ -166,7 +174,7 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
             <Section title="Full specs" open={open}>
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                 {specs.map(([k, v]) => <div key={k}><dt className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{k}</dt><dd className="font-semibold">{v}</dd></div>)}
-                {f.prepay && <div><dt className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Prepay rate</dt><dd className="font-semibold"><FleetPrice reg={f.registration} field="prepay" /></dd></div>}
+                {f.prepay && <div><dt className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Prepay rate</dt><dd className="font-semibold"><FleetPrice reg={f.registration} row={f.rateRow} field="prepay" /></dd></div>}
               </dl>
             </Section>
           )}
@@ -203,9 +211,10 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
 function PlaneTile({ f, open, onToggle }: { f: Plane; open: boolean; onToggle: () => void }) {
   const id = planeSlug(f);
   return (
-    <article id={`${id}-tile`} data-plane={id} className={`min-w-0 scroll-mt-20 border bg-background transition-colors ${open ? "border-foreground" : "border-border"}`}>
+    <article id={`${id}-tile`} data-plane={id} {...hiddenAttr(!!f.hidden)} className={`min-w-0 scroll-mt-20 border bg-background transition-colors ${open ? "border-foreground" : "border-border"}`}>
       <button type="button" onClick={onToggle} aria-expanded={open} aria-controls={`${id}-quick`} className="block w-full text-left">
         <span className="relative block aspect-[2/1] overflow-hidden bg-secondary/60">
+          <HideToggle kind="fleet" id={f.registration} hidden={!!f.hidden} className="!absolute left-1 top-1 !min-h-8 !px-2 !text-[9px]" />
           <img src={f.image} srcSet={srcSetFor(f.image)} sizes="50vw" alt="" width={600} height={400} loading="lazy" decoding="async" className="fleet-cutout h-full w-full object-contain p-2" />
         </span>
         <span className="block px-2.5 pb-2 pt-1.5">
@@ -215,7 +224,7 @@ function PlaneTile({ f, open, onToggle }: { f: Plane; open: boolean; onToggle: (
           </span>
           <span className="block truncate font-display text-base leading-tight">{f.nickname ?? f.name.replace(/^\d{4} /, "")}</span>
           <span className="block truncate text-xs text-foreground/70"><ST k={`fleet.${f.registration}.name`} d={f.name} /></span>
-          <span className="mt-0.5 block text-xs font-bold tabular-nums">{f.rate ? <><FleetPrice reg={f.registration} field="regular" /> <span className="font-semibold text-foreground/60">wet</span></> : <span className="font-semibold text-foreground/60">Ask for rate</span>}</span>
+          <span className="mt-0.5 block text-xs font-bold tabular-nums">{f.rate ? <><FleetPrice reg={f.registration} row={f.rateRow} field="regular" /> <span className="font-semibold text-foreground/60">wet</span></> : <span className="font-semibold text-foreground/60">Ask for rate</span>}</span>
         </span>
       </button>
     </article>

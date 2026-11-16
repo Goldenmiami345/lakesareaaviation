@@ -113,3 +113,4 @@
 - [x] Phones: shorter inner-page banners and a much shorter footer.
 
 - [x] Visual editor: every visible text and every price editable in place, prices tied to the rates engine (fleet cards, course totals, estimator follow), price history in the editor bar.
+- [x] Add/hide airplanes, training programs and specialty courses from admin (Fleet & courses tab) and in the visual editor (+ Add tiles, Hide / bring back), with history; new planes share or get their own rate line.

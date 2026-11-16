@@ -40,7 +40,7 @@ export function cleanContent(raw: unknown): Record<string, string> {
   for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
     if (typeof v !== "string") continue;
     const s = BY_KEY.get(k);
-    if (!s) { const t = v.trim(); if (t && t.length <= INLINE_MAX && k.length <= 160 && INLINE_KEY.test(k) && !/\.photo$/.test(k)) out[k] = t; continue; }
+    if (!s) { const t = v.trim(); if (t && t.length <= INLINE_MAX && k.length <= 160 && INLINE_KEY.test(k) && (!/\.photo$/.test(k) || /^https:\/\//.test(t))) out[k] = t; continue; }
     const t = v.trim(); if (!t || t.length > s.max || t === s.def) continue;
     if (s.kind === "photo" && !/^https:\/\//.test(t)) continue;
     out[k] = t;

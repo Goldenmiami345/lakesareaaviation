@@ -4,13 +4,14 @@ import type { ReactNode } from "react";
 import { PageIntro, SiteLayout } from "../components/site-shell";
 import { RATE_NOTES, RATE_SHEET_URL, RATES_YEAR, type Program } from "../lib/site-data";
 import { useLiveRates } from "../lib/use-live-rates";
+import { useFleet, usePrograms } from "../lib/use-catalog";
 import { CalcText, RateText, SlotText } from "@/components/slot-text";
 import { rateKey } from "../lib/rates-engine";
 import { keyPart } from "../lib/content-slots";
 import { programs as basePrograms } from "../lib/site-data";
 
 // Course estimates in the order the school publishes its rating sheets.
-const coursesOf = (programs: Program[]) => programs.flatMap((p, pi) => p.options.map((o, j) => ({ slug: p.slug, j, baseTimeline: basePrograms[pi]!.options[j]!.timeline, name: p.slug === "cfi-cfii" ? o.name.replace("Certified Flight Instructor–Instrument", "CFII").replace("Certified Flight Instructor", "CFI") : p.name, timeline: o.timeline, cost: o.estimatedCost.replace(/^As low as /, "").replace(/^Approximately /, "About ") })));
+const coursesOf = (programs: Program[]) => programs.flatMap((p) => p.options.map((o, j) => ({ slug: p.slug, j, baseTimeline: basePrograms.find((b) => b.slug === p.slug)?.options[j]?.timeline ?? o.timeline, name: p.slug === "cfi-cfii" ? o.name.replace("Certified Flight Instructor–Instrument", "CFII").replace("Certified Flight Instructor", "CFI") : p.name, timeline: o.timeline, cost: o.estimatedCost.replace(/^As low as /, "").replace(/^Approximately /, "About ") })));
 
 export const Route = createFileRoute("/rates")({
   staticData: { sitemap: true },
@@ -19,7 +20,13 @@ export const Route = createFileRoute("/rates")({
 });
 
 function Page() {
-  const { rentalRates, instructionRates, otherRates, programs, config } = useLiveRates();
+  const live = useLiveRates();
+  const { instructionRates, otherRates, config } = live;
+  // Courses: published + owner-added, minus hidden. Rental lines added for a new airplane show
+  // only while an airplane on the site uses them.
+  const { programs } = usePrograms();
+  const { planes } = useFleet();
+  const rentalRates = live.rentalRates.filter((r) => !("added" in r) || planes.some((f) => f.rateRow === r.aircraft));
   // Saved rate changes make the bundled PDF stale, so the button prints this page instead.
   const changed = Object.values(config).some((v) => Object.keys(v).length > 0);
   const courses = coursesOf(programs);

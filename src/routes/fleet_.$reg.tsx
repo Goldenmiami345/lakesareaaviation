@@ -5,8 +5,11 @@ import { lazy, Suspense, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Maximize, Phone } from "lucide-react";
 import { srcSetFor } from "@/lib/responsive-image";
 import { InquiryBand, SiteLayout } from "../components/site-shell";
-import { fleet, RATE_NOTES, SCHOOL_PHONE, SCHOOL_PHONE_TEL } from "../lib/site-data";
-import { ENDORSEMENTS, findPlane, planeSlug, planeTitle, ROLE_LABEL, TRAINING } from "../lib/fleet-info";
+import { RATE_NOTES, SCHOOL_PHONE, SCHOOL_PHONE_TEL } from "../lib/site-data";
+import { REG } from "../lib/catalog";
+import { useFleet } from "../lib/use-catalog";
+import { HideToggle } from "../components/catalog-controls";
+import { ENDORSEMENTS, findPlane, planeSlug, planeTitle, ROLE_LABEL, TRAINING, type Plane } from "../lib/fleet-info";
 
 // Photos only, like the fleet list: this page never loads 3D models.
 const AircraftViewer = lazy(() => import("../components/aircraft-viewer"));
@@ -14,9 +17,10 @@ const AircraftViewer = lazy(() => import("../components/aircraft-viewer"));
 export const Route = createFileRoute("/fleet_/$reg")({
   staticData: { sitemap: true },
   loader: ({ params }) => {
+    // Published airplanes prerender; an owner-added tail number renders once the catalog loads.
     const plane = findPlane(params.reg);
-    if (!plane) throw notFound();
-    return plane;
+    if (!plane && !REG.test(params.reg.toUpperCase())) throw notFound();
+    return plane ?? null;
   },
   head: ({ loaderData: p }) => {
     const title = p ? `${planeTitle(p)}, ${p.name} | Lakes Area Aviation Fleet` : "Aircraft | Lakes Area Aviation";
@@ -27,7 +31,20 @@ export const Route = createFileRoute("/fleet_/$reg")({
 });
 
 function PlanePage() {
-  const f = Route.useLoaderData();
+  const base = Route.useLoaderData();
+  const { reg } = Route.useParams();
+  const { all, planes, ready, editing } = useFleet();
+  const list = editing ? all : planes;
+  const f = all.find((p) => planeSlug(p) === reg.toLowerCase());
+  if (f && (!f.hidden || editing)) return <PlaneBody f={f} fleet={list.length ? list : [f]} />;
+  if (!ready && base) return <PlaneBody f={base} fleet={list} />;
+  return <SiteLayout><div className="site-container min-h-[60vh] pb-16 pt-28">{ready && <>
+    <p className="font-display text-3xl"><ST k="fleet.gone.title" d="This airplane is no longer in our fleet." /></p>
+    <Link to="/fleet" className="mt-6 inline-flex min-h-11 items-center gap-2 text-xs font-bold uppercase tracking-[0.14em]"><ArrowLeft className="size-4" /> <ST k="fleet.gone.link" d="See the current fleet" /></Link>
+  </>}</div></SiteLayout>;
+}
+
+function PlaneBody({ f, fleet }: { f: Plane; fleet: Plane[] }) {
   const [viewer, setViewer] = useState(false);
   const opener = useRef<HTMLButtonElement | null>(null);
   const specs = Object.entries(f.specs ?? {});
@@ -52,12 +69,13 @@ function PlanePage() {
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground/70">{ROLE_LABEL[f.role]} · <ST k={`fleet.${f.registration}.use`} d={f.use} /></p>
             <h1 className="mt-2 font-display text-4xl leading-tight sm:text-5xl">{planeTitle(f)}</h1>
+            <HideToggle kind="fleet" id={f.registration} hidden={!!f.hidden} className="mt-3" />
             <p className="mt-1 text-lg text-foreground/80"><ST k={`fleet.${f.registration}.name`} d={f.name} /></p>
 
             <div className="mt-6 grid grid-cols-2 border-y-2 border-foreground">
               {f.rate ? <>
-                <div className="py-4 pr-4"><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/70">Regular</p><p className="mt-1 text-3xl font-bold tabular-nums"><FleetPrice reg={f.registration} field="regular" suffix="" /><span className="text-sm font-semibold text-foreground/70">/hr</span></p></div>
-                <div className="bg-secondary px-4 py-4"><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/70">Prepay</p><p className="mt-1 text-3xl font-bold tabular-nums"><FleetPrice reg={f.registration} field={f.prepay ? "prepay" : "regular"} suffix="" /><span className="text-sm font-semibold text-foreground/70">/hr</span></p></div>
+                <div className="py-4 pr-4"><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/70">Regular</p><p className="mt-1 text-3xl font-bold tabular-nums"><FleetPrice reg={f.registration} row={f.rateRow} field="regular" suffix="" /><span className="text-sm font-semibold text-foreground/70">/hr</span></p></div>
+                <div className="bg-secondary px-4 py-4"><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/70">Prepay</p><p className="mt-1 text-3xl font-bold tabular-nums"><FleetPrice reg={f.registration} row={f.rateRow} field={f.prepay ? "prepay" : "regular"} suffix="" /><span className="text-sm font-semibold text-foreground/70">/hr</span></p></div>
               </> : <div className="col-span-2 py-4"><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/70">Rate</p><a href={SCHOOL_PHONE_TEL} className="mt-1 inline-flex min-h-11 items-center gap-2 text-lg font-bold"><Phone className="size-4" /> Call {SCHOOL_PHONE} for the current rate</a></div>}
             </div>
             {f.rate && <p className="mt-3 text-sm text-foreground/75"><ST k="rates.note.wet" d={RATE_NOTES.wet} /> <Link to="/rates" className="font-semibold underline underline-offset-2"><ST k="fleet.all-rates" d="All rates" /></Link></p>}
