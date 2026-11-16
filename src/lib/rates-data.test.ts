@@ -35,6 +35,17 @@ test("intro flight $100, housing $30/night, cars $20/day, MSP pickup $125", () =
   assert.equal(r["Airport pickup (MSP)"], "$125");
 });
 test("prepay applies at a $500 balance", () => assert.ok(RATE_NOTES.prepay.includes("$500")));
+test("rate names shown in the admin pickers fit on the smallest phone", () => {
+  // Pickers size to their own text; on a 360px phone the row is ~260px, which fits ~24 characters.
+  for (const r of rentalRates) assert.ok(r.aircraft.length <= 24, `too long for a picker: ${r.aircraft}`);
+  const shorts = new Set<string>();
+  for (const r of instructionRates) {
+    assert.ok(r.short && r.short.length <= 19, `too long for a picker: ${r.label}`);
+    assert.ok(!shorts.has(r.short), `two instruction lines share the short name ${r.short}`);
+    shorts.add(r.short);
+    assert.ok(r.label.length > r.short.length, `${r.short} should be shorter than ${r.label}`);
+  }
+});
 test("the downloadable rate sheet ships with the site", () => {
   assert.equal(existsSync(new URL(`../../public${RATE_SHEET_URL}`, import.meta.url)), true);
 });
