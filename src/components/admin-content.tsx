@@ -5,6 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { cleanContent, SLOTS, type Slot } from "@/lib/content-slots";
 import { resetSiteContent } from "@/lib/use-site-content";
+import { programs, specialtyCourses } from "@/lib/site-data";
+import { contentPages } from "@/lib/site-preview";
+import { SitePreview } from "./site-preview";
+
+const NAMES = { programs: Object.fromEntries(programs.map(p => [p.slug, p.name])), courses: Object.fromEntries(specialtyCourses.map(c => [c.slug, c.name])) };
 
 type Version = { id: string; content: Json; note: string | null; saved_at: string };
 const when = (iso: string) => new Date(iso).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
@@ -92,6 +97,7 @@ export function AdminContent() {
       <p className="text-xs font-bold uppercase tracking-[0.16em]">What this changes</p>
       {changed.length ? <ul className="mt-2 grid gap-1 text-sm">{changed.map(s => <li key={s.key}>{s.group}: {s.label}</li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">No unsaved changes.</p>}
     </div>
+    <div className="mt-3"><SitePreview pages={contentPages(changed.map(c => c.key), NAMES)} state={{ content: cleanContent(draft) }} /></div>
     <input value={note} onChange={e => setNote(e.target.value)} maxLength={200} placeholder="Note for this change (optional)" className="mt-3 h-11 w-full border border-input bg-background px-3 text-sm outline-none focus:border-primary" />
     <div className="mt-3 grid grid-cols-2 gap-3">
       <Button disabled={busy || !changed.length} variant="outline" className="h-12 rounded-none" onClick={() => setDraft(saved)}>Discard changes</Button>
