@@ -15,7 +15,8 @@ export function SlotText({ k }: { k: string }) {
 function EditableText({ k, value }: { k: string; value: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const slot = SLOT_BY_KEY.get(k);
-  // Uncontrolled while typing (keeps the caret); outside updates (restore, discard) sync in.
+  // React never renders the text (that reset the caret); it is set here and synced from outside
+  // changes (restore, discard) only while the spot is not being typed in.
   useEffect(() => { const el = ref.current; if (el && document.activeElement !== el && el.textContent !== value) el.textContent = value; }, [value]);
   const published = () => editStore.get().base?.[k] ?? slot?.def ?? "";
   return <span ref={ref} data-slot-text={k} className="slot-edit" contentEditable="plaintext-only" suppressContentEditableWarning spellCheck
@@ -24,5 +25,5 @@ function EditableText({ k, value }: { k: string; value: string }) {
     onFocus={() => editStore.setFocus(k)}
     onBlur={e => { editStore.setFocus(null); if (!e.currentTarget.textContent?.trim()) { e.currentTarget.textContent = slot?.def ?? ""; editStore.setDraft(k, slot?.def ?? "", published()); } }}
     onKeyDown={e => { if (e.key === "Enter" && !slot?.multiline) e.preventDefault(); if (e.key === "Escape") e.currentTarget.blur(); }}
-    onInput={e => editStore.setDraft(k, (e.currentTarget.textContent ?? "").replace(/\s+/g, " ").trim(), published())}>{value}</span>;
+    onInput={e => editStore.setDraft(k, (e.currentTarget.textContent ?? "").replace(/\s+/g, " ").trim(), published())} />;
 }
