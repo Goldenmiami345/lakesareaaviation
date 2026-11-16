@@ -33,7 +33,13 @@ export function cleanConfig(raw: unknown): RatesConfig {
   for (const r of instructionRates) { const v = c.instruction?.[r.label]; if (ok(v)) out.instruction![r.label] = v; }
   for (const r of otherRates) { const v = c.other?.[r.label]; if (typeof v === "string" && v.trim() && v.length <= 40) out.other![r.label] = v.trim(); }
   const names = new Set([...rentalRates.map(r => r.aircraft), ...extra.map(e => e.aircraft)]);
-  for (const [k, v] of Object.entries(c.assign ?? {})) if (typeof v === "string" && names.has(v)) out.assign![k] = v;
+  for (const [k, v] of Object.entries(c.assign ?? {})) {
+    if (typeof v !== "string" || !names.has(v)) continue;
+    const o = programs.flatMap(p => p.options).find(x => x.name === k);
+    const d = o ? defaultAircraftFor(o.lineItems) : null;
+    if (d && isMultiEngineLine(v) !== isMultiEngineLine(d)) continue; // never a twin for a single-engine course, or the reverse
+    out.assign![k] = v;
+  }
   return out;
 }
 
@@ -48,6 +54,16 @@ const INSTRUCTION_BY_SLUG: Record<string, string> = {
 };
 const LINE = /^(\d+(?:\.\d+)?) hours (.+?) at \$(\d+(?:\.\d+)?)\/hr: \$([\d,]+)$/;
 const AIRCRAFT_LINE = /^(Cessna 172|Piper Apache) rental$/;
+
+/** Twin-engine rental lines. A single-engine course can only be priced with a single-engine
+ *  airplane and a multi-engine course only with a twin, so the picker and saved config both enforce it. */
+const MULTI_ENGINE_LINES = new Set(["Piper Apache PA-23-160"]);
+export const isMultiEngineLine = (aircraft: string) => MULTI_ENGINE_LINES.has(aircraft);
+/** Rental lines an owner may price a course option with: same engine class as its published airplane. */
+export function aircraftChoicesFor(lineItems: string[]) {
+  const d = defaultAircraftFor(lineItems); if (!d) return [];
+  return rentalRates.map(r => r.aircraft).filter(a => isMultiEngineLine(a) === isMultiEngineLine(d));
+}
 
 /** The published default aircraft for a course option, or null when it has no rental hours. */
 export function defaultAircraftFor(lineItems: string[]) {

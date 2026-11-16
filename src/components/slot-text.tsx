@@ -68,13 +68,15 @@ export function AssignAircraft({ option }: { option: string }) {
   const edit = useEditState();
   const rates = useLiveRates();
   const o = programs.flatMap(p => p.options).find(x => x.name === option);
-  if (!isEditing(edit) || !o || !defaultAircraftFor(o.lineItems)) return null;
+  const choices = o ? aircraftChoicesFor(o.lineItems) : [];
+  if (!isEditing(edit) || !o || choices.length < 2) return null; // e.g. multi-engine courses: the Apache is the only twin
   const k = rateKey.assign(option);
   const published = rateValue(ratesOf(edit), k);
+  const current = rateValue(rates, k);
   return <label className="slot-assign mt-4 flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.1em]">
     Priced with
-    <select value={rateValue(rates, k)} onChange={e => editStore.setRateDraft(k, e.target.value, published)} className="h-9 border border-primary bg-background px-2 text-sm normal-case tracking-normal text-foreground">
-      {rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft} · {r.prepay}/hr prepay</option>)}
+    <select value={choices.includes(current) ? current : defaultAircraftFor(o.lineItems)!} onChange={e => editStore.setRateDraft(k, e.target.value, published)} className="h-9 border border-primary bg-background px-2 text-sm normal-case tracking-normal text-foreground">
+      {rates.rentalRates.filter(r => choices.includes(r.aircraft)).map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft} · {r.prepay}/hr prepay</option>)}
     </select>
   </label>;
 }
