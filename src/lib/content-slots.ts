@@ -62,3 +62,5 @@ export function contentOf(raw: unknown) {
   };
 }
 export type SiteContent = ReturnType<typeof contentOf>;
+/** Safe key segment from any label (spec names, aircraft names). */
+export const keyPart = (s: string) => s.replace(/[^A-Za-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "x";
