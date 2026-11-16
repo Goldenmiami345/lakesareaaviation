@@ -83,7 +83,7 @@ export default function SiteEditor() {
       const hit = e.target.closest(CLICKABLE);
       if (!hit || hit.closest(EDIT_ALLOWED)) return;
       e.preventDefault(); e.stopPropagation();
-      if (!e.target.closest("[data-slot-text]")) setMsg("Links and buttons are off while editing. Switch to Preview to click through.");
+      if (!e.target.closest("[data-slot-text]")) setMsg("Links are off while editing. Use Preview to click through.");
     };
     const onOver = (e: MouseEvent) => { const el = photoOf(e.target); setHover(el ? { key: el.dataset["slotPhoto"]!, rect: el.getBoundingClientRect() } : null); };
     const clear = () => setHover(null);
@@ -152,9 +152,9 @@ export default function SiteEditor() {
       <ImageUp className="size-3.5" /> {drafts[hover.key] ? "New photo · click to change" : "Click to replace photo"}</div>}
     <div role="toolbar" aria-label="Site editor" className="fixed inset-x-2 bottom-3 z-[200] mx-auto flex max-w-fit flex-wrap items-center gap-px bg-ink text-background shadow-[0_18px_50px_-12px_oklch(0_0_0/0.6)] sm:bottom-5">
       <span role="group" aria-label="Editor mode" className="m-1 flex border border-background/25">
-        <button type="button" aria-pressed={editing} onClick={() => { editStore.setPreview(false); setMsg("Edit mode: click any outlined text, price or photo."); }} title="Click words, prices and photos to change them. Links and buttons are off."
+        <button type="button" aria-pressed={editing} onClick={() => { editStore.setPreview(false); setMsg("Click any outlined text, price or photo"); }} title="Click words, prices and photos to change them. Links and buttons are off."
           className={`inline-flex min-h-9 items-center gap-1.5 px-3 text-xs font-bold uppercase tracking-[0.08em] transition-colors ${editing ? "bg-primary text-primary-foreground" : "hover:bg-background/10"}`}><PencilLine className="size-4" /> Edit</button>
-        <button type="button" aria-pressed={!editing} onClick={() => { editStore.setPreview(true); setMsg("Preview: click around like a visitor. Your unsaved changes are shown."); }} title="Use the site like a visitor, with your unsaved changes showing."
+        <button type="button" aria-pressed={!editing} onClick={() => { editStore.setPreview(true); setMsg("Preview: click around. Unsaved changes still show."); }} title="Use the site like a visitor, with your unsaved changes showing."
           className={`inline-flex min-h-9 items-center gap-1.5 px-3 text-xs font-bold uppercase tracking-[0.08em] transition-colors ${!editing ? "bg-primary text-primary-foreground" : "hover:bg-background/10"}`}><Eye className="size-4" /> Preview</button>
       </span>
       <select aria-label="Page" value={pageInList ? path : ""} onChange={e => router.history.push(e.target.value)} className="h-10 max-w-52 bg-transparent px-2 text-xs font-semibold outline-none [&>option]:text-foreground">
