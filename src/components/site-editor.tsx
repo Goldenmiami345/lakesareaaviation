@@ -65,6 +65,7 @@ export default function SiteEditor() {
     const html = document.documentElement; html.classList.add("site-editing");
     const photoOf = (t: EventTarget | null) => (t instanceof Element ? t.closest<HTMLElement>("[data-slot-photo]") : null);
     const onClick = (e: MouseEvent) => {
+      if (e.target instanceof Element && e.target.closest("[data-catalog-control]")) return;
       const calc = e.target instanceof Element ? e.target.closest("[data-slot-calc]") : null;
       if (calc) { e.preventDefault(); e.stopPropagation(); setMsg("Worked out from the rates: change an hourly rate to update it"); return; }
       const el = photoOf(e.target); if (!el) return; e.preventDefault(); e.stopPropagation(); pendingPhoto.current = el.dataset["slotPhoto"]!; file.current?.click(); };
