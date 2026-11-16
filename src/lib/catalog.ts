@@ -106,7 +106,7 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
 /** Change some details of one airplane. Anything set back to the original is dropped, so
  *  "Undo" on every field leaves no edit at all. */
 export function editPlane(c: Catalog, reg: string, patch: Partial<PlaneFields>): Catalog {
-  const original = allPlanes({ ...c, edits: {} }).find(p => p.registration === reg);
+  const original = originalPlane(c, reg);
   if (!original) return c;
   const base = fieldsOf(original);
   const merged = { ...c.edits?.[reg], ...patch } as Record<string, unknown>;
@@ -118,6 +118,8 @@ export function editPlane(c: Catalog, reg: string, patch: Partial<PlaneFields>):
   const { edits: _old, ...rest } = c;
   return Object.keys(edits).length ? { ...rest, edits } : rest;
 }
+/** An airplane as originally published (or added), before any edits. */
+export const originalPlane = (c: Catalog, reg: string) => allPlanes({ ...c, edits: {} }).find(p => p.registration === reg);
 /** Put one airplane back exactly as originally published (or added). */
 export const resetPlane = (c: Catalog, reg: string): Catalog => {
   const edits = { ...c.edits }; delete edits[reg];

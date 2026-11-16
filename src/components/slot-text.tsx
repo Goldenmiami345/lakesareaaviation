@@ -79,7 +79,7 @@ export function AssignAircraft({ option }: { option: string }) {
   </label>;
 }
 
-function EditableSpan({ k, value, meta, multiline = false, numeric = false, onType, onEmpty }: { k: string; value: string; meta: SpotMeta; multiline?: boolean; numeric?: boolean; onType: (t: string) => void; onEmpty: () => string }) {
+export function EditableSpan({ k, value, meta, multiline = false, numeric = false, onType, onEmpty }: { k: string; value: string; meta: SpotMeta; multiline?: boolean; numeric?: boolean; onType: (t: string) => void; onEmpty: () => string }) {
   const ref = useRef<HTMLSpanElement>(null);
   useEffect(() => { editStore.describe(k, meta); });
   // React never renders the text (that reset the caret); it is set here and synced from outside
