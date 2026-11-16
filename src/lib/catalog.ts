@@ -2,7 +2,7 @@
 // (site-data.ts) plus what the owner added, minus what the owner hid (site_catalog.catalog).
 // Hiding never deletes, so anything hidden comes back in one click.
 import { fleet as baseFleet, programs as basePrograms, specialtyCourses as baseCourses, type FleetRole, type Program, type SpecialtyCourse, type SpecialtyKind } from "./site-data";
-import { FLEET_RATE_ROW, fleetRate, numOf, usdOf, type AppliedRates } from "./rates-engine";
+import { FLEET_RATE_ROW, fleetRate, isMultiEngineLine, numOf, rateKey, usdOf, type AppliedRates } from "./rates-engine";
 
 export type Plane = (typeof baseFleet)[number] & { rateRow?: string | undefined; added?: boolean; photos?: string[]; edited?: boolean };
 /** Owner changes to any airplane (published or added). Only fields that differ are kept;
@@ -223,4 +223,36 @@ export function setCoursePricing(c: Catalog, slug: string, p: CoursePricing | nu
 export function setHidden(c: Catalog, kind: CatalogKind, id: string, hidden: boolean): Catalog {
   const list = c.hidden[kind].filter(x => x !== id);
   return { ...c, hidden: { ...c.hidden, [kind]: hidden ? [...list, id] : list } };
+}
+
+// ---- One airplane's hourly price. Changing it on an airplane that shares a rate line gives that
+// airplane its own line (the others keep theirs) unless the owner chooses the whole line.
+export type PlanePrice = { regular: number; prepay: number; scope: "plane" | "line" };
+/** The airplanes on a rate line, in "“Blue,” “Robin” or “Phoenix”" style. */
+export function joinNames(names: string[]) {
+  const q = names.map(n => `“${n}”`);
+  if (q.length <= 1) return q.join("");
+  return [...names.slice(0, -2).map(n => `“${n},”`), `${q.at(-2)} or ${q.at(-1)}`].join(" ");
+}
+/** Take one nickname out of a rate line's airplane list (unchanged when it isn't listed). */
+export function withoutName(list: string, name: string) {
+  const names = [...list.matchAll(/“([^”]+)”/g)].map(m => m[1]!.replace(/,$/, "").trim());
+  if (!names.includes(name) || names.length < 2) return list;
+  return joinNames(names.filter(n => n !== name));
+}
+export const ownLineName = (line: string, reg: string) => `${line.slice(0, 60 - reg.length - 3)} (${reg})`;
+/** Rate edits (rateKey -> value, for withRateDrafts or the visual editor) and the rate line the
+ *  airplane ends up on. */
+export function planePriceChange(c: Catalog, r: AppliedRates, reg: string, line: string, price: PlanePrice): { drafts: Record<string, string>; rateRow: string } {
+  const row = r.rentalRates.find(x => x.aircraft === line);
+  const plane = allPlanes(c).find(p => p.registration === reg);
+  if (!row || !plane || !(price.regular >= 0) || !(price.prepay >= 0)) return { drafts: {}, rateRow: line };
+  if (numOf(row.regular) === price.regular && numOf(row.prepay) === price.prepay) return { drafts: {}, rateRow: line };
+  const sharers = allPlanes(c).filter(p => p.registration !== reg && p.rateRow === line);
+  if (price.scope === "line" || !sharers.length) return { drafts: { [rateKey.rental(line, "regular")]: String(price.regular), [rateKey.rental(line, "prepay")]: String(price.prepay) }, rateRow: line };
+  const own = ownLineName(line, reg);
+  const twin = plane.role === "twin" || isMultiEngineLine(line, r.config.extraRental);
+  const drafts: Record<string, string> = { [rateKey.newRow(own)]: JSON.stringify({ names: plane.nickname ? `“${plane.nickname}”` : reg, regular: price.regular, prepay: price.prepay, ...(twin ? { twin: true } : {}) }) };
+  if (plane.nickname && !("added" in row)) { const rest = withoutName(row.names, plane.nickname); if (rest !== row.names) drafts[rateKey.names(line)] = rest; }
+  return { drafts, rateRow: own };
 }

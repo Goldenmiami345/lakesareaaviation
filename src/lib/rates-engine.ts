@@ -247,3 +247,12 @@ export function withRateDrafts(raw: unknown, drafts: Record<string, string>): Ra
   for (const k of ["names", "hours", "fee"] as const) if (out[k] && !Object.keys(out[k]!).length) delete out[k];
   return out;
 }
+
+/** "40 hours Cessna 172 rental at $175/hr: $7,000" -> its parts (null for any other line). */
+export function parseLine(line: string) {
+  const m = LINE.exec(line); return m ? { hours: Number(m[1]), what: m[2]!, rate: Number(m[3]) } : null;
+}
+/** "Course fee: $500" -> 500 (null for any other line). */
+export const parseFee = (line: string) => { const m = FEE_LINE.exec(line); return m ? num(m[1]!) : null; };
+/** The rate line that prices a published course option's rental hours right now. */
+export const pricedWith = (r: AppliedRates, option: string, lineItems: string[]) => r.config.assign?.[option] ?? defaultAircraftFor(lineItems);
