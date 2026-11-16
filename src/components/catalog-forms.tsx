@@ -1,16 +1,16 @@
 // Add-a-plane / add-a-program / add-a-course forms, shared by the admin "Fleet & courses" tab and
 // the visual editor's "+ Add" tiles. They only produce data; the caller decides where it is saved.
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ImageUp, Loader2, Plus, RotateCcw, Save, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ChevronDown, ImageUp, Loader2, Plus, RotateCcw, Save, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { allPlanes, buildProgram, editPlane, fieldsOf, originalPlane, PLANE_LIMITS, REG, resetPlane, slugify, type PlaneFields, type AddedCourse, type AddedPlane, type AddedProgram, type Catalog, type ProgramBlock } from "@/lib/catalog";
-import { applyRates, rateKey, withRateDrafts, type ExtraRental, type RatesConfig } from "@/lib/rates-engine";
+import { allPlanes, buildProgram, editPlane, fieldsOf, originalPlane, planePriceChange, PLANE_LIMITS, priceBlocks, REG, resetPlane, slugify, type CoursePricing, type PlaneFields, type PlanePrice, type AddedCourse, type AddedPlane, type AddedProgram, type Catalog, type ProgramBlock } from "@/lib/catalog";
+import { aircraftChoicesFor, applyRates, numOf, parseFee, parseLine, pricedWith, rateKey, withRateDrafts, type AppliedRates, type ExtraRental, type RatesConfig } from "@/lib/rates-engine";
 import { editStore, useEditState } from "@/lib/edit-store";
 import { useCatalog } from "@/lib/use-catalog";
 import type { Plane } from "@/lib/catalog";
-import { fleet as baseFleet, programs as basePrograms, specialtyCourses, SPECIALTY_KIND_LABEL, type FleetRole, type SpecialtyKind } from "@/lib/site-data";
+import { fleet as baseFleet, programs as basePrograms, specialtyCourses, SPECIALTY_KIND_LABEL, type FleetRole, type Program, type SpecialtyKind } from "@/lib/site-data";
 import { uploadSlotPhoto } from "@/lib/media-upload";
 
 const field = "grid gap-1.5 text-sm font-semibold";
@@ -22,6 +22,28 @@ const selectFit = "h-10 w-auto max-w-full min-w-0 border border-input bg-backgro
 const priceHint = "Prices are regular / prepay per hour.";
 const Field = ({ label, note, children }: { label: string; note?: string; children: ReactNode }) => <label className={field}>{label}{children}{note && <span className={hint}>{note}</span>}</label>;
 const linesOf = (s: string) => s.split("\n").map(x => x.trim()).filter(Boolean);
+const money = (s: string) => s.replace(/[^\d.]/g, "");
+
+/** A fold-away group in a long form; when closed, a one-line summary says what is inside. */
+function Section({ title, summary, open = false, children }: { title: string; summary?: ReactNode; open?: boolean; children: ReactNode }) {
+  return <details open={open} className="group border border-border bg-background">
+    <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2 sm:px-4 [&::-webkit-details-marker]:hidden">
+      <span className="min-w-0"><span className="block text-xs font-bold uppercase tracking-[0.14em]">{title}</span>{summary && <span className="mt-0.5 block text-xs text-muted-foreground group-open:hidden">{summary}</span>}</span>
+      <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+    </summary>
+    <div className="grid gap-4 border-t border-border p-3 sm:p-4">{children}</div>
+  </details>;
+}
+
+/** Save/Cancel pinned to the top of a form (below the admin bar), so long forms never need a
+ *  scroll to the bottom. The bottom Footer stays too. */
+function TopActions({ errors, onCancel, onSubmit, label, icon }: { errors: string[]; onCancel?: (() => void) | undefined; onSubmit: () => void; label: string; icon: ReactNode }) {
+  return <div className="sticky z-10 -mx-1 flex flex-wrap items-center justify-end gap-2 border-b border-border bg-background px-1 py-2" style={{ top: "var(--form-sticky-top, 0px)" }}>
+    {errors.length > 0 && <span className="mr-auto min-w-0 text-xs text-destructive">{errors.length === 1 ? errors[0] : `${errors.length} things to fix, listed at the bottom.`}</span>}
+    {onCancel && <Button type="button" size="sm" variant="ghost" onClick={onCancel}>Cancel</Button>}
+    <Button type="button" size="sm" disabled={errors.length > 0} onClick={onSubmit}>{icon} {label}</Button>
+  </div>;
+}
 
 function PhotoPick({ id, value, onChange, label = "Photo", note = "Use a real photo of this airplane or course. It is resized for the web automatically.", extra }: { id: string; value: string; onChange: (url: string) => void; label?: string; note?: string; extra?: ReactNode }) {
   const [busy, setBusy] = useState(false); const [err, setErr] = useState("");
@@ -69,6 +91,7 @@ export function PlaneForm({ rates, taken, onSubmit, onCancel, onDraft }: { rates
   // Live preview: the airplane as it would look, once it has a valid tail number and a name.
   useEffect(() => { onDraft?.(REG.test(reg) && f.name.trim() ? build() : null); }, [f, price, row, nr]); // eslint-disable-line react-hooks/exhaustive-deps
   return <div className="grid gap-4">
+    <TopActions errors={errors} onCancel={onCancel} onSubmit={submit} label="Add airplane" icon={<Plus className="size-4" />} />
     <div className="grid gap-4 sm:grid-cols-2">
       <Field label="Tail number"><Input value={f.registration} onChange={set("registration")} placeholder="N12345" autoCapitalize="characters" /></Field>
       <Field label="Nickname" note="Optional"><Input value={f.nickname} onChange={set("nickname")} placeholder="Robin" /></Field>
