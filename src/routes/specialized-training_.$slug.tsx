@@ -1,5 +1,6 @@
+import { rateKey, } from "@/lib/rates-engine";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { SlotText } from "@/components/slot-text";
+import { SlotText, RateText, } from "@/components/slot-text";
 import { useSiteContent } from "../lib/use-site-content";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { srcSetFor } from "@/lib/responsive-image";
@@ -31,9 +32,9 @@ function SpecialtyPage() {
     <section className="bg-ink pb-12 pt-28 text-background sm:pb-16 sm:pt-36">
       <div className="site-container grid items-center gap-8 lg:grid-cols-[1fr_1.1fr] lg:gap-14">
         <div>
-          <div><Link to="/specialized-training" className="inline-flex min-h-11 items-center gap-2 text-xs font-bold uppercase tracking-widest text-background/70 hover:text-background"><ArrowLeft className="size-4" /> Specialized training</Link></div>
-          <p className="stage-label mt-4">{SPECIALTY_KIND_LABEL[c.kind]}</p>
-          <h1 className="mt-3 font-display text-4xl sm:text-6xl">{c.name}</h1>
+          <div><Link to="/specialized-training" className="inline-flex min-h-11 items-center gap-2 text-xs font-bold uppercase tracking-widest text-background/70 hover:text-background"><ArrowLeft className="size-4" /> <SlotText k="specialized-training---slug.text.1" d="Specialized training" /></Link></div>
+          <p className="stage-label mt-4"><SlotText k={`course.kind.${c.kind}`} d={SPECIALTY_KIND_LABEL[c.kind]} /></p>
+          <h1 className="mt-3 font-display text-4xl sm:text-6xl"><SlotText k={`course.${c.slug}.name`} d={c.name} /></h1>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-background/80 sm:text-lg"><SlotText k={`course.${c.slug}.definition`} /></p>
         </div>
         {photo && <div className="relative aspect-[4/3] overflow-hidden bg-background/5 lg:aspect-[3/2]"><img data-slot-photo={`course.${c.slug}.photo`} src={photo.src} srcSet={srcSetFor(photo.src)} sizes="(min-width: 1024px) 52vw, 100vw" alt={photo.alt} width={1280} height={853} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover" /></div>}
@@ -41,18 +42,18 @@ function SpecialtyPage() {
     </section>
     <section className="site-container relative z-10 -mt-6 sm:-mt-8">
       <div className="grid gap-px overflow-hidden border border-border bg-border shadow-2xl sm:grid-cols-2 lg:grid-flow-col lg:grid-cols-none lg:auto-cols-fr">
-        {facts.map((f) => <div key={f.k} className="bg-background p-5 sm:p-6"><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{f.k}</p><p className="mt-2 font-display text-2xl sm:text-3xl">{f.v}</p></div>)}
-        <Link to="/contact" search={{ program: c.name }} className={`btn-shine flex min-h-16 items-center justify-between gap-3 bg-primary p-5 text-sm font-bold uppercase text-primary-foreground sm:p-6 lg:col-span-1 ${facts.length % 2 === 0 ? "sm:col-span-2" : ""}`}>Build my training plan <ArrowRight className="size-5" /></Link>
+        {facts.map((f) => <div key={f.k} className="bg-background p-5 sm:p-6"><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{c.facts.includes(f) ? <SlotText k={`course.${c.slug}.fact.${c.facts.indexOf(f)}.k`} d={f.k} /> : <SlotText k={`specialized.fact.${f.k.toLowerCase()}`} d={f.k} />}</p><p className="mt-2 font-display text-2xl sm:text-3xl">{f.k === "Location" ? <SlotText k={`course.${c.slug}.location`} d={c.location!} /> : c.facts.includes(f) ? c.slug === "tailwheel" && f.v === "$135/hr wet" ? <><RateText k={rateKey.rental("Taylorcraft BC-12D", "regular")} /><SlotText k="course.tailwheel.rate-suffix" d="/hr wet" /></> : <SlotText k={`course.${c.slug}.fact.${c.facts.indexOf(f)}.v`} d={f.v} /> : <SlotText k="specialized.estimate-value" d={f.v} />}</p></div>)}
+        <Link to="/contact" search={{ program: c.name }} className={`btn-shine flex min-h-16 items-center justify-between gap-3 bg-primary p-5 text-sm font-bold uppercase text-primary-foreground sm:p-6 lg:col-span-1 ${facts.length % 2 === 0 ? "sm:col-span-2" : ""}`}><SlotText k="cta.plan" d="Build my training plan" /> <ArrowRight className="size-5" /></Link>
       </div>
     </section>
     <section className="site-container grid gap-12 py-14 lg:grid-cols-2 lg:py-20">
       <div>
-        <p className="eyebrow text-primary-text">What you’ll train</p>
-        <ul className="mt-5 border-y border-border">{c.train.map((t) => <li key={t} className="flex gap-4 border-b border-border py-4 last:border-0"><Check className="mt-0.5 size-5 shrink-0 text-primary-text" /><span className="font-semibold">{t}</span></li>)}</ul>
+        <p className="eyebrow text-primary-text"><SlotText k="specialized-training---slug.text.2" d="What you’ll train" /></p>
+        <ul className="mt-5 border-y border-border">{c.train.map((t,i) => <li key={t} className="flex gap-4 border-b border-border py-4 last:border-0"><Check className="mt-0.5 size-5 shrink-0 text-primary-text" /><span className="font-semibold"><SlotText k={`course.${c.slug}.train.${i}`} d={t} /></span></li>)}</ul>
       </div>
       {related.length > 0 && <div>
         <p className="eyebrow text-primary-text">{c.kind === "endorsement" ? "More endorsements" : "More specialty courses"}</p>
-        <div className="mt-5 border-t border-border">{related.map((r) => <Link key={r.slug} to="/specialized-training/$slug" params={{ slug: r.slug }} className="interactive-arrow flex min-h-14 items-center justify-between gap-4 border-b border-border py-3 hover:text-primary-text"><span className="font-display text-xl">{r.name}</span><ArrowRight className="size-4 shrink-0" /></Link>)}</div>
+        <div className="mt-5 border-t border-border">{related.map((r) => <Link key={r.slug} to="/specialized-training/$slug" params={{ slug: r.slug }} className="interactive-arrow flex min-h-14 items-center justify-between gap-4 border-b border-border py-3 hover:text-primary-text"><span className="font-display text-xl"><SlotText k={`course.${r.slug}.name`} d={r.name} /></span><ArrowRight className="size-4 shrink-0" /></Link>)}</div>
       </div>}
     </section>
     <InquiryBand />

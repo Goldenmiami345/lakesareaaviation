@@ -1,3 +1,5 @@
+import { rateKey, } from "@/lib/rates-engine";
+import { SlotText, RateText, CalcText, } from "@/components/slot-text";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
@@ -136,59 +138,59 @@ function ContactPage() {
     {/* Slim header: visitors land on "Ratings you already have" on the first screen (owner request). */}
     <div className="site-container pb-14 pt-20 sm:pt-28 lg:pb-20">
       <div className="mb-5 sm:mb-10">
-        <h1 className="font-display text-3xl leading-tight sm:text-5xl">Build your training plan.</h1>
-        <p className="mt-1.5 text-sm text-foreground/75 sm:text-base">Tap what you have and what's next. Prices are estimates.</p>
+        <h1 className="font-display text-3xl leading-tight sm:text-5xl"><SlotText k="contact.text.1" d="Build your training plan." /></h1>
+        <p className="mt-1.5 text-sm text-foreground/75 sm:text-base"><SlotText k="contact.text.2" d="Tap what you have and what's next. Prices are estimates." /></p>
       </div>
       <div className="grid gap-10 lg:grid-cols-[1.25fr_.75fr]">
         <div ref={plannerRef}>
-          <PlannerStep number="01" title="Ratings you already have">
-            <div className="grid grid-cols-2 gap-2">{ratings.map(r => <Choice key={r.id} checked={earned.includes(r.id)} onChange={() => markEarned(r.id)} label={r.name} />)}</div>
+          <PlannerStep number="01" title={<SlotText k="contact.title.ratings-you-already-have" d="Ratings you already have" />}>
+            <div className="grid grid-cols-2 gap-2">{ratings.map(r => <Choice key={r.id} checked={earned.includes(r.id)} onChange={() => markEarned(r.id)} label={<SlotText k={`contact.rating.${r.id}.name`} d={r.name} />} />)}</div>
           </PlannerStep>
-          <PlannerStep number="02" title="Ratings you plan to earn">
-            {earned.length > 0 && <p className="-mt-2 mb-3 text-xs text-muted-foreground">Ratings you already hold are greyed out.</p>}<div className="grid grid-cols-2 gap-2">{ratings.map(r => <Choice key={r.id} checked={planned.includes(r.id) && !earned.includes(r.id)} disabled={earned.includes(r.id)} onChange={() => togglePlanned(r.id)} label={r.name} detail={earned.includes(r.id) ? "Already completed" : `${r.days}+ days · ${money(r.cost)}`} />)}</div>
+          <PlannerStep number="02" title={<SlotText k="contact.title.ratings-you-plan-to-earn" d="Ratings you plan to earn" />}>
+            {earned.length > 0 && <p className="-mt-2 mb-3 text-xs text-muted-foreground"><SlotText k="contact.text.3" d="Ratings you already hold are greyed out." /></p>}<div className="grid grid-cols-2 gap-2">{ratings.map(r => <Choice key={r.id} checked={planned.includes(r.id) && !earned.includes(r.id)} disabled={earned.includes(r.id)} onChange={() => togglePlanned(r.id)} label={<SlotText k={`contact.rating.${r.id}.name`} d={r.name} />} detail={earned.includes(r.id) ? <SlotText k="contact.completed" d="Already completed" /> : <>{r.days}<SlotText k="contact.rating-days" d="+ days · " /><CalcText>{money(r.cost)}</CalcText></>} />)}</div>
           </PlannerStep>
-          <PlannerStep number="03" title="Travel support">
+          <PlannerStep number="03" title={<SlotText k="contact.title.travel-support" d="Travel support" />}>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
-              <ServiceChoice checked={housing} onChange={() => setHousing(!housing)} icon={<House />} title="Housing" detail={`$${prices.housing} / night`} />
-              <ServiceChoice checked={car} onChange={() => setCar(!car)} icon={<Car />} title="Student car" detail={`$${prices.car} / day`} />
-              <ServiceChoice checked={pickup} onChange={() => setPickup(!pickup)} icon={<PlaneTakeoff />} title="Airport pickup" detail={`MSP · $${prices.pickup}`} />
+              <ServiceChoice checked={housing} onChange={() => setHousing(!housing)} icon={<House />} title={<SlotText k="contact.title.housing" d="Housing" />} detail={`$${prices.housing} / night`} />
+              <ServiceChoice checked={car} onChange={() => setCar(!car)} icon={<Car />} title={<SlotText k="contact.title.student-car" d="Student car" />} detail={`$${prices.car} / day`} />
+              <ServiceChoice checked={pickup} onChange={() => setPickup(!pickup)} icon={<PlaneTakeoff />} title={<SlotText k="contact.title.airport-pickup" d="Airport pickup" />} detail={`MSP · $${prices.pickup}`} />
             </div>
           </PlannerStep>
         </div>
 
         <div id="breakdown" className="h-fit scroll-mt-24 bg-ink p-6 text-background lg:sticky lg:top-24 sm:p-8">
-          <p className="stage-label">Your estimate</p>
+          <p className="stage-label"><SlotText k="contact.text.4" d="Your estimate" /></p>
           <div className="mt-6 grid grid-cols-2 gap-px bg-background/20">
-            <Result value={`${totals.days}+`} label="Training days" />
-            <Result value={money(totals.buffered)} label="Estimated total, incl. 20% buffer" />
+            <Result value={`${totals.days}+`} label={<SlotText k="contact.label.training-days" d="Training days" />} />
+            <Result value={<CalcText>{money(totals.buffered)}</CalcText>} label={<SlotText k="contact.label.estimated-total-incl-20-buffer" d="Estimated total, incl. 20% buffer" />} />
           </div>
           <div className="mt-6 space-y-3 border-y border-background/20 py-5 text-sm">
-            <Line label="Training" value={money(totals.training)} />
-            {housing && <Line label={`Housing · ${totals.days} nights`} value={money(totals.lodging)} />}
-            {car && <Line label={`Car · ${totals.days} days`} value={money(totals.transportation)} />}
-            {pickup && <Line label="Airport pickup (MSP)" value={`$${prices.pickup}`} />}
-            <Line label="Overestimate buffer (20%)" value={money(totals.contingency)} />
-            <div className="border-t border-background/20 pt-3"><Line label="Estimated total" value={money(totals.buffered)} /></div>
+            <Line label={<SlotText k="contact.label.training" d="Training" />} value={<CalcText>{money(totals.training)}</CalcText>} />
+            {housing && <Line label={<><SlotText k="contact.housing-prefix" d="Housing · " />{totals.days}<SlotText k="contact.housing-nights" d=" nights" /></>} value={<CalcText>{money(totals.lodging)}</CalcText>} />}
+            {car && <Line label={<><SlotText k="contact.car-prefix" d="Car · " />{totals.days}<SlotText k="contact.car-days" d=" days" /></>} value={<CalcText>{money(totals.transportation)}</CalcText>} />}
+            {pickup && <Line label={<SlotText k="contact.label.airport-pickup-msp" d="Airport pickup (MSP)" />} value={<RateText k={rateKey.other("Airport pickup (MSP)")} amount />} />}
+            <Line label={<SlotText k="contact.label.overestimate-buffer-20" d="Overestimate buffer (20%)" />} value={<CalcText>{money(totals.contingency)}</CalcText>} />
+            <div className="border-t border-background/20 pt-3"><Line label={<SlotText k="contact.label.estimated-total" d="Estimated total" />} value={<CalcText>{money(totals.buffered)}</CalcText>} /></div>
           </div>
-          <p className="mt-5 text-xs leading-relaxed text-background/60">All prices are estimates, based on published minimum course days and prices, plus a 20% buffer. Weather, proficiency, examiner fees, tax, aircraft availability, prerequisites, and time-building can change the final schedule and cost.</p>
-          <a href="#request" className="mt-6 flex min-h-13 items-center justify-center bg-primary px-5 text-center text-sm font-bold uppercase text-primary-foreground">Send this plan</a>
+          <p className="mt-5 text-xs leading-relaxed text-background/60"><SlotText k="contact.text.5" d="All prices are estimates, based on published minimum course days and prices, plus a 20% buffer. Weather, proficiency, examiner fees, tax, aircraft availability, prerequisites, and time-building can change the final schedule and cost." /></p>
+          <a href="#request" className="mt-6 flex min-h-13 items-center justify-center bg-primary px-5 text-center text-sm font-bold uppercase text-primary-foreground"><SlotText k="contact.text.6" d="Send this plan" /></a>
         </div>
       </div>
 
       <section id="request" className="mt-20 scroll-mt-24 border-t border-border pt-14">
-        {sent ? <div className="bg-secondary p-6 sm:p-10"><Check className="size-10 text-primary-text" aria-hidden="true" /><h2 ref={confirmRef} tabIndex={-1} className="mt-4 font-display text-4xl outline-none">Request received{summary?.name ? `, ${summary.name}` : ""}.</h2>
+        {sent ? <div className="bg-secondary p-6 sm:p-10"><Check className="size-10 text-primary-text" aria-hidden="true" /><h2 ref={confirmRef} tabIndex={-1} className="mt-4 font-display text-4xl outline-none"><SlotText k="contact.text.7" d="Request received" />{summary?.name ? `, ${summary.name}` : ""}.</h2>
           {summary && <dl className="mt-6 grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
-            <div><dt className="text-xs font-bold uppercase text-muted-foreground">Ratings planned</dt><dd className="mt-1">{summary.ratings.length ? summary.ratings.join(", ") : "To discuss"}</dd></div>
-            <div><dt className="text-xs font-bold uppercase text-muted-foreground">Preferred location</dt><dd className="mt-1">{summary.location}</dd></div>
-            <div><dt className="text-xs font-bold uppercase text-muted-foreground">Target start date</dt><dd className="mt-1">{summary.start ? new Date(summary.start + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "Flexible"}</dd></div>
-            <div><dt className="text-xs font-bold uppercase text-muted-foreground">Estimated total, incl. 20% buffer</dt><dd className="mt-1">{money(summary.total)}</dd></div>
+            <div><dt className="text-xs font-bold uppercase text-muted-foreground"><SlotText k="contact.text.8" d="Ratings planned" /></dt><dd className="mt-1">{summary.ratings.length ? summary.ratings.join(", ") : "To discuss"}</dd></div>
+            <div><dt className="text-xs font-bold uppercase text-muted-foreground"><SlotText k="contact.text.9" d="Preferred location" /></dt><dd className="mt-1">{summary.location}</dd></div>
+            <div><dt className="text-xs font-bold uppercase text-muted-foreground"><SlotText k="contact.text.10" d="Target start date" /></dt><dd className="mt-1">{summary.start ? new Date(summary.start + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "Flexible"}</dd></div>
+            <div><dt className="text-xs font-bold uppercase text-muted-foreground"><SlotText k="contact.text.11" d="Estimated total, incl. 20% buffer" /></dt><dd className="mt-1">{<CalcText>{money(summary.total)}</CalcText>}</dd></div>
           </dl>}
-          <p className="mt-6 max-w-2xl text-muted-foreground"><strong className="text-foreground">What happens next:</strong> our team reviews your plan and contacts you to confirm dates{sentPhone ? ` at ${sentPhone}` : ""}.</p>
-          <a href={SCHOOL_PHONE_TEL} className="mt-6 inline-flex min-h-12 items-center bg-primary px-6 text-sm font-bold uppercase text-primary-foreground">Call {SCHOOL_PHONE}</a></div> : <div className="grid gap-10 lg:grid-cols-[.7fr_1.3fr]"><div><p className="eyebrow text-primary-text">Request a review</p><h2 className="mt-4 font-display text-4xl">Put real dates around your plan.</h2><a href={SCHOOL_PHONE_TEL} className="mt-6 -mb-2 inline-flex min-h-11 items-center font-display text-2xl text-primary-text">{SCHOOL_PHONE}</a></div><form onSubmit={onSubmit} className="relative grid min-w-0 gap-5 sm:grid-cols-2">
-          <Field name="firstName" label="First name" autoComplete="given-name" /><Field name="lastName" label="Last name" autoComplete="family-name" /><Field name="email" label="Email" type="email" autoComplete="email" /><Field name="phone" label="Phone" type="tel" />
-          <Select key={preferred} label="Preferred location" options={locations.map(l => l.city)} defaultValue={preferred} /><Field name="targetStartDate" label="Target start date" type="date" required={false} />
-          <label className="sm:col-span-2"><span className="mb-2 block text-xs font-bold uppercase">Anything else we should know?</span><textarea name="notes" maxLength={2000} key={`${plane?.registration ?? ""}|${programNote}`} defaultValue={[plane ? aircraftNote : "", programNote].filter(Boolean).join(" ")} className="min-h-28 w-full border border-input bg-background p-4 outline-none focus:border-primary" /></label>
-          <div aria-hidden="true" className="sr-only"><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
+          <p className="mt-6 max-w-2xl text-muted-foreground"><strong className="text-foreground"><SlotText k="contact.text.12" d="What happens next:" /></strong> <SlotText k="contact.text.13" d="our team reviews your plan and contacts you to confirm dates" />{sentPhone ? ` at ${sentPhone}` : ""}.</p>
+          <a href={SCHOOL_PHONE_TEL} className="mt-6 inline-flex min-h-12 items-center bg-primary px-6 text-sm font-bold uppercase text-primary-foreground"><SlotText k="contact.text.14" d="Call" /> {SCHOOL_PHONE}</a></div> : <div className="grid gap-10 lg:grid-cols-[.7fr_1.3fr]"><div><p className="eyebrow text-primary-text"><SlotText k="contact.text.15" d="Request a review" /></p><h2 className="mt-4 font-display text-4xl"><SlotText k="contact.text.16" d="Put real dates around your plan." /></h2><a href={SCHOOL_PHONE_TEL} className="mt-6 -mb-2 inline-flex min-h-11 items-center font-display text-2xl text-primary-text">{SCHOOL_PHONE}</a></div><form onSubmit={onSubmit} className="relative grid min-w-0 gap-5 sm:grid-cols-2">
+          <Field name="firstName" label={<SlotText k="contact.label.first-name" d="First name" />} autoComplete="given-name" /><Field name="lastName" label={<SlotText k="contact.label.last-name" d="Last name" />} autoComplete="family-name" /><Field name="email" label={<SlotText k="contact.label.email" d="Email" />} type="email" autoComplete="email" /><Field name="phone" label={<SlotText k="contact.label.phone" d="Phone" />} type="tel" />
+          <Select key={preferred} label={<SlotText k="contact.label.preferred-location" d="Preferred location" />} options={locations.map(l => l.city)} defaultValue={preferred} /><Field name="targetStartDate" label={<SlotText k="contact.label.target-start-date" d="Target start date" />} type="date" required={false} />
+          <label className="sm:col-span-2"><span className="mb-2 block text-xs font-bold uppercase"><SlotText k="contact.text.17" d="Anything else we should know?" /></span><textarea name="notes" maxLength={2000} key={`${plane?.registration ?? ""}|${programNote}`} defaultValue={[plane ? aircraftNote : "", programNote].filter(Boolean).join(" ")} className="min-h-28 w-full border border-input bg-background p-4 outline-none focus:border-primary" /></label>
+          <div aria-hidden="true" className="sr-only"><label><SlotText k="contact.text.18" d="Website" /><input name="website" tabIndex={-1} autoComplete="off" /></label></div>
           <Button disabled={busy} className="min-h-14 rounded-none sm:col-span-2">{busy ? "Sending…" : "Send my training plan request"}</Button>
           {error && <p ref={errorRef} tabIndex={-1} role="alert" className="outline-none text-sm text-destructive sm:col-span-2">{error}</p>}
         </form></div>}
@@ -197,19 +199,19 @@ function ContactPage() {
     {mounted && createPortal(<Toaster position="top-center" offset={84} mobileOffset={{ top: 84 }} icons={{ success: <Check className="size-4 text-primary-text" /> }} />, document.body)}
     {mounted && createPortal(<div aria-live="polite" className={`fixed inset-x-0 bottom-0 z-40 border-t border-background/15 bg-ink px-4 pb-[calc(.75rem+env(safe-area-inset-bottom))] pt-3 text-background shadow-2xl transition-transform duration-300 lg:hidden ${showBar ? "translate-y-0" : "pointer-events-none translate-y-full"}`}>
       <div className="mx-auto flex max-w-xl items-center justify-between gap-3">
-        <div className="min-w-0"><p className="font-display text-2xl leading-none">{money(totals.buffered)}</p><p className="mt-1 truncate text-xs font-bold uppercase text-background/60">{totals.days}+ days · est. incl. 20% buffer</p></div>
-        <a href="#breakdown" className="flex min-h-11 shrink-0 items-center border border-background/40 px-4 text-xs font-bold uppercase">See breakdown</a>
+        <div className="min-w-0"><p className="font-display text-2xl leading-none">{<CalcText>{money(totals.buffered)}</CalcText>}</p><p className="mt-1 truncate text-xs font-bold uppercase text-background/60">{totals.days}<SlotText k="contact.text.19" d="+ days · est. incl. 20% buffer" /></p></div>
+        <a href="#breakdown" className="flex min-h-11 shrink-0 items-center border border-background/40 px-4 text-xs font-bold uppercase"><SlotText k="contact.text.20" d="See breakdown" /></a>
       </div>
     </div>, document.body)}
   </SiteLayout>;
 }
 
-function PlannerStep({ number, title, children }: { number: string; title: string; children: React.ReactNode }) { return <section className="border-t border-border py-8 first:border-0 first:pt-0"><h2 className="mb-5 flex items-baseline gap-3 font-display text-2xl sm:text-3xl"><span className="text-primary-text">{number}</span><span>{title}</span></h2>{children}</section>; }
-function Choice({ checked, disabled, onChange, label, detail }: { checked: boolean; disabled?: boolean; onChange: () => void; label: string; detail?: string }) { return <label className={`flex min-h-14 cursor-pointer items-center gap-2.5 border px-3 py-2.5 transition-colors sm:min-h-20 sm:gap-4 sm:p-4 ${checked ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background"} ${disabled ? "cursor-not-allowed opacity-40" : ""}`}><input type="checkbox" className="sr-only" checked={checked} disabled={disabled} onChange={onChange} /><span className={`grid size-5 shrink-0 place-items-center border ${checked ? "border-primary-foreground" : "border-foreground/30"}`}>{checked && <Check className="size-3" />}</span><span className="min-w-0"><strong className="block text-[13px] leading-tight sm:text-sm">{label}</strong>{detail && <span className={`mt-0.5 block text-xs sm:mt-1 sm:text-xs ${checked ? "text-primary-foreground" : "text-muted-foreground"}`}>{detail}</span>}</span></label>; }
-function ServiceChoice({ checked, onChange, icon, title, detail }: { checked: boolean; onChange: () => void; icon: React.ReactNode; title: string; detail: string }) { return <Button type="button" aria-pressed={checked} variant={checked ? "default" : "outline"} onClick={onChange} className="h-auto min-h-16 flex-col items-start whitespace-normal rounded-none p-3 text-left sm:min-h-32 sm:p-4"><span className="block [&_svg]:size-5">{icon}</span><strong className="mt-2 block text-sm sm:mt-6">{title}</strong><span className={`block text-xs ${checked ? "text-primary-foreground" : "text-muted-foreground"}`}>{detail}</span></Button>; }
-function Result({ value, label }: { value: string; label: string }) { return <div className="bg-ink p-4"><p className="font-display text-3xl text-background">{value}</p><p className="mt-1 text-xs font-bold uppercase text-background/55">{label}</p></div>; }
-function Line({ label, value }: { label: string; value: string }) { return <div className="flex items-center justify-between gap-4"><span className="text-background/70">{label}</span><strong>{value}</strong></div>; }
-function Field({ label, name, type = "text", required = true, autoComplete }: { label: string; name: string; type?: string; required?: boolean; autoComplete?: string }) { return <label className="min-w-0"><span className="mb-2 block text-xs font-bold uppercase">{label}</span><input name={name} inputMode={type === "tel" ? "tel" : undefined} autoComplete={autoComplete ?? (type === "tel" ? "tel" : undefined)} required={required} maxLength={type === "email" ? 255 : 60} type={type} className={`box-border h-14 w-full min-w-0 max-w-full border border-input bg-background px-4 outline-none focus:border-primary ${type === "date" ? "date-field" : ""}`} /></label>; }
-function Select({ label, options, defaultValue = "" }: { label: string; options: string[]; defaultValue?: string }) { return <label className="min-w-0"><span className="mb-2 block text-xs font-bold uppercase">{label}</span><select name="preferredLocation" required defaultValue={defaultValue} className="h-14 w-full border border-input bg-background px-4"><option value="">Select</option>{options.map(x => <option key={x}>{x}</option>)}</select></label>; }
+function PlannerStep({ number, title, children }: { number: string; title: React.ReactNode; children: React.ReactNode }) { return <section className="border-t border-border py-8 first:border-0 first:pt-0"><h2 className="mb-5 flex items-baseline gap-3 font-display text-2xl sm:text-3xl"><span className="text-primary-text">{number}</span><span>{title}</span></h2>{children}</section>; }
+function Choice({ checked, disabled, onChange, label, detail }: { checked: boolean; disabled?: boolean; onChange: () => void; label: React.ReactNode; detail?: React.ReactNode }) { return <label className={`flex min-h-14 cursor-pointer items-center gap-2.5 border px-3 py-2.5 transition-colors sm:min-h-20 sm:gap-4 sm:p-4 ${checked ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background"} ${disabled ? "cursor-not-allowed opacity-40" : ""}`}><input type="checkbox" className="sr-only" checked={checked} disabled={disabled} onChange={onChange} /><span className={`grid size-5 shrink-0 place-items-center border ${checked ? "border-primary-foreground" : "border-foreground/30"}`}>{checked && <Check className="size-3" />}</span><span className="min-w-0"><strong className="block text-[13px] leading-tight sm:text-sm">{label}</strong>{detail && <span className={`mt-0.5 block text-xs sm:mt-1 sm:text-xs ${checked ? "text-primary-foreground" : "text-muted-foreground"}`}>{detail}</span>}</span></label>; }
+function ServiceChoice({ checked, onChange, icon, title, detail }: { checked: boolean; onChange: () => void; icon: React.ReactNode; title: React.ReactNode; detail: React.ReactNode }) { return <Button type="button" aria-pressed={checked} variant={checked ? "default" : "outline"} onClick={onChange} className="h-auto min-h-16 flex-col items-start whitespace-normal rounded-none p-3 text-left sm:min-h-32 sm:p-4"><span className="block [&_svg]:size-5">{icon}</span><strong className="mt-2 block text-sm sm:mt-6">{title}</strong><span className={`block text-xs ${checked ? "text-primary-foreground" : "text-muted-foreground"}`}>{detail}</span></Button>; }
+function Result({ value, label }: { value: React.ReactNode; label: React.ReactNode }) { return <div className="bg-ink p-4"><p className="font-display text-3xl text-background">{value}</p><p className="mt-1 text-xs font-bold uppercase text-background/55">{label}</p></div>; }
+function Line({ label, value }: { label: React.ReactNode; value: React.ReactNode }) { return <div className="flex items-center justify-between gap-4"><span className="text-background/70">{label}</span><strong>{value}</strong></div>; }
+function Field({ label, name, type = "text", required = true, autoComplete }: { label: React.ReactNode; name: string; type?: string; required?: boolean; autoComplete?: string }) { return <label className="min-w-0"><span className="mb-2 block text-xs font-bold uppercase">{label}</span><input name={name} inputMode={type === "tel" ? "tel" : undefined} autoComplete={autoComplete ?? (type === "tel" ? "tel" : undefined)} required={required} maxLength={type === "email" ? 255 : 60} type={type} className={`box-border h-14 w-full min-w-0 max-w-full border border-input bg-background px-4 outline-none focus:border-primary ${type === "date" ? "date-field" : ""}`} /></label>; }
+function Select({ label, options, defaultValue = "" }: { label: React.ReactNode; options: string[]; defaultValue?: string }) { return <label className="min-w-0"><span className="mb-2 block text-xs font-bold uppercase">{label}</span><select name="preferredLocation" required defaultValue={defaultValue} className="h-14 w-full border border-input bg-background px-4"><option value="">Select</option>{options.map(x => <option key={x}>{x}</option>)}</select></label>; }
 function money(value: number) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value); }
 const meta = (title: string, description: string) => [{ title }, { name: "description", content: description }, { property: "og:title", content: title }, { property: "og:description", content: description }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }];
