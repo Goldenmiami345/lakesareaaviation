@@ -51,21 +51,21 @@ export function AdminRates() {
     <p className="text-sm text-muted-foreground">Nothing goes live until you press Save, and every save can be undone below.</p>
 
     <h3 className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Aircraft rental, per hour (regular / prepay)</h3>
-    <div className="mt-2 grid gap-2">{rentalRates.map(r => { const v = rentalOf(r.aircraft); return <label key={r.aircraft} className="flex items-center justify-between gap-2 text-sm"><span className="min-w-0 flex-1 truncate">{r.aircraft}</span>
+    <div className="mt-2 grid grid-cols-[minmax(0,1fr)] gap-2">{rentalRates.map(r => { const v = rentalOf(r.aircraft); return <label key={r.aircraft} className="flex items-center justify-between gap-2 text-sm"><span className="min-w-0 flex-1 truncate">{r.aircraft}</span>
       <input type="number" min={0} max={5000} className={field} value={v.regular} onChange={e => setRental(r.aircraft, "regular", Number(e.target.value))} aria-label={`${r.aircraft} regular`} />
       <input type="number" min={0} max={5000} className={field} value={v.prepay} onChange={e => setRental(r.aircraft, "prepay", Number(e.target.value))} aria-label={`${r.aircraft} prepay`} /></label>; })}</div>
     <p className="mt-1 text-xs text-muted-foreground">Course estimates use the prepay rate.</p>
 
     <h3 className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Instruction, per hour</h3>
-    <div className="mt-2 grid gap-2">{instructionRates.map(r => <label key={r.label} className="flex items-center justify-between gap-2 text-sm"><span className="min-w-0 flex-1">{r.label}</span>
+    <div className="mt-2 grid grid-cols-[minmax(0,1fr)] gap-2">{instructionRates.map(r => <label key={r.label} className="flex items-center justify-between gap-2 text-sm"><span className="min-w-0 flex-1">{r.label}</span>
       <input type="number" min={0} max={5000} className={field} value={num(next.instructionRates.find(x => x.label === r.label)!.rate)} onChange={e => setDraft(d => ({ ...d, instruction: { ...d.instruction, [r.label]: Number(e.target.value) } }))} /></label>)}</div>
 
     <h3 className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Flights, housing & travel</h3>
-    <div className="mt-2 grid gap-2">{otherRates.map(r => <label key={r.label} className="flex items-center justify-between gap-2 text-sm"><span className="min-w-0 flex-1">{r.label}</span>
+    <div className="mt-2 grid grid-cols-[minmax(0,1fr)] gap-2">{otherRates.map(r => <label key={r.label} className="flex items-center justify-between gap-2 text-sm"><span className="min-w-0 flex-1">{r.label}</span>
       <input maxLength={40} className={`${field} w-32`} value={next.otherRates.find(x => x.label === r.label)!.rate} onChange={e => setDraft(d => ({ ...d, other: { ...d.other, [r.label]: e.target.value } }))} /></label>)}</div>
 
     <h3 className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Airplane each course is priced with</h3>
-    <div className="mt-2 grid gap-2">{optionsWithPlane.map(o => <label key={o.name} className="flex items-center justify-between gap-2 text-sm"><span className="min-w-0 flex-1">{o.name}</span>
+    <div className="mt-2 grid grid-cols-[minmax(0,1fr)] gap-2">{optionsWithPlane.map(o => <label key={o.name} className="flex items-center justify-between gap-2 text-sm"><span className="min-w-0 flex-1">{o.name}</span>
       <select className="h-10 max-w-48 border border-input bg-background px-2 outline-none focus:border-primary" value={draft.assign?.[o.name] ?? o.def!} onChange={e => setDraft(d => { const a = { ...d.assign }; if (e.target.value === o.def) delete a[o.name]; else a[o.name] = e.target.value; return { ...d, assign: a }; })}>
         {rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft}</option>)}</select></label>)}</div>
 

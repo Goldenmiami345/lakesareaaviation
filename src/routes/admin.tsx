@@ -199,7 +199,7 @@ function AdminPage() {
             {tab === "edit" && <EditSiteTab />}
             {tab === "catalog" && <Panel><AdminCatalog /></Panel>}
             {tab === "prices" && <Panel><AdminRates /></Panel>}
-            {tab === "settings" && <div className="grid gap-6">
+            {tab === "settings" && <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
               <Panel title="Accent color" text="The color of buttons and highlights across the site.">
                 <div className="grid grid-cols-2 gap-3">
                   {(["blue", "orange"] as const).map(option => <Button key={option} disabled={busy} variant={theme === option ? "default" : "outline"} className="h-auto min-h-20 rounded-none p-4" onClick={() => changeTheme(option)}><span className={`size-5 rounded-full ${option === "blue" ? "theme-swatch-blue" : "theme-swatch-orange"}`} /> <span>{option === "blue" ? "Royal blue" : "Original orange"}</span>{theme === option && <Check />}</Button>)}
@@ -249,10 +249,10 @@ const SECTIONS: { id: SectionId; icon: LucideIcon; label: string; short: string;
 const openEditor = (path: string) => { editStore.start(); window.location.assign(path); };
 
 function Panel({ title, text, children }: { title?: string; text?: string; children: React.ReactNode }) {
-  return <section className="border border-border bg-background p-5 sm:p-7">
+  return <section className="min-w-0 border border-border bg-background p-5 sm:p-7">
     {title && <h2 className="font-display text-xl">{title}</h2>}
     {text && <p className="mt-1 text-sm text-muted-foreground">{text}</p>}
-    <div className={title ? "mt-4" : ""}>{children}</div>
+    <div className={`min-w-0 ${title ? "mt-4" : ""}`}>{children}</div>
   </section>;
 }
 
@@ -260,7 +260,7 @@ function Panel({ title, text, children }: { title?: string; text?: string; child
 function EditSiteTab() {
   const [q, setQ] = useState("");
   const groups = groupPages(EDIT_PAGES).map(g => ({ ...g, pages: g.pages.filter(p => p.label.toLowerCase().includes(q.trim().toLowerCase())) })).filter(g => g.pages.length);
-  return <div className="grid gap-6">
+  return <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
     <div className="flex flex-col gap-4 bg-ink p-6 text-background sm:flex-row sm:items-center sm:justify-between sm:p-8">
       <div><h2 className="font-display text-2xl">Start on the home page</h2><p className="mt-1 text-sm text-background/75">Use the page menu in the editor bar to move between pages.</p></div>
       <Button className="h-12 shrink-0 rounded-none" onClick={() => openEditor("/")}><PencilLine className="size-4" /> Open the visual editor</Button>
