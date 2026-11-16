@@ -305,9 +305,9 @@ export function PlaneEditForm({ plane, original, rates, onSave, onReset, onCance
       <div className="flex items-center justify-between gap-3"><h3 className="text-xs font-bold uppercase tracking-[0.14em]">Hourly price</h3>{undo("rateRow")}</div>
       <select aria-label="Price line" className={`${selectFit} justify-self-start`} value={f.rateRow} onChange={e => set("rateRow", e.target.value)}>
         {applied.rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft}</option>)}
-        <option value="">No published price (visitors are asked to call)</option>
+        <option value="">No published price</option>
       </select>
-      <span className={hint}>{(() => { const s = applied.rentalRates.find(r => r.aircraft === f.rateRow); return s ? `Regular ${s.regular} / prepay ${s.prepay} per hour.` : priceHint; })()}</span>
+      <span className={hint}>{f.rateRow ? (() => { const s = applied.rentalRates.find(r => r.aircraft === f.rateRow); return s ? `Regular ${s.regular} / prepay ${s.prepay} per hour.` : priceHint; })() : "Visitors are asked to call for a price."}</span>
       <span className={hint}>To change the dollar amount, click the price on the page or use Prices. Every airplane on the same line changes together.</span>
     </section>
 
