@@ -1,6 +1,7 @@
 import { fleet, type FleetRole } from "./site-data";
+import type { Plane as CatalogPlane } from "./catalog";
 
-export type Plane = (typeof fleet)[number];
+export type Plane = CatalogPlane & { hidden?: boolean };
 
 export const ROLE_LABEL: Record<FleetRole, string> = { trainer: "Trainer", twin: "Twin", tailwheel: "Tailwheel" };
 

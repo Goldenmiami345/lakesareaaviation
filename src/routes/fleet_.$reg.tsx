@@ -56,8 +56,8 @@ function PlanePage() {
 
             <div className="mt-6 grid grid-cols-2 border-y-2 border-foreground">
               {f.rate ? <>
-                <div className="py-4 pr-4"><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/70">Regular</p><p className="mt-1 text-3xl font-bold tabular-nums"><FleetPrice reg={f.registration} field="regular" suffix="" /><span className="text-sm font-semibold text-foreground/70">/hr</span></p></div>
-                <div className="bg-secondary px-4 py-4"><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/70">Prepay</p><p className="mt-1 text-3xl font-bold tabular-nums"><FleetPrice reg={f.registration} field={f.prepay ? "prepay" : "regular"} suffix="" /><span className="text-sm font-semibold text-foreground/70">/hr</span></p></div>
+                <div className="py-4 pr-4"><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/70">Regular</p><p className="mt-1 text-3xl font-bold tabular-nums"><FleetPrice reg={f.registration} row={f.rateRow} field="regular" suffix="" /><span className="text-sm font-semibold text-foreground/70">/hr</span></p></div>
+                <div className="bg-secondary px-4 py-4"><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/70">Prepay</p><p className="mt-1 text-3xl font-bold tabular-nums"><FleetPrice reg={f.registration} row={f.rateRow} field={f.prepay ? "prepay" : "regular"} suffix="" /><span className="text-sm font-semibold text-foreground/70">/hr</span></p></div>
               </> : <div className="col-span-2 py-4"><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/70">Rate</p><a href={SCHOOL_PHONE_TEL} className="mt-1 inline-flex min-h-11 items-center gap-2 text-lg font-bold"><Phone className="size-4" /> Call {SCHOOL_PHONE} for the current rate</a></div>}
             </div>
             {f.rate && <p className="mt-3 text-sm text-foreground/75"><ST k="rates.note.wet" d={RATE_NOTES.wet} /> <Link to="/rates" className="font-semibold underline underline-offset-2"><ST k="fleet.all-rates" d="All rates" /></Link></p>}

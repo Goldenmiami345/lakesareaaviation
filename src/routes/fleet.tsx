@@ -166,7 +166,7 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
             <Section title="Full specs" open={open}>
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                 {specs.map(([k, v]) => <div key={k}><dt className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{k}</dt><dd className="font-semibold">{v}</dd></div>)}
-                {f.prepay && <div><dt className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Prepay rate</dt><dd className="font-semibold"><FleetPrice reg={f.registration} field="prepay" /></dd></div>}
+                {f.prepay && <div><dt className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Prepay rate</dt><dd className="font-semibold"><FleetPrice reg={f.registration} row={f.rateRow} field="prepay" /></dd></div>}
               </dl>
             </Section>
           )}
@@ -215,7 +215,7 @@ function PlaneTile({ f, open, onToggle }: { f: Plane; open: boolean; onToggle: (
           </span>
           <span className="block truncate font-display text-base leading-tight">{f.nickname ?? f.name.replace(/^\d{4} /, "")}</span>
           <span className="block truncate text-xs text-foreground/70"><ST k={`fleet.${f.registration}.name`} d={f.name} /></span>
-          <span className="mt-0.5 block text-xs font-bold tabular-nums">{f.rate ? <><FleetPrice reg={f.registration} field="regular" /> <span className="font-semibold text-foreground/60">wet</span></> : <span className="font-semibold text-foreground/60">Ask for rate</span>}</span>
+          <span className="mt-0.5 block text-xs font-bold tabular-nums">{f.rate ? <><FleetPrice reg={f.registration} row={f.rateRow} field="regular" /> <span className="font-semibold text-foreground/60">wet</span></> : <span className="font-semibold text-foreground/60">Ask for rate</span>}</span>
         </span>
       </button>
     </article>

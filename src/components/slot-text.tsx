@@ -95,7 +95,7 @@ function EditableSpan({ k, value, meta, multiline = false, numeric = false, onTy
 }
 
 /** A fleet airplane's price from the live rental table ("$185/hr"), editable in place. */
-export function FleetPrice({ reg, field, suffix = "/hr" }: { reg: string; field: "regular" | "prepay"; suffix?: string }) {
-  const row = FLEET_RATE_ROW[reg];
+export function FleetPrice({ reg, field, suffix = "/hr", row: rowIn }: { reg: string; field: "regular" | "prepay"; suffix?: string; row?: string | undefined }) {
+  const row = rowIn ?? FLEET_RATE_ROW[reg];
   return row ? <><RateText k={rateKey.rental(row, field)} />{suffix}</> : null;
 }
