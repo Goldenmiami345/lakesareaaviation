@@ -126,61 +126,161 @@ export function PlaneForm({ rates, taken, onSubmit, onCancel, onDraft }: { rates
   </div>;
 }
 
-/** A training program priced from hours: course fee + aircraft rental + instruction, all from the rates. */
-export function ProgramForm({ rates, taken, onSubmit, onCancel, onDraft }: { rates: RatesConfig; taken: string[]; onSubmit: (p: AddedProgram) => void; onCancel?: () => void; onDraft?: (p: AddedProgram | null) => void }) {
+/** Hours of rental and instruction, each priced from the Rates table. Shared by programs and courses. */
+function BlocksEditor({ blocks, setBlocks, applied, defaultAircraft }: { blocks: ProgramBlock[]; setBlocks: (f: (b: ProgramBlock[]) => ProgramBlock[]) => void; applied: AppliedRates; defaultAircraft: string }) {
+  const firstInstr = applied.instructionRates[0]?.label ?? "";
+  const upd = (i: number, b: Partial<ProgramBlock> & { what?: ProgramBlock["what"] }) => setBlocks(list => list.map((x, j) => {
+    if (j !== i) return x;
+    const what = b.what ?? x.what; const hours = b.hours ?? x.hours;
+    if (what === "rental") return { hours, what, aircraft: ("aircraft" in b && b.aircraft) || (x.what === "rental" ? x.aircraft : defaultAircraft) };
+    return { hours, what, instruction: ("instruction" in b && b.instruction) || (x.what !== "rental" ? x.instruction : firstInstr) };
+  }));
+  return <>
+    {blocks.map((b, i) => {
+      const rLine = b.what === "rental" ? applied.rentalRates.find(r => r.aircraft === b.aircraft) : undefined;
+      const iLine = b.what === "rental" ? undefined : applied.instructionRates.find(r => r.label === b.instruction);
+      const line = rLine ? `${rLine.aircraft} · ${rLine.prepay}/hr prepay` : iLine ? `${iLine.label} · ${iLine.rate}/hr` : "";
+      return <div key={i} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:grid-cols-[4.5rem_auto_minmax(0,1fr)_auto] sm:items-center">
+        <Input aria-label="Hours" placeholder="0" className="col-start-1 row-start-1" value={b.hours || ""} onChange={e => upd(i, { hours: Number(money(e.target.value)) || 0 })} inputMode="decimal" />
+        <button type="button" aria-label="Remove line" onClick={() => setBlocks(l => l.filter((_, j) => j !== i))} className="col-start-2 row-start-1 grid size-10 place-items-center text-muted-foreground hover:text-destructive sm:col-start-4"><Trash2 className="size-4" /></button>
+        <select aria-label="Kind" className={`${select} col-span-2 row-start-2 sm:col-span-1 sm:col-start-2 sm:row-start-1`} value={b.what} onChange={e => upd(i, { what: e.target.value as ProgramBlock["what"] })}><option value="rental">hrs rental</option><option value="flight">hrs flight instr.</option><option value="ground">hrs ground instr.</option></select>
+        {b.what === "rental"
+          ? <select aria-label="Aircraft" className={`${selectFit} col-span-2 row-start-3 justify-self-stretch sm:col-span-1 sm:col-start-3 sm:row-start-1 sm:justify-self-start`} value={b.aircraft} onChange={e => upd(i, { aircraft: e.target.value } as Partial<ProgramBlock>)}>{applied.rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft}</option>)}</select>
+          : <select aria-label="Instruction rate" className={`${selectFit} col-span-2 row-start-3 justify-self-stretch sm:col-span-1 sm:col-start-3 sm:row-start-1 sm:justify-self-start`} value={b.instruction} onChange={e => upd(i, { instruction: e.target.value } as Partial<ProgramBlock>)}>{applied.instructionRates.map(r => <option key={r.label} value={r.label}>{r.short}</option>)}</select>}
+        {line && <p className="col-span-2 row-start-4 text-xs text-muted-foreground sm:col-span-4 sm:row-start-2">{line}</p>}
+      </div>;
+    })}
+    <div className="flex flex-wrap gap-x-4">
+      <button type="button" onClick={() => setBlocks(l => [...l, { hours: 0, what: "rental", aircraft: defaultAircraft }])} className="inline-flex min-h-10 w-fit items-center gap-2 text-sm font-semibold text-primary-text"><Plus className="size-4" /> Airplane hours</button>
+      <button type="button" onClick={() => setBlocks(l => [...l, { hours: 0, what: "flight", instruction: firstInstr }])} className="inline-flex min-h-10 w-fit items-center gap-2 text-sm font-semibold text-primary-text"><Plus className="size-4" /> Instruction hours</button>
+    </div>
+  </>;
+}
+function CostPreview({ items, total }: { items: string[]; total: string }) {
+  return <div className="mt-1 border-t border-border pt-3">
+    {items.length ? <ul className="grid gap-1 text-xs text-muted-foreground">{items.map(l => <li key={l}>{l}</li>)}</ul> : <p className={hint}>Add hours to work out a price.</p>}
+    <p className="mt-2 font-bold">{total}</p>
+    <p className={hint}>Worked out from the Rates table (airplanes at the prepay rate), so a rate change updates this too.</p>
+  </div>;
+}
+
+/** A training program priced from hours: course fee + aircraft rental + instruction, all from the rates.
+ *  With `initial` it edits an added program (its web address stays the same). */
+export function ProgramForm({ rates, taken, onSubmit, onCancel, onDraft, initial }: { rates: RatesConfig; taken: string[]; onSubmit: (p: AddedProgram) => void; onCancel?: () => void; onDraft?: (p: AddedProgram | null) => void; initial?: AddedProgram }) {
   const applied = useMemo(() => applyRates(rates), [rates]);
-  const [f, setF] = useState({ name: "", short: "", description: "", timeline: "", fee: "500", requirements: "", notes: "Examiner fees are additional and aircraft rental is subject to tax." });
-  const [blocks, setBlocks] = useState<ProgramBlock[]>([
-    { hours: 10, what: "rental", aircraft: applied.rentalRates[0]?.aircraft ?? "" },
+  const [f, setF] = useState(() => initial
+    ? { name: initial.name, short: initial.short, description: initial.description, timeline: initial.timeline, fee: String(initial.fee), requirements: initial.requirements.join("\n"), notes: initial.notes.join("\n") }
+    : { name: "", short: "", description: "", timeline: "", fee: "500", requirements: "", notes: "Examiner fees are additional and aircraft rental is subject to tax." });
+  const [blocks, setBlocks] = useState<ProgramBlock[]>(() => initial ? initial.blocks : [
+    { hours: 10, what: "rental", aircraft: "Cessna 172" },
     { hours: 10, what: "flight", instruction: applied.instructionRates[0]?.label ?? "" },
     { hours: 5, what: "ground", instruction: applied.instructionRates[0]?.label ?? "" },
   ]);
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF(v => ({ ...v, [k]: e.target.value }));
-  const slug = slugify(f.name);
+  const slug = initial?.slug ?? slugify(f.name);
   const draft: AddedProgram = { slug, name: f.name.trim(), short: f.short.trim() || f.name.trim(), description: f.description.trim(), timeline: f.timeline.trim() || "Custom", fee: Number(f.fee) || 0, blocks: blocks.filter(b => b.hours > 0), requirements: linesOf(f.requirements), notes: linesOf(f.notes) };
   const preview = buildProgram(draft, applied).options[0]!;
   useEffect(() => { onDraft?.(slug ? draft : null); }, [f, blocks]); // eslint-disable-line react-hooks/exhaustive-deps
-  const errors = [!f.name.trim() && "Add the program name.", slug && (taken.includes(slug) || basePrograms.some(p => p.slug === slug)) && "A program with that name already exists."].filter(Boolean) as string[];
-  const upd = (i: number, b: Partial<ProgramBlock> & { what?: ProgramBlock["what"] }) => setBlocks(list => list.map((x, j) => {
-    if (j !== i) return x;
-    const what = b.what ?? x.what; const hours = b.hours ?? x.hours;
-    if (what === "rental") return { hours, what, aircraft: ("aircraft" in b && b.aircraft) || (x.what === "rental" ? x.aircraft : applied.rentalRates[0]?.aircraft ?? "") };
-    return { hours, what, instruction: ("instruction" in b && b.instruction) || (x.what !== "rental" ? x.instruction : applied.instructionRates[0]?.label ?? "") };
-  }));
+  const errors = [!f.name.trim() && "Add the program name.", !initial && slug && (taken.includes(slug) || basePrograms.some(p => p.slug === slug)) && "A program with that name already exists."].filter(Boolean) as string[];
+  const label = initial ? "Save changes" : "Add program";
+  const icon = initial ? <Save className="size-4" /> : <Plus className="size-4" />;
   return <div className="grid gap-4">
-    <Field label="Program name"><Input value={f.name} onChange={set("name")} placeholder="Commercial Glider Add-On" /></Field>
-    <div className="grid gap-4 sm:grid-cols-2">
-      <Field label="Short tagline"><Input value={f.short} onChange={set("short")} placeholder="Add a rating" /></Field>
-      <Field label="Timeline"><Input value={f.timeline} onChange={set("timeline")} placeholder="5–7 days" /></Field>
-    </div>
-    <Field label="Description"><Textarea rows={2} value={f.description} onChange={set("description")} /></Field>
-    <fieldset className="grid gap-2 border border-border p-2 text-sm sm:p-3">
-      <legend className="px-1 font-semibold">What it costs</legend>
-      <Field label="Course fee $"><Input value={f.fee} onChange={e => setF(v => ({ ...v, fee: e.target.value.replace(/[^\d]/g, "") }))} inputMode="numeric" className="max-w-32" /></Field>
-      {blocks.map((b, i) => {
-        const rLine = b.what === "rental" ? applied.rentalRates.find(r => r.aircraft === b.aircraft) : undefined;
-        const iLine = b.what === "rental" ? undefined : applied.instructionRates.find(r => r.label === b.instruction);
-        const line = rLine ? `${rLine.aircraft} · ${rLine.prepay}/hr prepay` : iLine ? `${iLine.label} · ${iLine.rate}/hr` : "";
-        return <div key={i} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:grid-cols-[4.5rem_auto_minmax(0,1fr)_auto] sm:items-center">
-          <Input aria-label="Hours" className="col-start-1 row-start-1" value={b.hours || ""} onChange={e => upd(i, { hours: Number(e.target.value.replace(/[^\d.]/g, "")) || 0 })} inputMode="decimal" />
-          <button type="button" aria-label="Remove line" onClick={() => setBlocks(l => l.filter((_, j) => j !== i))} className="col-start-2 row-start-1 grid size-10 place-items-center text-muted-foreground hover:text-destructive sm:col-start-4"><Trash2 className="size-4" /></button>
-          <select aria-label="Kind" className={`${select} col-span-2 row-start-2 sm:col-span-1 sm:col-start-2 sm:row-start-1`} value={b.what} onChange={e => upd(i, { what: e.target.value as ProgramBlock["what"] })}><option value="rental">hrs rental</option><option value="flight">hrs flight instr.</option><option value="ground">hrs ground instr.</option></select>
-          {b.what === "rental"
-            ? <select aria-label="Aircraft" className={`${selectFit} col-span-2 row-start-3 justify-self-stretch sm:col-span-1 sm:col-start-3 sm:row-start-1 sm:justify-self-start`} value={b.aircraft} onChange={e => upd(i, { aircraft: e.target.value } as Partial<ProgramBlock>)}>{applied.rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft}</option>)}</select>
-            : <select aria-label="Instruction rate" className={`${selectFit} col-span-2 row-start-3 justify-self-stretch sm:col-span-1 sm:col-start-3 sm:row-start-1 sm:justify-self-start`} value={b.instruction} onChange={e => upd(i, { instruction: e.target.value } as Partial<ProgramBlock>)}>{applied.instructionRates.map(r => <option key={r.label} value={r.label}>{r.short}</option>)}</select>}
-          {line && <p className="col-span-2 row-start-4 text-xs text-muted-foreground sm:col-span-4 sm:row-start-2">{line}</p>}
-        </div>;
-      })}
-      <button type="button" onClick={() => setBlocks(l => [...l, { hours: 5, what: "flight", instruction: applied.instructionRates[0]?.label ?? "" }])} className="inline-flex min-h-10 w-fit items-center gap-2 text-sm font-semibold text-primary-text"><Plus className="size-4" /> Add a line</button>
-      <div className="mt-1 border-t border-border pt-3">
-        <ul className="grid gap-1 text-xs text-muted-foreground">{preview.lineItems.map(l => <li key={l}>{l}</li>)}</ul>
-        <p className="mt-2 font-bold">{preview.estimatedCost}</p>
-        <p className={hint}>Worked out from the Rates table, so a rate change updates this program too.</p>
+    <TopActions errors={errors} onCancel={onCancel} onSubmit={() => onSubmit(draft)} label={label} icon={icon} />
+    <Section title="Basics" open summary={[f.name, f.timeline].filter(Boolean).join(" · ") || "Name, tagline, timeline"}>
+      <Field label="Program name"><Input value={f.name} onChange={set("name")} placeholder="Commercial Glider Add-On" /></Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Short tagline"><Input value={f.short} onChange={set("short")} placeholder="Add a rating" /></Field>
+        <Field label="Timeline"><Input value={f.timeline} onChange={set("timeline")} placeholder="5–7 days" /></Field>
       </div>
-    </fieldset>
-    <Field label="Before you begin" note="One per line."><Textarea rows={2} value={f.requirements} onChange={set("requirements")} /></Field>
-    <Field label="Cost notes" note="One per line."><Textarea rows={2} value={f.notes} onChange={set("notes")} /></Field>
-    <Footer errors={errors} onCancel={onCancel} onSubmit={() => onSubmit(draft)} label="Add program" />
+      <Field label="Description"><Textarea rows={2} value={f.description} onChange={set("description")} /></Field>
+    </Section>
+    <Section title="Hours & price" open={!initial} summary={`${draft.blocks.map(b => `${b.hours} h ${b.what === "rental" ? b.aircraft : b.what}`).join(", ") || "No hours yet"} · ${preview.estimatedCost}`}>
+      <Field label="Course fee $"><Input value={f.fee} onChange={e => setF(v => ({ ...v, fee: e.target.value.replace(/[^\d]/g, "") }))} inputMode="numeric" className="max-w-32" /></Field>
+      <BlocksEditor blocks={blocks} setBlocks={setBlocks} applied={applied} defaultAircraft="Cessna 172" />
+      <CostPreview items={preview.lineItems} total={preview.estimatedCost} />
+    </Section>
+    <Section title="Requirements & notes" summary={`${linesOf(f.requirements).length} requirement(s), ${linesOf(f.notes).length} note(s)`}>
+      <Field label="Before you begin" note="One per line."><Textarea rows={2} value={f.requirements} onChange={set("requirements")} /></Field>
+      <Field label="Cost notes" note="One per line."><Textarea rows={2} value={f.notes} onChange={set("notes")} /></Field>
+    </Section>
+    <Footer errors={errors} onCancel={onCancel} onSubmit={() => onSubmit(draft)} label={label} icon={icon} />
+  </div>;
+}
+
+/** Hours, course fee and airplane of a published program. Saves as rate edits (rateKey -> value),
+ *  so the published wording stays and only the worked-out figures move. */
+export function PublishedProgramForm({ program, rates, onSave, onCancel, onDraft }: { program: Program; rates: RatesConfig; onSave: (drafts: Record<string, string>) => void; onCancel?: () => void; onDraft?: (drafts: Record<string, string>) => void }) {
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const before = useMemo(() => applyRates(rates), [rates]);
+  const after = useMemo(() => applyRates(withRateDrafts(rates, drafts)), [rates, drafts]);
+  useEffect(() => { onDraft?.(drafts); }, [drafts]); // eslint-disable-line react-hooks/exhaustive-deps
+  const put = (k: string, v: string) => setDrafts(d => ({ ...d, [k]: v }));
+  const live = after.programs.find(p => p.slug === program.slug) ?? program;
+  const worked = program.options.some(o => o.lineItems.some(l => parseLine(l)));
+  const changed = JSON.stringify(withRateDrafts(rates, drafts)) !== JSON.stringify(withRateDrafts(rates, {}));
+  const errors = changed ? [] : ["No changes yet."];
+  const save = () => onSave(drafts);
+  if (!worked) return <div className="grid gap-3 text-sm"><p>This program's estimate is a published summary, not worked out from hours. Change its words in the visual editor.</p>{onCancel && <Button type="button" variant="ghost" className="justify-self-end" onClick={onCancel}>Close</Button>}</div>;
+  return <div className="grid gap-4">
+    <TopActions errors={errors} onCancel={onCancel} onSubmit={save} label="Save changes" icon={<Save className="size-4" />} />
+    {program.options.map((o, j) => {
+      const lo = live.options[j] ?? o;
+      const choices = aircraftChoicesFor(o.lineItems, after.config.extraRental);
+      const plane = pricedWith(after, o.name, o.lineItems);
+      const was = before.programs.find(p => p.slug === program.slug)?.options[j]?.estimatedCost;
+      return <Section key={o.name} title={o.name} open={j === 0} summary={`${lo.estimatedCost}${plane ? ` · priced with ${plane}` : ""}`}>
+        {choices.length > 1 && <Field label="Airplane its rental hours are priced with" note="Most courses use the Cessna 172. Multi-engine courses can only use a twin.">
+          <select className={`${selectFit} justify-self-start`} value={plane ?? ""} onChange={e => put(rateKey.assign(o.name), e.target.value)}>
+            {choices.map(a => { const r = after.rentalRates.find(x => x.aircraft === a); return <option key={a} value={a}>{a}{r ? ` · ${r.prepay}/hr` : ""}</option>; })}
+          </select></Field>}
+        <ul className="grid gap-2">{o.lineItems.map((line, i) => {
+          const fee = parseFee(line); const p = parseLine(line); const shown = lo.lineItems[i] ?? line;
+          if (fee !== null) return <li key={i} className="grid grid-cols-[minmax(0,1fr)_7rem] items-center gap-2 text-sm"><span>Course fee $</span>
+            <Input aria-label={`${o.name} course fee`} inputMode="numeric" value={drafts[rateKey.fee(o.name)] ?? String(parseFee(shown) ?? fee)} onChange={e => put(rateKey.fee(o.name), e.target.value.replace(/[^\d]/g, ""))} /></li>;
+          if (!p) return <li key={i} className="text-xs text-muted-foreground">{line}</li>;
+          const cur = parseLine(shown);
+          return <li key={i} className="grid grid-cols-[5rem_minmax(0,1fr)] items-center gap-2 text-sm">
+            <Input aria-label={`Hours: ${p.what}`} inputMode="decimal" value={drafts[rateKey.hours(o.name, i)] ?? String(cur?.hours ?? p.hours)} onChange={e => put(rateKey.hours(o.name, i), money(e.target.value))} />
+            <span className="min-w-0">hours {cur?.what ?? p.what}<span className="block text-xs text-muted-foreground">{shown}</span></span>
+          </li>;
+        })}</ul>
+        <p className="border-t border-border pt-3 font-bold">{lo.estimatedCost}{was && was !== lo.estimatedCost && <span className="ml-2 text-xs font-normal text-muted-foreground">was {was.replace(/^As low as /, "")}</span>}</p>
+        <p className={hint}>Hours here set the published estimate and the hour summaries on the program page. To change an hourly price, use Prices or the airplane's own price.</p>
+      </Section>;
+    })}
+    <Footer errors={errors} onCancel={onCancel} onSubmit={save} label="Save changes" icon={<Save className="size-4" />} />
+  </div>;
+}
+
+/** Optional price for a specialty course or endorsement: fee plus hours, priced from the rates. */
+export function CoursePricingForm({ slug, pricing, rates, onSave, onCancel, onDraft }: { slug: string; pricing?: CoursePricing | undefined; rates: RatesConfig; onSave: (p: CoursePricing | null) => void; onCancel?: () => void; onDraft?: (p: CoursePricing | null) => void }) {
+  const applied = useMemo(() => applyRates(rates), [rates]);
+  const plane = slug === "tailwheel" ? "Taylorcraft BC-12D" : "Cessna 172";
+  const instr = applied.instructionRates[0]?.label ?? "";
+  const [fee, setFee] = useState(String(pricing?.fee ?? 0));
+  const [blocks, setBlocks] = useState<ProgramBlock[]>(() => pricing?.blocks.length ? pricing.blocks : [
+    { hours: 0, what: "rental", aircraft: plane }, { hours: 0, what: "flight", instruction: instr }, { hours: 0, what: "ground", instruction: instr },
+  ]);
+  const draft: CoursePricing = { fee: Number(fee) || 0, blocks: blocks.filter(b => b.hours > 0) };
+  const empty = !draft.fee && !draft.blocks.length;
+  const price = priceBlocks(draft.fee, draft.blocks, applied);
+  useEffect(() => { onDraft?.(empty ? null : draft); }, [fee, blocks]); // eslint-disable-line react-hooks/exhaustive-deps
+  const errors = empty ? ["Add hours or a course fee to show a price."] : [];
+  const save = () => onSave(draft);
+  return <div className="grid gap-4">
+    <TopActions errors={errors} onCancel={onCancel} onSubmit={save} label="Save price" icon={<Save className="size-4" />} />
+    <p className={hint}>Visitors see the estimate and its breakdown on the course page. Leave it unpriced to keep "In your training plan".</p>
+    <Field label="Course fee $" note="Optional."><Input value={fee} onChange={e => setFee(e.target.value.replace(/[^\d]/g, ""))} inputMode="numeric" className="max-w-32" /></Field>
+    <BlocksEditor blocks={blocks} setBlocks={setBlocks} applied={applied} defaultAircraft={plane} />
+    <CostPreview items={price.items} total={empty ? "No price yet" : price.estimatedCost} />
+    <div className="grid gap-2 border-t border-border pt-4">
+      {errors.length > 0 && <ul className="text-xs text-destructive">{errors.map(e => <li key={e}>{e}</li>)}</ul>}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        {pricing ? <Button type="button" variant="ghost" onClick={() => onSave(null)}><Trash2 className="size-4" /> Remove the price</Button> : <span />}
+        <span className="flex gap-2">{onCancel && <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>}
+          <Button type="button" disabled={errors.length > 0} onClick={save}><Save className="size-4" /> Save price</Button></span>
+      </div>
+    </div>
   </div>;
 }
 
@@ -192,6 +292,7 @@ export function CourseForm({ taken, onSubmit, onCancel, onDraft }: { taken: stri
   useEffect(() => { onDraft?.(slug ? build() : null); }, [f]); // eslint-disable-line react-hooks/exhaustive-deps
   const errors = [!f.name.trim() && "Add the course name.", !f.summary.trim() && "Add a one-line summary for the card.", slug && (taken.includes(slug) || specialtyCourses.some(c => c.slug === slug)) && "A course with that name already exists."].filter(Boolean) as string[];
   return <div className="grid gap-4">
+    <TopActions errors={errors} onCancel={onCancel} onSubmit={() => onSubmit(build())} label="Add course" icon={<Plus className="size-4" />} />
     <div className="grid gap-4 sm:grid-cols-[1fr_12rem]">
       <Field label="Course name"><Input value={f.name} onChange={set("name")} placeholder="Seaplane Rating" /></Field>
       <Field label="Kind"><select className={select} value={f.kind} onChange={set("kind")}>{(Object.keys(SPECIALTY_KIND_LABEL) as SpecialtyKind[]).map(k => <option key={k} value={k}>{SPECIALTY_KIND_LABEL[k]}</option>)}</select></Field>
@@ -205,12 +306,12 @@ export function CourseForm({ taken, onSubmit, onCancel, onDraft }: { taken: stri
   </div>;
 }
 
-function Footer({ errors, onCancel, onSubmit, label }: { errors: string[]; onCancel?: (() => void) | undefined; onSubmit: () => void; label: string }) {
+function Footer({ errors, onCancel, onSubmit, label, icon = <Plus className="size-4" /> }: { errors: string[]; onCancel?: (() => void) | undefined; onSubmit: () => void; label: string; icon?: ReactNode }) {
   return <div className="grid gap-2 border-t border-border pt-4">
     {errors.length > 0 && <ul className="text-xs text-destructive">{errors.map(e => <li key={e}>{e}</li>)}</ul>}
     <div className="flex flex-wrap justify-end gap-2">
       {onCancel && <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>}
-      <Button type="button" disabled={errors.length > 0} onClick={onSubmit}><Plus className="size-4" /> {label}</Button>
+      <Button type="button" disabled={errors.length > 0} onClick={onSubmit}>{icon} {label}</Button>
     </div>
   </div>;
 }
