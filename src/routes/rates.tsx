@@ -15,7 +15,9 @@ export const Route = createFileRoute("/rates")({
 });
 
 function Page() {
-  const { rentalRates, instructionRates, otherRates, programs } = useLiveRates();
+  const { rentalRates, instructionRates, otherRates, programs, config } = useLiveRates();
+  // Saved rate changes make the bundled PDF stale, so the button prints this page instead.
+  const changed = Object.values(config).some((v) => Object.keys(v).length > 0);
   const courses = coursesOf(programs);
   return (
     <SiteLayout>
@@ -27,7 +29,7 @@ function Page() {
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-foreground">{RATES_YEAR} rate sheet</p>
             <p className="mt-1 text-sm text-foreground/80">{RATE_NOTES.wet}</p>
           </div>
-          <a href={RATE_SHEET_URL} download className="inline-flex min-h-11 shrink-0 items-center gap-2 border border-foreground px-4 text-xs font-bold uppercase tracking-[0.12em] transition-colors hover:bg-foreground hover:text-background">
+          <a href={RATE_SHEET_URL} download onClick={(e) => { if (changed) { e.preventDefault(); window.print(); } }} className="inline-flex min-h-11 shrink-0 items-center gap-2 border border-foreground px-4 text-xs font-bold uppercase tracking-[0.12em] transition-colors hover:bg-foreground hover:text-background">
             <Download className="size-4" /><span className="max-sm:hidden">Download</span> PDF
           </a>
         </div>
