@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { buildProgram, REG, slugify, type AddedCourse, type AddedPlane, type AddedProgram, type Catalog, type ProgramBlock } from "@/lib/catalog";
-import { applyRates, type ExtraRental, type RatesConfig } from "@/lib/rates-engine";
+import { applyRates, rateKey, withRateDrafts, type ExtraRental, type RatesConfig } from "@/lib/rates-engine";
+import { editStore, useEditState } from "@/lib/edit-store";
+import { useCatalog } from "@/lib/use-catalog";
 import { fleet as baseFleet, programs as basePrograms, specialtyCourses, SPECIALTY_KIND_LABEL, type FleetRole, type SpecialtyKind } from "@/lib/site-data";
 import { uploadSlotPhoto } from "@/lib/media-upload";
 
@@ -174,3 +176,16 @@ function Footer({ errors, onCancel, onSubmit, label }: { errors: string[]; onCan
 export const addPlane = (c: Catalog, r: PlaneResult): Catalog => ({ ...c, fleet: [...c.fleet.filter(x => x.registration !== r.plane.registration), r.plane] });
 export const addProgram = (c: Catalog, p: AddedProgram): Catalog => ({ ...c, programs: [...c.programs.filter(x => x.slug !== p.slug), p] });
 export const addCourse = (c: Catalog, x: AddedCourse): Catalog => ({ ...c, courses: [...c.courses.filter(y => y.slug !== x.slug), x] });
+
+/** The visual editor's add panel: writes into the editor's unsaved changes (Publish makes it live). */
+export function EditorAddForm({ kind, onDone }: { kind: "fleet" | "programs" | "courses"; onDone: () => void }) {
+  const edit = useEditState();
+  const { catalog } = useCatalog();
+  const rates = withRateDrafts(edit.rateBase ?? {}, edit.rateDrafts);
+  if (kind === "fleet") return <PlaneForm rates={rates} taken={catalog.fleet.map(f => f.registration)} onCancel={onDone} onSubmit={r => {
+    if (r.newRow) editStore.setRateDraft(rateKey.newRow(r.newRow.aircraft), JSON.stringify({ names: r.newRow.names, regular: r.newRow.regular, prepay: r.newRow.prepay }), "");
+    editStore.setCatalog(addPlane(catalog, r)); onDone();
+  }} />;
+  if (kind === "programs") return <ProgramForm rates={rates} taken={catalog.programs.map(p => p.slug)} onCancel={onDone} onSubmit={p => { editStore.setCatalog(addProgram(catalog, p)); onDone(); }} />;
+  return <CourseForm taken={catalog.courses.map(c => c.slug)} onCancel={onDone} onSubmit={c => { editStore.setCatalog(addCourse(catalog, c)); onDone(); }} />;
+}

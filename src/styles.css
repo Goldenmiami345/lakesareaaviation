@@ -439,3 +439,6 @@ html.site-editing [data-slot-photo]:hover { outline-style: solid; }
 /* Visual editor: prices typed in place and figures worked out from them (admins only). */
 .slot-edit.slot-rate { outline-style: dashed; outline-color: color-mix(in oklab, var(--primary) 90%, transparent); }
 html.site-editing .slot-calc { text-decoration: underline dotted color-mix(in oklab, var(--primary) 80%, transparent); text-underline-offset: 4px; cursor: help; }
+/* Visual editor: hidden fleet/course items stay on screen, dimmed, so they can be brought back. */
+html.site-editing [data-catalog-hidden] { opacity: 0.45; filter: grayscale(1); }
+html.site-editing [data-catalog-hidden]:hover { opacity: 0.8; }
