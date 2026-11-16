@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { allCourses, allPlanes, allPrograms, cleanCatalog, EMPTY_CATALOG, type Catalog } from "./catalog";
-import { useEditState } from "./edit-store";
+import { isEditing, useEditState } from "./edit-store";
 import { useLiveRates } from "./use-live-rates";
 
 // One shared copy of the owner's fleet/course additions and hides. First render (prerender and
@@ -30,7 +30,7 @@ export function useCatalog() {
   const edit = useEditState();
   useEffect(() => { void loadCatalog(); }, []);
   const catalog = edit.on ? (edit.catalogDraft ?? edit.catalogBase ?? s.catalog) : s.catalog;
-  return { catalog, ready: s.ready, editing: edit.on };
+  return { catalog, ready: s.ready, editing: isEditing(edit) };
 }
 
 /** Planes, programs and courses as pages show them. In the editor hidden ones are included

@@ -1,6 +1,6 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { SLOT_BY_KEY, slotLimit } from "@/lib/content-slots";
-import { editStore, useEditState, type SpotMeta } from "@/lib/edit-store";
+import { editStore, isEditing, useEditState, type SpotMeta } from "@/lib/edit-store";
 import { useSiteContent } from "@/lib/use-site-content";
 import { useLiveRates } from "@/lib/use-live-rates";
 import { applyRates, defaultAircraftFor, FLEET_RATE_ROW, rateKey, rateLabel, rateValue } from "@/lib/rates-engine";
@@ -17,7 +17,7 @@ export function SlotText({ k, d, label, multiline }: { k: string; d?: string; la
   const known = SLOT_BY_KEY.get(k);
   const def = known?.def ?? d ?? "";
   const value = known ? site.get(k) : site.text(k, def);
-  if (!edit.on) return <>{value}</>;
+  if (!isEditing(edit)) return <>{value}</>;
   const meta: SpotMeta = { label: known?.label ?? label ?? humanize(k), max: known?.max ?? slotLimit(def), def };
   return <EditableSpan k={k} value={value} meta={meta} multiline={known?.multiline ?? multiline ?? def.length > 90}
     onType={t => editStore.setDraft(k, t, editStore.get().base?.[k] ?? def)}
@@ -33,7 +33,7 @@ export function RateText({ k, amount = false }: { k: string; amount?: boolean })
   const money = /\$([\d,]+(?:\.\d+)?)/.exec(full);
   const numeric = !k.startsWith("rate|other|");
   const shown = amount ? (money?.[0] ?? full) : full;
-  if (!edit.on) return <>{shown}</>;
+  if (!isEditing(edit)) return <>{shown}</>;
   const published = rateValue(ratesOf(edit), k);
   const meta: SpotMeta = { label: rateLabel(k), max: numeric || amount ? 7 : 40, hint: "Price · updates every page and course that uses it" };
   if (numeric || amount) {
@@ -59,7 +59,7 @@ function ratesOf(edit: ReturnType<typeof useEditState>) {
  *  marked so the owner knows to change the hourly rate instead. */
 export function CalcText({ children }: { children: ReactNode }) {
   const edit = useEditState();
-  if (!edit.on) return <>{children}</>;
+  if (!isEditing(edit)) return <>{children}</>;
   return <span data-slot-calc className="slot-calc" title="Worked out from the rates. Change an hourly rate and this updates.">{children}</span>;
 }
 
@@ -68,7 +68,7 @@ export function AssignAircraft({ option }: { option: string }) {
   const edit = useEditState();
   const rates = useLiveRates();
   const o = programs.flatMap(p => p.options).find(x => x.name === option);
-  if (!edit.on || !o || !defaultAircraftFor(o.lineItems)) return null;
+  if (!isEditing(edit) || !o || !defaultAircraftFor(o.lineItems)) return null;
   const k = rateKey.assign(option);
   const published = rateValue(ratesOf(edit), k);
   return <label className="slot-assign mt-4 flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.1em]">

@@ -1,6 +1,6 @@
 import { RateText, SlotText } from "@/components/slot-text";
 import { rateKey } from "@/lib/rates-engine";
-import { useEditState } from "@/lib/edit-store";
+import { isEditing, useEditState } from "@/lib/edit-store";
 import { startTransition, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { srcSetFor } from "@/lib/responsive-image";
 import { Link } from "@tanstack/react-router";
@@ -125,7 +125,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const [interacted, setInteracted] = useState(false);
   // Reading an airplane's card holds the stage: nothing moves on while it is up.
   const cardOpen = useTrafficCardOpen();
-  const autoOn = !edit.on && story && playing && inView && !holding && !interacted && !cardOpen;
+  const autoOn = !isEditing(edit) && story && playing && inView && !holding && !interacted && !cardOpen;
   const activeRef = useRef(0);
   activeRef.current = active;
   const storyRef = useRef(story);

@@ -5,7 +5,7 @@ import { Eye, EyeOff, PencilLine, Plus } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { editPlane, originalPlane, PLANE_LIMITS, setHidden, type CatalogKind, type Plane } from "@/lib/catalog";
 import { EditableSpan } from "@/components/slot-text";
-import { editStore, useEditState } from "@/lib/edit-store";
+import { editStore, isEditing, useEditState } from "@/lib/edit-store";
 import { useCatalog } from "@/lib/use-catalog";
 
 const Forms = lazy(() => import("./catalog-forms").then(m => ({ default: m.EditorAddForm })));
@@ -16,7 +16,7 @@ const NOUN: Record<CatalogKind, string> = { fleet: "airplane", programs: "traini
 export function HideToggle({ kind, id, hidden, className = "" }: { kind: CatalogKind; id: string; hidden: boolean; className?: string }) {
   const edit = useEditState();
   const { catalog } = useCatalog();
-  if (!edit.on) return null;
+  if (!isEditing(edit)) return null;
   return <button type="button" data-catalog-control onClick={e => { e.preventDefault(); e.stopPropagation(); editStore.setCatalog(setHidden(catalog, kind, id, !hidden)); }}
     className={`catalog-control relative z-20 inline-flex min-h-9 items-center gap-1.5 bg-ink px-3 text-[11px] font-bold uppercase tracking-[0.1em] text-background shadow-lg hover:bg-primary hover:text-primary-foreground ${className}`}>
     {hidden ? <><Eye className="size-3.5" /> Hidden · bring back</> : <><EyeOff className="size-3.5" /> Hide {NOUN[kind]}</>}
@@ -27,7 +27,7 @@ export function HideToggle({ kind, id, hidden, className = "" }: { kind: Catalog
 export function AddTile({ kind, className = "" }: { kind: CatalogKind; className?: string }) {
   const edit = useEditState();
   const [open, setOpen] = useState(false);
-  if (!edit.on) return null;
+  if (!isEditing(edit)) return null;
   return <>
     <button type="button" data-catalog-control onClick={() => setOpen(true)} className={`catalog-add flex min-h-32 flex-col items-center justify-center gap-2 border-2 border-dashed border-primary bg-background/60 p-6 text-sm font-bold uppercase tracking-[0.1em] text-primary-text hover:bg-secondary ${className}`}>
       <Plus className="size-6" /> Add {NOUN[kind]}
@@ -53,7 +53,7 @@ export function PlaneText({ f, field }: { f: Plane; field: PlaneField }) {
   const edit = useEditState();
   const { catalog } = useCatalog();
   const value = f[field] ?? "";
-  if (!edit.on) return <>{value}</>;
+  if (!isEditing(edit)) return <>{value}</>;
   const reg = f.registration;
   return <EditableSpan k={`plane.${reg}.${field}`} value={value} multiline={field === "note"}
     meta={{ label: `${reg} · ${FIELD_LABEL[field]}`, max: PLANE_LIMITS[field], def: value, hint: "Airplane detail · updates everywhere this airplane appears" }}
@@ -70,7 +70,7 @@ export function PlaneText({ f, field }: { f: Plane; field: PlaneField }) {
 export function PlaneEditButton({ f, className = "", short = false }: { f: Plane; className?: string; short?: boolean }) {
   const edit = useEditState();
   const [open, setOpen] = useState(false);
-  if (!edit.on) return null;
+  if (!isEditing(edit)) return null;
   return <>
     <button type="button" data-catalog-control aria-label={short ? "Edit details & photos" : undefined} onClick={e => { e.preventDefault(); e.stopPropagation(); setOpen(true); }}
       className={`catalog-control relative z-20 inline-flex min-h-9 items-center gap-1.5 bg-primary px-3 text-[11px] font-bold uppercase tracking-[0.1em] text-primary-foreground shadow-lg hover:bg-ink hover:text-background ${className}`}>
@@ -93,7 +93,7 @@ export function PlaneEditButton({ f, className = "", short = false }: { f: Plane
 /** Editor buttons for an airplane card (hide + edit), stacked in one corner. Nothing for visitors. */
 export function PlaneControls({ f, compact = false, className = "" }: { f: Plane & { hidden?: boolean }; compact?: boolean; className?: string }) {
   const edit = useEditState();
-  if (!edit.on) return null;
+  if (!isEditing(edit)) return null;
   const small = compact ? "!min-h-8 !px-2 !text-[9px]" : "";
   return <div data-catalog-control className={`absolute z-20 flex flex-col items-start gap-1 ${className}`}>
     <HideToggle kind="fleet" id={f.registration} hidden={!!f.hidden} className={small} />
