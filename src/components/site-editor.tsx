@@ -11,7 +11,7 @@ import { editStore, useEditState } from "@/lib/edit-store";
 import { uploadSlotPhoto } from "@/lib/media-upload";
 import { resetSiteContent } from "@/lib/use-site-content";
 import { resetLiveRates } from "@/lib/use-live-rates";
-import { resetCatalog } from "@/lib/use-catalog";
+import { resetCatalog, useCatalog } from "@/lib/use-catalog";
 import { cleanCatalog } from "@/lib/catalog";
 import { cleanConfig, isRateKey, withRateDrafts } from "@/lib/rates-engine";
 import { EDIT_PAGES } from "@/lib/edit-pages";
@@ -88,7 +88,13 @@ export default function SiteEditor() {
   const focusMeta = focusKey ? (editStore.meta(focusKey) ?? SLOT_BY_KEY.get(focusKey)) : undefined;
   const focus = focusMeta && focusKey ? { label: focusMeta.label, max: maxOf(focusKey), rate: isRateKey(focusKey) } : undefined;
   const focusLen = focusKey && !isRateKey(focusKey) ? (drafts[focusKey] ?? edit.base?.[focusKey] ?? editStore.meta(focusKey)?.def ?? SLOT_BY_KEY.get(focusKey)?.def ?? "").length : 0;
-  const pageInList = useMemo(() => EDIT_PAGES.some(p => p.path === path), [path]);
+  const { catalog } = useCatalog();
+  const pages = useMemo(() => [...EDIT_PAGES,
+    ...catalog.programs.map(p => ({ label: `Program · ${p.name} (added)`, path: `/programs/${p.slug}` })),
+    ...catalog.courses.map(c => ({ label: `Course · ${c.name} (added)`, path: `/specialized-training/${c.slug}` })),
+    ...catalog.fleet.map(f => ({ label: `Airplane · ${f.registration} (added)`, path: `/fleet/${f.registration.toLowerCase()}` })),
+  ], [catalog]);
+  const pageInList = pages.some(p => p.path === path);
 
   async function onFile(f: File | undefined) {
     const key = pendingPhoto.current; if (!f || !key) return;
@@ -132,7 +138,7 @@ export default function SiteEditor() {
       <span className="flex min-h-10 items-center gap-2 pl-4 pr-2 text-xs font-bold uppercase tracking-[0.12em]"><PencilLine className="size-4 text-primary-text" /> Editing</span>
       <select aria-label="Page" value={pageInList ? path : ""} onChange={e => router.history.push(e.target.value)} className="h-10 max-w-52 bg-transparent px-2 text-xs font-semibold outline-none [&>option]:text-foreground">
         {!pageInList && <option value="">This page</option>}
-        {EDIT_PAGES.map(p => <option key={p.path} value={p.path}>{p.label}</option>)}
+        {pages.map(p => <option key={p.path} value={p.path}>{p.label}</option>)}
       </select>
       <span className="min-h-10 min-w-40 px-3 py-1 text-xs tabular-nums text-background/75 flex flex-col justify-center" aria-live="polite">
         {focus ? <><span className="max-w-64 truncate font-semibold text-background">{focus.label}</span>{focus.rate ? <span>Updates every page and course that uses it</span> : <span className={focusLen > focus.max ? "font-bold text-destructive" : ""}>{focusLen} / {focus.max} characters{focusLen > focus.max ? " · too long" : ""}</span>}</>
