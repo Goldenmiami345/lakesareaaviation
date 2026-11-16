@@ -41,7 +41,7 @@
 - Scroll-reveal hides only under html.reveal-ready (set after hydration), so prerendered/no-JS HTML stays visible. SiteLayout owns the single <main id="main">.
 - Accent TEXT uses text-primary-text (--primary-text-dark on ink); fills keep --primary, because brand blue fails AA as text on beige and ink.
 
-- Every link to the contact/training-plan form is labelled "Build my training plan" (sticky bar: "Build my plan"); distinct actions keep their own labels, so one name always means one destination.
+- Contact-form links say "Build my training plan" (sticky bar: "Build my plan"); other actions keep own labels, so one name means one destination.
 - Navy/blue/beige seams are clean edges (edge-fade no-ops); blends go grey.
 - Layout width: site-container/site-wrap + --gutter (styles.css), never max-w-7xl, so header, sections and HUD share one edge.
 - ALT readout: journeyAltitude; wind: nearest METAR (wx-stations.ts), wxStation fallback.
@@ -50,5 +50,5 @@
 
 - Netlify: NETLIFY-only @netlify/vite-plugin-tanstack-start, nitro off (its netlify preset breaks prerender); Lovable default untouched.
 - Course facts: specialtyCourses (site-data.ts) + specialty-photos.ts; /specialized-training/<slug> pages, vite pages, contracts and sitemap stay in step (plan-preselect.test.ts). ?program= on /contact preselects after mount.
-- Owner edits (site_rates/content/catalog) store overrides only, load into shared stores after mount, archived by triggers; editor (edit-store, lazy site-editor) off in prerender/hydration. Copy SlotText k+d, prices RateText, derived CalcText.
+- Owner edits (site_rates/content/catalog) store overrides only, load into shared stores after mount, archived by triggers; editor (edit-store, lazy site-editor) off in prerender/hydration; Edit blocks links/buttons (toggles, data-edit-allow exempt). Copy SlotText k+d, prices RateText, derived CalcText.
 - Fleet/programs/courses: site-data + site_catalog (catalog.ts adds/hidden/edits, use-catalog); plane details/specs/photos only in catalog.edits (PlaneText/PlaneEditForm); unknown slugs resolve after mount; new rate lines in site_rates.extraRental.

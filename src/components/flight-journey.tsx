@@ -1,6 +1,6 @@
 import { RateText, SlotText } from "@/components/slot-text";
 import { rateKey } from "@/lib/rates-engine";
-import { useEditState } from "@/lib/edit-store";
+import { isEditing, useEditState } from "@/lib/edit-store";
 import { startTransition, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { srcSetFor } from "@/lib/responsive-image";
 import { Link } from "@tanstack/react-router";
@@ -125,7 +125,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   const [interacted, setInteracted] = useState(false);
   // Reading an airplane's card holds the stage: nothing moves on while it is up.
   const cardOpen = useTrafficCardOpen();
-  const autoOn = !edit.on && story && playing && inView && !holding && !interacted && !cardOpen;
+  const autoOn = !isEditing(edit) && story && playing && inView && !holding && !interacted && !cardOpen;
   const activeRef = useRef(0);
   activeRef.current = active;
   const storyRef = useRef(story);
@@ -876,7 +876,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
   // Phone stories: trail + altitude live inside each card so the whole page turns with the swipe (Instagram-style).
   const trail = (cur: number) => (
           <div className={carousel ? "absolute bottom-[2.6rem] left-1/2 z-30 flex w-[min(28rem,40vw)] -translate-x-1/2 gap-1.5" : "absolute inset-x-3 top-[calc(env(safe-area-inset-top)+3.6rem)] z-30 flex gap-1"}>
-            {stages.map((st, i) => <button key={st.code} type="button" aria-label={`Show ${st.label}`} onClick={() => { setActive(i); const top = (sectionRef.current?.parentElement ?? sectionRef.current)?.getBoundingClientRect().top ?? 0; if (Math.abs(top) > 2) glideTo(window.scrollY + top); }} className="flex h-6 flex-1 items-center"><span className="block h-[3px] w-full overflow-hidden rounded-full bg-background/30"><span key={i === cur && autoOn ? "run" : "idle"} className={`block h-full origin-left bg-primary ${i === cur && autoOn ? "carousel-fill" : "transition-transform duration-300"}`} style={i === cur && autoOn ? { animationDuration: `${AUTO_MS}ms` } : { transform: `scaleX(${i <= cur ? 1 : 0})` }} /></span></button>)}
+            {stages.map((st, i) => <button data-edit-allow key={st.code} type="button" aria-label={`Show ${st.label}`} onClick={() => { setActive(i); const top = (sectionRef.current?.parentElement ?? sectionRef.current)?.getBoundingClientRect().top ?? 0; if (Math.abs(top) > 2) glideTo(window.scrollY + top); }} className="flex h-6 flex-1 items-center"><span className="block h-[3px] w-full overflow-hidden rounded-full bg-background/30"><span key={i === cur && autoOn ? "run" : "idle"} className={`block h-full origin-left bg-primary ${i === cur && autoOn ? "carousel-fill" : "transition-transform duration-300"}`} style={i === cur && autoOn ? { animationDuration: `${AUTO_MS}ms` } : { transform: `scaleX(${i <= cur ? 1 : 0})` }} /></span></button>)}
           </div>
   );
   return (
@@ -885,9 +885,9 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
         {story && carousel && trail(active)}
         {carousel && (
           <div data-interactive="" className="absolute bottom-8 right-[max(var(--gutter),calc((100%-1720px)/2))] z-30 flex items-center gap-1 rounded-full bg-ink/45 p-1 text-background backdrop-blur-md">
-            <button type="button" aria-label="Previous stage" onClick={() => { setPlaying(false); setActive((a) => (a - 1 + stages.length) % stages.length); }} className="grid size-10 place-items-center rounded-full transition-colors hover:bg-background/15"><ChevronLeft className="size-5" /></button>
+            <button data-edit-allow type="button" aria-label="Previous stage" onClick={() => { setPlaying(false); setActive((a) => (a - 1 + stages.length) % stages.length); }} className="grid size-10 place-items-center rounded-full transition-colors hover:bg-background/15"><ChevronLeft className="size-5" /></button>
             <button type="button" aria-label={playing ? "Pause" : "Play"} onClick={() => setPlaying((p) => !p)} className="grid size-10 place-items-center rounded-full transition-colors hover:bg-background/15">{playing ? <Pause className="size-4" /> : <Play className="size-4" />}</button>
-            <button type="button" aria-label="Next stage" onClick={() => { setPlaying(false); setActive((a) => (a + 1) % stages.length); }} className="grid size-10 place-items-center rounded-full transition-colors hover:bg-background/15"><ChevronRight className="size-5" /></button>
+            <button data-edit-allow type="button" aria-label="Next stage" onClick={() => { setPlaying(false); setActive((a) => (a + 1) % stages.length); }} className="grid size-10 place-items-center rounded-full transition-colors hover:bg-background/15"><ChevronRight className="size-5" /></button>
           </div>
         )}
         {/* Safari tints its toolbar from the pixels at the screen's bottom edge; keep that edge plain dark ink so buttons never bleed a hard blue line into it. */}
@@ -969,7 +969,7 @@ export function FlightJourney({ stages = journeyStages, id = "flight-path", labe
           <ol className="flex flex-col justify-between gap-1 sm:gap-3">
             {stages.map((st, i) => (
               <li key={st.code}>
-                <Button variant="ghost" type="button" aria-label={st.label} aria-current={i === active ? "step" : undefined} onClick={(e) => { if ((e.target as Element | null)?.closest?.("[data-slot-text]")) return; jump(i); }} className={`group h-11 min-w-11 justify-start gap-3 rounded-none px-2 text-left text-xs lg:text-[13px] font-bold uppercase tracking-[0.16em] transition-colors hover:bg-transparent ${i === active ? "outlined-accent-label" : "text-background/55 hover:text-background/80"}`}>
+                <Button data-edit-allow variant="ghost" type="button" aria-label={st.label} aria-current={i === active ? "step" : undefined} onClick={(e) => { if ((e.target as Element | null)?.closest?.("[data-slot-text]")) return; jump(i); }} className={`group h-11 min-w-11 justify-start gap-3 rounded-none px-2 text-left text-xs lg:text-[13px] font-bold uppercase tracking-[0.16em] transition-colors hover:bg-transparent ${i === active ? "outlined-accent-label" : "text-background/55 hover:text-background/80"}`}>
                   <span className={`size-2 rounded-full border border-current transition-[scale,background-color,border-color] ${i === active ? "scale-150 bg-primary border-primary" : ""}`} />
                   <span className="hidden sm:inline"><StageText s={st} field="label" /></span>
                 </Button>
