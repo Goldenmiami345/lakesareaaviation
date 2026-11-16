@@ -1,7 +1,7 @@
 // Editable content slots: fixed, named spots whose words or photo the owner may change in admin.
 // Everything else (layout, fonts, colors, motion) stays in code. Text limits are sized from the
 // original wording so a replacement can never push a layout out of shape.
-import { fleet, programs, specialtyCourses, testimonials } from "./site-data";
+import { programs, specialtyCourses, testimonials } from "./site-data";
 import { SPECIALTY_PHOTOS } from "./specialty-photos";
 
 export type Slot = { key: string; group: string; label: string; kind: "text" | "photo"; def: string; max: number; multiline?: boolean };
@@ -23,7 +23,6 @@ export const SLOTS: Slot[] = [
     text(`testimonial.${i}.name`, "Testimonials", `Quote ${i + 1}: name`, t.name),
     text(`testimonial.${i}.detail`, "Testimonials", `Quote ${i + 1}: detail`, t.detail),
   ]),
-  ...fleet.map(f => text(`fleet.${f.registration}.note`, "Fleet", `${f.registration}${f.nickname ? ` “${f.nickname}”` : ""}: note`, f.note, true)),
 ];
 export const SLOT_BY_KEY = new Map(SLOTS.map(s => [s.key, s]));
 const BY_KEY = SLOT_BY_KEY;

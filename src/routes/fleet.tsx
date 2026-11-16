@@ -1,5 +1,4 @@
-import { FleetPrice, SlotText as ST } from "@/components/slot-text";
-import { SlotText } from "@/components/slot-text";
+import { FleetPrice } from "@/components/slot-text";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { srcSetFor } from "@/lib/responsive-image";
 import { lazy, Suspense, useLayoutEffect, useRef, useState } from "react";
@@ -8,7 +7,7 @@ import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
 import { Button } from "../components/ui/button";
 import { type FleetRole } from "../lib/site-data";
 import { useFleet } from "../lib/use-catalog";
-import { AddTile, HideToggle, hiddenAttr } from "../components/catalog-controls";
+import { AddTile, hiddenAttr, PlaneControls, PlaneText } from "../components/catalog-controls";
 import { ENDORSEMENTS, keyStats, planeSlug, ROLE_LABEL, TRAINING, type Plane } from "../lib/fleet-info";
 
 // The viewer code is only downloaded when a visitor opens it.
@@ -128,23 +127,23 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
   return (
     <article id={id} data-plane={id} {...hiddenAttr(!!f.hidden)} className="scroll-mt-20 overflow-hidden border border-border bg-background target:border-primary">
       <div className="relative aspect-[4/3] overflow-hidden bg-background max-sm:aspect-[11/5]">
-        <HideToggle kind="fleet" id={f.registration} hidden={!!f.hidden} className="!absolute left-3 top-3" />
+        <PlaneControls f={f} className="left-3 top-3" />
         {/* Fleet is photos only: no 3D models on this page, whatever the 3D setting is. */}
         <img src={f.image} srcSet={srcSetFor(f.image)} sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw" alt={label} width={1200} height={900} loading="lazy" decoding="async" className="fleet-cutout h-full w-full object-contain p-5 max-sm:px-3 max-sm:pb-5 max-sm:pt-2" />
         {/* On phones the whole photo opens the viewer, so no pill sits on top of the airplane. */}
         <button type="button" onClick={(e) => onView(e.currentTarget)} aria-label={`View photos of ${label}`} className="absolute inset-0 sm:hidden" />
         <Button variant="secondary" onClick={(e) => onView(e.currentTarget)} className="absolute bottom-3 right-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-ink/80 px-4 text-xs font-bold uppercase tracking-[0.14em] text-background backdrop-blur-md hover:bg-primary max-sm:hidden">
-          <Maximize className="size-4" /> View photo
+          <Maximize className="size-4" /> {f.photos?.length ? `View photos · ${f.photos.length + 1}` : "View photo"}
         </Button>
       </div>
       <div className="p-5 sm:p-6 max-sm:px-4 max-sm:pb-3 max-sm:pt-1">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
           <div className="min-w-0">
             <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-primary-text"><span className="h-px w-5 shrink-0 bg-primary" />{f.registration}
-              {f.nickname && <span className="truncate font-display text-sm font-normal normal-case tracking-normal text-muted-foreground sm:hidden">“<ST k={`fleet.${f.registration}.nickname`} d={f.nickname} />”</span>}
+              {f.nickname && <span className="truncate font-display text-sm font-normal normal-case tracking-normal text-muted-foreground sm:hidden">“<PlaneText f={f} field="nickname" />”</span>}
             </p>
-            <h2 className="mt-2 font-display text-2xl leading-tight sm:text-3xl max-sm:mt-1 max-sm:text-xl"><ST k={`fleet.${f.registration}.name`} d={f.name} /></h2>
-            {f.nickname && <p className="font-display text-base text-muted-foreground max-sm:hidden">“<ST k={`fleet.${f.registration}.nickname`} d={f.nickname} />”</p>}
+            <h2 className="mt-2 font-display text-2xl leading-tight sm:text-3xl max-sm:mt-1 max-sm:text-xl"><PlaneText f={f} field="name" /></h2>
+            {f.nickname && <p className="font-display text-base text-muted-foreground max-sm:hidden">“<PlaneText f={f} field="nickname" />”</p>}
           </div>
           <button type="button" onClick={(e) => onView(e.currentTarget)} aria-label={`View photos of ${label}`} className="-mr-2 grid size-11 place-items-center rounded-full text-muted-foreground transition-colors active:bg-muted sm:hidden">
             <Maximize className="size-4" />
@@ -185,7 +184,7 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
             </Section>
           )}
           <Section title="Used in training">
-            <p className="text-sm text-muted-foreground"><ST k={`fleet.${f.registration}.use`} d={f.use} />. <SlotText k={`fleet.${f.registration}.note`} /></p>
+            <p className="text-sm text-muted-foreground"><PlaneText f={f} field="use" />. <PlaneText f={f} field="note" /></p>
             <ul className="mt-2 flex flex-wrap gap-x-4">
               {TRAINING[f.role].map((t) => <li key={t.to}><a href={t.to} className="inline-flex min-h-11 items-center text-sm font-semibold text-primary-text">{t.label} →</a></li>)}
             </ul>
@@ -211,10 +210,11 @@ function PlaneCard({ f, open, onView }: { f: Plane; open: boolean; onView: (btn:
 function PlaneTile({ f, open, onToggle }: { f: Plane; open: boolean; onToggle: () => void }) {
   const id = planeSlug(f);
   return (
-    <article id={`${id}-tile`} data-plane={id} {...hiddenAttr(!!f.hidden)} className={`min-w-0 scroll-mt-20 border bg-background transition-colors ${open ? "border-foreground" : "border-border"}`}>
+    <article id={`${id}-tile`} data-plane={id} {...hiddenAttr(!!f.hidden)} className={`relative min-w-0 scroll-mt-20 border bg-background transition-colors ${open ? "border-foreground" : "border-border"}`}>
+      {/* Editor buttons sit beside the tile's button, never inside it (nested buttons swallow taps). */}
+      <PlaneControls f={f} compact className="left-1 top-1" />
       <button type="button" onClick={onToggle} aria-expanded={open} aria-controls={`${id}-quick`} className="block w-full text-left">
         <span className="relative block aspect-[2/1] overflow-hidden bg-secondary/60">
-          <HideToggle kind="fleet" id={f.registration} hidden={!!f.hidden} className="!absolute left-1 top-1 !min-h-8 !px-2 !text-[9px]" />
           <img src={f.image} srcSet={srcSetFor(f.image)} sizes="50vw" alt="" width={600} height={400} loading="lazy" decoding="async" className="fleet-cutout h-full w-full object-contain p-2" />
         </span>
         <span className="block px-2.5 pb-2 pt-1.5">
@@ -223,7 +223,7 @@ function PlaneTile({ f, open, onToggle }: { f: Plane; open: boolean; onToggle: (
             <ChevronDown aria-hidden="true" className={`size-3.5 shrink-0 text-foreground/60 transition-transform ${open ? "rotate-180" : ""}`} />
           </span>
           <span className="block truncate font-display text-base leading-tight">{f.nickname ?? f.name.replace(/^\d{4} /, "")}</span>
-          <span className="block truncate text-xs text-foreground/70"><ST k={`fleet.${f.registration}.name`} d={f.name} /></span>
+          <span className="block truncate text-xs text-foreground/70"><PlaneText f={f} field="name" /></span>
           <span className="mt-0.5 block text-xs font-bold tabular-nums">{f.rate ? <><FleetPrice reg={f.registration} row={f.rateRow} field="regular" /> <span className="font-semibold text-foreground/60">wet</span></> : <span className="font-semibold text-foreground/60">Ask for rate</span>}</span>
         </span>
       </button>
@@ -238,9 +238,9 @@ function QuickLook({ f, onClose, onView }: { f: Plane; onClose: () => void; onVi
     <section id={`${id}-quick`} aria-label={`${f.registration} quick look`} className="col-span-2 border border-foreground bg-background p-4 duration-300 animate-in fade-in slide-in-from-top-1">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/70">{ROLE_LABEL[f.role]} · <ST k={`fleet.${f.registration}.use`} d={f.use} /></p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/70">{ROLE_LABEL[f.role]} · <PlaneText f={f} field="use" /></p>
           <h2 className="mt-1 font-display text-xl leading-tight">{f.registration}{f.nickname && ` “${f.nickname}”`}</h2>
-          <p className="text-sm text-foreground/75"><ST k={`fleet.${f.registration}.name`} d={f.name} /></p>
+          <p className="text-sm text-foreground/75"><PlaneText f={f} field="name" /></p>
         </div>
         <button type="button" onClick={onClose} aria-label="Close quick look" className="-mr-2 -mt-2 grid size-11 place-items-center"><X className="size-4" /></button>
       </div>
@@ -249,10 +249,10 @@ function QuickLook({ f, onClose, onView }: { f: Plane; onClose: () => void; onVi
           {stats.map((s) => <div key={s.k} className="min-w-0"><dt className="text-[10px] font-bold uppercase tracking-[0.12em] text-foreground/65">{s.k}</dt><dd className="truncate text-sm font-semibold">{s.v}</dd></div>)}
         </dl>
       )}
-      <p className="mt-3 text-sm text-foreground/80"><SlotText k={`fleet.${f.registration}.note`} /></p>
+      <p className="mt-3 text-sm text-foreground/80"><PlaneText f={f} field="note" /></p>
       <div className="mt-4 grid grid-cols-2 gap-2">
         <Link to="/fleet/$reg" params={{ reg: id }} className="inline-flex min-h-11 items-center justify-center gap-1.5 border border-foreground px-3 text-xs font-bold uppercase tracking-[0.1em]">Full details <ArrowRight className="size-3.5" /></Link>
-        <button type="button" onClick={(e) => onView(e.currentTarget)} className="inline-flex min-h-11 items-center justify-center gap-1.5 border border-border px-3 text-xs font-bold uppercase tracking-[0.1em]"><Maximize className="size-3.5" /> Photo</button>
+        <button type="button" onClick={(e) => onView(e.currentTarget)} className="inline-flex min-h-11 items-center justify-center gap-1.5 border border-border px-3 text-xs font-bold uppercase tracking-[0.1em]"><Maximize className="size-3.5" /> {f.photos?.length ? "Photos" : "Photo"}</button>
       </div>
       <Link to="/contact" search={{ aircraft: f.registration }} className="mt-2 inline-flex min-h-11 w-full items-center justify-center gap-2 bg-primary px-4 text-xs font-bold uppercase tracking-[0.1em] text-primary-foreground">Build my training plan <ArrowRight className="size-3.5" /></Link>
     </section>

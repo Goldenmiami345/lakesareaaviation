@@ -3,12 +3,11 @@ import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, Minus, Plus, RotateCcw, X } from "lucide-react";
 import { TransformWrapper, TransformComponent, type ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
 import { Button } from './ui/button';
-import type { fleet } from "../lib/site-data";
+import type { Plane } from "../lib/fleet-info";
 
-type Plane = (typeof fleet)[number];
 export default function AircraftViewer({ plane, initialIndex = 0, onClose }: { plane: Plane; initialIndex?: number; onClose: () => void }) {
-  const photos = [{ src: plane.image, small: plane.image, label: 'Exterior' }];
-  const [index, setIndex] = useState(initialIndex);
+  const photos = [{ src: plane.image, label: 'Exterior' }, ...(plane.photos ?? []).map((src, i) => ({ src, label: `Photo ${i + 2}` }))];
+  const [index, setIndex] = useState(Math.min(Math.max(0, initialIndex), photos.length - 1));
   // Fleet viewer is photos only (no 3D on the fleet page).
   const [mode, setMode] = useState<'photos' | 'panel'>('photos');
   const zoom = useRef<ReactZoomPanPinchRef>(null);

@@ -1,5 +1,4 @@
 import { FleetPrice, SlotText as ST } from "@/components/slot-text";
-import { SlotText } from "@/components/slot-text";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { lazy, Suspense, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Maximize, Phone } from "lucide-react";
@@ -8,7 +7,7 @@ import { InquiryBand, SiteLayout } from "../components/site-shell";
 import { RATE_NOTES, SCHOOL_PHONE, SCHOOL_PHONE_TEL } from "../lib/site-data";
 import { REG } from "../lib/catalog";
 import { useFleet } from "../lib/use-catalog";
-import { HideToggle } from "../components/catalog-controls";
+import { HideToggle, PlaneEditButton, PlaneText } from "../components/catalog-controls";
 import { ENDORSEMENTS, findPlane, planeSlug, planeTitle, ROLE_LABEL, TRAINING, type Plane } from "../lib/fleet-info";
 
 // Photos only, like the fleet list: this page never loads 3D models.
@@ -46,6 +45,7 @@ function PlanePage() {
 
 function PlaneBody({ f, fleet }: { f: Plane; fleet: Plane[] }) {
   const [viewer, setViewer] = useState(false);
+  const [viewIndex, setViewIndex] = useState(0);
   const opener = useRef<HTMLButtonElement | null>(null);
   const specs = Object.entries(f.specs ?? {});
   const equipment = specs.filter(([k]) => ["GPS", "Equipment", "IFR/VFR", "Coms"].includes(k));
@@ -53,24 +53,33 @@ function PlaneBody({ f, fleet }: { f: Plane; fleet: Plane[] }) {
   const i = fleet.findIndex((p) => p.registration === f.registration);
   const prev = fleet[(i - 1 + fleet.length) % fleet.length]!;
   const next = fleet[(i + 1) % fleet.length]!;
-  const open = (btn: HTMLButtonElement) => { opener.current = btn; setViewer(true); };
+  const open = (btn: HTMLButtonElement, index = 0) => { opener.current = btn; setViewIndex(index); setViewer(true); };
+  const gallery = f.photos?.length ? [f.image, ...f.photos] : [];
 
   return (
     <SiteLayout>
       <div className="site-container pb-16 pt-20 sm:pt-28">
         <Link to="/fleet" className="inline-flex min-h-11 items-center gap-2 text-xs font-bold uppercase tracking-[0.14em]"><ArrowLeft className="size-4" /> All aircraft</Link>
         <div className="mt-2 grid gap-6 lg:grid-cols-[1.15fr_1fr] lg:gap-14">
+          <div className="min-w-0">
           <div className="relative bg-secondary/60">
             <img src={f.image} srcSet={srcSetFor(f.image)} sizes="(min-width: 1024px) 55vw, 100vw" alt={`${f.name} ${f.registration}${f.nickname ? ` “${f.nickname}”` : ""}`} width={1200} height={900} loading="eager" fetchPriority="high" decoding="async" className="fleet-cutout aspect-[4/3] w-full object-contain p-6 max-sm:aspect-[3/2] max-sm:p-4" />
             <button type="button" onClick={(e) => open(e.currentTarget)} className="absolute bottom-3 right-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-ink/80 px-4 text-xs font-bold uppercase tracking-[0.14em] text-background backdrop-blur-md hover:bg-primary">
-              <Maximize className="size-4" /> View photo
+              <Maximize className="size-4" /> {gallery.length ? `View photos · ${gallery.length}` : "View photo"}
             </button>
           </div>
+          {gallery.length > 0 && <ul aria-label="More photos" className="mt-2 grid grid-cols-5 gap-2 max-sm:grid-cols-4">
+            {gallery.map((src, i) => <li key={src}><button type="button" onClick={(e) => open(e.currentTarget, i)} aria-label={`Open photo ${i + 1} of ${gallery.length}`} className="block w-full bg-secondary/60 outline-offset-2 hover:opacity-80">
+              <img src={src} alt="" loading="lazy" decoding="async" className={`aspect-[4/3] w-full ${i === 0 ? "fleet-cutout object-contain p-1" : "object-cover"}`} />
+            </button></li>)}
+          </ul>}
+          </div>
           <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground/70">{ROLE_LABEL[f.role]} · <ST k={`fleet.${f.registration}.use`} d={f.use} /></p>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground/70">{ROLE_LABEL[f.role]} · <PlaneText f={f} field="use" /></p>
             <h1 className="mt-2 font-display text-4xl leading-tight sm:text-5xl">{planeTitle(f)}</h1>
-            <HideToggle kind="fleet" id={f.registration} hidden={!!f.hidden} className="mt-3" />
-            <p className="mt-1 text-lg text-foreground/80"><ST k={`fleet.${f.registration}.name`} d={f.name} /></p>
+            <HideToggle kind="fleet" id={f.registration} hidden={!!f.hidden} className="mr-2 mt-3" />
+            <PlaneEditButton f={f} className="mt-3" />
+            <p className="mt-1 text-lg text-foreground/80"><PlaneText f={f} field="name" /></p>
 
             <div className="mt-6 grid grid-cols-2 border-y-2 border-foreground">
               {f.rate ? <>
@@ -105,7 +114,7 @@ function PlaneBody({ f, fleet }: { f: Plane; fleet: Plane[] }) {
           )}
           <section>
             <h2 className="border-b border-foreground pb-2 font-display text-2xl"><ST k="fleet.page.used" d="Used in training" /></h2>
-            <p className="mt-3 text-sm text-foreground/80"><ST k={`fleet.${f.registration}.use`} d={f.use} />. <SlotText k={`fleet.${f.registration}.note`} /></p>
+            <p className="mt-3 text-sm text-foreground/80"><PlaneText f={f} field="use" />. <PlaneText f={f} field="note" /></p>
             <ul className="mt-2 divide-y divide-border">
               {TRAINING[f.role].map((t) => <li key={t.to}><a href={t.to} className="flex min-h-11 items-center justify-between gap-3 text-sm font-semibold">{t.label}<ArrowRight className="size-4 shrink-0" /></a></li>)}
             </ul>
@@ -128,7 +137,7 @@ function PlaneBody({ f, fleet }: { f: Plane; fleet: Plane[] }) {
       <InquiryBand />
       {viewer && (
         <Suspense fallback={<div className="fixed inset-0 z-[80] bg-ink" />}>
-          <AircraftViewer plane={f} onClose={() => { setViewer(false); opener.current?.focus(); }} />
+          <AircraftViewer plane={f} initialIndex={viewIndex} onClose={() => { setViewer(false); opener.current?.focus(); }} />
         </Suspense>
       )}
     </SiteLayout>

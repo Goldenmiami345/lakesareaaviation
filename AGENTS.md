@@ -51,4 +51,4 @@
 - Netlify: NETLIFY-only @netlify/vite-plugin-tanstack-start, nitro off (its netlify preset breaks prerender); Lovable default untouched.
 - Course facts: specialtyCourses (site-data.ts) + specialty-photos.ts; /specialized-training/<slug> pages, vite pages, contracts and sitemap stay in step (plan-preselect.test.ts). ?program= on /contact preselects after mount.
 - Owner edits (site_rates/content/catalog) store overrides only, load into shared stores after mount, archived by triggers; editor (edit-store, lazy site-editor) off in prerender/hydration. Copy SlotText k+d, prices RateText, derived CalcText.
-- Fleet/programs/courses: site-data + site_catalog (catalog.ts adds/hidden ids, use-catalog); detail routes resolve unknown slugs after mount; new rate lines in site_rates.extraRental.
+- Fleet/programs/courses: site-data + site_catalog (catalog.ts adds/hidden/edits, use-catalog); plane details/specs/photos only in catalog.edits (PlaneText/PlaneEditForm); unknown slugs resolve after mount; new rate lines in site_rates.extraRental.

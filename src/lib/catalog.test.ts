@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { allPlanes, buildProgram, cleanCatalog, coursesOf, EMPTY_CATALOG, planesOf, programsOf, setHidden } from "./catalog";
+import { allPlanes, buildProgram, cleanCatalog, coursesOf, editPlane, EMPTY_CATALOG, fieldsOf, originalPlane, planesOf, programsOf, resetPlane, setHidden } from "./catalog";
 import { applyRates, rateKey, withRateDrafts } from "./rates-engine";
 import { fleet, programs, specialtyCourses } from "./site-data";
 
@@ -33,4 +33,26 @@ test("an added program is priced from the rates: $500 fee + 10 h Cessna 172 + 10
 test("duplicate or malformed additions are dropped", () => {
   const c = cleanCatalog({ fleet: [{ registration: "N8570B", name: "dup" }, { registration: "bad", name: "x" }], courses: [{ slug: "tailwheel", name: "dup" }], programs: [{ slug: "Bad Slug", name: "x" }] });
   assert.deepEqual([c.fleet.length, c.courses.length, c.programs.length], [0, 0, 0]);
+});
+
+test("owner edits change an airplane's specs, photos and words, and Original undoes them", () => {
+  const c = editPlane(EMPTY_CATALOG, "N8570B", { specs: [["Seats", "2"], ["Year", "1957"]], photos: ["https://x.test/a.webp"], note: "New note", nickname: "" });
+  const p = allPlanes(cleanCatalog(c), r).find(x => x.registration === "N8570B")!;
+  assert.deepEqual(Object.entries(p.specs ?? {}), [["Seats", "2"], ["Year", "1957"]]);
+  assert.deepEqual(p.photos, ["https://x.test/a.webp"]);
+  assert.equal(p.note, "New note");
+  assert.equal(p.nickname, undefined);
+  assert.equal(p.rate, "$185/hr");
+  const back = editPlane(c, "N8570B", fieldsOf(originalPlane(c, "N8570B")!));
+  assert.equal(back.edits, undefined);
+  assert.equal(resetPlane(c, "N8570B").edits, undefined);
+});
+
+test("removing an airplane's price line asks visitors to call; bad photo links are dropped", () => {
+  const c = cleanCatalog({ edits: { N6641F: { rateRow: "", image: "javascript:alert(1)", photos: ["http://insecure", "https://ok.test/p.webp"] }, NBAD: { name: "x" } } });
+  const p = allPlanes(c, r).find(x => x.registration === "N6641F")!;
+  assert.equal(p.rate, undefined);
+  assert.equal(p.image, fleet.find(f => f.registration === "N6641F")!.image);
+  assert.deepEqual(p.photos, ["https://ok.test/p.webp"]);
+  assert.deepEqual(Object.keys(c.edits ?? {}), ["N6641F"]);
 });
