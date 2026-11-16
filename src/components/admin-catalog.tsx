@@ -73,7 +73,7 @@ export function AdminCatalog() {
         {preview(l.kind)}
       </div>}
       <ul className="divide-y divide-border border border-border">{l.items.map(it => <li key={it.id} className={it.hidden ? "bg-secondary/60 text-muted-foreground" : ""}><div className="flex min-h-14 items-center justify-between gap-3 px-3 py-2">
-        <span className="min-w-0"><span className="block truncate font-semibold">{it.label}{it.added && <span className="ml-2 text-[10px] font-bold uppercase tracking-widest text-primary-text">Added</span>}{it.hidden && <span className="ml-2 text-[10px] font-bold uppercase tracking-widest">Hidden</span>}</span><span className="block truncate text-xs text-muted-foreground">{it.sub}</span></span>
+        <span className="min-w-0"><span className="block font-semibold">{it.label}{it.added && <span className="ml-2 text-[10px] font-bold uppercase tracking-widest text-primary-text">Added</span>}{it.hidden && <span className="ml-2 text-[10px] font-bold uppercase tracking-widest">Hidden</span>}</span><span className="block text-xs text-muted-foreground">{it.sub}</span></span>
         <span className="flex shrink-0 flex-wrap justify-end gap-2">
           {l.kind === "fleet" && <Button size="sm" variant={editing === it.id ? "secondary" : "outline"} disabled={busy} aria-expanded={editing === it.id} onClick={() => setEditing(e => (e === it.id ? null : it.id))}><PencilLine className="size-4" /> Edit</Button>}
           <Button size="sm" variant="outline" disabled={busy} onClick={() => void save(setHidden(cat, l.kind, it.id, !it.hidden), `${it.hidden ? "Brought back" : "Hid"} ${it.label}`)}>{it.hidden ? <><Eye className="size-4" /> Bring back</> : <><EyeOff className="size-4" /> Hide</>}</Button>
