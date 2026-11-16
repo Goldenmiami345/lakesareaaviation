@@ -1,3 +1,4 @@
+import { SlotText } from "@/components/slot-text";
 import heroImg from "../assets/photos/sedona-wing.webp";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
@@ -30,22 +31,22 @@ const services = [
 function Page() {
   return (
     <SiteLayout>
-      <PageIntro image={heroImg} imageAlt="View under an aircraft wing over red rock country"
+      <PageIntro k="services.intro" image={heroImg} imageAlt="View under an aircraft wing over red rock country"
         eyebrow="Our services"
         title="Every rating, endorsement, and experience."
         text="Whether you have zero flight hours or have three-hundred and are looking to finish a multi-engine commercial certificate, we are the school for you. We offer a wide variety of ratings, endorsements, and aviation experiences. All of our offerings are tailored to suit your individual needs."
       />
       <div className="site-container py-20">
         <div className="stagger-grid grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-3" data-scroll-reveal>
-          {services.map(([name, to, text]) => (
+          {services.map(([name, to, text], i) => (
             <Link key={to} to={to === "zero" ? "/programs/$slug" : to} params={{ slug: "zero-to-hero" }} className="program-card interactive-arrow group bg-background p-8">
-              <h2 className="font-display text-3xl">{name}</h2>
-              <p className="mt-4 text-muted-foreground">{text}</p>
-              <span className="mt-8 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-primary-text">Explore <ArrowRight className="size-4" /></span>
+              <h2 className="font-display text-3xl"><SlotText k={`services.item.${i}.name`} d={name} /></h2>
+              <p className="mt-4 text-muted-foreground"><SlotText k={`services.item.${i}.description`} d={text} /></p>
+              <span className="mt-8 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-primary-text"><SlotText k="services.text.0" d="Explore" /> <ArrowRight className="size-4" /></span>
             </Link>
           ))}
         </div>
-        <p className="mt-10 text-sm text-muted-foreground">Helicopter training: call us, or <Link to="/contact" className="text-primary-text underline">build my training plan</Link> to ask about current availability.</p>
+        <p className="mt-10 text-sm text-muted-foreground"><SlotText k="services.text.1" d="Helicopter training: call us, or " /><Link to="/contact" className="text-primary-text underline"><SlotText k="services.text.2" d="build my training plan" /></Link><SlotText k="services.text.3" d=" to ask about current availability." /></p>
       </div>
       <InquiryBand />
     </SiteLayout>
