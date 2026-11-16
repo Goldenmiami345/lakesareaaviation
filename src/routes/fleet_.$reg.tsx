@@ -5,8 +5,11 @@ import { lazy, Suspense, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Maximize, Phone } from "lucide-react";
 import { srcSetFor } from "@/lib/responsive-image";
 import { InquiryBand, SiteLayout } from "../components/site-shell";
-import { fleet, RATE_NOTES, SCHOOL_PHONE, SCHOOL_PHONE_TEL } from "../lib/site-data";
-import { ENDORSEMENTS, findPlane, planeSlug, planeTitle, ROLE_LABEL, TRAINING } from "../lib/fleet-info";
+import { RATE_NOTES, SCHOOL_PHONE, SCHOOL_PHONE_TEL } from "../lib/site-data";
+import { REG } from "../lib/catalog";
+import { useFleet } from "../lib/use-catalog";
+import { HideToggle } from "../components/catalog-controls";
+import { ENDORSEMENTS, findPlane, planeSlug, planeTitle, ROLE_LABEL, TRAINING, type Plane } from "../lib/fleet-info";
 
 // Photos only, like the fleet list: this page never loads 3D models.
 const AircraftViewer = lazy(() => import("../components/aircraft-viewer"));
@@ -14,9 +17,10 @@ const AircraftViewer = lazy(() => import("../components/aircraft-viewer"));
 export const Route = createFileRoute("/fleet_/$reg")({
   staticData: { sitemap: true },
   loader: ({ params }) => {
+    // Published airplanes prerender; an owner-added tail number renders once the catalog loads.
     const plane = findPlane(params.reg);
-    if (!plane) throw notFound();
-    return plane;
+    if (!plane && !REG.test(params.reg.toUpperCase())) throw notFound();
+    return plane ?? null;
   },
   head: ({ loaderData: p }) => {
     const title = p ? `${planeTitle(p)}, ${p.name} | Lakes Area Aviation Fleet` : "Aircraft | Lakes Area Aviation";
@@ -27,7 +31,20 @@ export const Route = createFileRoute("/fleet_/$reg")({
 });
 
 function PlanePage() {
-  const f = Route.useLoaderData();
+  const base = Route.useLoaderData();
+  const { reg } = Route.useParams();
+  const { all, planes, ready, editing } = useFleet();
+  const list = editing ? all : planes;
+  const f = all.find((p) => planeSlug(p) === reg.toLowerCase());
+  if (f && (!f.hidden || editing)) return <PlaneBody f={f} fleet={list.length ? list : [f]} />;
+  if (!ready && base) return <PlaneBody f={base} fleet={list} />;
+  return <SiteLayout><div className="site-container min-h-[60vh] pb-16 pt-28">{ready && <>
+    <p className="font-display text-3xl"><ST k="fleet.gone.title" d="This airplane is no longer in our fleet." /></p>
+    <Link to="/fleet" className="mt-6 inline-flex min-h-11 items-center gap-2 text-xs font-bold uppercase tracking-[0.14em]"><ArrowLeft className="size-4" /> <ST k="fleet.gone.link" d="See the current fleet" /></Link>
+  </>}</div></SiteLayout>;
+}
+
+function PlaneBody({ f, fleet }: { f: Plane; fleet: Plane[] }) {
   const [viewer, setViewer] = useState(false);
   const opener = useRef<HTMLButtonElement | null>(null);
   const specs = Object.entries(f.specs ?? {});
