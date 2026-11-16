@@ -4,6 +4,7 @@ import { Check, LogOut, Palette } from "lucide-react";
 import { parseMobileJourneyMode, type MobileJourneyMode } from "@/lib/story-nav";
 import { parseDesktopJourneyMode, type DesktopJourneyMode } from "@/lib/use-site-settings";
 import { Button } from "@/components/ui/button";
+import { AdminRates } from "@/components/admin-rates";
 import { MAP_MODEL_AIRCRAFT } from "@/lib/map-models";
 import { applyAccentTheme, type AccentTheme } from "@/components/theme-sync";
 import { lovable } from "@/integrations/lovable";
@@ -167,6 +168,7 @@ function AdminPage() {
               {([false, true] as const).map(option => <Button key={String(option)} disabled={busy} variant={fleetModels === option ? "default" : "outline"} className="h-auto min-h-16 rounded-none p-4" onClick={() => changeFleetModels(option)}>{option ? "Enable 3D" : "3D off"}{fleetModels === option && <Check />}</Button>)}
             </div>
           </div>}
+          {isAdmin && <AdminRates />}
         </>}
         {message && <p className="mt-5 text-sm text-muted-foreground" role="status">{message}</p>}
       </div>
