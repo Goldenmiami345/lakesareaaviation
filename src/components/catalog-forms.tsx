@@ -1,6 +1,6 @@
 // Add-a-plane / add-a-program / add-a-course forms, shared by the admin "Fleet & courses" tab and
 // the visual editor's "+ Add" tiles. They only produce data; the caller decides where it is saved.
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ImageUp, Loader2, Plus, RotateCcw, Save, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +37,7 @@ function PhotoPick({ id, value, onChange, label = "Photo", note = "Use a real ph
 
 export type PlaneResult = { plane: AddedPlane; newRow?: ExtraRental };
 /** Rental lines a new airplane can share, from the live rates. */
-export function PlaneForm({ rates, taken, onSubmit, onCancel }: { rates: RatesConfig; taken: string[]; onSubmit: (r: PlaneResult) => void; onCancel?: () => void }) {
+export function PlaneForm({ rates, taken, onSubmit, onCancel, onDraft }: { rates: RatesConfig; taken: string[]; onSubmit: (r: PlaneResult) => void; onCancel?: () => void; onDraft?: (r: PlaneResult | null) => void }) {
   const applied = useMemo(() => applyRates(rates), [rates]);
   const [f, setF] = useState({ registration: "", name: "", nickname: "", role: "trainer" as FleetRole, use: "", note: "", photo: "", year: "", hp: "", seats: "", avionics: "" });
   const [price, setPrice] = useState<"share" | "new" | "none">("share");
@@ -54,13 +54,16 @@ export function PlaneForm({ rates, taken, onSubmit, onCancel }: { rates: RatesCo
     price === "new" && (!lineName || !(Number(nr.regular) > 0) || !(Number(nr.prepay) > 0)) && "Give the new rate line a name and both prices.",
     price === "new" && applied.rentalRates.some(r => r.aircraft === lineName) && "A rate line with that name already exists. Share it instead.",
   ].filter(Boolean) as string[];
-  const submit = () => {
+  const build = (): PlaneResult => {
     const specs: Record<string, string> = {};
     if (f.year.trim()) specs["Year"] = f.year.trim(); if (f.hp.trim()) specs["Horsepower"] = f.hp.trim(); if (f.seats.trim()) specs["Seats"] = f.seats.trim(); if (f.avionics.trim()) specs["GPS"] = f.avionics.trim();
     const rateRow = price === "share" ? row : price === "new" ? lineName : undefined;
     const plane: AddedPlane = { registration: reg, name: f.name.trim(), role: f.role, use: f.use.trim() || "Flight training", note: f.note.trim(), photo: f.photo, specs, ...(f.nickname.trim() ? { nickname: f.nickname.trim() } : {}), ...(rateRow ? { rateRow } : {}) };
-    onSubmit({ plane, ...(price === "new" ? { newRow: { aircraft: lineName, names: f.nickname.trim() ? `“${f.nickname.trim()}”` : reg, regular: Number(nr.regular), prepay: Number(nr.prepay) } } : {}) });
+    return { plane, ...(price === "new" ? { newRow: { aircraft: lineName, names: f.nickname.trim() ? `“${f.nickname.trim()}”` : reg, regular: Number(nr.regular), prepay: Number(nr.prepay) } } : {}) };
   };
+  const submit = () => onSubmit(build());
+  // Live preview: the airplane as it would look, once it has a valid tail number and a name.
+  useEffect(() => { onDraft?.(REG.test(reg) && f.name.trim() ? build() : null); }, [f, price, row, nr]); // eslint-disable-line react-hooks/exhaustive-deps
   return <div className="grid gap-4">
     <div className="grid gap-4 sm:grid-cols-2">
       <Field label="Tail number"><Input value={f.registration} onChange={set("registration")} placeholder="N12345" autoCapitalize="characters" /></Field>
@@ -96,7 +99,7 @@ export function PlaneForm({ rates, taken, onSubmit, onCancel }: { rates: RatesCo
 }
 
 /** A training program priced from hours: course fee + aircraft rental + instruction, all from the rates. */
-export function ProgramForm({ rates, taken, onSubmit, onCancel }: { rates: RatesConfig; taken: string[]; onSubmit: (p: AddedProgram) => void; onCancel?: () => void }) {
+export function ProgramForm({ rates, taken, onSubmit, onCancel, onDraft }: { rates: RatesConfig; taken: string[]; onSubmit: (p: AddedProgram) => void; onCancel?: () => void; onDraft?: (p: AddedProgram | null) => void }) {
   const applied = useMemo(() => applyRates(rates), [rates]);
   const [f, setF] = useState({ name: "", short: "", description: "", timeline: "", fee: "500", requirements: "", notes: "Examiner fees are additional and aircraft rental is subject to tax." });
   const [blocks, setBlocks] = useState<ProgramBlock[]>([
@@ -108,6 +111,7 @@ export function ProgramForm({ rates, taken, onSubmit, onCancel }: { rates: Rates
   const slug = slugify(f.name);
   const draft: AddedProgram = { slug, name: f.name.trim(), short: f.short.trim() || f.name.trim(), description: f.description.trim(), timeline: f.timeline.trim() || "Custom", fee: Number(f.fee) || 0, blocks: blocks.filter(b => b.hours > 0), requirements: linesOf(f.requirements), notes: linesOf(f.notes) };
   const preview = buildProgram(draft, applied).options[0]!;
+  useEffect(() => { onDraft?.(slug ? draft : null); }, [f, blocks]); // eslint-disable-line react-hooks/exhaustive-deps
   const errors = [!f.name.trim() && "Add the program name.", slug && (taken.includes(slug) || basePrograms.some(p => p.slug === slug)) && "A program with that name already exists."].filter(Boolean) as string[];
   const upd = (i: number, b: Partial<ProgramBlock> & { what?: ProgramBlock["what"] }) => setBlocks(list => list.map((x, j) => {
     if (j !== i) return x;
@@ -146,10 +150,12 @@ export function ProgramForm({ rates, taken, onSubmit, onCancel }: { rates: Rates
   </div>;
 }
 
-export function CourseForm({ taken, onSubmit, onCancel }: { taken: string[]; onSubmit: (c: AddedCourse) => void; onCancel?: () => void }) {
+export function CourseForm({ taken, onSubmit, onCancel, onDraft }: { taken: string[]; onSubmit: (c: AddedCourse) => void; onCancel?: () => void; onDraft?: (c: AddedCourse | null) => void }) {
   const [f, setF] = useState({ name: "", kind: "course" as SpecialtyKind, summary: "", definition: "", train: "", location: "", photo: "" });
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF(v => ({ ...v, [k]: e.target.value }));
   const slug = slugify(f.name);
+  const build = (): AddedCourse => ({ slug, name: f.name.trim(), kind: f.kind, summary: f.summary.trim(), definition: f.definition.trim(), train: linesOf(f.train), ...(f.location.trim() ? { location: f.location.trim() } : {}), ...(f.photo ? { photo: f.photo } : {}) });
+  useEffect(() => { onDraft?.(slug ? build() : null); }, [f]); // eslint-disable-line react-hooks/exhaustive-deps
   const errors = [!f.name.trim() && "Add the course name.", !f.summary.trim() && "Add a one-line summary for the card.", slug && (taken.includes(slug) || specialtyCourses.some(c => c.slug === slug)) && "A course with that name already exists."].filter(Boolean) as string[];
   return <div className="grid gap-4">
     <div className="grid gap-4 sm:grid-cols-[1fr_12rem]">
@@ -161,7 +167,7 @@ export function CourseForm({ taken, onSubmit, onCancel }: { taken: string[]; onS
     <Field label="What you'll train" note="One per line."><Textarea rows={3} value={f.train} onChange={set("train")} /></Field>
     <Field label="Location" note="Optional, for example Little Falls, MN"><Input value={f.location} onChange={set("location")} /></Field>
     <PhotoPick id={`course.${slug || "new"}.photo`} value={f.photo} onChange={photo => setF(v => ({ ...v, photo }))} />
-    <Footer errors={errors} onCancel={onCancel} label="Add course" onSubmit={() => onSubmit({ slug, name: f.name.trim(), kind: f.kind, summary: f.summary.trim(), definition: f.definition.trim(), train: linesOf(f.train), ...(f.location.trim() ? { location: f.location.trim() } : {}), ...(f.photo ? { photo: f.photo } : {}) })} />
+    <Footer errors={errors} onCancel={onCancel} label="Add course" onSubmit={() => onSubmit(build())} />
   </div>;
 }
 
@@ -198,9 +204,10 @@ const iconBtn = "grid size-8 shrink-0 place-items-center text-muted-foreground h
 const move = <T,>(list: T[], i: number, d: number) => { const j = i + d; if (j < 0 || j >= list.length) return list; const out = [...list]; [out[i], out[j]] = [out[j]!, out[i]!]; return out; };
 
 /** Every detail of one airplane: words, type, specs, all its photos and which price line it uses. */
-export function PlaneEditForm({ plane, original, rates, onSave, onReset, onCancel }: { plane: Plane; original: Plane; rates: RatesConfig; onSave: (f: PlaneFields) => void; onReset?: (() => void) | undefined; onCancel?: () => void }) {
+export function PlaneEditForm({ plane, original, rates, onSave, onReset, onCancel, onDraft }: { plane: Plane; original: Plane; rates: RatesConfig; onSave: (f: PlaneFields) => void; onReset?: (() => void) | undefined; onCancel?: () => void; onDraft?: (f: PlaneFields) => void }) {
   const applied = useMemo(() => applyRates(rates), [rates]);
   const [f, setF] = useState<PlaneFields>(() => fieldsOf(plane));
+  useEffect(() => { onDraft?.(f); }, [f]); // eslint-disable-line react-hooks/exhaustive-deps
   const orig = useMemo(() => fieldsOf(original), [original]);
   const [adding, setAdding] = useState(0); const [err, setErr] = useState("");
   const reg = plane.registration;

@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from "react";
 import type { RatesConfig } from "./rates-engine";
 import type { Catalog } from "./catalog";
+import { inPreviewFrame, onPreview, readPreview, type PreviewState } from "./site-preview";
 
 export type EditState = {
   on: boolean;
@@ -27,13 +28,22 @@ let loaded = false;
 const subs = new Set<() => void>();
 const META = new Map<string, SpotMeta>();
 
+/** Inside the admin preview frame: show the admin's unsaved versions like a visitor would. */
+const fromPreview = (p: PreviewState | null): EditState => ({ ...OFF, on: true, preview: true, base: p?.content ?? null, rateBase: p?.rates ?? null, catalogBase: p?.catalog ?? null });
+let frame = false;
 function init() {
   if (loaded || typeof window === "undefined") return;
   loaded = true;
+  if (inPreviewFrame()) {
+    frame = true; state = fromPreview(readPreview());
+    onPreview(p => { state = fromPreview(p); subs.forEach(f => f()); });
+    return;
+  }
   try { const s = JSON.parse(sessionStorage.getItem(KEY) ?? "null"); if (s?.on) state = { ...OFF, on: true, preview: s.preview === true, drafts: s.drafts ?? {}, rateDrafts: s.rateDrafts ?? {}, catalogDraft: s.catalogDraft ?? null }; } catch { /* ignore */ }
 }
 function set(next: Partial<EditState>) {
   state = { ...state, ...next };
+  if (frame) { subs.forEach(f => f()); return; }
   try { sessionStorage.setItem(KEY, JSON.stringify({ on: state.on, preview: state.preview, drafts: state.drafts, rateDrafts: state.rateDrafts, catalogDraft: state.catalogDraft })); } catch { /* ignore */ }
   subs.forEach(f => f());
 }
