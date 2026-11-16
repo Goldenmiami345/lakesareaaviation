@@ -118,6 +118,8 @@ export const rateKey = {
   /** A new rental-rate line; the value is JSON {names, regular, prepay}. */
   newRow: (aircraft: string) => `rate|newrow|${aircraft}`,
 };
+export const usdOf = usd;
+export const numOf = num;
 export const isRateKey = (k: string) => k.startsWith("rate|");
 /** Which rental-rate row prices each airplane in the fleet. */
 export const FLEET_RATE_ROW: Record<string, string> = {
@@ -125,8 +127,8 @@ export const FLEET_RATE_ROW: Record<string, string> = {
   N4383P: "Piper Apache PA-23-160", N6641F: "Cessna 150", N96150: "Taylorcraft BC-12D",
 };
 /** "$185/hr"-style fleet rates from the live rental table (undefined when the airplane has no published rate). */
-export function fleetRate(r: AppliedRates, registration: string) {
-  const row = r.rentalRates.find(x => x.aircraft === FLEET_RATE_ROW[registration]);
+export function fleetRate(r: AppliedRates, registration: string, rateRow: string | undefined = FLEET_RATE_ROW[registration]) {
+  const row = r.rentalRates.find(x => x.aircraft === rateRow);
   return row ? { row: row.aircraft, rate: `${row.regular}/hr`, prepay: `${row.prepay}/hr` } : undefined;
 }
 /** Parsed "N hours X at $R/hr: $T" lines are worked out from the rates, not typed. */
