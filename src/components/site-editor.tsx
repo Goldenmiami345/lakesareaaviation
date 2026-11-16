@@ -197,7 +197,7 @@ export default function SiteEditor() {
       <button type="button" className={bar} aria-label="Exit editor" onClick={exit}><X className="size-4" /></button>
     </div>
     {peek && <div role="dialog" aria-modal="true" aria-label={`Earlier version: ${peek.title}`} className="fixed inset-2 z-[220] overflow-auto border border-border bg-background p-3 shadow-2xl sm:inset-6">
-      <SitePreview startOpen pages={[{ label: "This page", path: path === "/" ? "/" : `${path}/` }, ...EDIT_PAGES.filter(p => p.path !== path).slice(0, 8)]} state={peek.state} title={`Earlier version · ${peek.title} · not live`} onClose={() => setPeek(null)} />
+      <SitePreview startOpen pages={[{ label: "This page", path }, ...EDIT_PAGES.filter(p => p.path !== path && !p.label.includes(" · "))]} state={peek.state} title={`Earlier version · ${peek.title} · not live`} onClose={() => setPeek(null)} />
     </div>}
   </>;
 }
