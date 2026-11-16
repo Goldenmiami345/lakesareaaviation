@@ -1,9 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { SLOT_BY_KEY, slotLimit } from "@/lib/content-slots";
 import { editStore, useEditState, type SpotMeta } from "@/lib/edit-store";
 import { useSiteContent } from "@/lib/use-site-content";
 import { useLiveRates } from "@/lib/use-live-rates";
-import { defaultAircraftFor, rateKey, rateLabel, rateValue } from "@/lib/rates-engine";
+import { applyRates, defaultAircraftFor, rateKey, rateLabel, rateValue } from "@/lib/rates-engine";
 import { programs, rentalRates } from "@/lib/site-data";
 
 const humanize = (k: string) => k.split(".").map(s => s.replace(/[-_]/g, " ")).join(" · ");
@@ -40,7 +40,7 @@ export function RateText({ k, amount = false }: { k: string; amount?: boolean })
     const digits = money?.[1]?.replace(/,/g, "") ?? "";
     const toDraft = (t: string) => numeric ? t : full.replace(/\$[\d,]+(?:\.\d+)?/, `$${t}`);
     return <>$<EditableSpan k={k} value={digits} meta={meta} numeric
-      onType={t => editStore.setRateDraft(k, toDraft(t.replace(/[^\d.]/g, "")), numeric ? published.replace(/[^\d.]/g, "") : published)}
+      onType={t => { const n = t.replace(/[^\d.]/g, ""); if (n) editStore.setRateDraft(k, toDraft(n), numeric ? published.replace(/[^\d.]/g, "") : published); }}
       onEmpty={() => { editStore.setRateDraft(k, numeric ? published.replace(/[^\d.]/g, "") : published, numeric ? published.replace(/[^\d.]/g, "") : published); return (published.match(/\$([\d,]+(?:\.\d+)?)/)?.[1] ?? "").replace(/,/g, ""); }} /></>;
   }
   return <EditableSpan k={k} value={full} meta={meta}
@@ -48,7 +48,6 @@ export function RateText({ k, amount = false }: { k: string; amount?: boolean })
     onEmpty={() => { editStore.setRateDraft(k, published, published); return published; }} />;
 }
 // Published rates (what Discard returns to), from the base the editor loaded.
-import { applyRates } from "@/lib/rates-engine";
 let pubMemo: { base: unknown; out: ReturnType<typeof applyRates> } | null = null;
 function ratesOf(edit: ReturnType<typeof useEditState>) {
   if (pubMemo && pubMemo.base === edit.rateBase) return pubMemo.out;
@@ -58,7 +57,7 @@ function ratesOf(edit: ReturnType<typeof useEditState>) {
 
 /** A figure worked out from the rates (course totals, cost lines). Not typed: in the editor it is
  *  marked so the owner knows to change the hourly rate instead. */
-export function CalcText({ children }: { children: React.ReactNode }) {
+export function CalcText({ children }: { children: ReactNode }) {
   const edit = useEditState();
   if (!edit.on) return <>{children}</>;
   return <span data-slot-calc className="slot-calc" title="Worked out from the rates. Change an hourly rate and this updates.">{children}</span>;
