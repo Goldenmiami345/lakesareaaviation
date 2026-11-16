@@ -6,4 +6,4 @@ export const ROW_ACTIONS = "grid grid-cols-2 gap-2 sm:flex sm:shrink-0 sm:flex-w
 /** Phone-size tap target for small buttons; desktop keeps the compact size. */
 export const ROW_BTN = "h-11 w-full text-sm sm:h-8 sm:w-auto sm:text-xs";
 /** Save/Discard row that stays pinned to the bottom of a phone screen while there are unsaved changes. */
-export const STICKY_SAVE = "sticky bottom-0 z-20 -mx-4 border-t border-border bg-background px-4 py-3 shadow-[0_-8px_24px_-12px_oklch(0_0_0/0.25)] md:static md:mx-0 md:border-0 md:p-0 md:shadow-none";
+export const STICKY_SAVE = "sticky bottom-0 z-20 -mx-4 border-t border-border bg-background px-4 py-3 sm:-mx-7 sm:px-7 shadow-[0_-8px_24px_-12px_oklch(0_0_0/0.25)] md:static md:mx-0 md:border-0 md:p-0 md:shadow-none";

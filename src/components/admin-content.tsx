@@ -83,7 +83,7 @@ export function AdminContent() {
         return <div key={s.key}>
           <div className="flex items-center justify-between gap-2"><span className="text-sm font-semibold">{s.label}</span>
             {edited && <button type="button" className="text-xs font-bold uppercase text-muted-foreground underline" onClick={() => restoreSlot(s)}>Use original</button>}</div>
-          {s.kind === "photo" ? <div className="mt-2 flex items-center gap-3">
+          {s.kind === "photo" ? <div className="mt-2 flex flex-wrap items-center gap-3">
             {v && <img src={v} alt="" className="aspect-[4/3] w-32 object-cover outline outline-1 -outline-offset-1 outline-foreground/10" />}
             <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 border border-input px-3 text-sm"><ImageUp className="size-4" /> Replace photo
               <input type="file" accept="image/*" className="sr-only" disabled={busy} onChange={e => upload(s, e.target.files?.[0])} /></label>
@@ -101,7 +101,7 @@ export function AdminContent() {
     </div>
     <div className="mt-3"><SitePreview pages={contentPages(changed.map(c => c.key), NAMES)} state={{ content: cleanContent(draft) }} /></div>
     <input value={note} onChange={e => setNote(e.target.value)} maxLength={200} placeholder="Note for this change (optional)" className="mt-3 h-11 w-full border border-input bg-background px-3 text-sm outline-none focus:border-primary" />
-    <div className="mt-3 grid grid-cols-2 gap-3">
+    <div className={`mt-3 grid grid-cols-2 gap-3 ${changed.length ? STICKY_SAVE : ""}`}>
       <Button disabled={busy || !changed.length} variant="outline" className="h-12 rounded-none" onClick={() => setDraft(saved)}>Discard changes</Button>
       <Button disabled={busy || !changed.length} className="h-12 rounded-none" onClick={() => write(cleanContent(draft), note, "Saved. The changes are live for everyone.")}><Save /> Save</Button>
     </div>

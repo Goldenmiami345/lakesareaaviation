@@ -193,13 +193,13 @@ function AdminPage() {
           <p className="mt-2 truncate">Signed in as {user.email}</p>
         </div>
       </aside>
-      <main id="main" className="min-w-0 flex-1 px-4 pb-24 pt-8 sm:px-8 lg:px-12">
+      <main id="main" className="min-w-0 flex-1 px-4 pb-24 pt-6 sm:px-8 sm:pt-8 lg:px-12">
         <div className="mx-auto max-w-4xl">
           <p className="eyebrow text-primary-text">{current.short}</p>
           <h1 className="mt-2 font-display text-3xl sm:text-4xl">{current.label}</h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{current.intro}</p>
           {message && <p className="mt-5 border border-border bg-background px-4 py-3 text-sm" role="status">{message}</p>}
-          <div className="mt-8">
+          <div className="mt-6 sm:mt-8">
             {tab === "edit" && <EditSiteTab />}
             {tab === "catalog" && <Panel><AdminCatalog /></Panel>}
             {tab === "prices" && <Panel><AdminRates /></Panel>}
@@ -253,7 +253,8 @@ const SECTIONS: { id: SectionId; icon: LucideIcon; label: string; short: string;
 const openEditor = (path: string) => { editStore.start(); window.location.assign(path); };
 
 function Panel({ title, text, children }: { title?: string; text?: string; children: React.ReactNode }) {
-  return <section className="min-w-0 border border-border bg-background p-4 sm:p-7">
+  // Phones: edge to edge (no side border) so lists and forms get the whole screen width.
+  return <section className="-mx-4 min-w-0 border-y border-border bg-background p-4 sm:mx-0 sm:border-x sm:p-7">
     {title && <h2 className="font-display text-xl">{title}</h2>}
     {text && <p className="mt-1 text-sm text-muted-foreground">{text}</p>}
     <div className={`min-w-0 ${title ? "mt-4" : ""}`}>{children}</div>
@@ -265,7 +266,7 @@ function EditSiteTab() {
   const [q, setQ] = useState("");
   const groups = groupPages(EDIT_PAGES).map(g => ({ ...g, pages: g.pages.filter(p => p.label.toLowerCase().includes(q.trim().toLowerCase())) })).filter(g => g.pages.length);
   return <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
-    <div className="flex flex-col gap-4 bg-ink p-6 text-background sm:flex-row sm:items-center sm:justify-between sm:p-8">
+    <div className="-mx-4 flex flex-col gap-4 bg-ink p-5 text-background sm:mx-0 sm:flex-row sm:items-center sm:justify-between sm:p-8">
       <div><h2 className="font-display text-2xl">Start on the home page</h2><p className="mt-1 text-sm text-background/75">Use the page menu in the editor bar to move between pages.</p></div>
       <Button className="h-12 shrink-0 rounded-none" onClick={() => openEditor("/")}><PencilLine className="size-4" /> Open the visual editor</Button>
     </div>
@@ -281,6 +282,6 @@ function EditSiteTab() {
         {!groups.length && <p className="text-sm text-muted-foreground">No page matches “{q}”.</p>}
       </div>
     </Panel>
-    <details className="border border-border bg-background p-5"><summary className="min-h-11 cursor-pointer text-sm font-semibold">List view of every editable spot</summary><AdminContent /></details>
+    <details className="-mx-4 border-y border-border bg-background p-4 sm:mx-0 sm:border-x sm:p-7"><summary className="min-h-11 cursor-pointer text-sm font-semibold">List view of every editable spot</summary><AdminContent /></details>
   </div>;
 }
