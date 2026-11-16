@@ -6,6 +6,9 @@ import { parseDesktopJourneyMode, type DesktopJourneyMode } from "@/lib/use-site
 import { Button } from "@/components/ui/button";
 import { AdminRates } from "@/components/admin-rates";
 import { AdminContent } from "@/components/admin-content";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EDIT_PAGES } from "@/lib/edit-pages";
+import { editStore } from "@/lib/edit-store";
 import { MAP_MODEL_AIRCRAFT } from "@/lib/map-models";
 import { applyAccentTheme, type AccentTheme } from "@/components/theme-sync";
 import { lovable } from "@/integrations/lovable";
@@ -37,6 +40,8 @@ function AdminPage() {
   const [mapRegs, setMapRegs] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [tab, setTab] = useState("edit");
+  useEffect(() => { const h = window.location.hash.slice(1); if (h === "prices" || h === "settings" || h === "edit") setTab(h); }, []);
 
   useEffect(() => {
     const refresh = async () => {
@@ -124,11 +129,11 @@ function AdminPage() {
   }
 
   return <main id="main" className="min-h-screen bg-ink px-5 py-20 text-background">
-    <div className="mx-auto max-w-xl">
+    <div className="mx-auto max-w-3xl">
       <a href="/" className="text-xs font-bold uppercase text-background/70">← Back to site</a>
       <div className="mt-10 border border-background/20 bg-background p-6 text-foreground sm:p-10">
         <Palette className="size-8 text-primary-text" />
-        <h1 className="mt-5 font-display text-4xl">Site appearance</h1>
+        <h1 className="mt-5 font-display text-4xl">Site admin</h1>
         {!user ? <>
           <p className="mt-3 text-sm text-muted-foreground">Sign in to change the accent color for every visitor.</p>
           <form onSubmit={emailAuth} className="mt-8 grid gap-4">
@@ -140,10 +145,20 @@ function AdminPage() {
           <Button variant="outline" className="h-12 w-full rounded-none" onClick={() => lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}/admin` })}>Continue with Google</Button>
         </> : <>
           <div className="mt-4 flex items-center justify-between gap-4 text-sm"><span className="truncate text-muted-foreground">{user.email}</span><Button variant="ghost" size="sm" onClick={() => supabase.auth.signOut()}><LogOut /> Sign out</Button></div>
-          {!isAdmin ? <div className="mt-8 border border-border bg-secondary p-5"><p className="text-sm leading-relaxed">If this is the first account connected to the site, claim administrator access below.</p><Button disabled={busy} className="mt-4 rounded-none" onClick={claimAdmin}>Claim administrator access</Button></div> : <div className="mt-8 grid grid-cols-2 gap-3">
+          {!isAdmin ? <div className="mt-8 border border-border bg-secondary p-5"><p className="text-sm leading-relaxed">If this is the first account connected to the site, claim administrator access below.</p><Button disabled={busy} className="mt-4 rounded-none" onClick={claimAdmin}>Claim administrator access</Button></div> : <Tabs value={tab} onValueChange={v => { setTab(v); history.replaceState(null, "", `#${v}`); }} className="mt-8">
+            <TabsList className="grid h-auto w-full grid-cols-3 rounded-none p-1">
+              <TabsTrigger value="edit" className="min-h-11 rounded-none">Edit site</TabsTrigger>
+              <TabsTrigger value="prices" className="min-h-11 rounded-none">Prices</TabsTrigger>
+              <TabsTrigger value="settings" className="min-h-11 rounded-none">Site settings</TabsTrigger>
+            </TabsList>
+            <TabsContent value="edit"><EditSiteTab /></TabsContent>
+            <TabsContent value="prices"><AdminRates /></TabsContent>
+            <TabsContent value="settings">
+            <h2 className="mt-6 font-display text-xl">Accent color</h2>
+            <div className="mt-3 grid grid-cols-2 gap-3">
             {(["blue", "orange"] as const).map(option => <Button key={option} disabled={busy} variant={theme === option ? "default" : "outline"} className="h-auto min-h-24 rounded-none p-4" onClick={() => changeTheme(option)}><span className={`size-5 rounded-full ${option === "blue" ? "theme-swatch-blue" : "theme-swatch-orange"}`} /> <span>{option === "blue" ? "Royal blue" : "Original orange"}</span>{theme === option && <Check />}</Button>)}
-          </div>}
-          {isAdmin && <div className="mt-8">
+          </div>
+            <div className="mt-8">
             <h2 className="font-display text-xl">Mobile home sections</h2>
             <p className="mt-1 text-sm text-muted-foreground">Phones only.</p>
             <div className="mt-3 grid grid-cols-2 gap-3">
@@ -168,12 +183,26 @@ function AdminPage() {
             <div className="mt-3 grid grid-cols-2 gap-3">
               {([false, true] as const).map(option => <Button key={String(option)} disabled={busy} variant={fleetModels === option ? "default" : "outline"} className="h-auto min-h-16 rounded-none p-4" onClick={() => changeFleetModels(option)}>{option ? "Enable 3D" : "3D off"}{fleetModels === option && <Check />}</Button>)}
             </div>
-          </div>}
-          {isAdmin && <AdminRates />}
-          {isAdmin && <AdminContent />}
+          </div></TabsContent></Tabs>}
         </>}
         {message && <p className="mt-5 text-sm text-muted-foreground" role="status">{message}</p>}
       </div>
     </div>
   </main>;
+}
+/** Entry to the visual editor: open any page with click-to-edit on. Prices and settings live in their own tabs. */
+function EditSiteTab() {
+  const open = (path: string) => { editStore.start(); window.location.assign(path); };
+  return <div className="mt-6">
+    <div className="bg-ink p-6 text-background sm:p-8">
+      <h2 className="font-display text-2xl sm:text-3xl">Edit the site like a page builder.</h2>
+      <p className="mt-2 max-w-lg text-sm text-background/75">Open the real site, click any outlined text to type over it, or click an outlined photo to replace it. Nothing goes live until you press Publish, and every published version can be restored.</p>
+      <Button className="mt-5 h-12 rounded-none" onClick={() => open("/")}>Open the visual editor</Button>
+    </div>
+    <p className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Or start on a page</p>
+    <div className="mt-2 grid gap-px border border-border bg-border sm:grid-cols-2">
+      {EDIT_PAGES.map(p => <button key={p.path} type="button" onClick={() => open(p.path)} className="min-h-11 bg-background px-4 text-left text-sm hover:bg-secondary">{p.label}</button>)}
+    </div>
+    <details className="mt-8"><summary className="min-h-11 cursor-pointer text-sm font-semibold">List view of every editable spot</summary><AdminContent /></details>
+  </div>;
 }

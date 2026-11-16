@@ -8,6 +8,11 @@ import { jumpToPageTop } from "./flight-journey";
 import { sitePath } from '../lib/site-path';
 import * as Dialog from "@radix-ui/react-dialog";
 import { SCHOOL_PHONE, SCHOOL_PHONE_TEL } from "../lib/site-data";
+import { lazy, Suspense } from "react";
+import { useEditState } from "../lib/edit-store";
+
+// Admin-only visual editor; never in the prerendered HTML or a visitor's bundle path.
+const SiteEditor = lazy(() => import("./site-editor"));
 
 const nav = [
   ["Services", "/services"],
@@ -124,11 +129,12 @@ export function SiteLayout({ children, overlayHeader = false }: { children: Reac
   // once the new route's loaders and code are ready), never on the raw pathname, so the
   // old page stays still until the new one renders and the fade plays exactly once.
   const pageKey = useMatch({ strict: false, select: (match) => match.id });
-  return <><MotionExperience pageKey={pageKey} /><Header overlay={overlayHeader} /><main id="main" tabIndex={-1} key={pageKey} className="page-enter outline-none">{children}</main><Footer /><MobileActions /></>;
+  const editing = useEditState().on;
+  return <><MotionExperience pageKey={pageKey} /><Header overlay={overlayHeader} /><main id="main" tabIndex={-1} key={pageKey} className="page-enter outline-none">{children}</main><Footer /><MobileActions />{editing && <Suspense fallback={null}><SiteEditor /></Suspense>}</>;
 }
 
 /** Phones always get a short intro so page content starts on the first screen; `compact` is kept for callers and is now the default. */
-export function PageIntro({ eyebrow, title, text, image, imageAlt = "", compact = true }: { eyebrow: string; title: string; text: string; image?: string; imageAlt?: string; compact?: boolean }) {
+export function PageIntro({ eyebrow, title, text, image, imageAlt = "", compact = true }: { eyebrow: string; title: string; text: ReactNode; image?: string; imageAlt?: string; compact?: boolean }) {
   return <section className={`relative isolate overflow-hidden edge-fade-b bg-ink pb-32 pt-36 text-background ${compact ? "max-sm:pb-10 max-sm:pt-28" : ""}`}>{image && <><img src={image} srcSet={srcSetFor(image)} sizes="100vw" alt={imageAlt} width={1920} height={1080} loading="eager" fetchPriority="high" decoding="async" className="hero-kenburns absolute inset-0 -z-20 h-full w-full object-cover" /><div className="absolute inset-0 -z-10 bg-gradient-to-r from-ink/90 via-ink/65 to-ink/25" /></>}<div className="site-container relative z-10" data-scroll-reveal><p className="stage-label">{eyebrow}</p><h1 className={`mt-4 max-w-4xl font-display text-5xl sm:text-7xl ${compact ? "max-sm:mt-3 max-sm:text-4xl" : ""}`}>{title}</h1><p className={`mt-6 max-w-2xl text-lg leading-relaxed text-background/80 ${compact ? "max-sm:mt-3 max-sm:text-base" : ""}`}>{text}</p></div></section>;
 }
 
