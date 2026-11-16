@@ -3,8 +3,8 @@ import { SLOT_BY_KEY, slotLimit } from "@/lib/content-slots";
 import { editStore, isEditing, useEditState, type SpotMeta } from "@/lib/edit-store";
 import { useSiteContent } from "@/lib/use-site-content";
 import { useLiveRates } from "@/lib/use-live-rates";
-import { applyRates, defaultAircraftFor, FLEET_RATE_ROW, rateKey, rateLabel, rateValue } from "@/lib/rates-engine";
-import { programs, rentalRates } from "@/lib/site-data";
+import { aircraftChoicesFor, applyRates, defaultAircraftFor, FLEET_RATE_ROW, rateKey, rateLabel, rateValue } from "@/lib/rates-engine";
+import { programs } from "@/lib/site-data";
 
 const humanize = (k: string) => k.split(".").map(s => s.replace(/[-_]/g, " ")).join(" · ");
 
