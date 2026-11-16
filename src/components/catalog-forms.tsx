@@ -339,14 +339,22 @@ const iconBtn = "grid size-8 shrink-0 place-items-center text-muted-foreground h
 const move = <T,>(list: T[], i: number, d: number) => { const j = i + d; if (j < 0 || j >= list.length) return list; const out = [...list]; [out[i], out[j]] = [out[j]!, out[i]!]; return out; };
 
 /** Every detail of one airplane: words, type, specs, all its photos and which price line it uses. */
-export function PlaneEditForm({ plane, original, rates, onSave, onReset, onCancel, onDraft }: { plane: Plane; original: Plane; rates: RatesConfig; onSave: (f: PlaneFields) => void; onReset?: (() => void) | undefined; onCancel?: () => void; onDraft?: (f: PlaneFields) => void }) {
+export function PlaneEditForm({ plane, original, rates, planes, onSave, onReset, onCancel, onDraft }: { plane: Plane; original: Plane; rates: RatesConfig; planes: Plane[]; onSave: (f: PlaneFields, price?: PlanePrice) => void; onReset?: (() => void) | undefined; onCancel?: () => void; onDraft?: (f: PlaneFields, price?: PlanePrice) => void }) {
   const applied = useMemo(() => applyRates(rates), [rates]);
   const [f, setF] = useState<PlaneFields>(() => fieldsOf(plane));
-  useEffect(() => { onDraft?.(f); }, [f]); // eslint-disable-line react-hooks/exhaustive-deps
   const orig = useMemo(() => fieldsOf(original), [original]);
   const [adding, setAdding] = useState(0); const [err, setErr] = useState("");
   const reg = plane.registration;
+  const lineOf = (row: string) => applied.rentalRates.find(r => r.aircraft === row);
+  const pricesOf = (row: string) => { const l = lineOf(row); return { regular: l ? String(numOf(l.regular)) : "", prepay: l ? String(numOf(l.prepay)) : "" }; };
+  const [price, setPrice] = useState(() => pricesOf(plane.rateRow ?? ""));
+  const [scope, setScope] = useState<PlanePrice["scope"]>("plane");
+  const line = lineOf(f.rateRow);
+  const priceChanged = !!line && (price.regular !== String(numOf(line.regular)) || price.prepay !== String(numOf(line.prepay)));
+  const change: PlanePrice | undefined = priceChanged ? { regular: Number(price.regular), prepay: Number(price.prepay), scope } : undefined;
+  useEffect(() => { onDraft?.(f, change); }, [f, price, scope]); // eslint-disable-line react-hooks/exhaustive-deps
   const set = <K extends keyof PlaneFields>(k: K, v: PlaneFields[K]) => setF(x => ({ ...x, [k]: v }));
+  const chooseLine = (row: string) => { set("rateRow", row); setPrice(pricesOf(row)); };
   const text = (k: "name" | "nickname" | "use" | "note") => (e: { target: { value: string } }) => set(k, e.target.value.slice(0, PLANE_LIMITS[k]));
   const setSpec = (i: number, j: 0 | 1, v: string) => set("specs", f.specs.map((s, n) => n === i ? (j === 0 ? [v.slice(0, PLANE_LIMITS.specKey), s[1]] : [s[0], v.slice(0, PLANE_LIMITS.specValue)]) : s));
   const keys = f.specs.map(s => s[0].trim().toLowerCase()).filter(Boolean);
@@ -355,6 +363,7 @@ export function PlaneEditForm({ plane, original, rates, onSave, onReset, onCance
     !f.use.trim() && "Say what the airplane is used for.",
     !f.image && "The airplane needs a main photo.",
     keys.length !== new Set(keys).size && "Two specs have the same name.",
+    priceChanged && !(Number(price.regular) > 0 && Number(price.prepay) > 0) && "Enter both hourly prices.",
     adding > 0 && "Wait for the photos to finish uploading.",
   ].filter(Boolean) as string[];
   async function addPhotos(files: FileList | null) {
@@ -367,11 +376,17 @@ export function PlaneEditForm({ plane, original, rates, onSave, onReset, onCance
     }
   }
   const undo = (k: keyof PlaneFields) => JSON.stringify(f[k]) !== JSON.stringify(orig[k])
-    ? <button type="button" onClick={() => set(k, orig[k])} className="inline-flex min-h-10 items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground"><RotateCcw className="size-3.5" /> Original</button> : null;
+    ? <button type="button" onClick={() => (k === "rateRow" ? chooseLine(orig.rateRow) : set(k, orig[k]))} className="inline-flex min-h-10 items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground"><RotateCcw className="size-3.5" /> Original</button> : null;
+  const save = () => onSave({ ...f, name: f.name.trim(), nickname: f.nickname.trim(), use: f.use.trim(), note: f.note.trim(), specs: f.specs.map(([k, v]) => [k.trim(), v.trim()] as [string, string]).filter(([k, v]) => k && v) }, change);
+  const label = (p: Plane) => `${p.registration}${p.nickname ? ` “${p.nickname}”` : ""}`;
+  const sharers = planes.filter(p => p.registration !== reg && p.rateRow === f.rateRow);
+  const courses = basePrograms.flatMap(p => p.options).filter(o => f.rateRow && pricedWith(applied, o.name, o.lineItems) === f.rateRow).map(o => o.name);
+  const typeLabel = { trainer: "Trainer", twin: "Twin", tailwheel: "Tailwheel" }[f.role];
+  const priceSummary = line ? `${priceChanged ? `$${price.regular} / $${price.prepay} (unsaved)` : `${line.regular} regular / ${line.prepay} prepay`} · ${f.rateRow}` : "No published price";
 
-  return <div className="grid gap-6">
-    <section className="grid gap-4">
-      <h3 className="text-xs font-bold uppercase tracking-[0.14em]">Basics</h3>
+  return <div className="grid gap-3">
+    <TopActions errors={errors} onCancel={onCancel} onSubmit={save} label="Save changes" icon={<Save className="size-4" />} />
+    <Section title="Basics" open summary={`${f.name} · ${typeLabel} · ${f.use}`}>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Tail number" note="The tail number can't change. Add a new airplane instead."><Input value={reg} disabled /></Field>
         <Field label="Nickname" note="Optional. Leave empty for none."><Input value={f.nickname} onChange={text("nickname")} /></Field>
@@ -382,10 +397,9 @@ export function PlaneEditForm({ plane, original, rates, onSave, onReset, onCance
         <Field label="Used for"><Input value={f.use} onChange={text("use")} placeholder="Primary · Instrument · Commercial" /></Field>
       </div>
       <Field label="Short note" note="One or two sentences on the fleet card and airplane page."><Textarea rows={2} value={f.note} onChange={text("note")} /></Field>
-    </section>
+    </Section>
 
-    <section className="grid gap-4 border-t border-border pt-5">
-      <h3 className="text-xs font-bold uppercase tracking-[0.14em]">Photos</h3>
+    <Section title="Photos" summary={`Main photo${f.panel ? ", instrument panel" : ""}${f.photos.length ? `, ${f.photos.length} more` : ""}`}>
       <PhotoPick id={`fleet.${reg}.photo`} label="Main photo" value={f.image} onChange={v => set("image", v)} extra={undo("image")}
         note="Shown on the fleet card and at the top of the airplane page. A side view on a plain background looks best." />
       <PhotoPick id={`fleet.${reg}.panel`} label="Instrument panel" value={f.panel} onChange={v => set("panel", v)} note="Optional. Shown under Equipment & avionics."
@@ -406,10 +420,10 @@ export function PlaneEditForm({ plane, original, rates, onSave, onReset, onCance
         {err && <span className="text-xs text-destructive">{err}</span>}
         <span className={hint}>Visitors flip through these after the main photo in the photo viewer. Up to {PLANE_LIMITS.photos}.</span>
       </div>
-    </section>
+    </Section>
 
-    <section className="grid gap-3 border-t border-border pt-5">
-      <div className="flex items-center justify-between gap-3"><h3 className="text-xs font-bold uppercase tracking-[0.14em]">Specs</h3>{undo("specs")}</div>
+    <Section title="Specs" summary={f.specs.length ? f.specs.slice(0, 4).map(([k, v]) => `${k} ${v}`).join(" · ") + (f.specs.length > 4 ? ` · +${f.specs.length - 4} more` : "") : "No specs yet"}>
+      <div className="flex justify-end">{undo("specs")}</div>
       <datalist id="plane-spec-names">{SPEC_NAMES.map(n => <option key={n} value={n} />)}</datalist>
       {f.specs.length === 0 && <p className={hint}>No specs yet.</p>}
       <ul className="grid gap-2">{f.specs.map(([k, v], i) => <li key={i} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_auto] items-center gap-2">
@@ -423,17 +437,29 @@ export function PlaneEditForm({ plane, original, rates, onSave, onReset, onCance
       </li>)}</ul>
       {f.specs.length < PLANE_LIMITS.specs && <button type="button" onClick={() => set("specs", [...f.specs, ["", ""]])} className="inline-flex min-h-10 w-fit items-center gap-2 text-sm font-semibold text-primary-text"><Plus className="size-4" /> Add a spec</button>}
       <span className={hint}>Seats, Horsepower and GPS also show as quick facts on the card. GPS, Equipment, IFR/VFR and Coms also list under Equipment & avionics. Rows left empty are skipped.</span>
-    </section>
+    </Section>
 
-    <section className="grid gap-3 border-t border-border pt-5">
-      <div className="flex items-center justify-between gap-3"><h3 className="text-xs font-bold uppercase tracking-[0.14em]">Hourly price</h3>{undo("rateRow")}</div>
-      <select aria-label="Price line" className={`${selectFit} justify-self-start`} value={f.rateRow} onChange={e => set("rateRow", e.target.value)}>
-        {applied.rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft}</option>)}
-        <option value="">No published price</option>
-      </select>
-      <span className={hint}>{f.rateRow ? (() => { const s = applied.rentalRates.find(r => r.aircraft === f.rateRow); return s ? `Regular ${s.regular} / prepay ${s.prepay} per hour.` : priceHint; })() : "Visitors are asked to call for a price."}</span>
-      <span className={hint}>To change the dollar amount, click the price on the page or use Prices. Every airplane on the same line changes together.</span>
-    </section>
+    <Section title="Hourly price" summary={priceSummary}>
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <Field label="Price line"><select aria-label="Price line" className={`${selectFit} justify-self-start`} value={f.rateRow} onChange={e => chooseLine(e.target.value)}>
+          {applied.rentalRates.map(r => <option key={r.aircraft} value={r.aircraft}>{r.aircraft}</option>)}
+          <option value="">No published price</option>
+        </select></Field>
+        {undo("rateRow")}
+      </div>
+      {line ? <>
+        <div className="grid grid-cols-2 gap-3 sm:max-w-sm">
+          <Field label="Regular $/hr"><Input value={price.regular} onChange={e => setPrice(p => ({ ...p, regular: money(e.target.value) }))} inputMode="decimal" /></Field>
+          <Field label="Prepay $/hr"><Input value={price.prepay} onChange={e => setPrice(p => ({ ...p, prepay: money(e.target.value) }))} inputMode="decimal" /></Field>
+        </div>
+        {priceChanged && sharers.length > 0 && <fieldset className="grid gap-2 border border-border p-3 text-sm">
+          <legend className="px-1 font-semibold">Who gets the new price?</legend>
+          <label className="flex items-start gap-2"><input type="radio" className="mt-1" checked={scope === "plane"} onChange={() => setScope("plane")} /><span>Only {label(plane)}<span className="block text-xs text-muted-foreground">It gets its own price line. {sharers.map(label).join(", ")} keep {line.regular} / {line.prepay}.</span></span></label>
+          <label className="flex items-start gap-2"><input type="radio" className="mt-1" checked={scope === "line"} onChange={() => setScope("line")} /><span>Every airplane on “{f.rateRow}”<span className="block text-xs text-muted-foreground">Also changes {sharers.map(label).join(", ")}.</span></span></label>
+        </fieldset>}
+        <span className={hint}>{courses.length ? `Courses priced with this line: ${courses.join(", ")}. Their estimates follow ${scope === "line" || !sharers.length ? "this price" : "the line, not this airplane's own price"}.` : "No course is priced with this line."} Choose which airplane prices each course under Prices or on a program's Edit.</span>
+      </> : <span className={hint}>Visitors are asked to call for a price.</span>}
+    </Section>
 
     <div className="grid gap-2 border-t border-border pt-4">
       {errors.length > 0 && <ul className="text-xs text-destructive">{errors.map(e => <li key={e}>{e}</li>)}</ul>}
@@ -441,7 +467,7 @@ export function PlaneEditForm({ plane, original, rates, onSave, onReset, onCance
         {onReset && plane.edited ? <Button type="button" variant="ghost" onClick={onReset}><RotateCcw className="size-4" /> Put back the original</Button> : <span />}
         <span className="flex gap-2">
           {onCancel && <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>}
-          <Button type="button" disabled={errors.length > 0} onClick={() => onSave({ ...f, name: f.name.trim(), nickname: f.nickname.trim(), use: f.use.trim(), note: f.note.trim(), specs: f.specs.map(([k, v]) => [k.trim(), v.trim()] as [string, string]).filter(([k, v]) => k && v) })}><Save className="size-4" /> Save changes</Button>
+          <Button type="button" disabled={errors.length > 0} onClick={save}><Save className="size-4" /> Save changes</Button>
         </span>
       </div>
     </div>
@@ -453,10 +479,15 @@ export function EditorPlaneForm({ reg, onDone }: { reg: string; onDone: () => vo
   const edit = useEditState();
   const { catalog } = useCatalog();
   const rates = withRateDrafts(edit.rateBase ?? {}, edit.rateDrafts);
-  const plane = allPlanes(catalog).find(p => p.registration === reg);
+  const planes = allPlanes(catalog);
+  const plane = planes.find(p => p.registration === reg);
   const original = originalPlane(catalog, reg);
   if (!plane || !original) return <p className="text-sm">This airplane is no longer in the list.</p>;
-  return <PlaneEditForm plane={plane} original={original} rates={rates} onCancel={onDone}
+  return <PlaneEditForm plane={plane} original={original} rates={rates} planes={planes} onCancel={onDone}
     onReset={() => { editStore.setCatalog(resetPlane(catalog, reg)); onDone(); }}
-    onSave={f => { editStore.setCatalog(editPlane(catalog, reg, f)); onDone(); }} />;
+    onSave={(f, price) => {
+      let rateRow = f.rateRow;
+      if (price) { const ch = planePriceChange(catalog, applyRates(rates), reg, f.rateRow, price); rateRow = ch.rateRow; for (const [k, v] of Object.entries(ch.drafts)) editStore.setRateDraft(k, v, ""); }
+      editStore.setCatalog(editPlane(catalog, reg, { ...f, rateRow })); onDone();
+    }} />;
 }
