@@ -116,10 +116,10 @@
 - [x] Add/hide airplanes, training programs and specialty courses from admin (Fleet & courses tab) and in the visual editor (+ Add tiles, Hide / bring back), with history; new planes share or get their own rate line.
 
 ## Admin editing round (2026-11-16)
-- [ ] Preview earlier versions (fleet & courses, prices, page content) before restoring.
-- [ ] Save/Cancel at the top and bottom of every add/edit form.
-- [ ] Collapsible sections (Basics, Photos, Specs, Hourly price) in the airplane editor.
-- [ ] Per-airplane hourly price: changing it gives that airplane its own price line (or the whole line, if chosen); courses priced with that airplane follow.
-- [ ] Edit training programs: hours per line, airplane, fee (published and added programs).
-- [ ] Specialty courses get optional pricing: fee, rental hours (default C172), flight and ground instruction; price shows on the course page.
-- [ ] Hide / Bring back feels glitchy: fix the jump.
+- [x] Preview earlier versions (fleet & courses, prices, page content) before restoring.
+- [x] Save/Cancel at the top and bottom of every add/edit form.
+- [x] Collapsible sections (Basics, Photos, Specs, Hourly price) in the airplane editor.
+- [x] Per-airplane hourly price: changing it gives that airplane its own price line (or the whole line, if chosen); courses priced with that airplane follow.
+- [x] Edit training programs: hours per line, airplane, fee (published and added programs).
+- [x] Specialty courses get optional pricing: fee, rental hours (default C172), flight and ground instruction; price shows on the course page.
+- [x] Hide / Bring back feels glitchy: fix the jump.
