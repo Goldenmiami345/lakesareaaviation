@@ -72,9 +72,9 @@ export function PlaneEditButton({ f, className = "", short = false }: { f: Plane
   const [open, setOpen] = useState(false);
   if (!edit.on) return null;
   return <>
-    <button type="button" data-catalog-control onClick={e => { e.preventDefault(); e.stopPropagation(); setOpen(true); }}
+    <button type="button" data-catalog-control aria-label={short ? "Edit details & photos" : undefined} onClick={e => { e.preventDefault(); e.stopPropagation(); setOpen(true); }}
       className={`catalog-control relative z-20 inline-flex min-h-9 items-center gap-1.5 bg-primary px-3 text-[11px] font-bold uppercase tracking-[0.1em] text-primary-foreground shadow-lg hover:bg-ink hover:text-background ${className}`}>
-      <PencilLine className="size-3.5" /> {short ? <span aria-label="Edit details & photos">Edit</span> : "Edit details & photos"}
+      <PencilLine className="size-3.5" /> {short ? "Edit" : "Edit details & photos"}
     </button>
     {/* The panel renders in a portal, but React still bubbles its clicks to the card underneath
         (a phone tile is one big button), so they stop here. */}
