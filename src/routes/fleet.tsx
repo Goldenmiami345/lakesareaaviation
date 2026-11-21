@@ -1,3 +1,4 @@
+import fleetIntroImg from "../assets/photos/sunset-ramp.webp";
 import { FleetPrice } from "@/components/slot-text";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { srcSetFor } from "@/lib/responsive-image";
@@ -74,7 +75,7 @@ function Page() {
 
   return (
     <SiteLayout>
-      <PageIntro k="fleet.intro"
+      <PageIntro k="fleet.intro" image={fleetIntroImg} imageAlt="Lakes Area Aviation airplanes on the ramp at sunset"
         eyebrow="Aircraft"
         title="The airplanes you’ll actually fly."
         text="Real photos, tail numbers and published rates for every airplane we fly."

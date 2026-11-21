@@ -1,3 +1,4 @@
+import scenicIntroImg from "../assets/photos/lake-aerial.webp";
 import { rateKey, } from "@/lib/rates-engine";
 import { SlotText, RateText, } from "@/components/slot-text";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/scenic-flights")({
 function Page() {
   return (
     <SiteLayout>
-      <PageIntro k="scenic-flights.intro"
+      <PageIntro k="scenic-flights.intro" image={scenicIntroImg} imageAlt="Aerial view of a forested lake shoreline"
         eyebrow="Scenic flights"
         title="See your world from the sky."
         text="Minnesota fall colors, the Rocky Mountains or your childhood landmarks, seen from above."

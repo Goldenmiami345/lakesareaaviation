@@ -1,3 +1,4 @@
+import specialIntroImg from "../assets/photos/sedona-airport.webp";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SlotText, } from "@/components/slot-text";
 import { useSiteContent } from "../lib/use-site-content";
@@ -28,7 +29,7 @@ function Page() {
   const kPhoto = kodiak ? coursePhoto(site, kodiak) : undefined;
   return (
     <SiteLayout>
-      <PageIntro k="specialized-training.intro" eyebrow="Specialized training" title="Endorsements and courses beyond the ratings." text="Endorsements and specialty training, built around your schedule." />
+      <PageIntro k="specialized-training.intro" image={specialIntroImg} imageAlt="Aerial of Sedona red rocks and airport in Arizona" eyebrow="Specialized training" title="Endorsements and courses beyond the ratings." text="Endorsements and specialty training, built around your schedule." />
       <div className="site-container space-y-14 pb-14 pt-8 sm:space-y-20 sm:pb-20 sm:pt-12">
         {kodiak && <Link to="/specialized-training/$slug" params={{ slug: kodiak.slug }} className="interactive-arrow group grid min-h-56 overflow-hidden bg-ink text-background md:grid-cols-[1.1fr_1fr]" data-scroll-reveal>
           <div className="p-7 md:p-12">

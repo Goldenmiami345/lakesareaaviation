@@ -36,19 +36,19 @@ function Page() {
         title="Every rating, endorsement, and experience."
         text="From zero hours to a multi-engine commercial certificate, all tailored to you."
       />
-      <div className="site-container pb-16 pt-8 sm:pb-20 sm:pt-12">
+      <div className="site-container pb-8 pt-6 sm:pb-10 sm:pt-8">
         <div className="stagger-grid grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-3" data-scroll-reveal>
           {services.map(([name, to, text], i) => (
-            <Link key={to} to={to === "zero" ? "/programs/$slug" : to} params={{ slug: "zero-to-hero" }} className="program-card interactive-arrow group bg-background p-6 sm:p-8">
+            <Link key={to} to={to === "zero" ? "/programs/$slug" : to} params={{ slug: "zero-to-hero" }} className="program-card interactive-arrow group bg-background p-6 sm:px-8 sm:py-6">
               <h2 className="font-display text-3xl"><SlotText k={`services.item.${i}.name`} d={name} /></h2>
-              <p className="mt-4 text-muted-foreground"><SlotText k={`services.item.${i}.description`} d={text} /></p>
-              <span className="mt-8 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-primary-text"><SlotText k="services.text.0" d="Explore" /> <ArrowRight className="size-4" /></span>
+              <p className="mt-3 text-muted-foreground"><SlotText k={`services.item.${i}.description`} d={text} /></p>
+              <span className="mt-5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-primary-text"><SlotText k="services.text.0" d="Explore" /> <ArrowRight className="size-4" /></span>
             </Link>
           ))}
         </div>
-        <p className="mt-10 text-sm text-muted-foreground"><SlotText k="services.text.1" d="Helicopter training: call us, or " /><Link to="/contact" className="text-primary-text underline"><SlotText k="services.text.2" d="build my training plan" /></Link><SlotText k="services.text.3" d=" to ask about current availability." /></p>
+        <p className="mt-6 text-sm text-muted-foreground"><SlotText k="services.text.1" d="Helicopter training: call us, or " /><Link to="/contact" className="text-primary-text underline"><SlotText k="services.text.2" d="build my training plan" /></Link><SlotText k="services.text.3" d=" to ask about current availability." /></p>
       </div>
-      <InquiryBand />
+      <InquiryBand compact />
     </SiteLayout>
   );
 }
