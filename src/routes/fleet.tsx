@@ -44,15 +44,23 @@ function Page() {
   const fleet = editing ? all : planes;
 
   // A #tail link (e.g. from the home-page traffic) opens that card before the first paint.
+  // Re-checked when the airplane list changes (owner-added planes load after mount), but a
+  // given hash is applied only once, so later filter/quick-look taps are never undone; a real
+  // hashchange always applies.
+  const regKey = fleet.map((f) => f.registration.toLowerCase()).join(",");
+  const appliedHash = useRef("");
   useLayoutEffect(() => {
-    const sync = () => {
+    const regs = regKey.split(",");
+    const sync = (force: boolean) => {
       const id = window.location.hash.slice(1).toLowerCase();
-      if (fleet.some((f) => f.registration.toLowerCase() === id)) { setRole("all"); setHashId(id); setQuick(id); }
+      if (!force && appliedHash.current === id) return;
+      if (regs.includes(id)) { appliedHash.current = id; setRole("all"); setHashId(id); setQuick(id); }
     };
-    sync();
-    window.addEventListener("hashchange", sync);
-    return () => window.removeEventListener("hashchange", sync);
-  }, [fleet]);
+    sync(false);
+    const onHash = () => sync(true);
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, [regKey]);
 
   const shown = fleet.filter((f) => role === "all" || f.role === role);
 

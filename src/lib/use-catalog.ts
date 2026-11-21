@@ -39,17 +39,21 @@ export function useFleet() {
   const { catalog, ready, editing } = useCatalog();
   const rates = useLiveRates();
   const all = useMemo(() => allPlanes(catalog, rates), [catalog, rates]);
-  return { all, planes: all.filter(p => !p.hidden), ready, editing };
+  // Memoized so consumers' effects keyed on the list don't re-run every render.
+  const planes = useMemo(() => all.filter(p => !p.hidden), [all]);
+  return { all, planes, ready, editing };
 }
 export function usePrograms() {
   const { catalog, ready, editing } = useCatalog();
   const rates = useLiveRates();
   const all = useMemo(() => allPrograms(catalog, rates), [catalog, rates]);
-  return { all, programs: all.filter(p => !p.hidden), ready, editing };
+  const programs = useMemo(() => all.filter(p => !p.hidden), [all]);
+  return { all, programs, ready, editing };
 }
 export function useCourses() {
   const { catalog, ready, editing } = useCatalog();
   const rates = useLiveRates();
   const all = useMemo(() => allCourses(catalog, rates), [catalog, rates]);
-  return { all, courses: all.filter(p => !p.hidden), ready, editing };
+  const courses = useMemo(() => all.filter(p => !p.hidden), [all]);
+  return { all, courses, ready, editing };
 }
