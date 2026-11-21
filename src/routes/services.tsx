@@ -34,12 +34,12 @@ function Page() {
       <PageIntro k="services.intro" image={heroImg} imageAlt="View under an aircraft wing over red rock country"
         eyebrow="Our services"
         title="Every rating, endorsement, and experience."
-        text="Whether you have zero flight hours or have three-hundred and are looking to finish a multi-engine commercial certificate, we are the school for you. We offer a wide variety of ratings, endorsements, and aviation experiences. All of our offerings are tailored to suit your individual needs."
+        text="From zero hours to a multi-engine commercial certificate, all tailored to you."
       />
-      <div className="site-container py-20">
+      <div className="site-container pb-16 pt-8 sm:pb-20 sm:pt-12">
         <div className="stagger-grid grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-3" data-scroll-reveal>
           {services.map(([name, to, text], i) => (
-            <Link key={to} to={to === "zero" ? "/programs/$slug" : to} params={{ slug: "zero-to-hero" }} className="program-card interactive-arrow group bg-background p-8">
+            <Link key={to} to={to === "zero" ? "/programs/$slug" : to} params={{ slug: "zero-to-hero" }} className="program-card interactive-arrow group bg-background p-6 sm:p-8">
               <h2 className="font-display text-3xl"><SlotText k={`services.item.${i}.name`} d={name} /></h2>
               <p className="mt-4 text-muted-foreground"><SlotText k={`services.item.${i}.description`} d={text} /></p>
               <span className="mt-8 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-primary-text"><SlotText k="services.text.0" d="Explore" /> <ArrowRight className="size-4" /></span>

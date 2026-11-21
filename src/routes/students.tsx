@@ -25,10 +25,10 @@ function Page() {
     <SiteLayout>
       <PageIntro k="students.intro" image={heroImg} imageAlt="Sunset above the clouds"
         eyebrow="Students"
-        title="Helping you reach your aviation goals in three great locations."
+        title="Your aviation goals, three great locations."
         text="New to Lakes Area Aviation or already training with us? Start here."
       />
-      <div className="site-container py-20">
+      <div className="site-container pb-16 pt-8 sm:pb-20 sm:pt-12">
         <div className="grid gap-6 md:grid-cols-2" data-scroll-reveal>
           <div className="card-lift border border-border bg-card p-8">
             <p className="eyebrow text-primary-text"><SlotText k="students.text.0" d="New students" /></p>

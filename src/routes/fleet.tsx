@@ -69,7 +69,7 @@ function Page() {
       <PageIntro k="fleet.intro"
         eyebrow="Aircraft"
         title="The airplanes you’ll actually fly."
-        text="Real photos, real tail numbers and the published rates for every airplane in the Lakes Area Aviation fleet."
+        text="Real photos, tail numbers and published rates for every airplane we fly."
         compact
       />
       <div className="site-container pb-20 pt-8 lg:pt-12 max-sm:!px-4 max-sm:pt-5">

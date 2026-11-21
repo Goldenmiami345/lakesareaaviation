@@ -32,7 +32,7 @@ function Page() {
   const courses = coursesOf(programs);
   return (
     <SiteLayout>
-      <PageIntro k="rates.intro" eyebrow="Our rates" title="Every published rate, in one place." text="We strive to keep our aircraft costs low to make aviation accessible for everyone. All aircraft rates are wet and include fuel and insurance." />
+      <PageIntro k="rates.intro" eyebrow="Our rates" title="Every published rate, in one place." text="Low aircraft costs. Every rate is wet and includes fuel and insurance." />
       <div className="site-container pb-20 pt-6 sm:pt-10">
         {/* Rate-sheet header: the year, the wet-rate rule and the download, before any table. */}
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b-2 border-foreground pb-4" data-scroll-reveal>

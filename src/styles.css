@@ -164,6 +164,8 @@ html.reveal-ready .stagger-grid > * { opacity: 0; transform: translateY(24px); }
 @keyframes kenburns-phone { from { transform: scale(1.08); } to { transform: scale(1); } }
 @media (max-aspect-ratio: 3/2) {
   .hero-kenburns { margin-top: -9%; animation-name: kenburns-phone; object-position: 30% center; }
+  /* Page title strips are short: no lift (it left a dark gap at the bottom), centred crop. */
+  .hero-kenburns.intro-photo { margin-top: 0; object-position: center; }
 }
 
 @keyframes line-up { from { transform: translateY(112%); } to { transform: translateY(0); } }

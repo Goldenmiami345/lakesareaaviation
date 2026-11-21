@@ -28,8 +28,8 @@ function Page() {
   const kPhoto = kodiak ? coursePhoto(site, kodiak) : undefined;
   return (
     <SiteLayout>
-      <PageIntro k="specialized-training.intro" eyebrow="Specialized training" title="Endorsements and courses beyond the ratings." text="Along with our commitment to providing you the best training to fit your needs and schedule, we also offer specialized training in a variety of endorsements and ratings." />
-      <div className="site-container space-y-14 py-14 sm:space-y-20 sm:py-20">
+      <PageIntro k="specialized-training.intro" eyebrow="Specialized training" title="Endorsements and courses beyond the ratings." text="Endorsements and specialty training, built around your schedule." />
+      <div className="site-container space-y-14 pb-14 pt-8 sm:space-y-20 sm:pb-20 sm:pt-12">
         {kodiak && <Link to="/specialized-training/$slug" params={{ slug: kodiak.slug }} className="interactive-arrow group grid min-h-56 overflow-hidden bg-ink text-background md:grid-cols-[1.1fr_1fr]" data-scroll-reveal>
           <div className="p-7 md:p-12">
             <p className="eyebrow text-primary-text"><SlotText k="specialized-training.text.1" d="Kodiak 100 training" /></p>

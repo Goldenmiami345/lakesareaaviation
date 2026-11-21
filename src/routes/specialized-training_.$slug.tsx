@@ -3,8 +3,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { SlotText, RateText, CalcText } from "@/components/slot-text";
 import { useSiteContent } from "../lib/use-site-content";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
-import { srcSetFor } from "@/lib/responsive-image";
-import { InquiryBand, SiteLayout } from "../components/site-shell";
+import { InquiryBand, PageIntro, SiteLayout } from "../components/site-shell";
 import { findSpecialty, SPECIALTY_KIND_LABEL, type SpecialtyCourse } from "../lib/site-data";
 import { SLUG, type CoursePrice } from "../lib/catalog";
 import { useCourses } from "../lib/use-catalog";
@@ -43,19 +42,14 @@ function CourseBody({ c, list }: { c: SpecialtyCourse & { hidden?: boolean; phot
   const facts = [...(c.location ? [{ k: "Location", v: c.location }] : []), ...c.facts, { k: "Estimate", v: "In your training plan" }];
   const related = list.filter((x) => x.slug !== c.slug && (x.kind === c.kind || (c.kind === "kodiak" && x.kind === "course")));
   return <SiteLayout>
-    <section className="bg-ink pb-12 pt-28 text-background sm:pb-16 sm:pt-36">
-      <div className="site-container grid items-center gap-8 lg:grid-cols-[1fr_1.1fr] lg:gap-14">
-        <div>
-          <div><Link to="/specialized-training" className="inline-flex min-h-11 items-center gap-2 text-xs font-bold uppercase tracking-widest text-background/70 hover:text-background"><ArrowLeft className="size-4" /> <SlotText k="specialized-training---slug.text.1" d="Specialized training" /></Link></div>
-          <p className="stage-label mt-4"><SlotText k={`course.kind.${c.kind}`} d={SPECIALTY_KIND_LABEL[c.kind]} /></p>
-          <h1 className="mt-3 font-display text-4xl sm:text-6xl"><SlotText k={`course.${c.slug}.name`} d={c.name} /></h1>
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-background/80 sm:text-lg"><SlotText k={`course.${c.slug}.definition`} d={c.definition} /></p>
-          <HideToggle kind="courses" id={c.slug} hidden={!!c.hidden} className="mt-4" />
-        </div>
-        {photo && <div className="relative aspect-[4/3] overflow-hidden bg-background/5 lg:aspect-[3/2]"><img data-slot-photo={`course.${c.slug}.photo`} src={photo.src} srcSet={srcSetFor(photo.src)} sizes="(min-width: 1024px) 52vw, 100vw" alt={photo.alt} width={1280} height={853} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover" /></div>}
-      </div>
-    </section>
-    <section className="site-container relative z-10 -mt-6 sm:-mt-8">
+    <PageIntro
+      {...(photo ? { image: photo.src, imageAlt: photo.alt } : {})} photoSlot={`course.${c.slug}.photo`}
+      above={<Link to="/specialized-training" className="-mt-2 mb-1 inline-flex min-h-11 items-center gap-2 text-xs font-bold uppercase tracking-widest text-background/70 hover:text-background sm:-mt-3"><ArrowLeft className="size-4" /> <SlotText k="specialized-training---slug.text.1" d="Specialized training" /></Link>}
+      eyebrow={<SlotText k={`course.kind.${c.kind}`} d={SPECIALTY_KIND_LABEL[c.kind]} />}
+      title={<SlotText k={`course.${c.slug}.name`} d={c.name} />}
+      text={<><SlotText k={`course.${c.slug}.definition`} d={c.definition} /><HideToggle kind="courses" id={c.slug} hidden={!!c.hidden} className="ml-3 align-middle" /></>}
+    />
+    <section className="site-container relative z-10 -mt-4 sm:-mt-5">
       <div className="grid gap-px overflow-hidden border border-border bg-border shadow-2xl sm:grid-cols-2 lg:grid-flow-col lg:grid-cols-none lg:auto-cols-fr">
         {facts.map((f) => <div key={f.k} className="bg-background p-5 sm:p-6"><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{c.facts.includes(f) ? <SlotText k={`course.${c.slug}.fact.${c.facts.indexOf(f)}.k`} d={f.k} /> : <SlotText k={`specialized.fact.${f.k.toLowerCase()}`} d={f.k} />}</p><p className="mt-2 font-display text-2xl sm:text-3xl">{f.k === "Location" ? <SlotText k={`course.${c.slug}.location`} d={c.location!} /> : c.facts.includes(f) ? c.slug === "tailwheel" && f.v === "$135/hr wet" ? <><RateText k={rateKey.rental("Taylorcraft BC-12D", "regular")} /><SlotText k="course.tailwheel.rate-suffix" d="/hr wet" /></> : <SlotText k={`course.${c.slug}.fact.${c.facts.indexOf(f)}.v`} d={f.v} /> : c.price ? <CalcText>{c.price.estimatedCost}</CalcText> : <SlotText k="specialized.estimate-value" d={f.v} />}</p></div>)}
         <Link to="/contact" search={{ program: c.name }} className={`btn-shine flex min-h-16 items-center justify-between gap-3 bg-primary p-5 text-sm font-bold uppercase text-primary-foreground sm:p-6 lg:col-span-1 ${facts.length % 2 === 0 ? "sm:col-span-2" : ""}`}><SlotText k="cta.plan" d="Build my training plan" /> <ArrowRight className="size-5" /></Link>

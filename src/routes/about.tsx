@@ -12,7 +12,7 @@ export const Route = createFileRoute("/about")({
 function Page() {
   return (
     <SiteLayout>
-      <PageIntro k="about.intro" eyebrow="About the school" title="A practical place to become a better pilot." text="Lakes Area Aviation provides flight instruction, pilot services, aircraft management, and specialized training from bases in Minnesota, Colorado, and Arizona." />
+      <PageIntro k="about.intro" eyebrow="About the school" title="A practical place to become a better pilot." text="Flight instruction, pilot services and specialized training in Minnesota, Colorado and Arizona." />
       <div>
         {/* Team first: faces are what visitors come to About for. */}
         <section id="team" className="site-container scroll-mt-20 pb-6 pt-10 sm:pt-16">

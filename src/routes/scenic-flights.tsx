@@ -24,9 +24,9 @@ function Page() {
       <PageIntro k="scenic-flights.intro"
         eyebrow="Scenic flights"
         title="See your world from the sky."
-        text="Have you ever wondered what the Minnesota fall leaves look like from above, wanted to see the Rocky Mountains from the sky, or fly over your childhood landmarks?"
+        text="Minnesota fall colors, the Rocky Mountains or your childhood landmarks, seen from above."
       />
-      <div className="site-container py-20">
+      <div className="site-container pb-16 pt-8 sm:pb-20 sm:pt-12">
         <div className="grid gap-12 lg:grid-cols-2">
           <div className="flex flex-col justify-center" data-scroll-reveal>
             <p className="eyebrow text-primary-text"><SlotText k="scenic-flights.text.1" d="The experience" /></p>
