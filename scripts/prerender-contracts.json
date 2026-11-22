@@ -1,7 +1,7 @@
 {
   "/models-preview": {
     "heading": "Aircraft model review",
-    "copy": "Phoenix \u00b7 Apache \u00b7 Cardinal"
+    "copy": "Phoenix · Apache · Cardinal"
   },
   "/": {
     "heading": "BECOME A PROFESSIONAL PILOT",
@@ -9,23 +9,23 @@
   },
   "/about": {
     "heading": "A practical place to become a better pilot.",
-    "copy": "Lakes Area Aviation provides flight instruction, pilot services, aircraft management, and specialized training from bases in Minnesota, Colorado, and Arizona."
+    "copy": "Flight instruction, pilot services and specialized training in Minnesota, Colorado and Arizona."
   },
   "/accelerated-training": {
     "heading": "Turn open calendar days into your next rating.",
-    "copy": "Concentrated flight and ground training for pilots who arrive prepared and want every day to move the plan forward."
+    "copy": "Concentrated flight and ground training for prepared pilots who want every day to count."
   },
   "/admin": {
-    "heading": "Site appearance",
-    "copy": "Sign in to change the accent color for every visitor."
+    "heading": "Site admin",
+    "copy": "Sign in to edit pages, prices, the fleet and courses."
   },
   "/contact": {
     "heading": "Build your training plan.",
     "copy": "Tap what you have and what's next. Prices are estimates."
   },
   "/fleet": {
-    "heading": "The airplanes you\u2019ll actually fly.",
-    "copy": "Real photos, real tail numbers and the published rates for every airplane in the Lakes Area Aviation fleet."
+    "heading": "The airplanes you’ll actually fly.",
+    "copy": "Real photos, tail numbers and published rates for every airplane we fly."
   },
   "/hero-options": {
     "heading": "Zero to Hero.",
@@ -33,46 +33,46 @@
   },
   "/introductory-flights": {
     "heading": "Take the pilot's seat for $100.",
-    "copy": "An introductory flight is a hands-on first lesson and the clearest way to find out if flight training is right for you."
+    "copy": "A hands-on first lesson and the clearest way to see if flying is for you."
   },
   "/local-training": {
     "heading": "Train at your own pace, close to home.",
-    "copy": "While we specialize in accelerated, full-time training, we value our local students. One of our main goals is to grow a community of aviators."
+    "copy": "We specialize in accelerated training and love growing a local community of aviators."
   },
   "/locations": {
     "heading": "Three places to move your training forward.",
-    "copy": "Contact the school to confirm which ratings, aircraft, and accelerated dates are available at each location."
+    "copy": "Call to confirm the ratings, aircraft and dates available at each base."
   },
   "/new-students": {
     "heading": "Three steps to your first day.",
-    "copy": "We do all of our flight scheduling, billing, and more directly through Flight Schedule Pro."
+    "copy": "Scheduling and billing all run through Flight Schedule Pro."
   },
   "/programs": {
     "heading": "Choose the rating. Set the timeline.",
-    "copy": "From your first solo to your first instructor student, build a focused training plan around the rating ahead."
+    "copy": "From first solo to first instructor student, built around your timeline."
   },
   "/rates": {
     "heading": "Every published rate, in one place.",
-    "copy": "We strive to keep our aircraft costs low to make aviation accessible for everyone. All aircraft rates are wet and include fuel and insurance."
+    "copy": "Low aircraft costs. Every rate is wet and includes fuel and insurance."
   },
   "/scenic-flights": {
     "heading": "See your world from the sky.",
-    "copy": "Have you ever wondered what the Minnesota fall leaves look like from above, wanted to see the Rocky Mountains from the sky, or fly over your childhood landmarks?"
+    "copy": "Minnesota fall colors, the Rocky Mountains or your childhood landmarks, seen from above."
   },
   "/specialized-training": {
     "heading": "Endorsements and courses beyond the ratings.",
-    "copy": "Along with our commitment to providing you the best training to fit your needs and schedule, we also offer specialized training in a variety of endorsements and ratings."
+    "copy": "Endorsements and specialty training, built around your schedule."
   },
   "/student-success": {
     "heading": "Progress measured in ratings earned.",
-    "copy": "Students come with different experience, preparation, and goals. Their stories show what focused training can make possible."
+    "copy": "What focused training made possible for our students."
   },
   "/services": {
     "heading": "Every rating, endorsement, and experience.",
-    "copy": "Whether you have zero flight hours or have three-hundred and are looking to finish a multi-engine commercial certificate, we are the school for you. We offer a wide variety of ratings, endorsements, and aviation experiences. All of our offerings are tailored to suit your individual needs."
+    "copy": "From zero hours to a multi-engine commercial certificate, all tailored to you."
   },
   "/students": {
-    "heading": "Helping you reach your aviation goals in three great locations.",
+    "heading": "Your aviation goals, three great locations.",
     "copy": "New to Lakes Area Aviation or already training with us? Start here."
   },
   "/programs/private-pilot": {
@@ -89,7 +89,7 @@
   },
   "/programs/commercial-multi-engine": {
     "heading": "Commercial Multi-Engine",
-    "copy": "Train for commercial multi-engine privileges in Lakes Area Aviation\u2019s Piper Apache."
+    "copy": "Train for commercial multi-engine privileges in Lakes Area Aviation’s Piper Apache."
   },
   "/programs/cfi-cfii": {
     "heading": "CFI & CFII",
